@@ -57,7 +57,15 @@ The site: the faction comes from the race (Skyborne: by raceID) and also from `C
 | The Vanilla zones stay, with new quests | Official | [Game Informer](https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with) |
 | Zone text comes from `GetRealZoneText` / the community member's `zone`, English, as in Vanilla; inside an instance it is the instance name | Confirmed (beta client) | API-FINDINGS V35 |
 
-None of the new zones has its own shape on our map (`src/core/map/zones.json`): Mount Hyjal is terrain, the others are not drawn.
+Where the new zones sit, and how our map (`src/core/map/zones.json`, WEB-31) draws them. The source SVGs have no shape for them: the outlines are hand-drawn in `tools/map/build_zones.py` (`EXTRA_ZONES`) from these location texts, so the exact borders are ours.
+
+| Zone | Location | Status | Source | On our map |
+|---|---|---|---|---|
+| The Riverglades | East coast of the Eastern Kingdoms, between Redridge, Burning Steppes, Badlands and Swamp of Sorrows; a gap that was off-limits in classic; about the size of Stranglethorn Vale; port town Powderfuse Port (boat from Tanaris), a road forks off in Redridge | Unverified | [lfcarry](https://lfcarry.com/guides/wow-forever-new-zones), [wowguide.net](https://wowguide.net/en/guides/wow-forever-riverglades-zone) | New land east of those four zones, pushing the coast out |
+| Shen'dralas | Central Kalimdor, south-east of Desolace between Feralas and Mulgore, entered from Desolace through the Valley of Bones; roughly where retail's Lake Dumont is. Another guide puts it south of Desolace, north of Dire Maul | Unverified (beta 1.60.1) | [warcraft.wiki.gg](https://warcraft.wiki.gg/wiki/Shen'dralas), [lfcarry](https://lfcarry.com/guides/wow-forever-new-zones) | Carved from northern Feralas over the source's Lake Dumont, bordering Desolace and Mulgore |
+| Zephras Isle | A flying island in Skywall, the elemental plane of air, not on Azeroth; skycutters to Dalaran (Alliance) and Thunder Bluff (Horde) | Official (Skywall); layout unverified | [lfcarry](https://lfcarry.com/guides/wow-forever-new-zones), [warcraft.wiki.gg](https://warcraft.wiki.gg/wiki/Zephras_Isle), [Warcraft Tavern](https://www.warcrafttavern.com/forever/guides/skyborne/) | An inset island in the sea between the continents, south of the Maelstrom (`cont` K) |
+| Mount Hyjal | Kalimdor; the endgame leveling zone, after Archimonde's defeat | Official (playable); position unverified | [Game Informer](https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with), [lfcarry](https://lfcarry.com/guides/wow-forever-new-zones) | The source's Mount Hyjal shape, now a zone |
+| Thousand Needles | Dry canyon and mesas, as in Vanilla (the Cataclysm flood is not part of Forever) | Official (the Vanilla zones stay) | [Game Informer](https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with) | The source's lake (an inlet with mesa islands) filled in |
 
 ## Dungeons
 Nine new five-player dungeons next to the Vanilla ones ([Blizzard: Explore the New Dungeons](https://news.blizzard.com/en-us/article/24301455/explore-the-new-dungeons-of-world-of-warcraft-forever), official):
@@ -103,7 +111,7 @@ Decided by Nico (2026-10-25) where the sources leave a choice:
   - The other five new dungeons use Blizzard's article.
 - **Raids:** only the announced ones: Onyxia's Lair, The Barrow Deeps and Hyjal Summit. Molten Core, Blackwing Lair, Zul'Gurub, the Ahn'Qiraj raids and Naxxramas come back when Blizzard announces them.
 - **Zones:**
-  - Mount Hyjal, The Barrow Deeps and Hyjal Summit resolve to the Hyjal shape (drawn as terrain).
-  - The Riverglades, Zephras Isle, Shen'dralas and Krol'dok Stronghold resolve to "elsewhere" until the map draws them. That is a map and design change (CLAUDE.md rule 12).
+  - Mount Hyjal, The Barrow Deeps and Hyjal Summit resolve to the Mount Hyjal zone.
+  - The Riverglades (also "Riverglades") and Krol'dok Stronghold resolve to The Riverglades, Shen'dralas and Zephras Isle to their zones (WEB-31, 2026-10-25): hand-drawn shapes, Zephras Isle as an inset island because Skywall is not on Azeroth. Placements are unverified until the launch client shows the zones.
 - **Battlegrounds** (Warsong Gulch, Arathi Basin, Alterac Valley, Darkspear Islands) resolve to "battleground"; other unknown text resolves to "elsewhere".
 - **Rulesets:** shown as PvP or PvE. The PvP realms are the beta realm and "Forever PvP".
