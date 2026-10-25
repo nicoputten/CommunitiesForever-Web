@@ -32,12 +32,6 @@ Build order: WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04,
 
 ## E2 Data
 
-### WEB-03 SavedVariables parser (core)
-- `parseLua(text)`: parses a SavedVariables file (`Name = { ... }` assignments, also the fixtures' `return { ... }`) into plain JS values. Supports what the game writes: tables with `["key"] =` and `[n] =` keys, array parts, strings with escapes, numbers (incl. negative, float, exponent), booleans, nil, `--` comments.
-- Never executes anything. Limits: 5 MB file, depth 32, clear errors with line and column.
-- Copy the addon's fixtures to `tests/fixtures/addon/v0.3`, `v0.4` (unchanged) and a real file from Nico (wrapped as the game writes it, anonymized if he wants).
-- Unit tests: every construct above, errors, limits, all fixtures parse.
-
 ### WEB-04 Normalize and merge (core)
 - `normalize(db)`: `CommunitiesForeverDB.global` per `schemaVersion` into the internal shape (`docs/SOURCE-DATA.md`). Unknown newer schema: rejected with the version in the message.
 - Sanitize: strip `|` escapes from every string, display names capped at 24.
