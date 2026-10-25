@@ -45,7 +45,7 @@ B (Parchment) and C (Carved) remain on the canvas as rejected directions.
   /* sea & land */
   --sea-light: #10233A; --sea: #0A172A; --sea-deep: #040811;
   --land-top: #26354D; --land-bottom: #151E2E;
-  --terrain: #0C121B;                   /* Hyjal, Uldum, Gilneas, Grim Batol */
+  --terrain: #0C121B;                   /* Uldum, Gilneas, Grim Batol */
   --zone-line: rgba(201,164,92,.36);
   --coast: #A9C8EA;  /* @55% */
   --surf: #5E93C9; --wave: #7FA9D6; --foam: #CFE3F7;
@@ -127,8 +127,9 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 
 ## 5. Map
 
-- Source: `src/core/map/zones.json` (derived from the Wikimedia Commons SVGs, trimmed to Vanilla, rebuilt with `tools/map/build_zones.py`): 43 shapes (39 zones + 4 terrain) with `id, name, cont (K|E), kind (zone|terrain), d (SVG path, evenodd), lx/ly (label + marker anchor), lines, size`; `coast.K/E`; `cities` (capitals `cap: 1`, towns `cap: 0`); `dungeons`. World coordinates = 1440 × 900.
-- Merged for Vanilla: Northern + Southern Barrens → The Barrens; Northern Stranglethorn + Cape → Stranglethorn Vale; Ahn'Qiraj → Silithus. Terrain (no hover): Mount Hyjal, Uldum, Gilneas, Grim Batol. Removed: Quel'Thalas, Kul Tiras, Tol Barad, Azuremyst/Bloodmyst. Alterac shares the Hillsbrad shape.
+- Source: `src/core/map/zones.json` (derived from the Wikimedia Commons SVGs, trimmed to Vanilla, rebuilt with `tools/map/build_zones.py`): 46 shapes (43 zones + 3 terrain) with `id, name, cont (K|E), kind (zone|terrain), d (SVG path, evenodd), lx/ly (label + marker anchor), lines, size`; `coast.K/E`; `cities` (capitals `cap: 1`, towns `cap: 0`); `dungeons`. World coordinates = 1440 × 900.
+- Merged for Vanilla: Northern + Southern Barrens → The Barrens; Northern Stranglethorn + Cape → Stranglethorn Vale; Ahn'Qiraj → Silithus. Terrain (no hover): Uldum, Gilneas, Grim Batol. Removed: Quel'Thalas, Kul Tiras, Tol Barad, Azuremyst/Bloodmyst. Alterac shares the Hillsbrad shape.
+- WoW: Forever (WEB-31): Thousand Needles is dry (the source's Cataclysm lake filled in); Mount Hyjal is a zone; The Riverglades (new land on the Eastern Kingdoms' east coast), Shen'dralas (carved from northern Feralas) and Zephras Isle (an inset island between the continents, south of the Maelstrom, as Skywall is not on Azeroth) are hand-drawn zones (`EXTRA_ZONES` in `tools/map/build_zones.py`), styled like every other zone.
 - Layers (bottom → top): sea gradient · moonlight glint · wave strokes (2 groups) · Maelstrom · surf (blurred coast stroke) · foam (dashed coast) · zone fills · grain · occupied tint + borders · coast line · capitals · labels · markers (HTML overlay) · cards.
 - Zone states: idle (gold line 36%) · occupied (gold tint 3–20% by recency) · hover (bright gold stroke 1.6, name in corner) · terrain (dark, no hover).
 - Zoom: **World 1×** markers + clusters per zone, capitals only · **Continent 2×** towns, clusters ≤ 5 fan out · **Zone 4×** dungeons, name tags on all markers.
@@ -207,3 +208,4 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | Date | What | Why | Approved |
 |---|---|---|---|
 | 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
+| 2026-10-25 | Map (WEB-31): Thousand Needles dry; Mount Hyjal a zone, not terrain; three new zones (The Riverglades, Shen'dralas carved from Feralas, Zephras Isle as an inset island) in the normal zone style. The boards still show the Cataclysm lake and no new zones | The map shows WoW: Forever, not Cataclysm; nothing else about the map changes | Nico |
