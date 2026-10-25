@@ -23,7 +23,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - classes: `classFile` → name, colour token, text-colour token (values in `docs/DESIGN.md` §3)
   - races: `raceID` → name, faction
   - professions: skill line ID → name, primary or secondary; caps 75/150/225/300
-  - rulesets: realm name → ruleset (Normal, PvP, RP, Hardcore). Forever has one mega-realm per ruleset per region; the names are known only at launch, so the table starts with the beta realm and gets filled on launch day. Unknown realm: show the realm text. Never parse the realm name.
+  - rulesets: show **PvP** or **PvE**. The group plays on the PvP ruleset, so the table lists the PvP realm name(s) (the beta realm now, the launch name on launch day) and every other realm shows PvE. Never parse the realm name.
   - dungeons and raids: name, zone, typical level range (labelled "typical"), map position
   - zone aliases: the addon's zone text → `zones.json` zone id, also for cities ("Orgrimmar", "Stormwind City") and for dungeon names (→ the dungeon's zone). Unknown text: "elsewhere", never dropped.
 - `tools/map/build_zones.py`: add every Vanilla dungeon and raid to `DUNGEONS` (positions placed by hand on our map, source of the level ranges named), and Alterac Mountains if the source SVG allows a separate shape (otherwise an alias to Hillsbrad). Rebuild `zones.json`.
@@ -45,14 +45,19 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ### WEB-06 Battle.net sign-in and access rules
 - Auth.js with the Battle.net provider (EU). Session cookie; JWT unless the guest list needs revocation at once (decide in the story).
 - Who may sign in:
-  - **admin**: `ADMIN_BATTLETAG` (Nico)
-  - **members**: every BattleTag in the community data of the admin's own uploads (`self`, `people`, `presence`). Uploads by members add data but never add members.
+  - **admin**: `ADMIN_BATTLETAG` (Nico). Can never be blocked.
+  - **members**: every BattleTag in the community data (`self`, `people`, `presence`) of an accepted upload from the community (see below).
   - **guests**: BattleTags on the guest list (admin page, WEB-18)
   - everyone else: "not on the list" (WEB-17)
-- Who may upload: admin and members. Guests view only, unless the admin ticks "may upload" for them (assumption, confirm in the story).
+- Who may upload: admin, members, and guests with "may upload" ticked. Other guests view only.
+- An upload is accepted only when:
+  - the uploader may upload
+  - **it is the uploader's own file**: the file's `self.battleTag` equals the signed-in BattleTag, so nobody can upload someone else's or a made-up file under their name
+  - **it is the same community**: its `settings.clubId` equals the community of the admin's uploads. Until the admin's first upload, only the admin can upload.
+- Every accepted upload adds its BattleTags as members. Membership never ends automatically (someone gone from the data stays a member); the admin can block a member on the admin page, and a blocked BattleTag can't sign in.
 - Every page and API route needs a session except sign-in and the callback (CLAUDE.md rule 6). Upload and admin routes check the role on the server.
-- Storage: guest list table (BattleTag, may upload, added at, added by); uploads already record `uploadedBy`.
-- Unit tests for the access rules (core), route tests for 401/403.
+- Storage: guest list table (BattleTag, may upload, added at, added by); members table (BattleTag, first seen in upload, blocked at/by); uploads already record `uploadedBy`. Members are derived from accepted uploads and rebuilt with them; blocks are kept apart so a rebuild never lifts one.
+- Unit tests for the access rules (core): roles, own-file check, same-community check, blocked members, the admin never blocked. Route tests for 401/403.
 - Manual: create the app at develop.battle.net with redirect URLs for localhost and `wow.vestras.nl`; client id and secret in `.env.local` and the TrueNAS app config.
 
 ### WEB-07 Docker image and deploy to TrueNAS
@@ -80,7 +85,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - page backgrounds: `--bg-abyss` on map pages, `--bg-night` on data pages
   - surfaces use the token blur
 - **Touch targets:** every interactive element is at least 44 × 44 px at phone size.
-- **Accessibility:** `@axe-core/playwright` scan of every screen at both sizes, no serious or critical violations (new dev dependency: ask first).
+- **Accessibility:** `@axe-core/playwright` scan of every screen at both sizes, no serious or critical violations (dev dependency approved by Nico).
 - **Screenshot baselines:** `toHaveScreenshot` per screen at 1440 and 375 px with fixed sample data (the design prompt's invented friends) and motion off. Baselines live in the repo; updating one is a deliberate `npm run test:design -- --update-snapshots` that Nico approves in the PR.
 - **Reduced motion:** with `prefers-reduced-motion`, no element has a running animation.
 - `npm run test:design` runs all of the above, and CI runs it on every PR.
@@ -103,7 +108,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - **signing in**: "Checking the guest list… Back from Battle.net as Femke#3307", then straight to the map
 
 ### WEB-18 Admin page: guest list
-- Admin only. Members (from the data, read-only, with their source), guests (add by BattleTag, remove, "may upload"), who signed in last.
+- Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
 - Validation of BattleTag format; adding an existing member says so.
 
 ### WEB-19 Upload page and states
@@ -114,6 +119,8 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - **wrong file**: "That's not our ledger", naming the file if it is another addon's (e.g. `Questie.lua`); nothing changed
   - **newer addon version**: "This file is from a newer addon. It uses data format N; the site reads up to M"
   - **nothing new**: "Same data as your upload of today 21:14. Did the game save yet?"
+  - **not your file**: the file belongs to another BattleTag ("This is Bob's ledger, sign in as Bob to upload it"); nothing changed
+  - **other community**: the file's addon has another community selected ("This ledger is for another community"); nothing changed
 - History: time, uploader, summary line ("5 levels gained · 4 skill gains · 1 new character"), Done / Rejected with reason; a line links to its session report.
 
 ### WEB-20 Session report

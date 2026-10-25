@@ -14,7 +14,7 @@
 | Framework | Next.js (App Router), React | React is known; one app for UI and API; standalone output runs in a small container |
 | Auth | Auth.js (`next-auth`) with the Battle.net provider | built-in provider, gives the BattleTag |
 | Database | SQLite via `better-sqlite3` (+ `@types/better-sqlite3`), Drizzle ORM, `drizzle-kit` migrations | one file on a TrueNAS dataset, easy backup through snapshots |
-| Tests | Vitest (unit, compat), Playwright (end to end, design checks: WEB-30) | `@axe-core/playwright` proposed for WEB-30 (needs OK) |
+| Tests | Vitest (unit, compat), Playwright (end to end, design checks: WEB-30), `@axe-core/playwright` (accessibility, WEB-30) | |
 | Lint/format | ESLint, Prettier | |
 | Runtime | Node.js LTS, Docker image on GHCR | |
 | Styling | CSS custom properties (`src/styles/tokens.css`) + CSS Modules | tokens from `docs/DESIGN.md`; no runtime CSS-in-JS |
@@ -73,11 +73,12 @@ Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in 
 | Role | Who | Sign in | Upload | Admin page |
 |---|---|---|---|---|
 | admin | `ADMIN_BATTLETAG` | yes | yes | yes |
-| member | a BattleTag in the community data of the admin's own uploads (`self`, `people`, `presence`) | yes | yes | no |
+| member | a BattleTag in the community data (`self`, `people`, `presence`) of an accepted upload | yes, unless blocked | yes | no |
 | guest | a BattleTag on the guest list (admin page) | yes | only if "may upload" is ticked | no |
 | anyone else | | "not on the list" | no | no |
 
-- Uploads by members add data (merged like any upload) but never add members; only the admin's uploads define the community.
+- An upload is accepted only from someone who may upload, only for **their own file** (the file's `self.battleTag` equals the signed-in BattleTag) and only for **the same community** (the file's `settings.clubId` equals that of the admin's uploads; before the admin's first upload only the admin can upload).
+- Every accepted upload adds its BattleTags as members. Membership never ends automatically; the admin can block a member (the admin can't be blocked). Blocks are stored apart from the derived members, so `rebuild()` never lifts one.
 - Roles are checked on the server for every route (CLAUDE.md rule 6).
 - Later (WEB-12): an API token for an automatic uploader, upload scope only.
 
@@ -85,7 +86,7 @@ Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in 
 - Screens follow the boards in `design/boards/` (index: `design/README.md`); `docs/DESIGN.md` is the source of truth for tokens, data age scale, map layers, zoom levels, motion and components. The boards are references only: no markup or runtime is copied.
 - Data age scale (one everywhere): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d, unknown. A friend's data turns amber at 7 days; the site-wide banner shows when the last upload is 7 days old or more.
 - Site name: the community name (`settings.clubName`) of the newest admin upload, never hardcoded.
-- Ruleset instead of realm: Forever has one mega-realm per ruleset (Normal, PvP, RP, Hardcore) per region. A sourced table maps realm names to rulesets (WEB-13); an unknown realm shows its text.
+- Ruleset instead of realm: Forever has one mega-realm per ruleset per region. The group plays PvP, so the site shows PvP or PvE: the rulesets table (WEB-13) lists the PvP realm name(s), every other realm is PvE.
 - Motion: ambient on the map and sign-in, calm on data pages; `prefers-reduced-motion` and a "Motion" toggle (`localStorage`) turn it off.
 - The design system is binding (CLAUDE.md rules 11 and 12): deviations only with Nico's OK, listed in `docs/DESIGN.md` "Deviations". The design checks (WEB-30) enforce it: token lint, computed styles, touch targets, accessibility, screenshot baselines.
 

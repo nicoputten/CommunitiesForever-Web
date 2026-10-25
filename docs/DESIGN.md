@@ -175,7 +175,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 ## 8. Decisions and rules
 
 - Covered / thin / gap professions: covered ≥ 225, thin 175–224, gap < 175 (to refine during implementation).
-- WoW: Forever has no realms: show the **ruleset** (Normal, PvP, RP, Hardcore) instead, through the rulesets table (WEB-13).
+- WoW: Forever has no realms: show the **ruleset** (PvP or PvE) instead, through the rulesets table (WEB-13).
 - Character names always contain a space; never split.
 - Item level may be missing → "—".
 - Talent points = level − 9; tree bars out of 31.
@@ -207,4 +207,3 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | Date | What | Why | Approved |
 |---|---|---|---|
 | 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
-| 2026-10-25 | Rulesets Normal, PvP, RP, Hardcore (boards show PvP / PvE) | Forever's actual rulesets | Nico |
