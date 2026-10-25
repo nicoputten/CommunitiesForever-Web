@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Roster — table</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:#0C1320;text-align:left;font-weight:500;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#7E8898;padding:10px 12px;border-bottom:1px solid rgba(212,175,106,.25);white-space:nowrap}
+th button{all:unset;cursor:pointer}
+td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;color:#C9CFD9}
+tbody tr:hover td{background:rgba(212,175,106,.06)}
+.d{display:inline-block;width:26px;height:26px;border-radius:50%;font:600 10px/26px Inter,sans-serif;text-align:center;color:#0B0F14;vertical-align:middle;margin-right:10px}
+.n{font:15px 'Marcellus',serif;vertical-align:middle}
+.bar{display:inline-block;width:60px;height:4px;border-radius:2px;background:#1F2837;vertical-align:middle;margin-left:8px;overflow:hidden}
+.p{display:inline-block;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.05);font-size:11px;margin-right:4px}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:transparent;color:#C9CFD9;font:13px Inter,sans-serif;cursor:pointer}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 900px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a>
+      <a href="#" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Roster</a>
+      <a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #8E98A8">Data uploaded just now</div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 260px">
+        <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Roster</h1>
+        <div style="font-size: 13px; color: #8E98A8; margin-top: 4px">10 characters · sorted by level</div>
+      </div>
+      <div role="group" aria-label="View" style="display: flex; border: 1px solid rgba(212,175,106,0.3); border-radius: 9px; overflow: hidden">
+        <a href="Roster.dc.html" style="padding: 8px 14px; color: #AEB6C3; font-size: 13px; text-decoration: none">Cards</a>
+        <button aria-pressed="true" style="padding: 8px 14px; border: 0; background: rgba(212,175,106,0.2); color: #F3EBDA; font: 600 13px Inter, sans-serif; cursor: pointer">Table</button>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap">
+      <button class="chip">Class ▾</button><button class="chip">Role ▾</button><button class="chip" style="border-color: #D4AF6A; color: #F3EBDA; background: rgba(212,175,106,0.14)">Level 1–60 ▾</button><button class="chip">Profession ▾</button><button class="chip">Group by friend</button>
+    </div>
+
+    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(212,175,106,0.2); background: rgba(12,18,30,0.75)">
+      <table>
+        <thead><tr>
+          <th scope="col"><button>Character</button></th><th scope="col"><button>Player</button></th><th scope="col" aria-sort="descending"><button style="color: #F0D08E">Level ↓</button></th><th scope="col"><button>Race · class</button></th><th scope="col"><button>Role</button></th><th scope="col"><button>Talents</button></th><th scope="col"><button>ilvl</button></th><th scope="col">Professions</th><th scope="col"><button>Last played</button></th><th scope="col">Last seen in</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="d" style="background: #3FC7EB">MS</span><span class="n" style="color: #3FC7EB">Mira Sunstrider</span></td><td>Mira <span style="color: #7E8898">· via Bob</span></td><td>60<span class="bar"><span style="display: block; width: 100%; height: 4px; background: #3FC7EB"></span></span></td><td>Undead Mage</td><td>Damage</td><td>Frost 10/0/41</td><td>58</td><td><span class="p">Tailoring 300</span><span class="p">Enchanting 285</span><span class="p">Fishing 240</span></td><td>2 days ago</td><td>Orgrimmar</td></tr>
+          <tr><td><span class="d" style="background: #FFF468">BE</span><span class="n" style="color: #FFF468">Bob Example</span></td><td>Bob</td><td>41<span class="bar"><span style="display: block; width: 68%; height: 4px; background: #FFF468"></span></span></td><td>Troll Rogue</td><td>Damage</td><td>Combat 4/28/0</td><td>36</td><td><span class="p">Skinning 210</span><span class="p">Leatherworking 201</span></td><td>5 h ago</td><td>The Deadmines</td></tr>
+          <tr><td style="background: rgba(212,175,106,0.06)"><span class="d" style="background: #8788EE">VD</span><span class="n" style="color: #A9AAF5">Ves Doombringer</span></td><td style="background: rgba(212,175,106,0.06)">Nico</td><td style="background: rgba(212,175,106,0.06)">39<span class="bar"><span style="display: block; width: 65%; height: 4px; background: #8788EE"></span></span></td><td style="background: rgba(212,175,106,0.06)">Undead Warlock</td><td style="background: rgba(212,175,106,0.06)">Damage</td><td style="background: rgba(212,175,106,0.06)">Destruction 10/0/20</td><td style="background: rgba(212,175,106,0.06)">34</td><td style="background: rgba(212,175,106,0.06)"><span class="p">Tailoring 187</span><span class="p">Enchanting 160</span><span class="p">Cooking 75</span></td><td style="background: rgba(212,175,106,0.06)">2 h ago</td><td style="background: rgba(212,175,106,0.06)">Stranglethorn Vale</td></tr>
+          <tr><td><span class="d" style="background: #FFFFFF">LT</span><span class="n" style="color: #FFFFFF">Lia Thornwhisper</span></td><td>Femke</td><td>37<span class="bar"><span style="display: block; width: 62%; height: 4px; background: #FFFFFF"></span></span></td><td>Troll Priest</td><td>Healer</td><td>Discipline 21/7/0</td><td>32</td><td><span class="p">Tailoring 205</span><span class="p">Cooking 150</span></td><td>1 h ago</td><td>Stranglethorn Vale</td></tr>
+          <tr><td><span class="d" style="background: #0070DD; color: #FFFFFF">TI</span><span class="n" style="color: #4DA3FF">Tok Ironhide</span></td><td>Bob</td><td>33<span class="bar"><span style="display: block; width: 55%; height: 4px; background: #0070DD"></span></span></td><td>Tauren Shaman</td><td>Healer</td><td>Restoration 0/5/19</td><td>29</td><td><span class="p">Alchemy 160</span><span class="p">Herbalism 175</span><span class="p">First Aid 225</span></td><td>Yesterday</td><td>Hillsbrad Foothills</td></tr>
+          <tr style="opacity: .8"><td><span class="d" style="background: #AAD372">RB</span><span class="n" style="color: #AAD372">Ruk Bloodhoof</span></td><td>Jorrit <span style="color: #C08A5A">· 9 d old</span></td><td>27<span class="bar"><span style="display: block; width: 45%; height: 4px; background: #AAD372"></span></span></td><td>Tauren Hunter</td><td>Damage</td><td>Beast Mastery 18/0/0</td><td>24</td><td><span class="p">Skinning 150</span><span class="p">Mining 131</span></td><td>9 days ago</td><td>Stonetalon Mts</td></tr>
+          <tr><td><span class="d" style="background: #C69B6D">GA</span><span class="n" style="color: #C69B6D">Grom Ashfeller</span></td><td>Nico</td><td>24<span class="bar"><span style="display: block; width: 40%; height: 4px; background: #C69B6D"></span></span></td><td>Orc Warrior</td><td>Tank</td><td>Protection 5/0/10</td><td>21</td><td><span class="p">Mining 142</span><span class="p">Blacksmithing 120</span></td><td>3 days ago</td><td>The Barrens</td></tr>
+          <tr><td><span class="d" style="background: #F48CBA">KD</span><span class="n" style="color: #F48CBA">Kel Dawnhammer</span></td><td>Mira <span style="color: #7E8898">· via Bob</span></td><td>18<span class="bar"><span style="display: block; width: 30%; height: 4px; background: #F48CBA"></span></span></td><td>Human Paladin</td><td>Tank</td><td>Protection 0/9/0</td><td>16</td><td><span class="p">Mining 88</span><span class="p">Engineering 70</span></td><td>A week ago</td><td>Westfall</td></tr>
+          <tr><td><span class="d" style="background: #8788EE">ZK</span><span class="n" style="color: #A9AAF5">Zul Kazrek</span></td><td>Femke</td><td>15<span class="bar"><span style="display: block; width: 25%; height: 4px; background: #8788EE"></span></span></td><td>Orc Warlock</td><td>Damage</td><td>Affliction 6/0/0</td><td>12</td><td style="color: #7E8898">—</td><td>4 days ago</td><td>Durotar</td></tr>
+          <tr><td><span class="d" style="background: #FF7C0A">SM</span><span class="n" style="color: #FF9A45">Sela Moonbrook</span></td><td>Nico</td><td>12<span class="bar"><span style="display: block; width: 20%; height: 4px; background: #FF7C0A"></span></span></td><td>Night Elf Druid</td><td>Healer</td><td>Restoration 0/0/3</td><td style="color: #7E8898">—</td><td><span class="p">Herbalism 61</span></td><td>2 weeks ago</td><td style="color: #FF9A45">Unknown</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size: 12px; color: #7E8898">On a phone this table becomes the card list; the sort and filters move into a sheet.</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

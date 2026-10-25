@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upload data file</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(212,175,106,0),inset 0 0 40px rgba(212,175,106,.04)}50%{box-shadow:0 0 30px 0 rgba(212,175,106,.12),inset 0 0 60px rgba(212,175,106,.08)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.drop{animation:breathe 5s ease-in-out infinite}
+.fl{animation:float 5s ease-in-out infinite}
+.hr{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:#C9CFD9;text-decoration:none}
+.hr .t{color:#E6E1D6}
+.hr .s{font-size:12px;color:#8E98A8}
+.ok{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(127,217,154,.12);color:#9BE3B0}
+.bad{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(224,138,74,.15);color:#F0A774}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+.still .drop,.still .fl{animation:none}
+@media (prefers-reduced-motion: reduce){.drop,.fl{animation:none}}
+</style>
+</helmet>
+<div style="min-height: 900px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a>
+      <a href="Roster.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Roster</a>
+      <a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: rgba(212,175,106,0.14); color: #F3EBDA; font-size: 13px; font-weight: 600; text-decoration: none"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#D4AF6A" stroke-width="1.6"><path d="M8 11V2M4 5.5L8 2l4 3.5M2 11v3h12v-3"></path></svg>Upload</a>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">N</span>Nico#2201</div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 32px 24px 48px; display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start">
+    <div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+      <div>
+        <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Upload the ledger</h1>
+        <div style="font-size: 13px; color: #8E98A8; margin-top: 4px">After a play session, drop the addon's saved file here. Everyone sees what changed.</div>
+      </div>
+
+      <label class="drop" style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 380px; padding: 32px; box-sizing: border-box; border-radius: 18px; border: 2px dashed rgba(212,175,106,0.5); background: radial-gradient(circle at 50% 40%, rgba(212,175,106,0.06), rgba(12,18,30,0.8) 70%); text-align: center; cursor: pointer">
+        <svg class="fl" width="84" height="84" viewBox="0 0 84 84" fill="none" aria-hidden="true">
+          <path d="M22 12h30l12 12v48H22z" fill="#121B2A" stroke="#D4AF6A" stroke-width="2" stroke-linejoin="round"></path>
+          <path d="M52 12v12h12" stroke="#D4AF6A" stroke-width="2" stroke-linejoin="round"></path>
+          <path d="M30 38h26M30 46h26M30 54h18" stroke="#8E98A8" stroke-width="2" stroke-linecap="round"></path>
+          <circle cx="62" cy="64" r="13" fill="#D4AF6A"></circle>
+          <path d="M62 70V58M57 63l5-5 5 5" stroke="#0B0F14" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <div style="font: 24px 'Marcellus', serif; color: #F3EBDA">Drop <span style="color: #F0D08E">CommunitiesForever.lua</span> here</div>
+        <div style="font-size: 13px; color: #8E98A8">or</div>
+        <span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 10px; background: #D4AF6A; color: #0B0F14; font-size: 14px; font-weight: 600">Choose file</span>
+        <input type="file" accept=".lua" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+        <div style="font-size: 12px; color: #7E8898; margin-top: 6px">Find it in your game folder under <span style="color: #C9CFD9">WTF › Account › [ACCOUNT] › SavedVariables</span></div>
+      </label>
+
+      <div style="display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: rgba(12,18,30,0.7); border: 1px solid rgba(174,182,195,0.15); font-size: 12px; color: #AEB6C3; line-height: 1.5">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#D4AF6A" stroke-width="1.5" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="8" cy="8" r="6.5"></circle><path d="M8 7v4M8 5v.01"></path></svg>
+        <span>The game writes this file when you log out or type <span style="color: #E6E1D6">/reload</span>. Upload after that, or you'll send the previous session.</span>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <aside aria-label="Upload history" style="flex: 1 1 360px; min-width: 0; padding: 18px 20px; border-radius: 14px; background: rgba(12,18,30,0.78); border: 1px solid rgba(212,175,106,0.2)">
+      <h2 style="margin: 0 0 6px; font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">History</h2>
+      <a href="UploadResult.dc.html" class="hr"><span class="t">Today 21:14</span><span class="s">5 levels gained · 4 skill gains · 1 new character</span><span class="ok">Done</span></a>
+      <a href="#" class="hr"><span class="t">Thu 23 Oct, 23:40</span><span class="s">2 level ups · 9 sightings</span><span class="ok">Done</span></a>
+      <a href="#" class="hr"><span class="t">Tue 21 Oct, 22:05</span><span class="s">1 level up · Mira reached 60</span><span class="ok">Done</span></a>
+      <a href="#" class="hr"><span class="t">Sun 19 Oct, 18:30</span><span class="s">First upload · 9 characters</span><span class="ok">Done</span></a>
+      <a href="#" class="hr" style="border-bottom: 0"><span class="t">Sun 19 Oct, 18:28</span><span class="s">Wrong file: another addon's data</span><span class="bad">Rejected</span></a>
+      <div style="font-size: 11px; color: #7E8898; margin-top: 10px">Only you can upload. Friends see the result on the map and roster.</div>
+    </aside>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

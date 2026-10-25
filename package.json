@@ -10,6 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node scripts/start-standalone.mjs",
+    "design": "node scripts/serve-design.mjs",
     "lint": "eslint . && prettier --check . && tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",

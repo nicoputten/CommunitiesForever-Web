@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Empty map — before the first upload</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes waveA{0%{transform:translate(-7px,0);opacity:.12}50%{opacity:.6}100%{transform:translate(7px,2px);opacity:.12}}
+@keyframes waveB{0%{transform:translate(6px,1px);opacity:.5}50%{opacity:.1}100%{transform:translate(-6px,-1px);opacity:.5}}
+@keyframes surf{0%,100%{stroke-opacity:.22;stroke-width:9}50%{stroke-opacity:.5;stroke-width:15}}
+@keyframes drift{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(6%,-3%,0)}}
+.wa{animation:waveA 7s ease-in-out infinite alternate}
+.wb{animation:waveB 9s ease-in-out infinite alternate}
+.surf{animation:surf 6s ease-in-out infinite}
+.fog{position:absolute;pointer-events:none;border-radius:50%;filter:blur(48px);animation:drift 44s ease-in-out infinite alternate}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:3px}
+@media (prefers-reduced-motion: reduce){.wa,.wb,.surf,.fog{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 100%; height: 900px; overflow: hidden; background: #050A12; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <div style="position: absolute; top: 0; left: 50%; width: 1440px; height: 900px; margin-left: -720px">
+    <svg width="1440" height="900" viewBox="0 0 1440 900" aria-hidden="true" style="position: absolute; inset: 0">
+      <defs>
+        <radialGradient id="eSea" cx="42%" cy="46%" r="78%"><stop offset="0" stop-color="#10233A"></stop><stop offset="1" stop-color="#040811"></stop></radialGradient>
+        <linearGradient id="eLand" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#26354D"></stop><stop offset="1" stop-color="#151E2E"></stop></linearGradient>
+        <filter id="eBlur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter>
+      </defs>
+      <rect width="1440" height="900" fill="url(#eSea)"></rect>
+      <g class="wa" fill="none" stroke="#7FA9D6" stroke-width="0.8"><sc-for list="{{wavesA}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for></g>
+      <g class="wb" fill="none" stroke="#7FA9D6" stroke-width="0.8"><sc-for list="{{wavesB}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for></g>
+      <g fill="none" stroke="#5E93C9" filter="url(#eBlur)"><path class="surf" d="{{coastK}}"></path><path class="surf" d="{{coastE}}"></path></g>
+      <sc-for list="{{zones}}" as="z" hint-placeholder-count="0"><path d="{{z.d}}" fill="{{z.fill}}" fill-rule="evenodd" stroke="{{z.stroke}}" stroke-width="0.7"></path></sc-for>
+      <path d="{{coastK}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="1.1"></path>
+      <path d="{{coastE}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="1.1"></path>
+      <g text-anchor="middle" stroke="#070B12" stroke-width="3" paint-order="stroke">
+        <sc-for list="{{labels}}" as="l" hint-placeholder-count="0">
+          <text fill="{{l.fill}}" font-size="{{l.fs}}" style="{{l.font}}"><tspan x="{{l.x}}" y="{{l.y1}}">{{l.l1}}</tspan><tspan x="{{l.x}}" y="{{l.y2}}">{{l.l2}}</tspan></text>
+        </sc-for>
+      </g>
+    </svg>
+    <div class="fog" style="left: 60px; top: 380px; width: 520px; height: 220px; background: radial-gradient(closest-side, rgba(150,175,210,0.16), rgba(150,175,210,0))"></div>
+    <div class="fog" style="left: 600px; top: 160px; width: 600px; height: 240px; background: radial-gradient(closest-side, rgba(150,175,210,0.13), rgba(150,175,210,0)); animation-delay: -18s"></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(5,10,18,0.35)"></div>
+
+  <header style="position: absolute; left: 0; right: 0; top: 0; min-height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 24px; box-sizing: border-box; background: linear-gradient(180deg, rgba(5,10,18,0.95), rgba(5,10,18,0)); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="#" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Map</a>
+      <a href="Roster.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Roster</a>
+      <a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #8E98A8">No data yet</div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">N</span>Nico#2201</div>
+  </header>
+
+  <!-- centre card (admin version) -->
+  <main style="position: absolute; left: calc(50% - 168px); top: 50%; transform: translate(-50%, -50%); width: 440px; max-width: calc(100% - 32px); box-sizing: border-box; padding: 34px 32px 28px; border-radius: 20px; background: rgba(10,16,28,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(212,175,106,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.55); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="#D4AF6A" stroke-opacity="0.5" stroke-dasharray="3 5"></circle><path d="M32 12 L36 32 L32 52 L28 32 Z" fill="#D4AF6A" fill-opacity="0.25" stroke="#D4AF6A"></path><path d="M12 32 L32 28 L52 32 L32 36 Z" fill="#D4AF6A" fill-opacity="0.12" stroke="#D4AF6A" stroke-opacity="0.6"></path></svg>
+    <h1 style="margin: 0; font: 28px/1.15 'Marcellus', serif; color: #F3EBDA">The map is still empty</h1>
+    <p style="margin: 0; font-size: 14px; color: #AEB6C3; line-height: 1.55">Upload the addon's file after your next play session. Everyone's characters appear here, on the roster and in professions.</p>
+    <a href="Upload.dc.html" style="margin-top: 6px; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 12px; background: #D4AF6A; color: #0B0F14; font-size: 15px; font-weight: 600; text-decoration: none">Upload the first file</a>
+    <p style="margin: 6px 0 0; font-size: 12px; color: #7E8898; line-height: 1.5">Friends see instead: <span style="color: #C9CFD9">"Nico hasn't uploaded any data yet. Check back after the next session."</span></p>
+  </main>
+
+  <aside aria-label="Roll call" style="position: absolute; right: 24px; top: 80px; bottom: 24px; width: 312px; box-sizing: border-box; padding: 16px; border-radius: 14px; background: rgba(12,18,30,0.8); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(212,175,106,0.28); display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 style="margin: 0; font: 20px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Roll call</h2>
+      <span style="font-size: 12px; color: #8E98A8">0 located</span>
+    </div>
+    <div style="font-size: 13px; color: #8E98A8; line-height: 1.6">On the guest list:</div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">N</span>Nico#2201</span>
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">B</span>Bob#2002</span>
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">M</span>Mira#1188</span>
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">J</span>Jorrit#4410</span>
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">F</span>Femke#3307</span>
+      <span style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9CFD9"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1.5px dashed #5A6476; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #8E98A8">S</span>Sanne#5150</span>
+    </div>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #7E8898; line-height: 1.5">Characters fill in here once the first file is uploaded.</div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    fetch('./assets/e00c3a54db413db7dd2e2d2dfc63d371.json').then(function (r) { return r.json(); }).then((m) => { this.setState({ map: m }); }).catch(function () {});
+  }
+  waves(o) {
+    var out = [];
+    for (var y = 70 + o * 17; y < 900; y += 34) {
+      for (var x = 10 + o * 28; x < 1100; x += 56) {
+        var h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; var j = h - Math.floor(h);
+        var w = 6 + j * 6;
+        out.push({ d: 'M' + (x + j * 24).toFixed(1) + ' ' + (y + (j - 0.5) * 12).toFixed(1) + ' q' + (w / 2).toFixed(1) + ' -3 ' + w.toFixed(1) + ' 0 t' + w.toFixed(1) + ' 0' });
+      }
+    }
+    return out;
+  }
+  renderVals() {
+    var m = (this.state || {}).map;
+    var zones = [], labels = [];
+    if (m) {
+      m.zones.forEach(function (z) {
+        var terr = z.kind === 'terrain';
+        zones.push({ d: z.d, fill: terr ? '#0C121B' : 'url(#eLand)', stroke: terr ? 'rgba(201,164,92,0.12)' : 'rgba(201,164,92,0.32)' });
+        var two = z.lines.length > 1, fs = z.size;
+        labels.push({ x: z.lx, y1: two ? z.ly - fs * 0.3 : z.ly + fs * 0.35, y2: z.ly + fs * 0.85, l1: z.lines[0], l2: two ? z.lines[1] : '', fs: fs,
+          fill: terr ? '#56627A' : '#8E98AA', font: terr ? "font-family: 'Marcellus', serif; font-style: italic" : "font-family: 'Marcellus SC', serif; letter-spacing: .07em" });
+      });
+    }
+    return { zones: zones, labels: labels, coastK: m ? m.coast.K : '', coastE: m ? m.coast.E : '', wavesA: this.waves(0), wavesB: this.waves(1) };
+  }
+}
+</script>
+</body>
+</html>

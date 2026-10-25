@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Loading and stale data</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes sh{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes line{0%{left:-30%;width:30%}100%{left:100%;width:30%}}
+@keyframes fadein{0%,40%{opacity:0;transform:translate(-50%,-50%) scale(.6)}60%,100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.sk{border-radius:6px;background:linear-gradient(90deg,#141C2A 0%,#1E2838 50%,#141C2A 100%);background-size:200% 100%;animation:sh 1.6s ease-in-out infinite}
+.ln{position:absolute;top:0;height:2px;background:linear-gradient(90deg,rgba(240,208,142,0),#F0D08E,rgba(240,208,142,0));animation:line 1.4s ease-in-out infinite}
+.mk{position:absolute;width:22px;height:22px;border-radius:50%;border:2px solid #0B0F14;box-sizing:border-box;animation:fadein 3s ease-out infinite}
+.cap{font:15px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.sub{font-size:12px;color:#7E8898}
+@media (prefers-reduced-motion: reduce){.sk,.ln,.mk{animation:none}.mk{opacity:1;transform:translate(-50%,-50%)}}
+</style>
+</helmet>
+<div style="width: 1440px; min-height: 560px; box-sizing: border-box; padding: 40px 48px; background: #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 28px">
+
+  <div style="display: flex; flex-direction: column; gap: 10px"><div class="cap">Map loading</div><div class="sub">Zones are in the page itself, so the map paints at once. Markers fade in when the data arrives; a thin gold line shows only after 300 ms.</div>
+    <div style="position: relative; height: 380px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(212,175,106,0.2); background: radial-gradient(circle at 45% 45%, #10233A, #050A12 75%)">
+      <span class="ln"></span>
+      <svg width="100%" height="100%" viewBox="0 0 400 380" aria-hidden="true" style="position: absolute; inset: 0"><path d="M60 70 C110 40 170 60 180 110 C200 170 160 230 170 290 C175 330 120 350 90 320 C50 280 70 220 50 170 C35 130 40 90 60 70Z" fill="#1E2A3E" stroke="rgba(201,164,92,0.35)"></path><path d="M240 60 C290 40 340 70 330 120 C320 150 290 160 300 200 C310 250 330 300 290 330 C260 350 250 300 240 260 C230 210 260 180 240 140 C225 110 215 75 240 60Z" fill="#1E2A3E" stroke="rgba(201,164,92,0.35)"></path></svg>
+      <span class="mk" style="left: 290px; top: 300px; background: #8788EE"></span>
+      <span class="mk" style="left: 312px; top: 292px; background: #FFFFFF; animation-delay: .1s"></span>
+      <span class="mk" style="left: 270px; top: 120px; background: #0070DD; animation-delay: .2s"></span>
+      <span class="mk" style="left: 150px; top: 160px; background: #3FC7EB; animation-delay: .3s"></span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px"><div class="cap">Roster loading</div><div class="sub">Rarely seen: pages are server-rendered. Skeletons keep the layout still.</div>
+    <div style="padding: 16px; border-radius: 14px; background: rgba(12,18,30,0.75); border: 1px solid rgba(212,175,106,0.2); display: flex; flex-direction: column; gap: 10px; height: 380px; box-sizing: border-box">
+      <div style="display: flex; gap: 10px; align-items: center"><span class="sk" style="width: 34px; height: 34px; border-radius: 50%"></span><span class="sk" style="width: 120px; height: 14px"></span><span style="flex: 1"></span><span class="sk" style="width: 90px; height: 20px; border-radius: 999px"></span></div>
+      <div style="display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.02)"><span class="sk" style="width: 44px; height: 44px; border-radius: 50%"></span><div style="flex: 1; display: flex; flex-direction: column; gap: 6px"><span class="sk" style="width: 60%; height: 14px"></span><span class="sk" style="width: 80%; height: 10px"></span></div></div>
+      <div style="display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.02)"><span class="sk" style="width: 44px; height: 44px; border-radius: 50%"></span><div style="flex: 1; display: flex; flex-direction: column; gap: 6px"><span class="sk" style="width: 50%; height: 14px"></span><span class="sk" style="width: 70%; height: 10px"></span></div></div>
+      <div style="display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.02)"><span class="sk" style="width: 44px; height: 44px; border-radius: 50%"></span><div style="flex: 1; display: flex; flex-direction: column; gap: 6px"><span class="sk" style="width: 65%; height: 14px"></span><span class="sk" style="width: 75%; height: 10px"></span></div></div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px"><div class="cap">Whole site is out of date</div><div class="sub">Shown under the top bar when the last upload is older than 3 days.</div>
+    <div role="status" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: linear-gradient(90deg, rgba(224,138,74,0.14), rgba(12,18,30,0.8)); border: 1px solid rgba(224,138,74,0.45)">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#F0A774" stroke-width="1.6" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="10" cy="10" r="8"></circle><path d="M10 5v5l3 2"></path></svg>
+      <div style="font-size: 13px; color: #E6E1D6; line-height: 1.5">Last upload was <b style="font-weight: 600">4 days ago</b>. Positions and levels may be behind.<div style="font-size: 12px; color: #AEB6C3; margin-top: 2px">Nico uploads after a play session.</div></div>
+    </div>
+    <div class="cap" style="margin-top: 18px">One friend's data is old</div><div class="sub">Already in the roster and roll call: the badge turns amber after 7 days.</div>
+    <div style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; background: rgba(12,18,30,0.75); border: 1px solid rgba(212,175,106,0.2)">
+      <span style="width: 32px; height: 32px; border-radius: 50%; background: #2A3446; color: #F0D08E; font: 600 13px/32px Inter, sans-serif; text-align: center">J</span>
+      <span style="flex: 1; font: 17px 'Marcellus SC', serif; color: #F3EBDA">Jorrit</span>
+      <span style="font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(224,138,74,0.5); color: #F0A774">Data 9 days old · via Mira</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
