@@ -20,6 +20,9 @@
 
 Every dependency beyond this list needs Nico's OK (CLAUDE.md rule 9).
 
+Version pins (WEB-01): TypeScript `~6.0` and ESLint `^9`, because `typescript-eslint` (via `eslint-config-next`) supports TypeScript below 6.1 and `eslint-plugin-react` supports ESLint 9 at most. Lift them when those catch up.
+npm's install-script allow-list (`allowScripts` in `package.json`): `unrs-resolver` denied (its postinstall only fetches a fallback binary).
+
 ## Layering
 ```
 src/core/        pure TS: Lua literal parser, schema normalize, merge, view models, game data tables

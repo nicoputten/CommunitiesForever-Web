@@ -2,4 +2,25 @@
 
 Private website (`wow.vestras.nl`) that shows the data of the [CommunitiesForever](https://github.com/nicoputten/CommunitiesForever) World of Warcraft: Forever addon outside the game: alts, professions, and where characters were last seen.
 
-Status: planning. See `docs/STORIES.md`.
+Plan and status: `docs/STORIES.md`. How it fits together: `docs/ARCHITECTURE.md`.
+
+## Local setup
+Needs Node.js 24 LTS (`winget install OpenJS.NodeJS.LTS`).
+
+```bash
+npm ci
+npx playwright install chromium   # once, for the end-to-end tests
+npm run dev                       # http://localhost:3000
+```
+
+| Command | Does |
+|---|---|
+| `npm run dev` | dev server |
+| `npm run lint` | ESLint, Prettier check (code, not Markdown), TypeScript check |
+| `npm run format` | Prettier write |
+| `npm test` | unit and compat tests (Vitest) |
+| `npm run build` | production build (standalone) |
+| `npm run start` | runs the standalone build as the Docker image will |
+| `npm run test:e2e` | Playwright on the production build, desktop and phone (build first) |
+
+Configuration: copy `.env.example` to `.env.local`.
