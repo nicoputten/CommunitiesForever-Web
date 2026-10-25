@@ -33,8 +33,10 @@ Build order: WEB-01, WEB-02 (design workshop runs alongside WEB-03..07), WEB-03,
   - Technical constraints for the output: React components, the libraries in `docs/ARCHITECTURE.md` plus the map/styling/animation choices the design proposes (listed as proposals, Nico decides), accessible contrast.
   - A list of open UX questions to work through in the workshop (navigation model, map interaction, how much motion, density of the roster, phone layout of the map).
 - After the workshop: `docs/DESIGN.md` records decisions (tokens: colors, type, spacing; components; screen layouts; chosen map/styling/animation libraries) and links the Claude Design result. Those libraries get added to `docs/ARCHITECTURE.md`.
-- Open question for Nico before writing the prompt: **map art.** Blizzard's in-game map textures are their copyright. Options: a custom illustrated map in Vanilla style (designed in the workshop), or a fan-made map with a license that allows it. The prompt should say which.
-- Done when: Nico has run the prompt and `docs/DESIGN.md` holds the decisions.
+- Decided: **map art** is a custom illustrated Vanilla-style map, made in the workshop (Blizzard's in-game map textures are their copyright).
+- Part 1 (done): `docs/DESIGN-PROMPT.md`.
+- Part 2: Nico runs the workshop; `docs/DESIGN.md` records the decisions.
+- Done when: `docs/DESIGN.md` holds the decisions.
 
 ## E2 Data
 
