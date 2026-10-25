@@ -3,17 +3,9 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-01, WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04, WEB-05, WEB-06, WEB-07, then the views WEB-08..11 once the design is settled, WEB-12 (uploader) last.
+Build order: WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04, WEB-05, WEB-06, WEB-07, then the views WEB-08..11 once the design is settled, WEB-12 (uploader) last.
 
 ## E1 Foundation
-
-### WEB-01 Repo skeleton and CI
-- Next.js (App Router) + TypeScript strict, ESLint, Prettier, Vitest, Playwright, per `docs/ARCHITECTURE.md` Stack and Layering.
-- ESLint forbids imports from `src/server`, `src/app`, `src/components`, React and Node built-ins inside `src/core`.
-- Scripts: `npm run dev`, `lint`, `test`, `test:e2e`, `build`. CLAUDE.md "Commands" filled in.
-- GitHub Actions on PRs and `develop`: lint, test, build.
-- `CHANGELOG.md` with `## Unreleased`, `.env.example`, `README.md` with local setup.
-- Done when: a placeholder page renders, one core unit test and one Playwright smoke test pass in CI.
 
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
