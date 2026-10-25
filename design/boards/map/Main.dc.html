@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Map — Night over Azeroth</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes driftA{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(6%,-3%,0)}}
+@keyframes driftB{from{transform:translate3d(5%,2%,0)}to{transform:translate3d(-6%,-1%,0)}}
+@keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes shaft{0%,100%{opacity:.35}50%{opacity:.6}}
+@keyframes waveA{0%{transform:translate(-7px,0);opacity:.12}50%{opacity:.6}100%{transform:translate(7px,2px);opacity:.12}}
+@keyframes waveB{0%{transform:translate(6px,1px);opacity:.5}50%{opacity:.1}100%{transform:translate(-6px,-1px);opacity:.5}}
+@keyframes surf{0%,100%{stroke-opacity:.22;stroke-width:9}50%{stroke-opacity:.5;stroke-width:15}}
+@keyframes foam{to{stroke-dashoffset:-220}}
+@keyframes spin{to{transform:rotate(-360deg)}}
+@keyframes glint{0%,100%{opacity:.45;transform:translate(0,0)}50%{opacity:.8;transform:translate(24px,10px)}}
+.fog{position:absolute;pointer-events:none;border-radius:50%;filter:blur(48px)}
+.fa{animation:driftA 40s ease-in-out infinite alternate}
+.fb{animation:driftB 56s ease-in-out infinite alternate}
+.shaft{position:absolute;pointer-events:none;animation:shaft 14s ease-in-out infinite}
+.wa{animation:waveA 7s ease-in-out infinite alternate}
+.wb{animation:waveB 9s ease-in-out infinite alternate}
+.surf{animation:surf 6s ease-in-out infinite}
+.foam{stroke-dasharray:1.2 10;animation:foam 40s linear infinite}
+.mael{transform-box:fill-box;transform-origin:center;animation:spin 50s linear infinite}
+.glint{animation:glint 18s ease-in-out infinite}
+.mk{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;padding:0;cursor:pointer;font:600 11px/26px Inter,system-ui,sans-serif;text-align:center;letter-spacing:.02em}
+.pulse{position:absolute;inset:-2px;border-radius:50%;animation:pulse 2.6s ease-out infinite;pointer-events:none}
+.age{position:absolute;font:500 10px/1 Inter,system-ui,sans-serif;color:#9AA3B2;padding:3px 5px;border-radius:4px;background:rgba(5,10,18,.78);white-space:nowrap;pointer-events:none}
+.chip{padding:5px 10px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:transparent;color:#C9CFD9;font:12px Inter,system-ui,sans-serif;cursor:pointer}
+.zone{transition:fill-opacity .25s,stroke .25s}
+button:focus-visible,a:focus-visible{outline:2px solid #F0D08E;outline-offset:3px}
+.still .fa,.still .fb,.still .shaft,.still .pulse,.still .wa,.still .wb,.still .surf,.still .foam,.still .mael,.still .glint{animation:none}
+@media (prefers-reduced-motion: reduce){.fa,.fb,.shaft,.pulse,.wa,.wb,.surf,.foam,.mael,.glint{animation:none}}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="position: relative; width: 100%; height: 900px; overflow: hidden; background: #050A12; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+
+  <!-- MAP STAGE (world coordinates = px) -->
+  <div style="position: absolute; top: 0; left: 50%; width: 1440px; height: 900px; margin-left: -720px">
+    <svg width="1440" height="900" viewBox="0 0 1440 900" style="position: absolute; left: 0; top: 0" role="img" aria-label="Map of Kalimdor and the Eastern Kingdoms">
+      <defs>
+        <radialGradient id="seaN" cx="42%" cy="46%" r="78%">
+          <stop offset="0" stop-color="#10233A"></stop>
+          <stop offset="0.55" stop-color="#0A172A"></stop>
+          <stop offset="1" stop-color="#040811"></stop>
+        </radialGradient>
+        <radialGradient id="glintG" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#9EC3EA" stop-opacity="0.22"></stop>
+          <stop offset="1" stop-color="#9EC3EA" stop-opacity="0"></stop>
+        </radialGradient>
+        <linearGradient id="landN" x1="0" y1="0" x2="0.25" y2="1">
+          <stop offset="0" stop-color="#26354D"></stop>
+          <stop offset="1" stop-color="#151E2E"></stop>
+        </linearGradient>
+        <filter id="blurN" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter>
+        <filter id="grainN" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="3"></feTurbulence><feColorMatrix values="0 0 0 0 0.75  0 0 0 0 0.82  0 0 0 0 0.95  0 0 0 0.09 0"></feColorMatrix></filter>
+        <clipPath id="landClip"><path d="{{coastK}}"></path><path d="{{coastE}}"></path></clipPath>
+      </defs>
+
+      <!-- SEA -->
+      <rect width="1440" height="900" fill="url(#seaN)"></rect>
+      <ellipse class="glint" cx="560" cy="300" rx="260" ry="120" fill="url(#glintG)"></ellipse>
+      <g class="wa" fill="none" stroke="#7FA9D6" stroke-width="0.8" stroke-linecap="round">
+        <sc-for list="{{wavesA}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for>
+      </g>
+      <g class="wb" fill="none" stroke="#7FA9D6" stroke-width="0.8" stroke-linecap="round">
+        <sc-for list="{{wavesB}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for>
+      </g>
+      <g transform="translate(548 575)">
+        <g class="mael" fill="none" stroke="#6E9CCB" stroke-opacity="0.45" stroke-width="1.1">
+          <path d="M0 0 m-3 0 a3 3 0 1 1 6 0 a7 7 0 1 1 -14 0 a12 12 0 1 1 24 0 a18 18 0 1 1 -36 0 a26 26 0 1 1 52 0"></path>
+        </g>
+      </g>
+      <text x="548" y="622" text-anchor="middle" fill="#6E9CCB" fill-opacity="0.75" style="font: 10px 'Marcellus SC'; letter-spacing: .18em">The Maelstrom</text>
+      <g transform="translate(520 130)" stroke="#C9A45C" stroke-opacity="0.45" fill="none">
+        <circle r="22"></circle><circle r="15" stroke-dasharray="2 4"></circle>
+        <path d="M0 -32 L4 0 L0 32 L-4 0 Z M-32 0 L0 -4 L32 0 L0 4 Z" fill="#C9A45C" fill-opacity="0.12"></path>
+      </g>
+      <text x="520" y="92" text-anchor="middle" fill="#C9A45C" fill-opacity="0.7" style="font: 10px 'Marcellus SC'">N</text>
+
+      <!-- SURF -->
+      <g fill="none" stroke="#5E93C9" stroke-linejoin="round" filter="url(#blurN)">
+        <path class="surf" d="{{coastK}}"></path>
+        <path class="surf" d="{{coastE}}" style="animation-delay: -3s"></path>
+      </g>
+      <g fill="none" stroke="#CFE3F7" stroke-opacity="0.55" stroke-width="1.3" stroke-linecap="round">
+        <path class="foam" d="{{coastK}}" transform="translate(0 0)" style="stroke-dashoffset: 0"></path>
+        <path class="foam" d="{{coastE}}" style="animation-direction: reverse"></path>
+      </g>
+
+      <!-- LAND -->
+      <sc-for list="{{zones}}" as="z" hint-placeholder-count="0">
+        <path class="zone" d="{{z.d}}" fill="{{z.fill}}" fill-rule="evenodd" stroke="#0A0F18" stroke-width="2" onMouseEnter="{{z.enter}}" style="{{z.cursor}}"></path>
+      </sc-for>
+      <rect width="1440" height="900" filter="url(#grainN)" clip-path="url(#landClip)" pointer-events="none"></rect>
+      <g pointer-events="none">
+        <sc-for list="{{zones}}" as="z" hint-placeholder-count="0">
+          <path class="zone" d="{{z.d}}" fill="#D4AF6A" fill-opacity="{{z.glow}}" fill-rule="evenodd" stroke="{{z.stroke}}" stroke-width="{{z.sw}}" stroke-linejoin="round"></path>
+        </sc-for>
+        <path d="{{coastK}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="1.1"></path>
+        <path d="{{coastE}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="1.1"></path>
+      </g>
+
+      <!-- capitals -->
+      <g pointer-events="none">
+        <sc-for list="{{capitals}}" as="c" hint-placeholder-count="0">
+          <rect x="-3.5" y="-3.5" width="7" height="7" transform="{{c.t}}" fill="#E2BE74" stroke="#070A0F" stroke-width="1.5"></rect>
+          <text x="{{c.tx}}" y="{{c.ty}}" fill="#E8CF97" stroke="#070A0F" stroke-width="3" paint-order="stroke" style="font: italic 10px 'Marcellus'">{{c.name}}</text>
+        </sc-for>
+      </g>
+
+      <!-- zone labels -->
+      <g pointer-events="none" text-anchor="middle" stroke="#070B12" stroke-width="3" paint-order="stroke" stroke-linejoin="round">
+        <sc-for list="{{labels}}" as="l" hint-placeholder-count="0">
+          <text fill="{{l.fill}}" font-size="{{l.fs}}" style="{{l.font}}"><tspan x="{{l.x}}" y="{{l.y1}}">{{l.l1}}</tspan><tspan x="{{l.x}}" y="{{l.y2}}">{{l.l2}}</tspan></text>
+        </sc-for>
+      </g>
+
+      <!-- continent names -->
+      <g fill="#C9A45C" fill-opacity="0.32" style="font: 18px 'Marcellus SC'; letter-spacing: .55em" text-anchor="middle">
+        <text transform="translate(66 470) rotate(-90)">KALIMDOR</text>
+        <text transform="translate(1062 420) rotate(90)">EASTERN KINGDOMS</text>
+      </g>
+
+      <!-- cluster spokes (Stranglethorn, expanded) -->
+      <g stroke="#F0D08E" stroke-opacity="0.75" stroke-width="1">
+        <line x1="773" y1="778" x2="756" y2="764"></line><line x1="773" y1="778" x2="790" y2="758"></line>
+      </g>
+      <circle cx="773" cy="778" r="3" fill="#F0D08E"></circle>
+    </svg>
+
+    <!-- light shafts -->
+    <div class="shaft" style="left: 120px; top: -120px; width: 220px; height: 900px; transform: rotate(18deg); background: linear-gradient(180deg, rgba(170,200,240,0.09), rgba(170,200,240,0)); opacity: {{shaftOpacity}}; pointer-events: none"></div>
+    <div class="shaft" style="left: 720px; top: -140px; width: 160px; height: 800px; transform: rotate(14deg); background: linear-gradient(180deg, rgba(170,200,240,0.07), rgba(170,200,240,0)); animation-delay: -6s; opacity: {{shaftOpacity}}; pointer-events: none"></div>
+
+    <!-- fog -->
+    <div style="position: absolute; inset: 0; pointer-events: none; opacity: {{fog}}">
+      <div class="fog fa" style="left: 60px; top: 380px; width: 520px; height: 220px; background: radial-gradient(closest-side, rgba(150,175,210,0.16), rgba(150,175,210,0))"></div>
+      <div class="fog fb" style="left: 600px; top: 140px; width: 600px; height: 240px; background: radial-gradient(closest-side, rgba(150,175,210,0.13), rgba(150,175,210,0))"></div>
+      <div class="fog fa" style="left: 420px; top: 640px; width: 640px; height: 260px; background: radial-gradient(closest-side, rgba(150,175,210,0.11), rgba(150,175,210,0)); animation-delay: -18s"></div>
+    </div>
+
+    <!-- MARKERS -->
+    <button class="mk" aria-label="Lia Thornwhisper, level 37 Priest, Stranglethorn Vale, seen 1 hour ago" style="left: 790px; top: 758px; background: #FFFFFF; color: #0B0F14; border: 2px solid #0B0F14; box-shadow: 0 0 18px rgba(255,255,255,0.55)"><span class="pulse" style="border: 2px solid #FFFFFF"></span>LT</button>
+    <button class="mk" aria-label="Ves Doombringer, level 39 Warlock, Stranglethorn Vale, seen 2 hours ago (selected)" style="left: 756px; top: 764px; background: #8788EE; color: #0B0F14; border: 2px solid #F0D08E; box-shadow: 0 0 0 3px rgba(240,208,142,0.25), 0 0 20px rgba(135,136,238,0.7)"><span class="pulse" style="border: 2px solid #8788EE"></span>VD</button>
+
+    <button class="mk" aria-label="2 characters in Westfall, including 1 in The Deadmines" style="left: 658px; top: 700px; width: 36px; height: 36px; border: 0; box-shadow: 0 0 0 2px #0E1520, 0 0 14px rgba(255,244,104,0.35); background-image: conic-gradient(#FFF468 0 50%, #F48CBA 50% 100%); color: #F3EBDA"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; font: 600 13px/28px Inter, system-ui, sans-serif">2</span><span class="pulse" style="border: 2px solid #FFF468"></span></button>
+    <span aria-hidden="true" style="position: absolute; left: 670px; top: 668px; width: 18px; height: 18px; border-radius: 4px; background: #1B2433; border: 1px solid #D4AF6A; display: flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#F0D08E" stroke-width="1.4"><path d="M2 11V5a4 4 0 0 1 8 0v6M2 11h8M4.5 11V7.5M7.5 11V7.5"></path></svg></span>
+
+    <button class="mk" aria-label="Tok Ironhide, level 33 Shaman, Hillsbrad Foothills, seen yesterday" style="left: 728px; top: 256px; background: #0070DD; color: #FFFFFF; border: 2px solid #0B0F14">TI</button>
+    <span class="age" style="left: 748px; top: 250px">1d</span>
+    <button class="mk" aria-label="Mira Sunstrider, level 60 Mage, Orgrimmar, seen 2 days ago" style="left: 380px; top: 402px; background: #3FC7EB; color: #0B0F14; border: 2px solid #0B0F14; opacity: 0.85">MS</button>
+    <span class="age" style="left: 400px; top: 384px">2d</span>
+    <button class="mk" aria-label="Zul Kazrek, level 15 Warlock, Durotar, seen 4 days ago" style="left: 382px; top: 462px; background: #121822; color: #8788EE; border: 2px solid #8788EE; opacity: 0.65">ZK</button>
+    <span class="age" style="left: 402px; top: 456px">4d</span>
+    <button class="mk" aria-label="Grom Ashfeller, level 24 Warrior, The Barrens, seen 3 days ago" style="left: 306px; top: 488px; background: #121822; color: #C69B6D; border: 2px solid #C69B6D; opacity: 0.7">GA</button>
+    <span class="age" style="left: 326px; top: 482px">3d</span>
+    <button class="mk" aria-label="Ruk Bloodhoof, level 27 Hunter, Stonetalon Mountains, seen 9 days ago" style="left: 180px; top: 426px; background: transparent; color: #AAD372; border: 2px dashed #AAD372; opacity: 0.5">RB</button>
+    <span class="age" style="left: 200px; top: 420px; color: #C08A5A">9d</span>
+
+    <!-- HOVER CARD: Ves -->
+    <div role="dialog" aria-label="Ves Doombringer" style="position: absolute; left: 816px; top: 690px; width: 248px; box-sizing: border-box; padding: 14px 16px; border-radius: 12px; background: rgba(12,18,30,0.84); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(212,175,106,0.35); box-shadow: 0 18px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #8788EE; color: #0B0F14; font: 600 13px/36px Inter, system-ui, sans-serif; text-align: center; flex: none">VD</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+          <div style="font: 18px/1.1 'Marcellus', serif; color: #A9AAF5">Ves Doombringer</div>
+          <div style="font-size: 12px; color: #AEB6C3">Level 39 Undead Warlock · Destruction</div>
+        </div>
+      </div>
+      <div style="height: 4px; border-radius: 2px; background: #232C3A; overflow: hidden"><div style="width: 65%; height: 4px; background: linear-gradient(90deg, #8788EE, #B9BAF7)"></div></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 12px; color: #AEB6C3">
+        <div>Zone<br><span style="color: #E6E1D6">Stranglethorn Vale</span></div>
+        <div>Seen<br><span style="color: #E6E1D6">2 h ago</span> <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7FD99A; margin-left: 2px; vertical-align: middle"></span></div>
+        <div>Player<br><span style="color: #E6E1D6">Nico</span></div>
+        <div>Item level<br><span style="color: #E6E1D6">34</span></div>
+      </div>
+      <a href="#" style="font-size: 12px; font-weight: 600; text-decoration: none">Open character →</a>
+    </div>
+
+    <!-- hovered zone name -->
+    <div aria-live="polite" style="position: absolute; left: 30px; top: 830px; font: 13px 'Marcellus SC', serif; letter-spacing: .1em; color: #F0D08E; text-shadow: 0 1px 6px #000; pointer-events: none">{{hoverName}}</div>
+  </div>
+
+  <!-- TOP BAR -->
+  <header style="position: absolute; left: 0; right: 0; top: 0; min-height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 24px; box-sizing: border-box; background: linear-gradient(180deg, rgba(5,10,18,0.95), rgba(5,10,18,0)); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="#" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Map</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Roster</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+    </nav>
+    <div role="group" aria-label="Continent" style="display: flex; border-radius: 8px; border: 1px solid rgba(212,175,106,0.3); overflow: hidden; background: rgba(12,18,30,0.6)">
+      <button aria-pressed="true" style="padding: 6px 12px; border: 0; background: rgba(212,175,106,0.2); color: #F3EBDA; font: 600 12px Inter, sans-serif; cursor: pointer">Azeroth</button>
+      <button aria-pressed="false" style="padding: 6px 12px; border: 0; background: transparent; color: #AEB6C3; font: 12px Inter, sans-serif; cursor: pointer">Kalimdor</button>
+      <button aria-pressed="false" style="padding: 6px 12px; border: 0; background: transparent; color: #AEB6C3; font: 12px Inter, sans-serif; cursor: pointer">Eastern Kingdoms</button>
+    </div>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #8E98A8">Data uploaded just now</div>
+    <button aria-label="Upload data file" style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(212,175,106,0.35); background: rgba(12,18,30,0.6); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M8 11V2M4 5.5L8 2l4 3.5M2 11v3h12v-3"></path></svg></button>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #E6E1D6"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">N</span>Nico#2201</div>
+  </header>
+
+  <!-- ZOOM -->
+  <div style="position: absolute; right: 352px; bottom: 24px; display: flex; flex-direction: column; gap: 6px">
+    <button aria-label="Zoom in" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(212,175,106,0.3); background: rgba(12,18,30,0.72); color: #F0D08E; font: 20px/1 Inter, sans-serif; cursor: pointer">+</button>
+    <button aria-label="Zoom out" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(212,175,106,0.3); background: rgba(12,18,30,0.72); color: #F0D08E; font: 20px/1 Inter, sans-serif; cursor: pointer">−</button>
+  </div>
+
+  <!-- ROLL CALL PANEL with filters -->
+  <aside aria-label="Roll call" style="position: absolute; right: 24px; top: 80px; bottom: 24px; width: 312px; box-sizing: border-box; padding: 16px; border-radius: 14px; background: rgba(12,18,30,0.8); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(212,175,106,0.28); display: flex; flex-direction: column; gap: 10px; overflow: hidden">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <h2 style="margin: 0; font: 20px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Roll call</h2>
+      <span style="font-size: 12px; color: #8E98A8">9 of 10 located</span>
+    </div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+      <button class="chip" aria-pressed="true" style="border-color: #D4AF6A; background: rgba(212,175,106,0.16); color: #F3EBDA">All</button>
+      <button class="chip" aria-pressed="false">Nico</button>
+      <button class="chip" aria-pressed="false">Bob</button>
+      <button class="chip" aria-pressed="false">Mira</button>
+      <button class="chip" aria-pressed="false">Jorrit</button>
+      <button class="chip" aria-pressed="false">Femke</button>
+    </div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+      <button class="chip" aria-pressed="false">Last 24 h</button>
+      <button class="chip" aria-pressed="false">Horde + Alliance ▾</button>
+      <button class="chip" aria-pressed="false">Level 1–60 ▾</button>
+    </div>
+    <div style="display: flex; gap: 14px; font-size: 11px; color: #8E98A8; padding-top: 2px">
+      <span style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #E6E1D6; box-shadow: 0 0 6px #E6E1D6"></span>Live &lt; 6 h</span>
+      <span style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #E6E1D6; opacity: .7"></span>Days</span>
+      <span style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px dashed #E6E1D6; opacity: .5"></span>Week +</span>
+    </div>
+    <div style="height: 1px; background: rgba(212,175,106,0.2)"></div>
+
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #7E8898">Last 24 hours</div>
+    <div style="display: flex; flex-direction: column; gap: 1px">
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 0 6px #FFFFFF; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #FFFFFF">Lia Thornwhisper <span style="color: #8E98A8; font-weight: 400">37</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Stranglethorn Vale · Femke</span></span><span style="font-size: 11px; color: #AEB6C3">1 h</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6; background: rgba(212,175,106,0.1)"><span style="width: 8px; height: 8px; border-radius: 50%; background: #8788EE; box-shadow: 0 0 6px #8788EE; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #A9AAF5">Ves Doombringer <span style="color: #8E98A8; font-weight: 400">39</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Stranglethorn Vale · Nico</span></span><span style="font-size: 11px; color: #AEB6C3">2 h</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FFF468; box-shadow: 0 0 6px #FFF468; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #FFF468">Bob Example <span style="color: #8E98A8; font-weight: 400">41</span></span><span style="display: block; font-size: 11px; color: #8E98A8">The Deadmines, Westfall · Bob</span></span><span style="font-size: 11px; color: #AEB6C3">5 h</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; background: #0070DD; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #4DA3FF">Tok Ironhide <span style="color: #8E98A8; font-weight: 400">33</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Hillsbrad Foothills · Bob</span></span><span style="font-size: 11px; color: #AEB6C3">1 d</span></a>
+    </div>
+
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #7E8898">Earlier</div>
+    <div style="display: flex; flex-direction: column; gap: 1px; opacity: .85">
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #3FC7EB; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #3FC7EB">Mira Sunstrider <span style="color: #8E98A8; font-weight: 400">60</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Orgrimmar · Mira, via Bob</span></span><span style="font-size: 11px; color: #AEB6C3">2 d</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #C69B6D; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #C69B6D">Grom Ashfeller <span style="color: #8E98A8; font-weight: 400">24</span></span><span style="display: block; font-size: 11px; color: #8E98A8">The Barrens · Nico</span></span><span style="font-size: 11px; color: #AEB6C3">3 d</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #8788EE; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #A9AAF5">Zul Kazrek <span style="color: #8E98A8; font-weight: 400">15</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Durotar · Femke</span></span><span style="font-size: 11px; color: #AEB6C3">4 d</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #F48CBA; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #F48CBA">Kel Dawnhammer <span style="color: #8E98A8; font-weight: 400">18</span></span><span style="display: block; font-size: 11px; color: #8E98A8">Westfall · Mira, via Bob</span></span><span style="font-size: 11px; color: #AEB6C3">7 d</span></a>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 8px; text-decoration: none; color: #E6E1D6"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px dashed #AAD372; flex: none"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 13px; font-weight: 500; color: #AAD372">Ruk Bloodhoof <span style="color: #8E98A8; font-weight: 400">27</span></span><span style="display: block; font-size: 11px; color: #C08A5A">Stonetalon · Jorrit's data is 9 days old</span></span><span style="font-size: 11px; color: #AEB6C3">9 d</span></a>
+    </div>
+
+    <div style="flex: 1"></div>
+    <div style="border-top: 1px solid rgba(212,175,106,0.2); padding-top: 10px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #7E8898">Unknown whereabouts</div>
+      <a href="#" style="display: flex; gap: 10px; align-items: center; text-decoration: none; font-size: 13px; color: #FF9A45"><span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px dotted #FF7C0A; flex: none"></span>Sela Moonbrook <span style="color: #8E98A8; font-size: 11px">12 · Nico · never sighted</span></a>
+      <div style="font-size: 12px; color: #8E98A8">Sanne has no addon data yet.</div>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"fog":{"editor":"range","default":1,"min":0,"max":1.5,"step":0.1,"section":"Atmosphere"},"motion":{"editor":"boolean","default":true,"section":"Atmosphere"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    fetch('./assets/e00c3a54db413db7dd2e2d2dfc63d371.json')
+      .then(function (r) { return r.json(); })
+      .then((m) => { this.setState({ map: m }); })
+      .catch(function () {});
+  }
+  waves(offset) {
+    var out = [];
+    for (var y = 70 + offset * 17; y < 900; y += 34) {
+      for (var x = 10 + offset * 28; x < 1440; x += 56) {
+        var h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        var j = h - Math.floor(h);
+        var px = (x + j * 24).toFixed(1), py = (y + (j - 0.5) * 12).toFixed(1);
+        var w = 6 + j * 6;
+        out.push({ d: 'M' + px + ' ' + py + ' q' + (w / 2).toFixed(1) + ' -3 ' + w.toFixed(1) + ' 0 t' + w.toFixed(1) + ' 0' });
+      }
+    }
+    return out;
+  }
+  renderVals() {
+    var st = this.state || {};
+    var m = st.map;
+    var hover = st.hover || 'stv';
+    var fog = this.props.fog ?? 1;
+    var motion = this.props.motion ?? true;
+    var occ = { stv: 0.2, westfall: 0.15, hillsbrad: 0.1, durotar: 0.08, barrens: 0.06, stonetalon: 0.035 };
+    var live = { stv: 1, westfall: 1 };
+    var zones = [], labels = [], capitals = [], hoverName = '';
+    if (m) {
+      m.zones.forEach((z) => {
+        var terr = z.kind === 'terrain';
+        var h = z.id === hover && !terr;
+        if (h) hoverName = z.name;
+        zones.push({
+          d: z.d,
+          fill: terr ? '#0C121B' : 'url(#landN)',
+          glow: terr ? 0 : (h ? Math.max(0.12, (occ[z.id] || 0) + 0.06) : (occ[z.id] || 0)),
+          stroke: terr ? 'rgba(201,164,92,0.12)' : (h ? '#F0D08E' : 'rgba(201,164,92,0.36)'),
+          sw: h ? 1.6 : 0.7,
+          enter: terr ? null : () => this.setState({ hover: z.id }),
+          cursor: terr ? 'cursor: default' : 'cursor: pointer'
+        });
+        var two = z.lines.length > 1;
+        var fs = z.size;
+        labels.push({
+          x: z.lx,
+          y1: two ? z.ly - fs * 0.3 : z.ly + fs * 0.35,
+          y2: z.ly + fs * 0.85,
+          l1: z.lines[0],
+          l2: two ? z.lines[1] : '',
+          fs: fs,
+          fill: terr ? '#56627A' : (live[z.id] ? '#F3DFAE' : (occ[z.id] ? '#D3D9E3' : '#A4AEBF')),
+          font: terr ? "font-family: 'Marcellus', serif; font-style: italic; letter-spacing: .04em" : "font-family: 'Marcellus SC', serif; letter-spacing: .07em"
+        });
+      });
+      m.cities.filter(function (c) { return c.cap; }).forEach(function (c) {
+        capitals.push({ name: c.name, t: 'translate(' + c.x + ' ' + c.y + ') rotate(45)', tx: c.x + 7, ty: c.y + 3.5 });
+      });
+    }
+    return {
+      zones: zones, labels: labels, capitals: capitals, hoverName: hoverName,
+      coastK: m ? m.coast.K : '', coastE: m ? m.coast.E : '',
+      wavesA: this.waves(0), wavesB: this.waves(1),
+      fog: fog, shaftOpacity: Math.min(1, fog), rootClass: motion ? '' : 'still'
+    };
+  }
+}
+</script>
+</body>
+</html>

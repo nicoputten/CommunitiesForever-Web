@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Map states, zoom levels and motion</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes fanL{0%,30%{transform:translate(0,0) scale(.6);opacity:0}45%,85%{transform:translate(-26px,-22px) scale(1);opacity:1}100%{transform:translate(0,0) scale(.6);opacity:0}}
+@keyframes fanR{0%,30%{transform:translate(0,0) scale(.6);opacity:0}45%,85%{transform:translate(26px,-22px) scale(1);opacity:1}100%{transform:translate(0,0) scale(.6);opacity:0}}
+@keyframes hub{0%,30%{opacity:1;transform:scale(1)}40%,90%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+@keyframes spokes{0%,35%{opacity:0}45%,85%{opacity:.8}95%,100%{opacity:0}}
+@keyframes hov{0%,40%{transform:translate(-50%,-50%) scale(1)}50%,90%{transform:translate(-50%,-50%) scale(1.15)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes tip{0%,45%{opacity:0;transform:translate(-50%,6px)}55%,90%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@keyframes drop{0%{transform:translate(-50%,-180%);opacity:0}30%{transform:translate(-50%,-50%);opacity:1}100%{transform:translate(-50%,-50%);opacity:1}}
+@keyframes ring{0%,25%{transform:scale(1);opacity:0}30%{opacity:.8}70%,100%{transform:scale(3);opacity:0}}
+.tile{position:relative;height:120px;border-radius:12px;background:radial-gradient(circle at 50% 40%,#1B2638,#0B1220);border:1px solid rgba(212,175,106,.18);overflow:hidden}
+.cap{font-size:12px;color:#C9CFD9;margin-top:8px}
+.cap small{display:block;color:#7E8898;font-size:11px;margin-top:2px}
+.mk{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;box-sizing:border-box;font:600 11px/26px Inter,system-ui,sans-serif;text-align:center}
+.pulse{position:absolute;inset:-2px;border-radius:50%;animation:pulse 2.6s ease-out infinite}
+.age{position:absolute;font:500 10px/1 Inter,system-ui,sans-serif;color:#9AA3B2;padding:3px 5px;border-radius:4px;background:rgba(5,10,18,.8)}
+.sec{font:16px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E;margin:0 0 12px}
+.fanl{animation:fanL 4s cubic-bezier(.34,1.56,.64,1) infinite}
+.fanr{animation:fanR 4s cubic-bezier(.34,1.56,.64,1) infinite}
+.hub{animation:hub 4s ease infinite}
+.spk{animation:spokes 4s ease infinite}
+.hov{animation:hov 3s ease-out infinite}
+.tip{animation:tip 3s ease-out infinite}
+.drop{animation:drop 3.5s cubic-bezier(.34,1.56,.64,1) infinite}
+.ring{animation:ring 3.5s ease-out infinite}
+td,th{padding:9px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top}
+th{font-weight:500;color:#7E8898;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.still .pulse,.still .fanl,.still .fanr,.still .hub,.still .spk,.still .hov,.still .tip,.still .drop,.still .ring{animation:none}
+@media (prefers-reduced-motion: reduce){.pulse,.fanl,.fanr,.hub,.spk,.hov,.tip,.drop,.ring{animation:none}}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="width: 1440px; min-height: 1000px; box-sizing: border-box; padding: 48px 56px; background: #050A12; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 36px">
+  <div style="display: flex; align-items: baseline; gap: 16px">
+    <h1 style="margin: 0; font: 32px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Map states</h1>
+    <span style="font-size: 13px; color: #8E98A8">Direction A · markers, clusters, zones, zoom levels and motion. The animated tiles loop so the motion can be judged.</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 40px">
+    <!-- MARKERS -->
+    <section>
+      <h2 class="sec">Marker · how fresh is the sighting</h2>
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+        <div><div class="tile"><span class="mk" style="background: #8788EE; color: #0B0F14; border: 2px solid #0B0F14; box-shadow: 0 0 18px rgba(135,136,238,0.7)"><span class="pulse" style="border: 2px solid #8788EE"></span>VD</span></div><div class="cap">Live<small>&lt; 6 h · glow + pulse</small></div></div>
+        <div><div class="tile"><span class="mk" style="background: #0070DD; color: #FFFFFF; border: 2px solid #0B0F14">TI</span></div><div class="cap">Today<small>6–24 h · solid</small></div></div>
+        <div><div class="tile"><span class="mk" style="background: #121822; color: #C69B6D; border: 2px solid #C69B6D; opacity: .7">GA</span><span class="age" style="left: 74px; top: 50px">3d</span></div><div class="cap">Days<small>1–6 d · ring, 70%, age tag</small></div></div>
+        <div><div class="tile"><span class="mk" style="background: transparent; color: #AAD372; border: 2px dashed #AAD372; opacity: .5">RB</span><span class="age" style="left: 74px; top: 50px; color: #C08A5A">9d</span></div><div class="cap">Week +<small>≥ 7 d · dashed, 50%</small></div></div>
+        <div><div class="tile"><span class="mk hov" style="background: #121822; color: #C69B6D; border: 2px solid #C69B6D">GA</span><span class="tip" style="position: absolute; left: 50%; top: 12px; padding: 4px 8px; border-radius: 6px; background: rgba(12,18,30,0.95); border: 1px solid rgba(212,175,106,0.35); font-size: 11px; white-space: nowrap">Grom · 24 · 3 d</span></div><div class="cap">Hover / focus<small>scale 1.15 + quick tip</small></div></div>
+        <div><div class="tile"><span class="mk" style="background: #8788EE; color: #0B0F14; border: 2px solid #F0D08E; box-shadow: 0 0 0 4px rgba(240,208,142,0.25), 0 0 20px rgba(135,136,238,0.7)">VD</span></div><div class="cap">Selected<small>gold ring · card open</small></div></div>
+      </div>
+    </section>
+
+    <!-- CLUSTERS -->
+    <section>
+      <h2 class="sec">Cluster · several in one zone</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <div><div class="tile"><span class="mk" style="width: 36px; height: 36px; background-image: conic-gradient(#FFFFFF 0 50%, #8788EE 50% 100%); box-shadow: 0 0 12px rgba(255,255,255,0.3)"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; color: #F3EBDA; font: 600 13px/28px Inter, sans-serif">2</span></span></div><div class="cap">Collapsed<small>count + class ring</small></div></div>
+        <div><div class="tile"><span class="mk" style="width: 36px; height: 36px; background-image: conic-gradient(#FFF468 0 50%, #F48CBA 50% 100%)"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; color: #F3EBDA; font: 600 13px/28px Inter, sans-serif">2</span></span><span aria-hidden="true" style="position: absolute; left: calc(50% + 10px); top: 28px; width: 18px; height: 18px; border-radius: 4px; background: #1B2433; border: 1px solid #D4AF6A; display: flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#F0D08E" stroke-width="1.4"><path d="M2 11V5a4 4 0 0 1 8 0v6M2 11h8M4.5 11V7.5M7.5 11V7.5"></path></svg></span></div><div class="cap">In a dungeon<small>badge · tip names it</small></div></div>
+        <div><div class="tile">
+          <span class="spk" style="position: absolute; left: 50%; top: 62px; width: 34px; height: 1px; background: #F0D08E; transform-origin: 0 0; transform: rotate(-140deg)"></span>
+          <span class="spk" style="position: absolute; left: 50%; top: 62px; width: 34px; height: 1px; background: #F0D08E; transform-origin: 0 0; transform: rotate(-40deg)"></span>
+          <span class="mk hub" style="width: 36px; height: 36px; background-image: conic-gradient(#FFFFFF 0 50%, #8788EE 50% 100%)"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; color: #F3EBDA; font: 600 13px/28px Inter, sans-serif">2</span></span>
+          <span style="position: absolute; left: 50%; top: 52%; width: 0; height: 0"><span class="fanl" style="position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; background: #8788EE; color: #0B0F14; border: 2px solid #0B0F14; box-sizing: border-box; font: 600 11px/26px Inter, sans-serif; text-align: center">VD</span><span class="fanr" style="position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; background: #FFFFFF; color: #0B0F14; border: 2px solid #0B0F14; box-sizing: border-box; font: 600 11px/26px Inter, sans-serif; text-align: center">LT</span></span>
+        </div><div class="cap">Expand<small>hover / tap · spring fan</small></div></div>
+        <div><div class="tile"><span class="mk" style="left: 38%; width: 38px; height: 38px; background-image: conic-gradient(#3FC7EB 0 20%, #C69B6D 20% 40%, #8788EE 40% 60%, #AAD372 60% 80%, #F48CBA 80% 100%)"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; color: #F3EBDA; font: 600 13px/30px Inter, sans-serif">6</span></span>
+          <div style="position: absolute; right: 8px; top: 12px; width: 92px; padding: 6px 8px; border-radius: 8px; background: rgba(12,18,30,0.95); border: 1px solid rgba(212,175,106,0.35); font-size: 10px; line-height: 1.6"><span style="color: #3FC7EB">Mira</span> 60<br><span style="color: #C69B6D">Grom</span> 24<br><span style="color: #A9AAF5">Zul</span> 15<br><span style="color: #8E98A8">+3 more</span></div></div><div class="cap">6 or more<small>opens a list, not a fan</small></div></div>
+      </div>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 40px">
+    <!-- ZONE STATES -->
+    <section>
+      <h2 class="sec">Zone</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <div><div class="tile"><svg width="100%" height="120" viewBox="0 0 120 120" aria-hidden="true"><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#1E2A3E" stroke="rgba(201,164,92,0.36)" stroke-width="1"></path><text x="60" y="64" text-anchor="middle" fill="#A4AEBF" style="font: 10px 'Marcellus SC'">Duskwood</text></svg></div><div class="cap">Idle<small>thin gold border</small></div></div>
+        <div><div class="tile"><svg width="100%" height="120" viewBox="0 0 120 120" aria-hidden="true"><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#1E2A3E" stroke="rgba(201,164,92,0.36)" stroke-width="1"></path><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#D4AF6A" fill-opacity="0.18"></path><text x="60" y="64" text-anchor="middle" fill="#F3DFAE" style="font: 10px 'Marcellus SC'">Westfall</text></svg></div><div class="cap">Occupied<small>gold tint by recency</small></div></div>
+        <div><div class="tile"><svg width="100%" height="120" viewBox="0 0 120 120" aria-hidden="true"><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#26354D" stroke="#F0D08E" stroke-width="1.8"></path><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#D4AF6A" fill-opacity="0.12"></path><text x="60" y="64" text-anchor="middle" fill="#F3DFAE" style="font: 10px 'Marcellus SC'">Redridge</text></svg></div><div class="cap">Hover<small>bright edge · name in corner</small></div></div>
+        <div><div class="tile"><svg width="100%" height="120" viewBox="0 0 120 120" aria-hidden="true"><path d="M22 34 L70 22 L98 46 L92 86 L48 98 L20 72 Z" fill="#111824" stroke="rgba(201,164,92,0.15)" stroke-width="1"></path><text x="60" y="64" text-anchor="middle" fill="#56627A" style="font: italic 10px 'Marcellus'">Grim Batol</text></svg></div><div class="cap">Not a zone<small>dark, no hover</small></div></div>
+      </div>
+    </section>
+
+    <!-- ZOOM LEVELS -->
+    <section>
+      <h2 class="sec">Zoom levels</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+        <div style="padding: 14px; border-radius: 12px; background: #0B1220; border: 1px solid rgba(212,175,106,0.18); font-size: 12px; line-height: 1.55; color: #AEB6C3; min-height: 120px; box-sizing: border-box"><div style="font: 14px 'Marcellus SC', serif; color: #F3EBDA; margin-bottom: 4px">World · 1×</div>Both continents. One marker per character, a cluster per zone when there are 2 or more. Capitals only. Zone labels at full size.</div>
+        <div style="padding: 14px; border-radius: 12px; background: #0B1220; border: 1px solid rgba(212,175,106,0.18); font-size: 12px; line-height: 1.55; color: #AEB6C3; min-height: 120px; box-sizing: border-box"><div style="font: 14px 'Marcellus SC', serif; color: #F3EBDA; margin-bottom: 4px">Continent · 2×</div>Town dots and names appear (Crossroads, Booty Bay…). Clusters of 2–5 open as a fan by default. Labels hold their screen size.</div>
+        <div style="padding: 14px; border-radius: 12px; background: #0B1220; border: 1px solid rgba(212,175,106,0.18); font-size: 12px; line-height: 1.55; color: #AEB6C3; min-height: 120px; box-sizing: border-box"><div style="font: 14px 'Marcellus SC', serif; color: #F3EBDA; margin-bottom: 4px">Zone · 4×</div>Dungeon icons with names, every marker gets a name tag. The zone name moves to the top bar; other zones dim slightly.</div>
+      </div>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 40px">
+    <!-- MOTION -->
+    <section>
+      <h2 class="sec">Motion</h2>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #C9CFD9">
+        <thead><tr><th>Element</th><th>Trigger</th><th>Duration</th><th>Easing</th><th>Reduced motion</th></tr></thead>
+        <tbody>
+          <tr><td>Marker</td><td>hover / focus</td><td>120 ms</td><td>ease-out, scale 1.15</td><td>outline only</td></tr>
+          <tr><td>Cluster fan</td><td>hover / tap</td><td>220 ms, 30 ms stagger</td><td>spring (.34, 1.56, .64, 1)</td><td>instant</td></tr>
+          <tr><td>Hover card</td><td>marker hover / tap</td><td>160 ms</td><td>fade + rise 8 px</td><td>fade 80 ms</td></tr>
+          <tr><td>Zone highlight</td><td>hover</td><td>250 ms</td><td>ease</td><td>same (colour only)</td></tr>
+          <tr><td>Bottom sheet</td><td>drag / tap</td><td>280 ms, follows the finger</td><td>(.2, .8, .2, 1)</td><td>120 ms fade</td></tr>
+          <tr><td>Fly to character</td><td>pick from roll call</td><td>600 ms</td><td>ease-in-out pan + zoom</td><td>jump</td></tr>
+          <tr><td>New sighting</td><td>after an upload</td><td>400 ms drop + one ripple</td><td>spring</td><td>appear</td></tr>
+          <tr><td>Ambient</td><td>always</td><td>pulse 2.6 s · waves 7–9 s · surf 6 s · foam 40 s · Maelstrom 50 s · moonlight 18 s · fog 40–56 s</td><td>linear / ease-in-out loops</td><td>all off, static fog</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2 class="sec">New sighting</h2>
+      <div class="tile" style="height: 150px"><span class="ring" style="position: absolute; left: calc(50% - 15px); top: calc(52% - 15px); width: 30px; height: 30px; border-radius: 50%; border: 2px solid #FFF468"></span><span class="mk drop" style="background: #FFF468; color: #0B0F14; border: 2px solid #0B0F14">BE</span></div>
+      <div class="cap">Drops in after an upload, one ripple<small>only for sightings new since your last visit</small></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return { rootClass: (this.props.motion ?? true) ? '' : 'still' }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upload states</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes over{0%,100%{box-shadow:0 0 0 0 rgba(240,208,142,.0),inset 0 0 40px rgba(240,208,142,.15)}50%{box-shadow:0 0 34px 2px rgba(240,208,142,.35),inset 0 0 70px rgba(240,208,142,.25)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes bar{from{width:8%}to{width:78%}}
+.st{display:flex;flex-direction:column;gap:12px}
+.cap{font:15px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.sub{font-size:12px;color:#7E8898;margin-top:-6px}
+.frame{height:360px;border-radius:16px;box-sizing:border-box;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+.msg{font:20px/1.25 'Marcellus',serif;color:#F3EBDA}
+.sm{font-size:13px;color:#AEB6C3;line-height:1.5}
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none}
+.over{animation:over 2.4s ease-in-out infinite}
+.bob{animation:bob 1.6s ease-in-out infinite}
+.spin{animation:spin 1.4s linear infinite}
+.bar{animation:bar 2.4s cubic-bezier(.2,.8,.2,1) infinite alternate}
+@media (prefers-reduced-motion: reduce){.over,.bob,.spin,.bar{animation:none}}
+</style>
+</helmet>
+<div style="width: 1440px; min-height: 620px; box-sizing: border-box; padding: 40px 48px; background: #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px">
+
+  <div class="st"><div class="cap">Dragging over</div><div class="sub">The whole page accepts the drop</div>
+    <div class="frame over" style="border: 2px solid #F0D08E; background: radial-gradient(circle at 50% 45%, rgba(240,208,142,0.16), rgba(12,18,30,0.85) 70%)">
+      <svg class="bob" width="64" height="64" viewBox="0 0 84 84" fill="none" aria-hidden="true"><path d="M22 12h30l12 12v48H22z" fill="#121B2A" stroke="#F0D08E" stroke-width="2.4" stroke-linejoin="round"></path><path d="M52 12v12h12" stroke="#F0D08E" stroke-width="2.4"></path><path d="M30 38h26M30 46h26M30 54h18" stroke="#AEB6C3" stroke-width="2" stroke-linecap="round"></path></svg>
+      <div class="msg">Let go to upload</div>
+      <div class="sm">CommunitiesForever.lua · 48 KB</div>
+    </div>
+  </div>
+
+  <div class="st"><div class="cap">Reading</div><div class="sub">Usually under a second</div>
+    <div class="frame" style="border: 1px solid rgba(212,175,106,0.3); background: rgba(12,18,30,0.85)">
+      <svg class="spin" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="22" stroke="#1F2837" stroke-width="4"></circle><path d="M28 6a22 22 0 0 1 22 22" stroke="#D4AF6A" stroke-width="4" stroke-linecap="round"></path></svg>
+      <div class="msg">Reading the ledger…</div>
+      <div class="sm">10 characters from 5 friends</div>
+      <div style="width: 80%; height: 4px; border-radius: 2px; background: #1F2837; overflow: hidden"><div class="bar" style="height: 4px; background: #D4AF6A"></div></div>
+    </div>
+  </div>
+
+  <div class="st"><div class="cap">Wrong file</div><div class="sub">Nothing was changed</div>
+    <div class="frame" role="alert" style="border: 1px solid rgba(224,138,74,0.55); background: linear-gradient(180deg, rgba(224,138,74,0.10), rgba(12,18,30,0.85) 60%)">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 6L44 40H4z" stroke="#F0A774" stroke-width="2.4" stroke-linejoin="round"></path><path d="M24 19v10M24 34v.01" stroke="#F0A774" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <div class="msg">That's not our ledger</div>
+      <div class="sm">This looks like the saved data of another addon (<span style="color: #E6E1D6">Questie.lua</span>). Pick the file named <span style="color: #E6E1D6">CommunitiesForever.lua</span>.</div>
+      <a href="Upload.dc.html" class="btn" style="background: #D4AF6A; color: #0B0F14">Choose another file</a>
+    </div>
+  </div>
+
+  <div class="st"><div class="cap">Newer addon version</div><div class="sub">Nothing was changed</div>
+    <div class="frame" role="alert" style="border: 1px solid rgba(224,138,74,0.55); background: linear-gradient(180deg, rgba(224,138,74,0.10), rgba(12,18,30,0.85) 60%)">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="19" stroke="#F0A774" stroke-width="2.4"></circle><path d="M24 14v12l7 4" stroke="#F0A774" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <div class="msg">This file is from a newer addon</div>
+      <div class="sm">It uses data format <span style="color: #E6E1D6">3</span>; the site reads up to format <span style="color: #E6E1D6">2</span>. Update the site first, then upload again.</div>
+      <a href="#" class="btn" style="border: 1px solid rgba(212,175,106,0.45); color: #F0D08E">What changed in format 3</a>
+    </div>
+  </div>
+
+  <div class="st"><div class="cap">Nothing new</div><div class="sub">Same data as last time</div>
+    <div class="frame" style="border: 1px solid rgba(174,182,195,0.25); background: rgba(12,18,30,0.85)">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="19" stroke="#8E98A8" stroke-width="2.4"></circle><path d="M15 24h18" stroke="#8E98A8" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <div class="msg">The ledger hasn't changed</div>
+      <div class="sm">This is the same data as your upload of today 21:14. Did the game save yet? Log out or type <span style="color: #E6E1D6">/reload</span> first.</div>
+      <a href="Upload.dc.html" class="btn" style="border: 1px solid rgba(174,182,195,0.35); color: #C9CFD9">Try again</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

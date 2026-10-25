@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone — roll call sheet</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:transparent;color:#C9CFD9;font:13px Inter,system-ui,sans-serif;cursor:pointer}
+.row{display:flex;gap:12px;align-items:center;min-height:52px;padding:4px 4px;border-bottom:1px solid rgba(255,255,255,.05);text-decoration:none;color:#E6E1D6}
+.av{width:32px;height:32px;border-radius:50%;flex:none;font:600 11px/32px Inter,system-ui,sans-serif;text-align:center;box-sizing:border-box}
+.nm{display:block;font-size:14px;font-weight:500}
+.sub{display:block;font-size:12px;color:#8E98A8}
+.when{font-size:12px;color:#AEB6C3;text-align:right}
+.h{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898;padding:12px 4px 4px}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:3px}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: radial-gradient(circle at 40% 0%, #10233A, #050A12 70%); font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+
+  <!-- APP BAR (map stays behind, dimmed) -->
+  <header style="position: absolute; left: 0; right: 0; top: 0; height: 56px; box-sizing: border-box; padding: 0 12px 0 16px; display: flex; align-items: center; gap: 8px; background: rgba(5,10,18,0.96); border-bottom: 1px solid rgba(212,175,106,0.18)">
+    <svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.6"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+    <span style="font: 17px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Doombringers</span>
+    <span style="flex: 1"></span>
+    <span style="width: 32px; height: 32px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: #F0D08E">N</span>
+  </header>
+  <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 56px; height: 60px; background: linear-gradient(180deg, rgba(38,53,77,0.6), rgba(5,10,18,0.2)); opacity: .6"></div>
+
+  <!-- FULL SHEET -->
+  <section aria-label="Roll call" style="position: absolute; left: 0; right: 0; top: 96px; bottom: 72px; border-radius: 18px 18px 0 0; background: rgba(12,18,30,0.97); border-top: 1px solid rgba(212,175,106,0.35); box-shadow: 0 -12px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column">
+    <div style="padding: 8px 16px 10px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid rgba(212,175,106,0.15)">
+      <a href="PhoneMap.dc.html" aria-label="Collapse roll call" style="align-self: center; display: block; width: 60px; height: 20px; position: relative"><span style="position: absolute; left: 12px; right: 12px; top: 6px; height: 4px; border-radius: 2px; background: rgba(212,175,106,0.5)"></span></a>
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 style="margin: 0; font: 22px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Roll call</h2>
+        <span style="font-size: 12px; color: #8E98A8">9 of 10 located</span>
+      </div>
+      <div style="display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+        <button class="chip" aria-pressed="true" style="border-color: #D4AF6A; background: rgba(212,175,106,0.16); color: #F3EBDA">All</button>
+        <button class="chip" aria-pressed="false">Nico</button>
+        <button class="chip" aria-pressed="false">Bob</button>
+        <button class="chip" aria-pressed="false">Mira</button>
+        <button class="chip" aria-pressed="false">Jorrit</button>
+        <button class="chip" aria-pressed="false">Femke</button>
+      </div>
+      <div style="display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+        <button class="chip" aria-pressed="false">Last 24 h</button>
+        <button class="chip" aria-pressed="false">Horde + Alliance ▾</button>
+        <button class="chip" aria-pressed="false">Level 1–60 ▾</button>
+      </div>
+    </div>
+
+    <div style="flex: 1; overflow-y: auto; padding: 0 12px 12px">
+      <div class="h">Last 24 hours</div>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="background: #FFFFFF; color: #0B0F14; box-shadow: 0 0 10px rgba(255,255,255,0.45)">LT</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #FFFFFF">Lia Thornwhisper <span style="color: #8E98A8; font-weight: 400">37</span></span><span class="sub">Stranglethorn Vale · Femke</span></span><span class="when">1 h</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="background: #8788EE; color: #0B0F14; box-shadow: 0 0 10px rgba(135,136,238,0.55)">VD</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #A9AAF5">Ves Doombringer <span style="color: #8E98A8; font-weight: 400">39</span></span><span class="sub">Stranglethorn Vale · Nico</span></span><span class="when">2 h</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="background: #FFF468; color: #0B0F14; box-shadow: 0 0 10px rgba(255,244,104,0.45)">BE</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #FFF468">Bob Example <span style="color: #8E98A8; font-weight: 400">41</span></span><span class="sub">The Deadmines, Westfall · Bob</span></span><span class="when">5 h</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="background: #0070DD; color: #FFFFFF">TI</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #4DA3FF">Tok Ironhide <span style="color: #8E98A8; font-weight: 400">33</span></span><span class="sub">Hillsbrad Foothills · Bob</span></span><span class="when">1 d</span></a>
+
+      <div class="h">Earlier</div>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="border: 2px solid #3FC7EB; color: #3FC7EB">MS</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #3FC7EB">Mira Sunstrider <span style="color: #8E98A8; font-weight: 400">60</span></span><span class="sub">Orgrimmar · Mira, via Bob</span></span><span class="when">2 d</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="border: 2px solid #C69B6D; color: #C69B6D">GA</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #C69B6D">Grom Ashfeller <span style="color: #8E98A8; font-weight: 400">24</span></span><span class="sub">The Barrens · Nico</span></span><span class="when">3 d</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="border: 2px solid #8788EE; color: #A9AAF5">ZK</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #A9AAF5">Zul Kazrek <span style="color: #8E98A8; font-weight: 400">15</span></span><span class="sub">Durotar · Femke</span></span><span class="when">4 d</span></a>
+      <a href="PhoneCharacter.dc.html" class="row"><span class="av" style="border: 2px solid #F48CBA; color: #F48CBA">KD</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #F48CBA">Kel Dawnhammer <span style="color: #8E98A8; font-weight: 400">18</span></span><span class="sub">Westfall · Mira, via Bob</span></span><span class="when">7 d</span></a>
+      <a href="PhoneCharacter.dc.html" class="row" style="opacity: .75"><span class="av" style="border: 2px dashed #AAD372; color: #AAD372">RB</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #AAD372">Ruk Bloodhoof <span style="color: #8E98A8; font-weight: 400">27</span></span><span class="sub" style="color: #C08A5A">Stonetalon · Jorrit's data is 9 days old</span></span><span class="when">9 d</span></a>
+
+      <div class="h">Unknown whereabouts</div>
+      <a href="#" class="row" style="border-bottom: 0"><span class="av" style="border: 2px dotted #FF7C0A; color: #FF9A45">SM</span><span style="flex: 1; min-width: 0"><span class="nm" style="color: #FF9A45">Sela Moonbrook <span style="color: #8E98A8; font-weight: 400">12</span></span><span class="sub">Nico · never sighted by the addon</span></span></a>
+      <div style="font-size: 12px; color: #8E98A8; padding: 6px 4px">Sanne has no addon data yet.</div>
+    </div>
+  </section>
+
+  <!-- TAB BAR -->
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 72px; box-sizing: border-box; padding-bottom: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #070C15; border-top: 1px solid rgba(212,175,106,0.2)">
+    <a href="PhoneMap.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: #F0D08E; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#F0D08E" stroke-width="1.8" aria-hidden="true"><path d="M3 7l7-3 8 3 7-3v17l-7 3-8-3-7 3z M10 4v17 M18 7v17"></path></svg>Map</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #8E98A8; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#8E98A8" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="4"></circle><circle cx="19" cy="11" r="3"></circle><path d="M3 23c1-5 4-7 7-7s6 2 7 7 M16 17c3 0 6 2 7 6"></path></svg>Roster</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #8E98A8; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#8E98A8" stroke-width="1.8" aria-hidden="true"><path d="M5 23l10-10 M13 7l8 8 M16 4l8 8-3 3-8-8z M4 24l3-1-2-2z"></path></svg>Professions</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

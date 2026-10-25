@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign-in states</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1.2s linear infinite}
+.cap{font:15px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.pn{box-sizing:border-box;padding:34px 30px 26px;border-radius:20px;background:rgba(10,16,28,.78);border:1px solid rgba(212,175,106,.35);box-shadow:0 30px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;min-height:430px}
+.t{margin:0;font:26px/1.15 'Marcellus',serif;color:#F3EBDA}
+.p{margin:0;font-size:14px;color:#AEB6C3;line-height:1.55}
+.btn{width:100%;min-height:48px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:3px}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+</style>
+</helmet>
+<div style="width: 1440px; min-height: 640px; box-sizing: border-box; padding: 40px 120px; background: radial-gradient(ellipse at 50% 40%, #10233A, #050A12 70%); font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 12px"><div class="cap">Not on the list</div>
+    <div class="pn">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M26 5l17 7v13c0 11-7.5 17-17 21C16.5 42 9 36 9 25V12z" fill="#121B2A" stroke="#F0A774" stroke-width="1.8"></path><path d="M19 19l14 14M33 19L19 33" stroke="#F0A774" stroke-width="2.2" stroke-linecap="round"></path></svg>
+      <h1 class="t">The gate stays closed</h1>
+      <p class="p"><span style="color: #E6E1D6; font-weight: 600">Stranger#1234</span> isn't on the Doombringers guest list.</p>
+      <p class="p" style="font-size: 13px">Send Nico your BattleTag and he can add you. Signed in with the wrong account?</p>
+      <div style="flex: 1"></div>
+      <a href="SignIn.dc.html" class="btn" style="border: 1px solid rgba(212,175,106,0.45); color: #F0D08E">Use another Battle.net account</a>
+      <a href="SignIn.dc.html" style="font-size: 13px; color: #8E98A8">Sign out</a>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px"><div class="cap">Battle.net didn't answer</div>
+    <div class="pn" role="alert">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true"><circle cx="26" cy="26" r="20" stroke="#F0A774" stroke-width="2"></circle><path d="M26 15v14M26 36v.01" stroke="#F0A774" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      <h1 class="t">Couldn't reach Battle.net</h1>
+      <p class="p">Sign-in was interrupted or timed out. Nothing is wrong with your account.</p>
+      <div style="flex: 1"></div>
+      <a href="SignIn.dc.html" class="btn" style="background: linear-gradient(180deg, #1A8CFF, #0B66D6); color: #FFFFFF">Try again</a>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px"><div class="cap">Signing in</div>
+    <div class="pn" aria-live="polite">
+      <svg class="spin" width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true"><circle cx="26" cy="26" r="20" stroke="#1F2837" stroke-width="4"></circle><path d="M26 6a20 20 0 0 1 20 20" stroke="#D4AF6A" stroke-width="4" stroke-linecap="round"></path></svg>
+      <h1 class="t">Checking the guest list…</h1>
+      <p class="p">Back from Battle.net as <span style="color: #E6E1D6; font-weight: 600">Femke#3307</span></p>
+      <div style="flex: 1"></div>
+      <p class="p" style="font-size: 12px; color: #7E8898">Then straight to the map</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

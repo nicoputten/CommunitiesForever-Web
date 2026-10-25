@@ -13,3 +13,4 @@ next-env.d.ts
 *.tsbuildinfo
 *.sqlite-wal
 *.sqlite-shm
+.venv-map/

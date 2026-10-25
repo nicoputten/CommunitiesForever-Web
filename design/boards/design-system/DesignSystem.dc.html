@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Doombringers design system</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes shine{0%,60%{background-position:-120% 0}100%{background-position:220% 0}}
+.sec{display:flex;flex-direction:column;gap:14px}
+.h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.note{font-size:12px;color:#7E8898;margin-top:-8px}
+.grp{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898;margin:6px 0 -4px}
+.sw{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.s{border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.07);background:#0C121E}
+.s i{display:block;height:46px}
+.s b{display:block;font-weight:500;font-size:12px;color:#E6E1D6;padding:7px 9px 0;font-family:ui-monospace,Menlo,monospace}
+.s span{display:block;font-size:11px;color:#8E98A8;padding:2px 9px 8px;font-family:ui-monospace,Menlo,monospace}
+.tr{display:grid;grid-template-columns:150px minmax(0,1fr) 260px;gap:18px;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.tr code,.code{font:12px ui-monospace,Menlo,monospace;color:#AEB6C3}
+.box{padding:16px;border-radius:12px;background:rgba(12,18,30,.78);border:1px solid rgba(212,175,106,.2)}
+.cmp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cmp .box{display:flex;flex-direction:column;gap:12px;min-height:150px}
+.cn{font:13px ui-monospace,Menlo,monospace;color:#F0D08E}
+.cd{font-size:12px;color:#8E98A8;line-height:1.5}
+.ex{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;flex-wrap:wrap}
+.mk{position:relative;width:30px;height:30px;border-radius:50%;box-sizing:border-box;font:600 11px/26px Inter,sans-serif;text-align:center;color:#0B0F14}
+.pulse{position:absolute;inset:-2px;border-radius:50%;animation:pulse 2.6s ease-out infinite}
+.lvlup{background:linear-gradient(100deg,#D4AF6A 0%,#F3DFAE 40%,#FFF7DD 50%,#F3DFAE 60%,#D4AF6A 100%);background-size:220% 100%;animation:shine 3.5s ease-in-out infinite;color:#1A1206}
+.mrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (prefers-reduced-motion: reduce){.pulse,.lvlup{animation:none}}
+</style>
+</helmet>
+<div style="width: 1440px; box-sizing: border-box; padding: 56px 64px 72px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 48px">
+
+  <!-- BRAND -->
+  <section style="display: flex; align-items: center; gap: 28px">
+    <svg width="72" height="72" viewBox="0 0 26 26" aria-hidden="true" fill="#121B2A" stroke="#F0D08E" stroke-width="1.1" style="filter: drop-shadow(0 0 16px rgba(240,208,142,0.35))"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+    <div style="flex: 1">
+      <h1 style="margin: 0; font: 56px/1 'Marcellus SC', serif; letter-spacing: .06em; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,0.3)">Doombringers</h1>
+      <div style="font-size: 14px; color: #AEB6C3; margin-top: 8px">Design system for wow.vestras.nl · direction A, “Night over Azeroth” · tokens, type, motion and components</div>
+    </div>
+    <div class="box" style="font-size: 12px; color: #AEB6C3; line-height: 1.7; width: 300px">Atmosphere goes <b style="color: #F3EBDA; font-weight: 600">around</b> the data, never over it. The map is alive; data screens are calm.</div>
+  </section>
+
+  <!-- COLOR -->
+  <section class="sec">
+    <h2 class="h2">Colour</h2>
+    <div class="note">CSS custom properties. Every text pairing listed here passes 4.5 : 1 on its surface.</div>
+    <div class="grp">Surfaces</div>
+    <div class="sw">
+      <div class="s"><i style="background: #050A12"></i><b>--bg-abyss</b><span>#050A12 · map pages</span></div>
+      <div class="s"><i style="background: #070C15"></i><b>--bg-night</b><span>#070C15 · data pages</span></div>
+      <div class="s"><i style="background: rgba(12,18,30,0.78)"></i><b>--surface</b><span>#0C121E / 78% + blur 14</span></div>
+      <div class="s"><i style="background: #121B2A"></i><b>--surface-raised</b><span>#121B2A</span></div>
+      <div class="s"><i style="background: #1F2837"></i><b>--track</b><span>#1F2837 · bars, skeleton</span></div>
+      <div class="s"><i style="background: rgba(212,175,106,0.2)"></i><b>--line</b><span>gold 20% · borders</span></div>
+    </div>
+    <div class="grp">Sea &amp; land</div>
+    <div class="sw">
+      <div class="s"><i style="background: linear-gradient(90deg, #10233A, #0A172A, #040811)"></i><b>--sea-*</b><span>#10233A → #040811</span></div>
+      <div class="s"><i style="background: linear-gradient(180deg, #26354D, #151E2E)"></i><b>--land-*</b><span>#26354D → #151E2E</span></div>
+      <div class="s"><i style="background: #0C121B"></i><b>--terrain</b><span>#0C121B · not a zone</span></div>
+      <div class="s"><i style="background: #A9C8EA"></i><b>--coast</b><span>#A9C8EA @ 55%</span></div>
+      <div class="s"><i style="background: linear-gradient(90deg, #5E93C9, #7FA9D6)"></i><b>--surf / --wave</b><span>#5E93C9 · #7FA9D6</span></div>
+      <div class="s"><i style="background: #CFE3F7"></i><b>--foam</b><span>#CFE3F7 @ 55%</span></div>
+    </div>
+    <div class="grp">Gold &amp; text</div>
+    <div class="sw">
+      <div class="s"><i style="background: #D4AF6A"></i><b>--gold</b><span>#D4AF6A · accents, buttons</span></div>
+      <div class="s"><i style="background: #F0D08E"></i><b>--gold-bright</b><span>#F0D08E · active, focus</span></div>
+      <div class="s"><i style="background: #F3DFAE"></i><b>--gold-pale</b><span>#F3DFAE · hero titles</span></div>
+      <div class="s"><i style="background: #F3EBDA"></i><b>--text-strong</b><span>#F3EBDA</span></div>
+      <div class="s"><i style="background: #E6E1D6"></i><b>--text</b><span>#E6E1D6</span></div>
+      <div class="s"><i style="background: linear-gradient(90deg, #AEB6C3 33%, #8E98A8 33% 66%, #7E8898 66%)"></i><b>--text-muted/dim/faint</b><span>#AEB6C3 · #8E98A8 · #7E8898</span></div>
+    </div>
+    <div class="grp">Status</div>
+    <div class="sw">
+      <div class="s"><i style="background: #7FD99A"></i><b>--fresh</b><span>#7FD99A · text #9BE3B0</span></div>
+      <div class="s"><i style="background: #E08A4A"></i><b>--stale</b><span>#E08A4A · text #F0A774</span></div>
+      <div class="s"><i style="background: #B5302A"></i><b>--horde</b><span>#B5302A · text #F08A80</span></div>
+      <div class="s"><i style="background: #3A6BD6"></i><b>--alliance</b><span>#3A6BD6 · text #8DB0FF</span></div>
+      <div class="s"><i style="background: linear-gradient(180deg, #1A8CFF, #0B66D6)"></i><b>--bnet</b><span>#1A8CFF → #0B66D6</span></div>
+      <div class="s"><i style="background: #FFD270"></i><b>--ember</b><span>#F2B866 / #FFD270</span></div>
+    </div>
+    <div class="grp">Class colours · fill / text on dark</div>
+    <div style="display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px">
+      <div class="s"><i style="background: #C69B6D"></i><b style="color: #C69B6D">Warrior</b><span>#C69B6D</span></div>
+      <div class="s"><i style="background: #F48CBA"></i><b style="color: #F48CBA">Paladin</b><span>#F48CBA</span></div>
+      <div class="s"><i style="background: #AAD372"></i><b style="color: #AAD372">Hunter</b><span>#AAD372</span></div>
+      <div class="s"><i style="background: #FFF468"></i><b style="color: #FFF468">Rogue</b><span>#FFF468</span></div>
+      <div class="s"><i style="background: #FFFFFF"></i><b style="color: #FFFFFF">Priest</b><span>#FFFFFF</span></div>
+      <div class="s"><i style="background: #0070DD"></i><b style="color: #4DA3FF">Shaman</b><span>#0070DD / #4DA3FF</span></div>
+      <div class="s"><i style="background: #3FC7EB"></i><b style="color: #3FC7EB">Mage</b><span>#3FC7EB</span></div>
+      <div class="s"><i style="background: #8788EE"></i><b style="color: #A9AAF5">Warlock</b><span>#8788EE / #A9AAF5</span></div>
+      <div class="s"><i style="background: #FF7C0A"></i><b style="color: #FF9A45">Druid</b><span>#FF7C0A / #FF9A45</span></div>
+    </div>
+    <div class="note" style="margin-top: 0">Initials on a class fill are #0B0F14, except Shaman (white). Shaman, Warlock and Druid get a lighter text variant so names stay readable.</div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="sec">
+    <h2 class="h2">Type</h2>
+    <div class="note">Marcellus SC is the free stand-in for Friz Quadrata. Inter carries all data, with tabular numbers.</div>
+    <div class="tr"><code>display-xl · 48/56</code><span style="font: 48px/1 'Marcellus SC', serif; letter-spacing: .06em; color: #F3DFAE">Session report</span><code>Marcellus SC · hero titles</code></div>
+    <div class="tr"><code>display · 34</code><span style="font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Roster</span><code>Marcellus SC · page titles</code></div>
+    <div class="tr"><code>title · 20–22</code><span style="font: 20px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Roll call</span><code>Marcellus SC · panels, brand</code></div>
+    <div class="tr"><code>section · 16</code><span style="font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Skill gains</span><code>Marcellus SC +.08em · card headers</code></div>
+    <div class="tr"><code>name · 15–21</code><span style="font: 18px 'Marcellus', serif; color: #A9AAF5">Ves Doombringer</span><code>Marcellus · character names</code></div>
+    <div class="tr"><code>map-label · 9–11</code><span style="font: 11px 'Marcellus SC', serif; letter-spacing: .07em; color: #A4AEBF; text-shadow: 0 0 3px #070B12">Stranglethorn Vale</span><code>Marcellus SC + 3px dark halo</code></div>
+    <div class="tr"><code>body · 13–14</code><span style="font-size: 14px; color: #E6E1D6">Level 39 Undead Warlock · Destruction</span><code>Inter 400/500</code></div>
+    <div class="tr"><code>meta · 11–12</code><span style="font-size: 12px; color: #8E98A8">Stranglethorn Vale · Nico · 2 h ago</span><code>Inter 400 · muted</code></div>
+    <div class="tr"><code>overline · 11</code><span style="font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #7E8898">Last 24 hours</span><code>Inter 500 · +.12em · caps</code></div>
+  </section>
+
+  <!-- SPACE / RADIUS / ELEVATION / MOTION -->
+  <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+    <div class="box sec" style="gap: 10px"><h3 style="margin: 0; font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Space &amp; radius</h3>
+      <div style="display: flex; align-items: flex-end; gap: 8px">
+        <span style="width: 4px; height: 4px; background: #D4AF6A"></span><span style="width: 8px; height: 8px; background: #D4AF6A"></span><span style="width: 12px; height: 12px; background: #D4AF6A"></span><span style="width: 16px; height: 16px; background: #D4AF6A"></span><span style="width: 24px; height: 24px; background: #D4AF6A"></span><span style="width: 32px; height: 32px; background: #D4AF6A"></span><span style="width: 48px; height: 48px; background: #D4AF6A"></span>
+      </div>
+      <div class="code">space: 4 · 8 · 12 · 16 · 20 · 24 · 32 · 48</div>
+      <div style="display: flex; gap: 8px">
+        <span style="width: 36px; height: 36px; border: 1px solid #D4AF6A; border-radius: 6px"></span><span style="width: 36px; height: 36px; border: 1px solid #D4AF6A; border-radius: 10px"></span><span style="width: 36px; height: 36px; border: 1px solid #D4AF6A; border-radius: 14px"></span><span style="width: 36px; height: 36px; border: 1px solid #D4AF6A; border-radius: 20px"></span><span style="width: 56px; height: 36px; border: 1px solid #D4AF6A; border-radius: 999px"></span>
+      </div>
+      <div class="code">radius: 6 tag · 10 button/row · 14 panel · 18 sheet · 20 modal · pill</div>
+      <div class="code">page max-width 1280 · gutter 24 (16 on phone) · touch ≥ 44</div>
+    </div>
+    <div class="box sec" style="gap: 10px"><h3 style="margin: 0; font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Elevation &amp; glass</h3>
+      <div style="display: flex; gap: 12px">
+        <span style="flex: 1; height: 60px; border-radius: 12px; background: rgba(12,18,30,0.78); border: 1px solid rgba(212,175,106,0.2)"></span>
+        <span style="flex: 1; height: 60px; border-radius: 12px; background: rgba(12,18,30,0.84); border: 1px solid rgba(212,175,106,0.35); box-shadow: 0 18px 40px rgba(0,0,0,0.5)"></span>
+        <span style="flex: 1; height: 60px; border-radius: 12px; background: rgba(10,16,28,0.78); border: 1px solid rgba(212,175,106,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(240,208,142,0.15)"></span>
+      </div>
+      <div class="code">panel · card (0 18 40 / 50%) · modal (0 30 80 / 60%)</div>
+      <div class="code">glass = surface 78–84% + backdrop-blur 14–18px; solid fallback without blur support</div>
+      <div class="code">glow: class colour @ 45–70%, 14–22px, live markers only</div>
+    </div>
+    <div class="box sec" style="gap: 10px"><h3 style="margin: 0; font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Motion</h3>
+      <div class="code">--dur-instant 80 · --dur-fast 120 · --dur-card 160 · --dur-fan 220 · --dur-zone 250 · --dur-sheet 280 · --dur-drop 400 · --dur-fly 600 ms</div>
+      <div class="code">--ease-out cubic-bezier(.2,.8,.2,1)</div>
+      <div class="code">--ease-spring cubic-bezier(.34,1.56,.64,1)</div>
+      <div class="code">ambient: pulse 2.6s · waves 7/9s · surf 6s · foam 40s · Maelstrom 50s · fog 40–56s · moonlight 18s</div>
+      <div class="code" style="color: #F0A774">prefers-reduced-motion: ambient off, transitions ≤ 80 ms opacity</div>
+    </div>
+  </section>
+
+  <!-- DATA AGE -->
+  <section class="sec">
+    <h2 class="h2">Data age</h2>
+    <div class="note">One scale everywhere: markers, roll call, roster badges, banners.</div>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+      <div class="box" style="display: flex; gap: 12px; align-items: center"><span class="mk" style="background: #8788EE; border: 2px solid #0B0F14; box-shadow: 0 0 16px rgba(135,136,238,0.7)"><span class="pulse" style="border: 2px solid #8788EE"></span>VD</span><div><div style="font-size: 13px">Live</div><div class="code">&lt; 6 h · glow + pulse</div></div></div>
+      <div class="box" style="display: flex; gap: 12px; align-items: center"><span class="mk" style="background: #0070DD; color: #FFFFFF; border: 2px solid #0B0F14">TI</span><div><div style="font-size: 13px">Today</div><div class="code">6–24 h · solid</div></div></div>
+      <div class="box" style="display: flex; gap: 12px; align-items: center"><span class="mk" style="background: #121822; color: #C69B6D; border: 2px solid #C69B6D; opacity: .7">GA</span><div><div style="font-size: 13px">Days</div><div class="code">1–6 d · ring 70% + tag</div></div></div>
+      <div class="box" style="display: flex; gap: 12px; align-items: center"><span class="mk" style="background: transparent; color: #AAD372; border: 2px dashed #AAD372; opacity: .5">RB</span><div><div style="font-size: 13px; color: #F0A774">Week +</div><div class="code">≥ 7 d · dashed 50%, amber</div></div></div>
+      <div class="box" style="display: flex; gap: 12px; align-items: center"><span class="mk" style="background: transparent; color: #FF9A45; border: 2px dotted #FF7C0A">SM</span><div><div style="font-size: 13px">Unknown</div><div class="code">no location · tray only</div></div></div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section class="sec">
+    <h2 class="h2">Components</h2>
+    <div class="note">Names as React components. Map pieces render inside one SVG / overlay layer; everything else is plain HTML + CSS.</div>
+    <div class="cmp">
+      <div class="box"><span class="cn">&lt;CharacterMarker&gt;</span><div class="ex"><span class="mk" style="background: #FFFFFF; border: 2px solid #0B0F14">LT</span><span class="mk" style="background: #8788EE; border: 2px solid #F0D08E; box-shadow: 0 0 0 4px rgba(240,208,142,0.25)">VD</span></div><span class="cd">class, initials, age → state; selected; 44px hit area</span></div>
+      <div class="box"><span class="cn">&lt;ZoneCluster&gt;</span><div class="ex"><span class="mk" style="width: 36px; height: 36px; background-image: conic-gradient(#FFF468 0 50%, #F48CBA 50% 100%)"><span style="position: absolute; inset: 4px; border-radius: 50%; background: #0E1520; color: #F3EBDA; font: 600 13px/28px Inter, sans-serif">2</span></span></div><span class="cd">count, class ring, dungeon badge; fan ≤ 5, list ≥ 6</span></div>
+      <div class="box"><span class="cn">&lt;MapZone&gt;</span><div class="ex"><svg width="110" height="70" viewBox="0 0 120 80" aria-hidden="true"><path d="M10 20 L60 8 L104 26 L96 66 L40 74 L12 52 Z" fill="#26354D" stroke="#F0D08E" stroke-width="1.6"></path><path d="M10 20 L60 8 L104 26 L96 66 L40 74 L12 52 Z" fill="#D4AF6A" fill-opacity="0.15"></path></svg></div><span class="cd">path from zones.json; idle · occupied(recency) · hover · terrain</span></div>
+      <div class="box"><span class="cn">&lt;CharacterCard&gt;</span><div class="ex"><div style="width: 100%; padding: 8px 10px; border-radius: 10px; background: rgba(12,18,30,0.9); border: 1px solid rgba(212,175,106,0.35); font-size: 11px; color: #AEB6C3"><div style="font: 14px 'Marcellus', serif; color: #A9AAF5">Ves Doombringer</div>Level 39 Warlock · 2 h ago</div></div><span class="cd">hover card on desktop, half sheet on phone</span></div>
+
+      <div class="box"><span class="cn">&lt;RollCallRow&gt;</span><div class="ex"><div style="width: 100%; display: flex; gap: 8px; align-items: center; font-size: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FFF468; box-shadow: 0 0 6px #FFF468"></span><span style="flex: 1; color: #FFF468">Bob Example <span style="color: #8E98A8">41</span></span><span style="color: #AEB6C3">5 h</span></div></div><span class="cd">dot by age, name, zone · player, via</span></div>
+      <div class="box"><span class="cn">&lt;CharacterRow&gt;</span><div class="ex"><div style="width: 100%; display: flex; gap: 10px; align-items: center"><span class="mk" style="background: #3FC7EB; border: 0; line-height: 30px">MS</span><div style="flex: 1"><div style="font: 14px 'Marcellus', serif; color: #3FC7EB">Mira Sunstrider</div><div style="height: 3px; background: #3FC7EB; margin-top: 5px; border-radius: 2px"></div></div></div></div><span class="cd">roster card row: disc + level badge, level bar, professions, seen</span></div>
+      <div class="box"><span class="cn">&lt;FriendPanel&gt;</span><div class="ex"><span style="font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(224,138,74,0.5); color: #F0A774">Data 9 days old · via Mira</span></div><span class="cd">header with &lt;DataAgeBadge&gt;, rows, empty state (no addon)</span></div>
+      <div class="box"><span class="cn">&lt;SkillBar&gt;</span><div class="ex"><div style="width: 100%; position: relative; height: 8px; border-radius: 4px; background: #161E2B; overflow: hidden"><span style="position: absolute; left: 0; top: 0; bottom: 0; width: 75%; background: rgba(212,175,106,0.16)"></span><span style="position: absolute; left: 0; top: 0; bottom: 0; width: 62%; background: #D4AF6A; border-radius: 4px"></span><span style="position: absolute; left: 25%; top: 0; bottom: 0; width: 1px; background: #070C15"></span><span style="position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #070C15"></span><span style="position: absolute; left: 75%; top: 0; bottom: 0; width: 1px; background: #070C15"></span></div></div><span class="cd">rank / cap on a 300 scale, ticks at 75/150/225; also LevelBar</span></div>
+
+      <div class="box"><span class="cn">&lt;StatusBadge&gt;</span><div class="ex"><span style="font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; background: rgba(127,217,154,0.14); color: #9BE3B0">Covered</span><span style="font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; background: rgba(212,175,106,0.16); color: #F0D08E">Thin</span><span style="font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; background: rgba(224,138,74,0.18); color: #F0A774">Gap</span></div><span class="cd">profession coverage; FactionTag uses the same shape</span></div>
+      <div class="box"><span class="cn">&lt;FilterChip&gt; &lt;Segmented&gt;</span><div class="ex"><span style="padding: 5px 10px; border-radius: 999px; border: 1px solid #D4AF6A; background: rgba(212,175,106,0.16); font-size: 12px">All</span><span style="padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(174,182,195,0.25); font-size: 12px; color: #C9CFD9">Bob</span></div><span class="cd">aria-pressed; segmented for continent and view</span></div>
+      <div class="box"><span class="cn">&lt;BottomSheet&gt;</span><div class="ex"><div style="width: 100%; height: 56px; border-radius: 14px 14px 0 0; background: rgba(12,18,30,0.92); border-top: 1px solid rgba(212,175,106,0.35); display: flex; justify-content: center; padding-top: 6px; box-sizing: border-box"><span style="width: 32px; height: 4px; border-radius: 2px; background: rgba(212,175,106,0.5)"></span></div></div><span class="cd">peek · half · full; drag follows finger; phone only</span></div>
+      <div class="box"><span class="cn">&lt;TopBar&gt; &lt;TabBar&gt;</span><div class="ex"><span style="font: 15px 'Marcellus SC', serif; color: #F0D08E; letter-spacing: .06em">Doombringers</span><span style="font-size: 12px; padding: 4px 8px; border-radius: 6px; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Map</span></div><span class="cd">desktop top bar; phone tab bar Map · Roster · Professions</span></div>
+
+      <div class="box"><span class="cn">&lt;Dropzone&gt;</span><div class="ex"><div style="width: 100%; height: 54px; border-radius: 10px; border: 2px dashed rgba(212,175,106,0.5); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #F3EBDA">Drop .lua · or choose</div></div><span class="cd">idle · over · reading · error · nothing new</span></div>
+      <div class="box"><span class="cn">&lt;SessionReport&gt;</span><div class="ex"><span class="lvlup" style="font: 600 10px/1 Inter, sans-serif; letter-spacing: .1em; padding: 5px 8px; border-radius: 4px">LEVEL UP ×2</span><span style="font: 18px 'Marcellus', serif"><span style="color: #8E98A8; font-size: 14px">37 →</span> 39</span></div><span class="cd">counters, level ups, skill gains (bars grow), sightings, senders</span></div>
+      <div class="box"><span class="cn">&lt;Banner&gt; &lt;EmptyState&gt;</span><div class="ex"><div style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(224,138,74,0.45); background: rgba(224,138,74,0.1); font-size: 11px">Last upload was 4 days ago</div></div><span class="cd">stale-site banner, empty map, no-addon friend, gate closed</span></div>
+      <div class="box"><span class="cn">&lt;Atmosphere&gt;</span><div class="ex"><div style="width: 100%; height: 54px; border-radius: 10px; background: radial-gradient(closest-side, rgba(150,175,210,0.25), rgba(150,175,210,0)), #0A172A"></div></div><span class="cd">fog, light shafts, embers, sea waves; one switch for reduced motion</span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
