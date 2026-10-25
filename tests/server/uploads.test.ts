@@ -138,9 +138,29 @@ describe("upload", () => {
       removedCharacters: [{ guid: "Old", owner: "Ada#1001", name: "Old Alt" }],
       levelUps: [{ guid: "A", owner: "Ada#1001", name: "Ada Example", from: 10, to: 12 }],
       professionGains: [
-        { guid: "A", owner: "Ada#1001", name: "Ada Example", skillLine: "185", profession: "Cooking", to: 1 },
-        { guid: "A", owner: "Ada#1001", name: "Ada Example", skillLine: "186", profession: "Mining", from: 50, to: 80 },
+        {
+          guid: "A",
+          owner: "Ada#1001",
+          name: "Ada Example",
+          skillLine: "185",
+          profession: "Cooking",
+          to: 1,
+          max: 75,
+          capReached: false,
+        },
+        {
+          guid: "A",
+          owner: "Ada#1001",
+          name: "Ada Example",
+          skillLine: "186",
+          profession: "Mining",
+          from: 50,
+          to: 80,
+          max: 150,
+          capReached: false,
+        },
       ],
+      itemLevelGains: [],
       sightings: [
         {
           guid: "A",
@@ -152,6 +172,18 @@ describe("upload", () => {
         },
         { guid: "B", owner: "Bob#2002", zone: "Mulgore", seenAt: 190 },
       ],
+      senders: [
+        { key: "Ada#1001", displayName: "Ada", isUploader: true, status: "newer", dataAt: 200 },
+        { key: "Bob#2002", displayName: "Bob", isUploader: false, status: "noAddon" },
+      ],
+      counts: {
+        levelsGained: 2,
+        skillGains: 2,
+        itemLevelGains: 0,
+        newCharacters: 1,
+        sightings: 2,
+        peopleWithNewData: 1,
+      },
     });
     const sources = Object.fromEntries(
       db

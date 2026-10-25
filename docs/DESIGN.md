@@ -179,7 +179,8 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 - Character names always contain a space; never split.
 - Item level may be missing → "—".
 - Talent points = level − 9; tree bars out of 31.
-- Dungeon level bands on the roster are typical ranges, labelled as such.
+- Dungeon level bands on the roster are typical ranges, labelled as such. A band shows for every dungeon (not raids) where at least two characters fit; the one with the most fits gets the "fits ..." line (WEB-14, Nico 2026-10-25).
+- Character dungeon fit: other friends' characters in the typical range (not the owner's alts), any data age; the dungeon with the most of them, ties to the narrower range (WEB-14, Nico 2026-10-25).
 - Error copy: wrong file, newer data format, nothing new, not on the guest list, Battle.net unreachable (see UploadStates / SignInStates).
 
 ## 9. Suggested libraries (proposal — you decide)
@@ -207,3 +208,5 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | Date | What | Why | Approved |
 |---|---|---|---|
 | 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
+| 2026-10-25 | Full character names wherever the boards show a first word ("with Lia, Tok and Bob", "Tok ★", "Ves item level 31 → 34") | Names are never split (CLAUDE.md rule 3) | Nico |
+| 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |

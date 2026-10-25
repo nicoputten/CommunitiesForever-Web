@@ -18,13 +18,26 @@ describe("diff", () => {
       removedCharacters: [],
       levelUps: [],
       professionGains: [],
+      itemLevelGains: [],
       sightings: [{ guid: "A", owner: "Ada#1001", name: "Ada Example", zone: "Durotar", seenAt: 5 }],
+      senders: [{ key: "Ada#1001", displayName: "Ada", isUploader: true, status: "newer" }],
+      counts: {
+        levelsGained: 0,
+        skillGains: 0,
+        itemLevelGains: 0,
+        newCharacters: 1,
+        sightings: 1,
+        peopleWithNewData: 1,
+      },
     });
   });
 
   it("is empty between equal states", () => {
     const d = upload('self = { battleTag = "Ada#1001", chars = { A = { level = 3 } } }');
-    expect(Object.values(diff(d, d)).every((list) => list.length === 0)).toBe(true);
+    const { senders, counts, ...lists } = diff(d, d);
+    expect(Object.values(lists).every((list) => list.length === 0)).toBe(true);
+    expect(senders).toEqual([{ key: "Ada#1001", displayName: "Ada", isUploader: true, status: "unchanged" }]);
+    expect(Object.values(counts).every((n) => n === 0)).toBe(true);
   });
 
   it("lists a stub that got a record as a new character", () => {
