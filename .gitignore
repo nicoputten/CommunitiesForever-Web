@@ -11,3 +11,5 @@ playwright-report/
 *.sqlite-journal
 next-env.d.ts
 *.tsbuildinfo
+*.sqlite-wal
+*.sqlite-shm

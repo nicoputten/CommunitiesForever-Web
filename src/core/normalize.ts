@@ -10,7 +10,11 @@ import { cleanName, stripEscapes } from "./sanitize";
 export const SUPPORTED_SCHEMA = 1;
 
 export class NormalizeError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    /** The file's schemaVersion, when it has one. */
+    readonly schemaVersion?: number,
+  ) {
     super(message);
     this.name = "NormalizeError";
   }
@@ -89,6 +93,7 @@ export function normalize(chunk: LuaChunk): Dataset {
   if (schemaVersion > SUPPORTED_SCHEMA) {
     throw new NormalizeError(
       `The file has schema version ${schemaVersion}; this site reads up to ${SUPPORTED_SCHEMA}. Update the site.`,
+      schemaVersion,
     );
   }
   // Schema 1 is the only one so far. A new schema gets its own reader here; older ones keep theirs.

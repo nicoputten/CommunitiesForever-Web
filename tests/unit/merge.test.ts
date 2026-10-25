@@ -133,3 +133,11 @@ describe("merge", () => {
     expect([canonical(a), canonical(b)]).toEqual(before);
   });
 });
+
+describe("merge: community", () => {
+  it("keeps community fields the newer upload lacks", () => {
+    const a = upload('self = { battleTag = "Ada#1001", version = 1 }, settings = { clubId = 1, clubName = "Friends" }');
+    const b = upload('self = { battleTag = "Ada#1001", version = 2 }, settings = { clubId = 2 }');
+    expect(both(a, b).community).toEqual({ id: "2", name: "Friends" });
+  });
+});

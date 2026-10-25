@@ -9,7 +9,8 @@ import { dict, finalize } from "./normalize";
 // - people: fields of the newer record (version, then receivedAt); removals are kept, the later time per GUID
 // - the uploader's own record is the truth for their characters: one it no longer lists is removed at that
 //   record's version when the character is not newer than it (a deleted character disappears)
-// - community, uploader and version come from the upload whose own record is newer
+// - community, uploader and version come from the upload whose own record is newer; a community field it lacks
+//   comes from the other upload
 // Ties fall back to comparing the values themselves, so they are decided the same way in either order.
 // Inputs are not changed.
 
@@ -24,7 +25,7 @@ export function merge(a: Dataset, b: Dataset): Dataset {
     schemaVersion: Math.max(a.schemaVersion, b.schemaVersion),
     version: top.version,
     uploader: top.uploader,
-    community: { ...top.community },
+    community: { ...(top === a ? b : a).community, ...top.community },
     people: mergeMaps(a.people, b.people, mergePerson),
     characters: mergeMaps(a.characters, b.characters, (x, y) =>
       pick(x, y, (c) => [c.hasRecord ? 1 : 0, c.updatedAt ?? 0, c.lastPlayed ?? 0]),

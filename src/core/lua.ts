@@ -26,7 +26,7 @@ export interface LuaChunk {
 
 export const LUA_LIMITS = {
   /** Characters (UTF-16 code units) in the whole text. */
-  maxLength: 5 * 1024 * 1024,
+  maxLength: 25 * 1024 * 1024,
   /** Nesting depth of tables; the outermost table is depth 1. */
   maxDepth: 32,
   /** Characters in one string after unescaping. */
