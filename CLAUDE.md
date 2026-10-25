@@ -28,7 +28,8 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 ## Commands
 - Node.js 24 LTS (`.nvmrc`). Shells started before the install need `C:\Program Files\nodejs` on PATH (Git Bash: `export PATH="/c/Program Files/nodejs:$PATH"`).
 - `npm run lint`: ESLint (incl. the `src/core` layering rule), Prettier check (code only, Markdown is excluded), `tsc --noEmit`
-- `npm test`: Vitest (`tests/unit`, `tests/compat`)
+- `npm test`: Vitest (`tests/unit`, `tests/compat`, `tests/server` on a temporary SQLite file)
+- `npm run db:generate -- --name <what>`: a new Drizzle migration in `drizzle/` after a schema change
 - `npm run build`, then `npm run test:e2e`: Playwright on the production build, desktop and phone
 - `npm run format`: Prettier write
 

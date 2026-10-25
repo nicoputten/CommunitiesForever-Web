@@ -32,13 +32,6 @@ Build order: WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04,
 
 ## E2 Data
 
-### WEB-05 Storage and upload service
-- Drizzle schema and first migration for `uploads` and the derived tables (`docs/ARCHITECTURE.md` Storage).
-- `upload(file, user)`: store raw (gzip, sha256; same file again is a no-op), parse, normalize, merge into derived tables in one transaction; a rejected file is stored with its reason and changes nothing.
-- `rebuild()`: recompute derived tables from all ok uploads in order.
-- Diff of an upload against the previous state (new characters, level ups, profession gains) for the upload result screen.
-- Tests against a temporary SQLite file.
-
 ## E3 Access and hosting
 
 ### WEB-06 Battle.net login
