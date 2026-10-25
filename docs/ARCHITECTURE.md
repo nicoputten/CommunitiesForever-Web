@@ -41,9 +41,9 @@ upload (.lua) ──▶ store raw (gzip, sha256) ──▶ core.parseLua ──�
               pages ◀── core.viewModels ◀── derived tables ◀── core.merge(current, upload)
 ```
 1. **Parse:** our own parser for the Lua value subset SavedVariables uses (tables, strings, numbers, booleans, nil). Limits: file size, nesting depth, string length. No code execution.
-2. **Normalize:** reads `CommunitiesForeverDB.global` per its `schemaVersion` into one internal shape (`docs/SOURCE-DATA.md`). A schema newer than the site knows is rejected with "update the site" (nothing is half-read).
-3. **Merge:** per character GUID the copy with the highest `updatedAt` wins (same rule as the addon's `Merge.lua`). Locations: highest `seenAt` wins. A character the addon lists under `removed` is hidden. People without the addon (no record) are not invented.
-4. **Sanitize:** every string loses WoW escape sequences (`|`); display names capped at 24 characters (same as the addon).
+2. **Normalize** (`src/core/normalize.ts`): reads `CommunitiesForeverDB.global` per its `schemaVersion` into one internal shape (`src/core/model.ts`, `docs/SOURCE-DATA.md`). A schema newer than the site knows is rejected with "update the site" (nothing is half-read). Friends known only through Battle.net presence become people without a record (`hasRecord: false`) whose GUIDs are character stubs (guid and owner only); a GUID seen only in `locations` is a stub without owner. A presence link decides a character's owner over the record that lists it (addon rule).
+3. **Merge** (`src/core/merge.ts`): order-independent (`merge(a, b)` equals `merge(b, a)`). Per character GUID a record beats a stub and the copy with the highest `updatedAt` wins (same rule as the addon's `Merge.lua`). Locations: highest `seenAt` wins; presence: highest `lastSeen`. A character the addon lists under `removed` is hidden unless newer than the removal. The uploader's own record is the truth for their characters: one a newer own record no longer lists is removed at that record's `version`. Person fields come from the newer record.
+4. **Sanitize** (`src/core/sanitize.ts`): every string loses WoW escape sequences (whole sequences: `|c...`, `|r`, `|T...|t`, `|H...|h` keeps the link text, `||` becomes `|`, any other `|` is removed); display names: own display name > BattleTag name part, capped at 24 characters (same as the addon).
 
 ## Storage
 - `uploads`: id, uploadedAt, uploadedBy, sha256 (duplicate upload: no-op), size, raw (gzip blob), schemaVersion, status (ok / rejected + reason).

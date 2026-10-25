@@ -32,13 +32,6 @@ Build order: WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04,
 
 ## E2 Data
 
-### WEB-04 Normalize and merge (core)
-- `normalize(db)`: `CommunitiesForeverDB.global` per `schemaVersion` into the internal shape (`docs/SOURCE-DATA.md`). Unknown newer schema: rejected with the version in the message.
-- Sanitize: strip `|` escapes from every string, display names capped at 24.
-- `merge(current, incoming)`: per GUID newest `updatedAt` wins; locations newest `seenAt`; `removed` hides a character; person display name: own `displayName` > BattleTag name part (addon rule).
-- `tests/compat`: every addon fixture normalizes; snapshot of the result.
-- Unit tests: missing fields everywhere, merge order independence, removed characters.
-
 ### WEB-05 Storage and upload service
 - Drizzle schema and first migration for `uploads` and the derived tables (`docs/ARCHITECTURE.md` Storage).
 - `upload(file, user)`: store raw (gzip, sha256; same file again is a no-op), parse, normalize, merge into derived tables in one transaction; a rejected file is stored with its reason and changes nothing.
