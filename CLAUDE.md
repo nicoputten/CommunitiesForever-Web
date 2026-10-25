@@ -12,7 +12,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 ## Platform facts
 - The uploaded file is `WTF/Account/<ACCOUNT>/SavedVariables/CommunitiesForever.lua`: a Lua table literal assigning `CommunitiesForeverDB` (AceDB: the data is in `.global`).
 - Character names contain a space (first + last name), e.g. "Ves Doombringer".
-- Forever has no classic realms: one mega-realm per ruleset (Normal, PvP, RP, Hardcore) per region. Realm names change at launch; never hardcode or parse them, map them through the rulesets table (`src/core/gamedata`).
+- Forever has no classic realms: one mega-realm per ruleset per region. The group plays PvP; the site shows PvP or PvE. Realm names change at launch; never hardcode or parse them, map them through the rulesets table (`src/core/gamedata`).
 - Zones are stored as the client's zone name text (English client), not as IDs. A zone can also be a dungeon name.
 
 ## Hard rules
@@ -21,7 +21,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 3. GUID is the character key. Never parse or split character names.
 4. **Backwards compatible with every addon release.** The site must read SavedVariables of every released addon version, because the addon's schema evolves. The addon's golden fixtures are copied to `tests/fixtures/addon/<release>/` and never edited; `tests/compat` must keep passing on all of them. Code reading uploaded data handles missing fields (undefined) everywhere.
 5. **Own database: forward-only migrations.** Every schema change is a new migration file; released migrations are never edited.
-6. Every page and API route requires login, except the login page and the auth callback. Roles (admin, member, guest; `docs/ARCHITECTURE.md` Access) are checked on the server: uploading needs admin, member or a guest with "may upload"; the admin page needs admin.
+6. Every page and API route requires login, except the login page and the auth callback. Roles (admin, member, guest; `docs/ARCHITECTURE.md` Access) are checked on the server: uploading needs admin, member or a guest with "may upload", and only the uploader's own file of the same community is accepted; the admin page needs admin. The admin can never be blocked.
 7. No secrets in the repo. Configuration via environment variables, documented in `.env.example`.
 8. English strings, hardcoded. No localization system.
 9. No dependencies beyond those listed in `docs/ARCHITECTURE.md` without asking.
