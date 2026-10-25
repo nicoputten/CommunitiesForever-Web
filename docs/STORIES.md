@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-14, WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
+Build order: WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
 WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the design workshop.
 
 ## Every UI story
@@ -14,19 +14,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Works at 375 px (phone) and 1440 px (desktop canvas); page max-width 1280.
 - Empty, loading and error states of the screen are part of the story.
 - Playwright test for the main flow at desktop and phone size; screenshots of both in the PR next to the board.
-
-## E2 Data
-
-### WEB-14 View models (core)
-- Goal: everything the screens compute, pure and tested, so pages only render.
-- Data age scale, one everywhere (`docs/DESIGN.md` §4): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d, unknown (no location). A friend's data turns amber at 7 days. The site-wide banner shows when the last upload is 7 days old or more.
-- Site name: the community name (`settings.clubName`) of the newest admin upload; fallback "CommunitiesForever".
-- Roll call: characters grouped by sighting age ("Last 24 hours", "Earlier"), "N of M located", the unknown-whereabouts list, friends without the addon ("Sanne has no addon data yet"), "via X" and "X's data is N days old".
-- Roster: people with characters, sorted and filtered (class, role, level range, profession, last played); level spread 1–60 with dungeon bands and "fits Scarlet Monastery (26–45) with Lia, Tok and Bob"; quick answers (healers, tanks, level 30–40, level 60).
-- Character: main tree name from `mainTree` (an index into `talents`), points spent (level − 9), bars out of 31; "N levels to 60"; dungeon fit with the group; who else was last seen in the same zone; the owner's other characters.
-- Professions: per profession the best in the group and status covered (best ≥ 225), thin (175–224) or gap (< 175); character × profession matrix; "no professions yet".
-- Upload summary (extends WEB-05's `diff`): item level gains, "cap reached" when a rank hits its max, who sent new data (per person: newer data, nothing new, no addon; "via X"), counts for the report header.
-- Unit tests for every rule above, with the addon fixtures and the real beta file.
 
 ## E3 Access and hosting
 

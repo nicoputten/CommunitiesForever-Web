@@ -23,6 +23,7 @@ Launch: November 4, 2026; the first raids open December 9, 2026 ([Game Informer]
 | Change | Status | Source |
 |---|---|---|
 | Level cap 60, no level scaling, no flying | Official (content covers 1–60); scaling and flying unverified | [Game Informer](https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with), [mmonster](https://mmonster.co/wow-forever/guides/articles/forever-vs-classic) |
+| Talent points: one per level from 10 (level − 9, 51 at 60); a tree's deepest talent needs 31 points | Vanilla rule, kept by the site (`src/core/gamedata/levels.ts`, docs/DESIGN.md §8); not confirmed for Forever's changed talents | [warcraft.wiki.gg Talent](https://warcraft.wiki.gg/wiki/Talent) |
 
 ## Races
 | Change | Status | Source |

@@ -34,7 +34,8 @@ Type packages: `@types/better-sqlite3` (dev, WEB-05; the package ships no types)
 ## Layering
 ```
 src/core/          pure TS: Lua literal parser, schema normalize, merge, diff, view models, access rules
-src/core/gamedata/ sourced game data tables: classes, races, professions, rulesets, dungeons, zone aliases (WEB-13)
+src/core/gamedata/ sourced game data tables: classes, races, professions, rulesets, dungeons, levels, zone aliases (WEB-13)
+src/core/views/    view models (WEB-14): data age, site name, roll call, roster, character, professions, session report
 src/core/map/      zones.json (built by tools/map, CC BY-SA 4.0) and map helpers
 src/server/        database (Drizzle schema, migrations, queries), upload service, auth config
 src/app/           Next.js routes: pages (React) and route handlers (API)

@@ -61,6 +61,24 @@
 - Decided (Nico, 2026-10-25): shapes as hand-drawn polygons in `build_zones.py` (`EXTRA_ZONES`); The Riverglades as new land east of its four neighbours; Shen'dralas carved from northern Feralas over Lake Dumont; Zephras Isle (Skywall, not Azeroth) as an inset island between the continents (placed south of the Maelstrom, not at the gap's north end as first proposed, because the board's compass rose sits there; confirmed by Nico); no other classic changes (the terrain labels and other Cataclysm coasts stay).
 - Done: `--forever-only` in `tools/map/build_zones.py` applies the changes to the committed `zones.json` (the full build applies them too); 46 shapes (43 zones + 3 terrain), Krol'dok Stronghold's marker in The Riverglades; aliases incl. "Riverglades"; tests in `tests/unit/gamedata.test.ts`.
 
+### WEB-14 View models (core)
+- Goal: everything the screens compute, pure and tested, so pages only render.
+- Data age scale, one everywhere (`docs/DESIGN.md` §4): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d, unknown (no location). A friend's data turns amber at 7 days. The site-wide banner shows when the last upload is 7 days old or more.
+- Site name: the community name (`settings.clubName`) of the newest admin upload; fallback "CommunitiesForever".
+- Roll call: characters grouped by sighting age ("Last 24 hours", "Earlier"), "N of M located", the unknown-whereabouts list, friends without the addon ("Sanne has no addon data yet"), "via X" and "X's data is N days old".
+- Roster: people with characters, sorted and filtered (class, role, level range, profession, last played); level spread 1–60 with dungeon bands and "fits Scarlet Monastery (26–45) with Lia, Tok and Bob"; quick answers (healers, tanks, level 30–40, level 60).
+- Character: main tree name from `mainTree` (an index into `talents`), points spent (level − 9), bars out of 31; "N levels to 60"; dungeon fit with the group; who else was last seen in the same zone; the owner's other characters.
+- Professions: per profession the best in the group and status covered (best ≥ 225), thin (175–224) or gap (< 175); character × profession matrix; "no professions yet".
+- Upload summary (extends WEB-05's `diff`): item level gains, "cap reached" when a rank hits its max, who sent new data (per person: newer data, nothing new, no addon; "via X"), counts for the report header.
+- Unit tests for every rule above, with the addon fixtures and the real beta file.
+- Decided with Nico (2026-10-25):
+  - sighted stubs (friends without the addon seen in a zone) are roll call rows and count in "N of M located"; the no-addon line still names them
+  - level spread: a band for every dungeon (raids excluded) where at least two characters fit; the one with the most fits gets the "fits ..." line, ties go to the narrower range
+  - character dungeon fit: other friends' characters in range (not the owner's alts), any data age; the dungeon with the most of them, ties go to the narrower range
+  - views show full character names, never a first word (the boards' "Lia, Tok and Bob" become full names)
+  - a person's data age is their record's `version` (set by the owner's addon), else `receivedAt`, else their newest character update
+- Done: `src/core/views/` (`age`, `site`, `characters`, `rollCall`, `roster`, `character`, `professions`, `report`), `src/core/people.ts` (data time, "via" names), `src/core/gamedata/levels.ts` (level cap 60, talent points, 31-point trees); `diff` extended with `itemLevelGains`, `capReached`, `senders` and `counts`; tests in `tests/unit/views/` with the design prompt's sample group (`sample.ts`), the addon fixtures and the real beta file.
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):
