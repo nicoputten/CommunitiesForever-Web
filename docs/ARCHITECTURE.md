@@ -14,7 +14,7 @@
 | Framework | Next.js (App Router), React | React is known; one app for UI and API; standalone output runs in a small container |
 | Auth | Auth.js (`next-auth`) with the Battle.net provider | built-in provider, gives the BattleTag |
 | Database | SQLite via `better-sqlite3` (+ `@types/better-sqlite3`), Drizzle ORM, `drizzle-kit` migrations | one file on a TrueNAS dataset, easy backup through snapshots |
-| Tests | Vitest (unit, compat), Playwright (end to end) | |
+| Tests | Vitest (unit, compat), Playwright (end to end, design checks: WEB-30) | `@axe-core/playwright` proposed for WEB-30 (needs OK) |
 | Lint/format | ESLint, Prettier | |
 | Runtime | Node.js LTS, Docker image on GHCR | |
 | Styling | CSS custom properties (`src/styles/tokens.css`) + CSS Modules | tokens from `docs/DESIGN.md`; no runtime CSS-in-JS |
@@ -87,6 +87,7 @@ Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in 
 - Site name: the community name (`settings.clubName`) of the newest admin upload, never hardcoded.
 - Ruleset instead of realm: Forever has one mega-realm per ruleset (Normal, PvP, RP, Hardcore) per region. A sourced table maps realm names to rulesets (WEB-13); an unknown realm shows its text.
 - Motion: ambient on the map and sign-in, calm on data pages; `prefers-reduced-motion` and a "Motion" toggle (`localStorage`) turn it off.
+- The design system is binding (CLAUDE.md rules 11 and 12): deviations only with Nico's OK, listed in `docs/DESIGN.md` "Deviations". The design checks (WEB-30) enforce it: token lint, computed styles, touch targets, accessibility, screenshot baselines.
 
 ## Hosting
 - TrueNAS SCALE 25.10, Custom App (Docker Compose): image from GHCR, `/data` on a dataset, port 3000 on the LAN only.

@@ -3,11 +3,13 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-13, WEB-14, WEB-06, WEB-15, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
+Build order: WEB-13, WEB-14, WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
 WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the design workshop.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
+- Always the design system (CLAUDE.md rules 11 and 12): no raw values outside the tokens, design system components first. A deviation only after Nico said so, recorded in `docs/DESIGN.md` "Deviations".
+- The screen gets its design checks (WEB-30): computed-style checks for its key elements, accessibility scan, screenshot baselines at desktop and phone size.
 - Accessible: semantic HTML, visible focus states, keyboard use, 44 px touch targets, contrast as in `docs/DESIGN.md`, `prefers-reduced-motion` honoured.
 - Works at 375 px (phone) and 1440 px (desktop canvas); page max-width 1280.
 - Empty, loading and error states of the screen are part of the story.
@@ -67,6 +69,22 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - App shell per the boards: `TopBar` (brand with site name from data, Map / Roster / Professions, data age "Data uploaded just now", Upload for admin and members, user menu with sign out), phone `TabBar`, footer credit "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted".
 - Shared components: `DataAgeBadge`, `FactionTag`, `FilterChip` and `Segmented` (`aria-pressed`), `Banner` (site data 7+ days old), `EmptyState`, `Skeleton`, class disc with initials and level badge.
 - Design system board as reference: a `/dev/components` page (admin only) that shows every component in every state.
+
+### WEB-30 Design checks
+- Goal: drifting from the design system fails the build, not a review.
+- **Token lint** (Vitest, no new dependency): scans `src/**/*.module.css` and `src/**/*.tsx` and fails on raw colours (hex, `rgb()`, `hsl()`), font sizes, font families, radii, shadows and durations outside `src/styles/tokens.css`; a value that is really needed goes into the tokens. Allowed: `0`, `100%`, `1px` borders using a token colour.
+- **Computed-style checks** (Playwright): per screen, its key elements use the design values, read with `getComputedStyle`. For example:
+  - page title: Marcellus SC at the `display` size
+  - character names: Marcellus, in their class `-text` colour
+  - data in Inter with tabular numbers
+  - page backgrounds: `--bg-abyss` on map pages, `--bg-night` on data pages
+  - surfaces use the token blur
+- **Touch targets:** every interactive element is at least 44 × 44 px at phone size.
+- **Accessibility:** `@axe-core/playwright` scan of every screen at both sizes, no serious or critical violations (new dev dependency: ask first).
+- **Screenshot baselines:** `toHaveScreenshot` per screen at 1440 and 375 px with fixed sample data (the design prompt's invented friends) and motion off. Baselines live in the repo; updating one is a deliberate `npm run test:design -- --update-snapshots` that Nico approves in the PR.
+- **Reduced motion:** with `prefers-reduced-motion`, no element has a running animation.
+- `npm run test:design` runs all of the above, and CI runs it on every PR.
+- Built right after WEB-15, so every screen story adds its checks from the start.
 
 ### WEB-16 Atmosphere
 - `Atmosphere` component: drifting fog, light shafts, embers, animated sea (waves, surf, foam, Maelstrom, moonlight) with the loop times of `docs/DESIGN.md` §6.

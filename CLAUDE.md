@@ -26,7 +26,8 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 8. English strings, hardcoded. No localization system.
 9. No dependencies beyond those listed in `docs/ARCHITECTURE.md` without asking.
 10. Never invent game data (zone positions, class colors, profession IDs, dungeon levels). Every table of game data names its source in a comment.
-11. **UI follows the design.** Build screens with the tokens from `src/styles/tokens.css` and real data through view models. The boards in `design/boards/` are a visual reference only: match spacing, type and colours, never copy their markup or runtime. Accessible (semantic HTML, focus states, 44 px touch targets, reduced motion) and working at 375 px. The site name comes from the data, never hardcoded.
+11. **Always follow the design system.** Every screen uses the tokens (`src/styles/tokens.css`), type scale, components, data age scale and motion of `docs/DESIGN.md`, and matches its board in `design/boards/`. No raw colours, font sizes, spacing, radii, shadows or durations outside `tokens.css`; no new component when a design system one fits. The boards are a visual reference only: never copy their markup or runtime. Accessible (semantic HTML, focus states, 44 px touch targets, reduced motion) and working at 375 px. The site name comes from the data, never hardcoded.
+12. **Deviating from the design only when Nico says so.** If something can't be built as designed, or seems better another way, ask first. An approved deviation is written in `docs/DESIGN.md` "Deviations" (what, why, date) in the same PR. The design checks (`npm run test:design`, WEB-30) must pass; a changed screenshot baseline is only committed after Nico approved the new look.
 
 ## Commands
 - Node.js 24 LTS (`.nvmrc`). Shells started before the install need `C:\Program Files\nodejs` on PATH (Git Bash: `export PATH="/c/Program Files/nodejs:$PATH"`).
@@ -36,6 +37,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 - `npm run build`, then `npm run test:e2e`: Playwright on the production build, desktop and phone
 - `npm run format`: Prettier write
 - `npm run design`: serves the design boards at http://localhost:4400
+- `npm run test:design`: design checks (WEB-30): token lint, computed-style and accessibility checks, screenshot baselines
 - Map data: `tools/map/README.md` (Python venv; rebuild only when the map should change)
 
 ## Branches
@@ -48,7 +50,7 @@ Gitflow: `feature/web-XX-<slug>` off `develop`, PRs into `develop`. `main` recei
 ## Definition of done (per story)
 - All acceptance criteria met
 - `npm run lint`, `npm test` and `npm run build` pass
-- UI stories: the "Every UI story" criteria in `docs/STORIES.md`; Playwright test for the main flow, screenshots (desktop and phone width) in the PR next to the board
+- UI stories: the "Every UI story" criteria in `docs/STORIES.md`; Playwright test for the main flow; design checks pass; screenshots (desktop and phone width) in the PR next to the board; any deviation approved by Nico and recorded in `docs/DESIGN.md`
 - Manual steps that only Nico can do (Battle.net app, TrueNAS, DNS, a real upload) are written in the story's PR under "Manual"
 
 ## Working with Nico

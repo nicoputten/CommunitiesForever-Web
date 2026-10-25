@@ -196,6 +196,15 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 
 - Final emblem/logo for Doombringers.
 - Exact addon data-format versioning (the "format 2 / 3" copy is a placeholder).
-- ~~Stale thresholds to confirm.~~ Decided: 7 days for both the site banner and a friend's data.
+- ~~Stale thresholds to confirm.~~ Decided: 7 days for both the site banner and a friend's data (§11).
 - Recipe search UI once the addon shares recipes.
 - ~~Confirm the licence and attribution text of the source map SVGs.~~ Done: CC BY-SA 4.0, Syrio.
+
+## 11. Deviations
+
+Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one; add it here in the PR that builds it.
+
+| Date | What | Why | Approved |
+|---|---|---|---|
+| 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
+| 2026-10-25 | Rulesets Normal, PvP, RP, Hardcore (boards show PvP / PvE) | Forever's actual rulesets | Nico |
