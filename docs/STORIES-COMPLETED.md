@@ -53,6 +53,15 @@
 - Decided: Auth.js v5 (`next-auth` 5.0.0-beta.32, pinned); JWT sessions with only the BattleTag, the role read from the database on every request (`src/proxy.ts`), so blocks and guest list removals take effect at once; BattleTags compared without case; blocks apply to members and guests; the community is that of the admin's newest upload, the admin's own file is not held to it; a file without `self.battleTag` is not your file, without `settings.clubId` another community; rejected-for-access files are stored as rejected (history), duplicates are per uploader, a community rejection is checked again on the next try; `rebuild()` re-applies the own-file and community checks but not "may upload".
 - Done: `src/core/access.ts` (roles, permissions, `checkFile`, `battleTagsOf`), `src/server/access.ts` (access list, guest list, blocks, members), `src/server/auth.ts`, `src/server/session.ts` (`guard`), `src/proxy.ts`, `drizzle/0001_access.sql`, routes `/api/uploads`, `/api/admin/guests`, `/api/admin/blocks`, placeholder pages `/signin` and `/not-on-list`; tests in `tests/unit/access.test.ts`, `tests/server/access.test.ts`, `tests/server/routes.test.ts`, `tests/e2e/smoke.spec.ts`.
 
+### WEB-07 Docker image and deploy to TrueNAS
+- Multi-stage Dockerfile (Next.js standalone, non-root user), `/data` volume, health endpoint, migrations run at start.
+- GitHub Actions on tag `v*` on `main`: build and push to GHCR (`:<tag>`, `:latest`).
+- `deploy/` with the TrueNAS 25.10 Custom App compose YAML, the nginx server block for `wow.vestras.nl` (TLS, proxy headers, `client_max_body_size`), and a step-by-step `deploy/README.md`.
+- Manual: DNS record at Hostnet, nginx config and certificate, dataset and app on TrueNAS, first sign-in, first upload.
+- Decided with Nico: the image is public on GHCR; nginx runs as an app on TrueNAS and makes the certificates (the README covers Nginx Proxy Manager and plain nginx); `/data` is the dataset `/mnt/<pool>/apps/cf`, owned by `apps` (568:568), and the container runs as 568:568.
+- `/api/health` is the one route open without a session besides sign-in (CLAUDE.md rule 6): `{ ok, version }` only, 503 when the database doesn't open.
+- Done: `Dockerfile`, `.dockerignore`, `src/app/api/health/route.ts`, `src/instrumentation.ts` (opens the database at start, so migrations run then), `.github/workflows/release.yml`, the `image` job in `ci.yml` (builds the image on every PR and checks its health endpoint), `deploy/compose.yaml`, `deploy/nginx/wow.vestras.nl.conf`, `deploy/README.md`.
+
 ### WEB-13 Game data tables and map data
 - Goal: every table of game data the screens need, sourced (CLAUDE.md rule 10), in `src/core/gamedata/`.
 - Tables:

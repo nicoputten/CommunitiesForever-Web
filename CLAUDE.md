@@ -22,7 +22,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 3. GUID is the character key. Never parse or split character names.
 4. **Backwards compatible with every addon release.** The site must read SavedVariables of every released addon version, because the addon's schema evolves. The addon's golden fixtures are copied to `tests/fixtures/addon/<release>/` and never edited; `tests/compat` must keep passing on all of them. Code reading uploaded data handles missing fields (undefined) everywhere.
 5. **Own database: forward-only migrations.** Every schema change is a new migration file; released migrations are never edited.
-6. Every page and API route requires login, except the login page and the auth callback. Roles (admin, member, guest; `docs/ARCHITECTURE.md` Access) are checked on the server: uploading needs admin, member or a guest with "may upload", and only the uploader's own file of the same community is accepted; the admin page needs admin. The admin can never be blocked.
+6. Every page and API route requires login, except the login page, the auth callback and `/api/health` (WEB-07: ok and the version only, nothing about the data). Roles (admin, member, guest; `docs/ARCHITECTURE.md` Access) are checked on the server: uploading needs admin, member or a guest with "may upload", and only the uploader's own file of the same community is accepted; the admin page needs admin. The admin can never be blocked.
 7. No secrets in the repo. Configuration via environment variables, documented in `.env.example`.
 8. English strings, hardcoded. No localization system.
 9. No dependencies beyond those listed in `docs/ARCHITECTURE.md` without asking.
