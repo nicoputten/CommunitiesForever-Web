@@ -7,9 +7,10 @@ import { BATTLEGROUND, ELSEWHERE } from "./places";
 // Commons, tools/map); the capitals' zones from the map (each capital is drawn inside its zone); Alterac Mountains
 // shares the Hillsbrad shape, as the source SVG has no shape of its own for it (docs/DESIGN.md §5); Blackrock
 // Mountain is in Burning Steppes, where the source map puts it. Dungeon texts come from src/core/gamedata/dungeons.ts.
-// WoW: Forever (docs/WOW-FOREVER.md): Mount Hyjal is playable and resolves to the Hyjal shape (drawn as terrain);
-// the new zones The Riverglades, Zephras Isle and Shen'dralas are not on our map yet and resolve to "elsewhere"
-// (decided by Nico) until the map draws them.
+// WoW: Forever (docs/WOW-FOREVER.md "Zones"): Mount Hyjal is playable (a zone since WEB-31); the new zones
+// The Riverglades, Shen'dralas and Zephras Isle have hand-drawn shapes (tools/map/build_zones.py EXTRA_ZONES, placed by
+// the location texts there; unverified). "Riverglades" without the article is how guides write it; which form the client
+// uses is not confirmed yet, so both resolve.
 // Battlegrounds are not on the map: they resolve to "battleground" (someone who logged off inside one). The Vanilla
 // ones (warcraft.wiki.gg "Battleground", https://warcraft.wiki.gg/wiki/Battleground) and Forever's Darkspear Islands
 // (Game Informer, https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with).
@@ -43,6 +44,9 @@ export const ZONE_ALIASES: Readonly<Record<string, string>> = {
   Tanaris: "tanaris",
   Silithus: "silithus",
   "Mount Hyjal": "hyjal",
+  "Shen'dralas": "shendralas",
+  // Skyborne start, in Skywall: an inset island on the map
+  "Zephras Isle": "zephras",
   // Eastern Kingdoms
   "Tirisfal Glades": "tirisfal",
   "Western Plaguelands": "wpl",
@@ -67,6 +71,8 @@ export const ZONE_ALIASES: Readonly<Record<string, string>> = {
   "Swamp of Sorrows": "swamp",
   "Blasted Lands": "blasted",
   "Stranglethorn Vale": "stv",
+  "The Riverglades": "riverglades",
+  Riverglades: "riverglades",
   // capitals
   Orgrimmar: "durotar",
   "Thunder Bluff": "mulgore",

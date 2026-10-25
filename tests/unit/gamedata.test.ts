@@ -158,10 +158,16 @@ describe("dungeons", () => {
     expect(map.dungeons.map((d) => [d.name, d.zone]).sort()).toEqual(onMap.map((d) => [d.name, d.zone]).sort());
   });
 
-  it("keeps a dungeon in a zone the map does not draw off the map", () => {
-    const kroldok = DUNGEONS.find((d) => d.id === "kroldok")!;
-    expect(kroldok.zone).toBe(ELSEWHERE);
-    expect(dungeonPosition(kroldok)).toBeUndefined();
+  it("puts every dungeon and raid on the map, Forever's in their new zones", () => {
+    expect(DUNGEONS.filter((d) => d.zone === ELSEWHERE)).toEqual([]);
+    for (const [text, zone] of [
+      ["Krol'dok Stronghold", "riverglades"],
+      ["The Barrow Deeps", "hyjal"],
+      ["Hyjal Summit", "hyjal"],
+    ] as const) {
+      expect(resolveZone(text).zone).toBe(zone);
+      expect(zones.get(zone)?.kind).toBe("zone");
+    }
   });
 
   it("lists only the raids announced for Forever", () => {
@@ -185,21 +191,46 @@ describe("dungeons", () => {
   });
 });
 
+describe("map zones", () => {
+  // The ids of the map before WEB-31; sightings and the UI refer to them, so they never change.
+  const vanilla = [
+    "teldrassil", "darkshore", "moonglade", "winterspring", "felwood", "hyjal", "azshara", "ashenvale", "stonetalon",
+    "durotar", "barrens", "mulgore", "desolace", "feralas", "dustwallow", "needles", "ungoro", "tanaris", "silithus",
+    "uldum", "tirisfal", "wpl", "epl", "silverpine", "hillsbrad", "hinterlands", "arathi", "gilneas", "wetlands",
+    "grimbatol", "dunmorogh", "lochmodan", "searing", "badlands", "burning", "elwynn", "redridge", "westfall",
+    "duskwood", "deadwind", "swamp", "blasted", "stv",
+  ]; // prettier-ignore
+
+  it("keeps the existing ids, in order, and adds Forever's zones after them", () => {
+    expect(map.zones.map((z) => z.id)).toEqual([...vanilla, "riverglades", "shendralas", "zephras"]);
+  });
+
+  it("has terrain only where no one plays", () => {
+    expect(map.zones.filter((z) => z.kind === "terrain").map((z) => z.id)).toEqual(["uldum", "gilneas", "grimbatol"]);
+  });
+
+  it("draws Thousand Needles dry: one outline, no lake or islands", () => {
+    expect(zones.get("needles")!.d.match(/M/g)).toHaveLength(1);
+  });
+
+  it.each(map.zones.map((z) => [z.id, z] as const))("%s has its label point inside it", (_, z) => {
+    expect(insidePath(z.d, z.lx, z.ly)).toBe(true);
+  });
+});
+
 describe("zone aliases", () => {
   it.each(playable)("$name has an alias", (z) => {
     expect(ZONE_ALIASES[z.name]).toBe(z.id);
   });
 
-  it("only points at zones on the map, terrain only for Mount Hyjal", () => {
-    for (const [text, id] of Object.entries(ZONE_ALIASES)) {
-      expect(zones.get(id)?.kind).toBe(text === "Mount Hyjal" ? "terrain" : "zone");
-    }
+  it("only points at zones on the map, never at terrain", () => {
+    for (const id of Object.values(ZONE_ALIASES)) expect(zones.get(id)?.kind).toBe("zone");
   });
 
-  it("keeps Forever's zones the map does not draw yet as elsewhere", () => {
-    for (const text of ["The Riverglades", "Riverglades", "Zephras Isle", "Shen'dralas"]) {
-      expect(resolveZone(text).zone).toBe(ELSEWHERE);
-    }
+  it("puts Forever's new zones on the map", () => {
+    expect(
+      ["Mount Hyjal", "The Riverglades", "Riverglades", "Shen'dralas", "Zephras Isle"].map((t) => resolveZone(t).zone),
+    ).toEqual(["hyjal", "riverglades", "riverglades", "shendralas", "zephras"]);
   });
 
   it("puts the capitals in their zone", () => {

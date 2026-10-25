@@ -13,10 +13,13 @@ Requirements:
 Usage:
     python tools/map/build_zones.py --ek tools/map/source/Eastern_Kingdoms.svg --kal tools/map/source/Kalimdor_english.svg --out src/core/map/zones.json
     python tools/map/build_zones.py --dungeons-only --out src/core/map/zones.json
+    python tools/map/build_zones.py --forever-only --out src/core/map/zones.json
 
 --dungeons-only rewrites only the "dungeons" list of an existing zones.json and keeps everything else byte for byte:
 a full rebuild moves outline points and city positions by fractions of a pixel (browser sampling and text measurement),
 which would rewrite every path for a change that only adds dungeons.
+--forever-only applies the WoW: Forever changes (dry Thousand Needles, EXTRA_ZONES, the zone kinds) and the dungeons to
+an existing zones.json: only the zones they touch and the coastline rings next to them are rewritten.
 
 How it works:
     1. A headless browser renders each SVG and samples every path outline (getPointAtLength), so curves,
@@ -24,13 +27,16 @@ How it works:
     2. Paths are grouped by fill colour; each colour is one zone (islands included). Holes (lakes)
        are detected with the even-odd rule.
     3. Zones are merged/renamed for Vanilla, both continents are scaled to the same height and
-       placed side by side, outlines are simplified, and label points are found with polylabel.
+       placed side by side.
+    4. WoW: Forever (forever()): Thousand Needles is dried and the EXTRA_ZONES are added; then outlines are
+       simplified and label points are found with polylabel.
 
-To change the map, edit COLOURS / LINES / LABEL_OVERRIDES / CITIES below and run it again.
+To change the map, edit COLOURS / LINES / LABEL_OVERRIDES / CITIES / EXTRA_ZONES below and run it again.
 """
 import argparse
 import json
 import math
+import re
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -46,6 +52,7 @@ CONTINENT_GAP = 70              # px between Kalimdor and the Eastern Kingdoms
 SAMPLE_STEP = 0.4               # SVG units between sampled outline points (smaller = slower, more exact)
 SIMPLIFY = 0.45                 # px tolerance for zone outlines
 MIN_AREA = 1.5                  # px² — drop specks smaller than this
+SLIVER = 10                     # px²: --forever-only drops new coastline holes smaller than this
 
 # fill colour(s) in the source SVG -> (id, name, kind). kind: "zone" (interactive) or "terrain" (dark, no hover)
 # A list of colours means the zones are merged. Colours not listed are dropped (Cataclysm-only areas).
@@ -55,7 +62,7 @@ KALIMDOR = [
     ("moonglade",   "Moonglade",             "zone",    ["#81D4F7"]),   # same colour as Bloodmyst; filtered by x below
     ("winterspring","Winterspring",          "zone",    ["#B6D98B"]),
     ("felwood",     "Felwood",               "zone",    ["#759341"]),
-    ("hyjal",       "Mount Hyjal",           "terrain", ["#00A750"]),
+    ("hyjal",       "Mount Hyjal",           "zone",    ["#00A750"]),   # playable in WoW: Forever (WEB-31)
     ("azshara",     "Azshara",               "zone",    ["#62BD5E"]),
     ("ashenvale",   "Ashenvale",             "zone",    ["#87BC40"]),
     ("stonetalon",  "Stonetalon Mountains",  "zone",    ["#B47565"]),
@@ -108,6 +115,7 @@ LINES = {
     "searing": ["Searing", "Gorge"], "blasted": ["Blasted", "Lands"], "stv": ["Stranglethorn", "Vale"],
     "tirisfal": ["Tirisfal", "Glades"], "arathi": ["Arathi", "Highlands"], "elwynn": ["Elwynn", "Forest"],
     "lochmodan": ["Loch", "Modan"], "hyjal": ["Mount", "Hyjal"], "hinterlands": ["The Hinterlands"], "grimbatol": ["Grim", "Batol"],
+    "riverglades": ["The", "Riverglades"], "zephras": ["Zephras", "Isle"],
 }
 
 # hand-placed label / marker anchor points in world px (to avoid capitals and keep room for markers)
@@ -116,6 +124,37 @@ LABEL_OVERRIDES = {
     "durotar": (382, 488), "barrens": (306, 512), "hillsbrad": (728, 282), "stonetalon": (180, 452), "westfall": (656, 726),
     "epl": (882, 152),
 }
+
+# WoW: Forever (WEB-31, docs/WOW-FOREVER.md "Zones"). The source SVGs are Cataclysm-era; these make the map Forever's.
+# Thousand Needles: the source floods it (a sea inlet cut out of the zone, the mesas as islands); in classic it is dry
+# canyon. The zone is filled up to its convex hull (grown by 4 px) minus its neighbours, the inlet's mouth closed along this line (world
+# px, north to south, following the coast on either side of the mouth).
+NEEDLES_EAST_COAST = [(393.6, 655), (392.6, 668), (391.4, 676), (388.8, 681), (389.4, 686), (392.4, 690), (394.6, 700),
+                      (395.2, 730)]
+
+# New zones the source SVGs have no shape for: outlines in world px, placed by hand (Claude, approved by Nico 2026-10-25)
+# and roughened like the source coastlines (rough()). A zone is its outline minus the other zones of its continent,
+# except those it "carves", which lose the outline instead. Locations: docs/WOW-FOREVER.md, all unverified.
+EXTRA_ZONES = [
+    # East coast of the Eastern Kingdoms between Burning Steppes, Redridge, Swamp of Sorrows and Badlands, about the size
+    # of Stranglethorn Vale; land the classic map never had, so new coast (lfcarry, wowguide.net).
+    {"id": "riverglades", "name": "The Riverglades", "cont": "E", "carves": [], "points": [
+        (858, 590), (880, 582), (905, 580), (916, 571), (926, 566), (934, 558), (942, 561), (949, 568), (957, 571),
+        (961, 580), (966, 590), (974, 596), (978, 606), (973, 613), (980, 622), (986, 633), (982, 641), (977, 652),
+        (969, 657), (964, 667), (957, 676), (949, 683), (940, 686), (931, 683), (921, 680), (911, 679), (898, 677),
+        (886, 671), (876, 652), (862, 615)]},
+    # South-east of Desolace between Feralas and Mulgore, entered through the Valley of Bones, where retail's Lake Dumont
+    # is (warcraft.wiki.gg "Shen'dralas", lfcarry): carved from northern Feralas, the lake filled.
+    {"id": "shendralas", "name": "Shen'dralas", "cont": "K", "carves": ["feralas"], "points": [
+        (150, 571), (178, 568), (207, 569), (210, 585), (208, 604), (190, 612), (168, 610), (152, 600), (146, 586)]},
+    # In Skywall, the elemental plane of air, not on Azeroth (warcraft.wiki.gg "Zephras Isle"): an inset island in the
+    # open sea between the continents, south of the Maelstrom (the map's compass rose takes the gap's north end).
+    {"id": "zephras", "name": "Zephras Isle", "cont": "K", "carves": [], "points": [
+        (492, 783), (502, 773), (518, 769), (534, 772), (546, 781), (548, 793), (540, 804), (524, 810), (507, 808),
+        (495, 799)]},
+]
+ROUGH_STEP = 2.5     # px between the points rough() adds
+ROUGH_AMP = 1.2      # px: how far rough() moves them sideways
 
 # cities: (name, continent, label text in the source SVG, capital?) — position taken from that label
 CITIES = [
@@ -152,10 +191,10 @@ DUNGEONS = [
     {"name": "Scholomance", "zone": "wpl", "x": 828, "y": 206},
     {"name": "Stratholme", "zone": "epl", "x": 862.7, "y": 103.9},
     {"name": "Onyxia's Lair", "zone": "dustwallow", "x": 350, "y": 655},
-    # WoW: Forever's new dungeons and raids (docs/WOW-FOREVER.md); Krol'dok Stronghold has no marker (The Riverglades
-    # is not on the map). Placed by Blizzard's location text: beneath Ironforge, above the Undercity, western Wetlands,
-    # Alterac Mountains, the islet off Stranglethorn's west coast, Alcaz Island, Azshara (no exact spot published),
-    # northern Un'Goro, Mount Hyjal (Hyjal Summit by the source's Nordrassil label).
+    # WoW: Forever's new dungeons and raids (docs/WOW-FOREVER.md). Placed by Blizzard's location text: beneath Ironforge,
+    # above the Undercity, western Wetlands, Alterac Mountains, the islet off Stranglethorn's west coast, Alcaz Island,
+    # Azshara (no exact spot published), northern Un'Goro, Mount Hyjal (Hyjal Summit by the source's Nordrassil label),
+    # The Riverglades (no exact spot published).
     {"name": "Hall of Thanes", "zone": "dunmorogh", "x": 752, "y": 476},
     {"name": "Ruins of Lordaeron", "zone": "tirisfal", "x": 711, "y": 184},
     {"name": "Excavation Site", "zone": "wetlands", "x": 780, "y": 392},
@@ -166,6 +205,7 @@ DUNGEONS = [
     {"name": "Shaper's Terrace", "zone": "ungoro", "x": 270, "y": 700},
     {"name": "The Barrow Deeps", "zone": "hyjal", "x": 310, "y": 345},
     {"name": "Hyjal Summit", "zone": "hyjal", "x": 340, "y": 288},
+    {"name": "Krol'dok Stronghold", "zone": "riverglades", "x": 940, "y": 645},
 ]
 
 SOURCE_NOTE = ("Wikimedia Commons Kalimdor_english.svg / Eastern_Kingdoms.svg (zone outlines), "
@@ -241,13 +281,56 @@ def build_zones(spec, colours, cont):
         if len(cols) > 1:   # close hairline gaps between merged zones
             g = g.buffer(0.6).buffer(-0.6)
         if zid == "moonglade":
-            parts = list(g.geoms) if hasattr(g, "geoms") else [g]
-            g = unary_union([p for p in parts if p.centroid.x > MOONGLADE_MIN_X])
+            g = unary_union([p for p in parts(g) if p.centroid.x > MOONGLADE_MIN_X])
         zones.append({"id": zid, "name": name, "cont": cont, "kind": kind, "geom": g})
     return zones
 
 
-# ---------------------------------------------------------------- 3. place, simplify, label
+# ---------------------------------------------------------------- 3. WoW: Forever (world px)
+
+def parts(g):
+    return list(g.geoms) if hasattr(g, "geoms") else [g]
+
+
+def rough(points, seed):
+    """The closed outline with a point every ROUGH_STEP px, moved sideways by smooth deterministic noise."""
+    out = []
+    for i, (xa, ya) in enumerate(points):
+        xb, yb = points[(i + 1) % len(points)]
+        length = math.hypot(xb - xa, yb - ya)
+        n = max(1, round(length / ROUGH_STEP))
+        nx, ny = (ya - yb) / length, (xb - xa) / length
+        for k in range(n):
+            t = len(out) + seed * 97
+            off = ROUGH_AMP * (0.6 * math.sin(t * 0.9) + 0.4 * math.sin(t * 2.3 + 1.7))
+            out.append((xa + (xb - xa) * k / n + nx * off, ya + (yb - ya) * k / n + ny * off))
+    return Polygon(out).buffer(0)
+
+
+def forever(geoms, conts):
+    """Dry Thousand Needles and add EXTRA_ZONES. geoms (zone id -> geometry in world px) and conts (id -> "K"/"E") are
+    changed in place. Returns the ids of the zones it changed and of those that grew (the others only lost land)."""
+    def others(cont, skip):
+        return unary_union([g for k, g in geoms.items() if conts[k] == cont and k not in skip])
+
+    needles, rest = geoms["needles"], others("K", {"needles"})
+    west = Polygon([(0, 0), (NEEDLES_EAST_COAST[0][0], 0), *NEEDLES_EAST_COAST, (NEEDLES_EAST_COAST[-1][0], WORLD_H),
+                    (0, WORLD_H)])
+    filled = unary_union([needles, needles.buffer(4).convex_hull.intersection(west)]).difference(rest)
+    geoms["needles"] = Polygon(max(parts(filled), key=lambda p: p.area).exterior).difference(rest)
+    changed, grown = ["needles"], ["needles"]
+
+    for i, z in enumerate(EXTRA_ZONES):
+        conts[z["id"]] = z["cont"]
+        geoms[z["id"]] = rough(z["points"], i).difference(others(z["cont"], {z["id"], *z["carves"]}))
+        for c in z["carves"]:
+            geoms[c] = geoms[c].difference(geoms[z["id"]])
+        changed += [z["id"], *z["carves"]]
+        grown.append(z["id"])
+    return changed, grown
+
+
+# ---------------------------------------------------------------- 4. place, simplify, label
 
 def ring_d(coords):
     pts = list(coords)[:-1]
@@ -265,14 +348,83 @@ def geom_d(g):
     return "".join(out)
 
 
+def parse_d(d):
+    """A geometry from a "M x,y x,y …Z" path as geom_d writes it (even-odd)."""
+    g = Polygon()
+    for ring in re.findall(r"M([^Z]*)Z", d):
+        g = g.symmetric_difference(Polygon([tuple(map(float, p.split(","))) for p in ring.split(" ")]).buffer(0))
+    return g
+
+
+def zone_entry(z, g):
+    """The zones.json entry of zone z ({id, name, cont, kind}) with its simplified geometry g."""
+    lp = polylabel(max(parts(g), key=lambda p: p.area), 0.5)
+    lx, ly = LABEL_OVERRIDES.get(z["id"], (round(lp.x, 1), round(lp.y, 1)))
+    area = round(g.area)
+    return {
+        "id": z["id"], "name": z["name"], "cont": z["cont"], "kind": z["kind"],
+        "d": geom_d(g), "lx": lx, "ly": ly, "area": area,
+        "lines": LINES.get(z["id"], [z["name"]]),
+        "size": 11 if area > 7000 else (10 if area > 3500 else 9),
+    }
+
+
+def extra_specs():
+    return [{"id": e["id"], "name": e["name"], "cont": e["cont"], "kind": "zone"} for e in EXTRA_ZONES]
+
+
+def forever_only(path):
+    """Apply forever(), the zone kinds and DUNGEONS to an existing zones.json. Zones forever() does not change keep their
+    entry byte for byte, coastline rings it does not touch keep their text."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    kinds = {zid: kind for zid, _, kind, _ in KALIMDOR + EASTERN_KINGDOMS}
+    for z in data["zones"]:
+        z["kind"] = kinds.get(z["id"], z["kind"])
+    geoms = {z["id"]: parse_d(z["d"]) for z in data["zones"]}
+    conts = {z["id"]: z["cont"] for z in data["zones"]}
+    changed, grown = forever(geoms, conts)
+
+    specs = {z["id"]: z for z in data["zones"] + extra_specs()}
+    entries = {zid: zone_entry(specs[zid], geoms[zid].simplify(SIMPLIFY, preserve_topology=True)) for zid in changed}
+    data["zones"] = [entries.pop(z["id"], z) for z in data["zones"]] + [entries[z["id"]] for z in extra_specs() if z["id"] in entries]
+
+    for c in "KE":
+        old = data["coast"][c]
+        land = unary_union([g for zid, g in geoms.items() if conts[zid] == c])
+        added = unary_union([geoms[zid] for zid in grown if conts[zid] == c])
+        # the new land grown a little over the old land, to close seams with the old coastline, not out to sea
+        coast = unary_union([parse_d(old), added, added.buffer(0.8).intersection(land)])
+        keep = {r: i for i, r in enumerate(re.findall(r"M[^Z]*Z", old))}
+        kept, new = set(), []
+        for p in parts(coast):
+            if p.area < MIN_AREA:
+                continue
+            for ring in [p.exterior, *p.interiors]:
+                d = ring_d(ring.coords)
+                same = next((r for r in keep if set(r[1:-1].split(" ")) == set(d[1:-1].split(" "))), None)
+                if same:
+                    kept.add(same)
+                elif ring is p.exterior or Polygon(ring).area > SLIVER:   # seams between old coast and new land
+                    new.append(d)
+        data["coast"][c] = "".join(sorted(kept, key=keep.get)) + "".join(new)
+
+    data["dungeons"] = DUNGEONS
+    path.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
+    print(f"wrote {path} · changed {', '.join(changed)} · {len(data['zones'])} zones")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ek", type=Path, help="Eastern_Kingdoms.svg")
     ap.add_argument("--kal", type=Path, help="Kalimdor_english.svg")
     ap.add_argument("--out", default=Path("zones.json"), type=Path)
     ap.add_argument("--dungeons-only", action="store_true", help="only rewrite the dungeons of an existing --out file")
+    ap.add_argument("--forever-only", action="store_true", help="only apply the Forever changes to an existing --out file")
     args = ap.parse_args()
 
+    if args.forever_only:
+        forever_only(args.out)
+        return
     if args.dungeons_only:
         text = args.out.read_text(encoding="utf-8")
         data = json.loads(text)
@@ -317,23 +469,14 @@ def main():
         s, dx, dy = T[c]
         return affinity.affine_transform(g, [s, 0, 0, s, dx, dy])
 
-    out_zones = []
-    for z in zones:
-        g = place(z["geom"], z["cont"]).simplify(SIMPLIFY, preserve_topology=True)
-        main_part = max(g.geoms, key=lambda p: p.area) if hasattr(g, "geoms") else g
-        lp = polylabel(main_part, 0.5)
-        lx, ly = LABEL_OVERRIDES.get(z["id"], (round(lp.x, 1), round(lp.y, 1)))
-        area = round(g.area)
-        out_zones.append({
-            "id": z["id"], "name": z["name"], "cont": z["cont"], "kind": z["kind"],
-            "d": geom_d(g), "lx": lx, "ly": ly, "area": area,
-            "lines": LINES.get(z["id"], [z["name"]]),
-            "size": 11 if area > 7000 else (10 if area > 3500 else 9),
-        })
+    placed = {z["id"]: place(z["geom"], z["cont"]) for z in zones}
+    forever(placed, {z["id"]: z["cont"] for z in zones})
+    zones += extra_specs()
+    out_zones = [zone_entry(z, placed[z["id"]].simplify(SIMPLIFY, preserve_topology=True)) for z in zones]
 
     coast = {}
     for c in "KE":
-        u = unary_union([place(z["geom"], c) for z in zones if z["cont"] == c])
+        u = unary_union([placed[z["id"]] for z in zones if z["cont"] == c])
         coast[c] = geom_d(u.buffer(0.8).buffer(-0.8).simplify(0.5))
 
     texts = {"K": kal["texts"], "E": ek["texts"]}

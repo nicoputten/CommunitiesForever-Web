@@ -48,6 +48,19 @@
 - Decided: Vanilla dungeon level ranges from the addon's planner table (`Dungeons.STATIC`), new ones from the beta Group Finder or else Blizzard; Blackrock Mountain and its instances in Burning Steppes, where the source map puts it; Alterac Mountains aliases to Hillsbrad (the source SVG has no shape for it); battlegrounds (incl. Darkspear Islands) resolve to "battleground" and other unknown text to "elsewhere" (both off the map); PvP realms: the beta realm and "Forever PvP" (launch).
 - Done: `src/core/gamedata/` (`classes`, `races`, `professions`, `rulesets`, `dungeons`, `zones` with `resolveZone`); 30 dungeon and raid markers in `tools/map/build_zones.py` and `zones.json` (`--dungeons-only` rewrites just that list, so the outlines stay byte for byte); tests in `tests/unit/gamedata.test.ts`.
 
+### WEB-31 Map: classic Thousand Needles and Forever's new zones
+- Goal: the map looks like WoW: Forever, not Cataclysm, with a few small changes to `src/core/map/zones.json` and no rework of the rest.
+- **Thousand Needles dry:** the source SVG's flooded lake (a sea inlet cut out of the zone, with the mesas as islands) is land again: the zone is one shape without water, holes or islands, and the coastline no longer runs into it.
+- **Mount Hyjal** is a zone (`kind: "zone"`) instead of terrain, with the same id `hyjal`.
+- **New zones** The Riverglades, Shen'dralas and Zephras Isle are drawn, placed by the sources in `docs/WOW-FOREVER.md`; each placement is marked confirmed or unverified there. Their shapes are defined in `tools/map/build_zones.py`, so a full rebuild reproduces them.
+- **Resolving:** the new zones' names, Krol'dok Stronghold, The Barrow Deeps and Hyjal Summit resolve to real zones, not "elsewhere"; Krol'dok Stronghold gets a marker inside The Riverglades.
+- **The rest unchanged:** every existing zone keeps its id; the `zones.json` diff only touches Thousand Needles, Mount Hyjal, the new zones, the zones a new zone borders or is carved from, and the coastlines next to them.
+- Every approved look change is in `docs/DESIGN.md` §11 Deviations; §5 describes the new zones.
+- Tests: every zone in `zones.json` has an alias; the new dungeon and raid zones resolve to their zone; the existing zone ids are all still there; every dungeon marker lies inside its zone.
+- PR: before/after screenshots of the map board rendered with the new `zones.json`.
+- Decided (Nico, 2026-10-25): shapes as hand-drawn polygons in `build_zones.py` (`EXTRA_ZONES`); The Riverglades as new land east of its four neighbours; Shen'dralas carved from northern Feralas over Lake Dumont; Zephras Isle (Skywall, not Azeroth) as an inset island between the continents (placed south of the Maelstrom, not at the gap's north end as first proposed, because the board's compass rose sits there; confirmed by Nico); no other classic changes (the terrain labels and other Cataclysm coasts stay).
+- Done: `--forever-only` in `tools/map/build_zones.py` applies the changes to the committed `zones.json` (the full build applies them too); 46 shapes (43 zones + 3 terrain), Krol'dok Stronghold's marker in The Riverglades; aliases incl. "Riverglades"; tests in `tests/unit/gamedata.test.ts`.
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):

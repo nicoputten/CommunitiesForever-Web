@@ -1,5 +1,4 @@
 import map from "../map/zones.json";
-import { ELSEWHERE } from "./places";
 
 // WoW: Forever's dungeons and raids (docs/WOW-FOREVER.md): one entry per instance entrance (the place a marker goes),
 // wings listed under it. All level ranges are typical, not limits: label them so. Sources:
@@ -16,8 +15,7 @@ import { ELSEWHERE } from "./places";
 //   Forever and stay out until they are (decided by Nico).
 // - Zone texts: the client's zone name inside the instance (GetInstanceInfo, e.g. "Ruins of Lordaeron"), the Group
 //   Finder name, and the addon's quest-log headers for it (Dungeons.STATIC `areas`).
-// - Krol'dok Stronghold is in The Riverglades, which our map does not draw yet: its zone is "elsewhere" and it has no
-//   marker. The Mount Hyjal raids sit on the Hyjal (terrain) shape.
+// - Krol'dok Stronghold is in The Riverglades, the Mount Hyjal raids on Mount Hyjal (both zones since WEB-31).
 // - Map positions: zones.json `dungeons` (hand-placed in tools/map/build_zones.py), joined by name.
 
 export type InstanceKind = "dungeon" | "raid";
@@ -262,7 +260,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     id: "kroldok",
     name: "Krol'dok Stronghold",
     kind: "dungeon",
-    zone: ELSEWHERE,
+    zone: "riverglades",
     typicalLevels: typical(40, 45),
     zoneTexts: ["Krol'dok Stronghold"],
   },
