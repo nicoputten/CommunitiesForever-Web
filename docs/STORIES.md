@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-13, WEB-14, WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
+Build order: WEB-14, WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
 WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the design workshop.
 
 ## Every UI story
@@ -16,18 +16,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Playwright test for the main flow at desktop and phone size; screenshots of both in the PR next to the board.
 
 ## E2 Data
-
-### WEB-13 Game data tables and map data
-- Goal: every table of game data the screens need, sourced (CLAUDE.md rule 10), in `src/core/gamedata/`.
-- Tables:
-  - classes: `classFile` → name, colour token, text-colour token (values in `docs/DESIGN.md` §3)
-  - races: `raceID` → name, faction
-  - professions: skill line ID → name, primary or secondary; caps 75/150/225/300
-  - rulesets: show **PvP** or **PvE**. The group plays on the PvP ruleset, so the table lists the PvP realm name(s) (the beta realm now, the launch name on launch day) and every other realm shows PvE. Never parse the realm name.
-  - dungeons and raids: name, zone, typical level range (labelled "typical"), map position
-  - zone aliases: the addon's zone text → `zones.json` zone id, also for cities ("Orgrimmar", "Stormwind City") and for dungeon names (→ the dungeon's zone). Unknown text: "elsewhere", never dropped.
-- `tools/map/build_zones.py`: add every Vanilla dungeon and raid to `DUNGEONS` (positions placed by hand on our map, source of the level ranges named), and Alterac Mountains if the source SVG allows a separate shape (otherwise an alias to Hillsbrad). Rebuild `zones.json`.
-- Unit tests: every zone in `zones.json` has an alias; every dungeon's zone exists; every class has its tokens.
 
 ### WEB-14 View models (core)
 - Goal: everything the screens compute, pure and tested, so pages only render.
