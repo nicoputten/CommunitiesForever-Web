@@ -32,3 +32,25 @@
 - Tests against a temporary SQLite file.
 - Decided with Nico: derived state in tables; the diff is saved on the upload row; `rebuild()` retries rejected uploads; upload limit 25 MiB (parser limit raised to match), larger files refused and not stored. `@types/better-sqlite3` added.
 - Done: `src/server/db/` (schema, `openDatabase`, `DATA_DIR`), `drizzle/0000_init.sql`, `src/server/uploads.ts` (`upload`, `rebuild`, `loadState`), `src/core/diff.ts`; tests in `tests/server/uploads.test.ts`, `tests/unit/diff.test.ts`.
+
+### WEB-02 Design prompt for Claude Design
+- Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
+- Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):
+  - What the site is, who uses it (Nico uploads; 4-8 friends browse, mostly to plan play sessions and find crafters), when (not in game: at work, on the couch, on a phone).
+  - **Visual direction:** Vanilla WoW (parchment, gold-trimmed frames, class colors, serif display type in the spirit of Friz Quadrata, Azeroth map art) made with modern techniques: drifting fog and volumetric light, parallax depth, subtle particle embers, smooth transitions, glass and blur layers. "Really cool looking" is the bar; it should feel like a premium fan site, not a spreadsheet. Respect `prefers-reduced-motion`.
+  - **Screens, in priority order:**
+    1. **World map (hero):** a big map of Azeroth (Eastern Kingdoms, Kalimdor) with small icons (class color, or portrait) of characters at their last known zone, region-level precision. Clustering when many sit in one zone, hover/tap for name, level, class, "seen 3 h ago", fading for old sightings, dungeon sightings shown at the dungeon's zone. Filters: person, online recently, faction.
+    2. **Alts / roster:** per friend, their characters: class, race, level, item level, role, main talent tree, professions, last played. Sort and filter; compare across the group ("who has a level 60", "who is closest to 40").
+    3. **Professions:** who has which profession at what skill (rank/max bars), gaps in the group ("nobody has Alchemy"), later recipes ("who can craft Bolt of Silk Cloth").
+    4. **Character detail:** everything about one character.
+    5. **Upload (admin):** drag and drop the `.lua` file, result summary (what changed: new characters, level ups, profession gains), upload history.
+    6. **Login:** "Sign in with Battle.net", not-allowed state.
+  - Shared states: data age per person ("data from 2 days ago, via Bob"), empty state before the first upload, a friend without the addon, a character with no location.
+  - Real data shape and edge cases: names with a space ("Ves Doombringer"), 10+ alts for one person, realm names that change, item level missing, sample data generated from the addon fixtures (invented players).
+  - Responsive: desktop first, map and tables that work with touch at 375 px wide.
+  - Technical constraints for the output: React components, the libraries in `docs/ARCHITECTURE.md` plus the map/styling/animation choices the design proposes (listed as proposals, Nico decides), accessible contrast.
+  - A list of open UX questions to work through in the workshop (navigation model, map interaction, how much motion, density of the roster, phone layout of the map).
+- After the workshop: `docs/DESIGN.md` records decisions (tokens: colors, type, spacing; components; screen layouts; chosen map/styling/animation libraries) and links the Claude Design result. Those libraries get added to `docs/ARCHITECTURE.md`.
+- Decided: **map art** is a custom illustrated Vanilla-style map, made in the workshop (Blizzard's in-game map textures are their copyright).
+- Part 1 (done): `docs/DESIGN-PROMPT.md`.
+- Part 2 (done): the workshop; decisions in `docs/DESIGN.md`, boards in `design/boards/`.

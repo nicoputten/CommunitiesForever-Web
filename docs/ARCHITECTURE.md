@@ -2,9 +2,10 @@
 
 ## Core rules
 - Raw uploads are the source of truth. Everything shown is derived from them and can be rebuilt (`rebuild` after a parser or merge fix), so no upload is ever lost to a bug.
-- One uploader (Nico, admin role). Viewers: the friend group, logged in with Battle.net.
+- Uploaders: Nico (admin) and every member of his in-game community; viewers also include guests from the admin's guest list. Everyone signs in with Battle.net (see Access).
 - The site never talks to the game or to Blizzard's game data APIs; it only shows what the addon recorded.
 - Desktop first, fully usable on a phone (responsive, touch-friendly map).
+- The look is fixed by the design workshop: `docs/DESIGN.md` (decisions, tokens) and `design/boards/` (visual references).
 
 ## Stack
 | Part | Choice | Why |
@@ -16,7 +17,13 @@
 | Tests | Vitest (unit, compat), Playwright (end to end) | |
 | Lint/format | ESLint, Prettier | |
 | Runtime | Node.js LTS, Docker image on GHCR | |
-| Map, styling, animation | **decided in WEB-02** (design workshop) | depends on the design direction |
+| Styling | CSS custom properties (`src/styles/tokens.css`) + CSS Modules | tokens from `docs/DESIGN.md`; no runtime CSS-in-JS |
+| Fonts | `next/font/google`: Marcellus SC, Marcellus, Inter | self-hosted at build, no layout shift |
+| Map | inline SVG rendered on the server from `src/core/map/zones.json`, HTML overlay for markers | no tiles, no WebGL |
+| Pan, zoom, pinch | `react-zoom-pan-pinch` | map (WEB-26) |
+| Popovers | `@floating-ui/react` | marker cards, filter menus |
+| Bottom sheet | `vaul` | phone map (WEB-28) |
+| Motion | CSS keyframes and transitions; `motion` only if the sheet drag or cluster fan need physics (ask first) | |
 
 Every dependency beyond this list needs Nico's OK (CLAUDE.md rule 9).
 
@@ -26,11 +33,16 @@ Type packages: `@types/better-sqlite3` (dev, WEB-05; the package ships no types)
 
 ## Layering
 ```
-src/core/        pure TS: Lua literal parser, schema normalize, merge, view models, game data tables
-src/server/      database (Drizzle schema, migrations, queries), upload service, auth config
-src/app/         Next.js routes: pages (React) and route handlers (API)
-src/components/  React UI components
-tests/           unit (core), compat (addon fixtures), e2e (Playwright)
+src/core/          pure TS: Lua literal parser, schema normalize, merge, diff, view models, access rules
+src/core/gamedata/ sourced game data tables: classes, races, professions, rulesets, dungeons, zone aliases (WEB-13)
+src/core/map/      zones.json (built by tools/map, CC BY-SA 4.0) and map helpers
+src/server/        database (Drizzle schema, migrations, queries), upload service, auth config
+src/app/           Next.js routes: pages (React) and route handlers (API)
+src/components/    React UI components (CSS Modules)
+src/styles/        tokens.css, global styles
+design/            Claude Design board exports: visual reference only, never imported (design/README.md)
+tools/map/         build_zones.py and its source SVGs: rebuilds src/core/map/zones.json
+tests/             unit (core), compat (addon fixtures), server (temporary SQLite), e2e (Playwright)
 ```
 - `core` imports nothing from the other layers (enforced by ESLint `no-restricted-imports`).
 - `server` calls `core`; pages and route handlers call `server`. Components get view models as props and never touch the database.
@@ -52,12 +64,29 @@ Schema: `src/server/db/schema.ts`; service: `src/server/uploads.ts` (WEB-05).
 - Derived (rebuildable, rewritten in the upload's transaction): `people` (key, data JSON), `characters` (GUID key, owner, updatedAt, source upload, via, data JSON), `locations` (GUID, zone, seenAt, source upload), `presence` (GUID, BattleTag, lastSeen), `meta` (one row: schemaVersion, version, uploader, community). Together they are the merged `Dataset`.
 - `rebuild()` re-reads every stored upload in upload order, rejected ones too (a file with a newer schema can become ok after a site update), and recomputes statuses, summaries and the derived tables.
 - Migrations: `npm run db:generate -- --name <what>` writes `drizzle/NNNN_<what>.sql`; `openDatabase` applies them on open. Released migration files are never edited (CLAUDE.md rule 5).
-- Sessions per Auth.js adapter or JWT (decided in WEB-06).
+- Sessions per Auth.js adapter or JWT (decided in WEB-06). Guest list table (WEB-06).
 - Data directory: `DATA_DIR` (`.env.example`; `./data` locally, `/data` in the container), file `communitiesforever.sqlite`, a TrueNAS dataset on the host.
 
 ## Access
-- Battle.net OAuth (region EU). Allowed: BattleTags on an allow-list; admin: `ADMIN_BATTLETAG`. Details in WEB-06.
-- Later (WEB-12): an API token for an automatic uploader, admin scope, upload only.
+Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in an in-game community. Membership therefore comes from the data. Details in WEB-06.
+
+| Role | Who | Sign in | Upload | Admin page |
+|---|---|---|---|---|
+| admin | `ADMIN_BATTLETAG` | yes | yes | yes |
+| member | a BattleTag in the community data of the admin's own uploads (`self`, `people`, `presence`) | yes | yes | no |
+| guest | a BattleTag on the guest list (admin page) | yes | only if "may upload" is ticked | no |
+| anyone else | | "not on the list" | no | no |
+
+- Uploads by members add data (merged like any upload) but never add members; only the admin's uploads define the community.
+- Roles are checked on the server for every route (CLAUDE.md rule 6).
+- Later (WEB-12): an API token for an automatic uploader, upload scope only.
+
+## UI
+- Screens follow the boards in `design/boards/` (index: `design/README.md`); `docs/DESIGN.md` is the source of truth for tokens, data age scale, map layers, zoom levels, motion and components. The boards are references only: no markup or runtime is copied.
+- Data age scale (one everywhere): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d, unknown. A friend's data turns amber at 7 days; the site-wide banner shows when the last upload is 7 days old or more.
+- Site name: the community name (`settings.clubName`) of the newest admin upload, never hardcoded.
+- Ruleset instead of realm: Forever has one mega-realm per ruleset (Normal, PvP, RP, Hardcore) per region. A sourced table maps realm names to rulesets (WEB-13); an unknown realm shows its text.
+- Motion: ambient on the map and sign-in, calm on data pages; `prefers-reduced-motion` and a "Motion" toggle (`localStorage`) turn it off.
 
 ## Hosting
 - TrueNAS SCALE 25.10, Custom App (Docker Compose): image from GHCR, `/data` on a dataset, port 3000 on the LAN only.

@@ -3,70 +3,173 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04, WEB-05, WEB-06, WEB-07, then the views WEB-08..11 once the design is settled, WEB-12 (uploader) last.
+Build order: WEB-13, WEB-14, WEB-06, WEB-15, WEB-16, WEB-07, then the screens WEB-17..29 in number order, WEB-12 last.
+WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the design workshop.
 
-## E1 Foundation
-
-### WEB-02 Design prompt for Claude Design
-- Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
-- Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):
-  - What the site is, who uses it (Nico uploads; 4-8 friends browse, mostly to plan play sessions and find crafters), when (not in game: at work, on the couch, on a phone).
-  - **Visual direction:** Vanilla WoW (parchment, gold-trimmed frames, class colors, serif display type in the spirit of Friz Quadrata, Azeroth map art) made with modern techniques: drifting fog and volumetric light, parallax depth, subtle particle embers, smooth transitions, glass and blur layers. "Really cool looking" is the bar; it should feel like a premium fan site, not a spreadsheet. Respect `prefers-reduced-motion`.
-  - **Screens, in priority order:**
-    1. **World map (hero):** a big map of Azeroth (Eastern Kingdoms, Kalimdor) with small icons (class color, or portrait) of characters at their last known zone, region-level precision. Clustering when many sit in one zone, hover/tap for name, level, class, "seen 3 h ago", fading for old sightings, dungeon sightings shown at the dungeon's zone. Filters: person, online recently, faction.
-    2. **Alts / roster:** per friend, their characters: class, race, level, item level, role, main talent tree, professions, last played. Sort and filter; compare across the group ("who has a level 60", "who is closest to 40").
-    3. **Professions:** who has which profession at what skill (rank/max bars), gaps in the group ("nobody has Alchemy"), later recipes ("who can craft Bolt of Silk Cloth").
-    4. **Character detail:** everything about one character.
-    5. **Upload (admin):** drag and drop the `.lua` file, result summary (what changed: new characters, level ups, profession gains), upload history.
-    6. **Login:** "Sign in with Battle.net", not-allowed state.
-  - Shared states: data age per person ("data from 2 days ago, via Bob"), empty state before the first upload, a friend without the addon, a character with no location.
-  - Real data shape and edge cases: names with a space ("Ves Doombringer"), 10+ alts for one person, realm names that change, item level missing, sample data generated from the addon fixtures (invented players).
-  - Responsive: desktop first, map and tables that work with touch at 375 px wide.
-  - Technical constraints for the output: React components, the libraries in `docs/ARCHITECTURE.md` plus the map/styling/animation choices the design proposes (listed as proposals, Nico decides), accessible contrast.
-  - A list of open UX questions to work through in the workshop (navigation model, map interaction, how much motion, density of the roster, phone layout of the map).
-- After the workshop: `docs/DESIGN.md` records decisions (tokens: colors, type, spacing; components; screen layouts; chosen map/styling/animation libraries) and links the Claude Design result. Those libraries get added to `docs/ARCHITECTURE.md`.
-- Decided: **map art** is a custom illustrated Vanilla-style map, made in the workshop (Blizzard's in-game map textures are their copyright).
-- Part 1 (done): `docs/DESIGN-PROMPT.md`.
-- Part 2: Nico runs the workshop; `docs/DESIGN.md` records the decisions.
-- Done when: `docs/DESIGN.md` holds the decisions.
+## Every UI story
+- Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
+- Accessible: semantic HTML, visible focus states, keyboard use, 44 px touch targets, contrast as in `docs/DESIGN.md`, `prefers-reduced-motion` honoured.
+- Works at 375 px (phone) and 1440 px (desktop canvas); page max-width 1280.
+- Empty, loading and error states of the screen are part of the story.
+- Playwright test for the main flow at desktop and phone size; screenshots of both in the PR next to the board.
 
 ## E2 Data
 
+### WEB-13 Game data tables and map data
+- Goal: every table of game data the screens need, sourced (CLAUDE.md rule 10), in `src/core/gamedata/`.
+- Tables:
+  - classes: `classFile` → name, colour token, text-colour token (values in `docs/DESIGN.md` §3)
+  - races: `raceID` → name, faction
+  - professions: skill line ID → name, primary or secondary; caps 75/150/225/300
+  - rulesets: realm name → ruleset (Normal, PvP, RP, Hardcore). Forever has one mega-realm per ruleset per region; the names are known only at launch, so the table starts with the beta realm and gets filled on launch day. Unknown realm: show the realm text. Never parse the realm name.
+  - dungeons and raids: name, zone, typical level range (labelled "typical"), map position
+  - zone aliases: the addon's zone text → `zones.json` zone id, also for cities ("Orgrimmar", "Stormwind City") and for dungeon names (→ the dungeon's zone). Unknown text: "elsewhere", never dropped.
+- `tools/map/build_zones.py`: add every Vanilla dungeon and raid to `DUNGEONS` (positions placed by hand on our map, source of the level ranges named), and Alterac Mountains if the source SVG allows a separate shape (otherwise an alias to Hillsbrad). Rebuild `zones.json`.
+- Unit tests: every zone in `zones.json` has an alias; every dungeon's zone exists; every class has its tokens.
+
+### WEB-14 View models (core)
+- Goal: everything the screens compute, pure and tested, so pages only render.
+- Data age scale, one everywhere (`docs/DESIGN.md` §4): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d, unknown (no location). A friend's data turns amber at 7 days. The site-wide banner shows when the last upload is 7 days old or more.
+- Site name: the community name (`settings.clubName`) of the newest admin upload; fallback "CommunitiesForever".
+- Roll call: characters grouped by sighting age ("Last 24 hours", "Earlier"), "N of M located", the unknown-whereabouts list, friends without the addon ("Sanne has no addon data yet"), "via X" and "X's data is N days old".
+- Roster: people with characters, sorted and filtered (class, role, level range, profession, last played); level spread 1–60 with dungeon bands and "fits Scarlet Monastery (26–45) with Lia, Tok and Bob"; quick answers (healers, tanks, level 30–40, level 60).
+- Character: main tree name from `mainTree` (an index into `talents`), points spent (level − 9), bars out of 31; "N levels to 60"; dungeon fit with the group; who else was last seen in the same zone; the owner's other characters.
+- Professions: per profession the best in the group and status covered (best ≥ 225), thin (175–224) or gap (< 175); character × profession matrix; "no professions yet".
+- Upload summary (extends WEB-05's `diff`): item level gains, "cap reached" when a rank hits its max, who sent new data (per person: newer data, nothing new, no addon; "via X"), counts for the report header.
+- Unit tests for every rule above, with the addon fixtures and the real beta file.
+
 ## E3 Access and hosting
 
-### WEB-06 Battle.net login
-- Auth.js with the Battle.net provider (EU). Allow-list of BattleTags; `ADMIN_BATTLETAG` gets the admin role.
-- Every page and API route needs a session except login and callback (CLAUDE.md rule 6); upload needs admin.
-- Open questions: allow-list from an env var, or managed on an admin page? Also allow every BattleTag that appears in the uploaded data automatically? Session: JWT or database?
-- Manual: create the app at develop.battle.net with the redirect URL for localhost and `wow.vestras.nl`, put the client id and secret in the TrueNAS app config.
+### WEB-06 Battle.net sign-in and access rules
+- Auth.js with the Battle.net provider (EU). Session cookie; JWT unless the guest list needs revocation at once (decide in the story).
+- Who may sign in:
+  - **admin**: `ADMIN_BATTLETAG` (Nico)
+  - **members**: every BattleTag in the community data of the admin's own uploads (`self`, `people`, `presence`). Uploads by members add data but never add members.
+  - **guests**: BattleTags on the guest list (admin page, WEB-18)
+  - everyone else: "not on the list" (WEB-17)
+- Who may upload: admin and members. Guests view only, unless the admin ticks "may upload" for them (assumption, confirm in the story).
+- Every page and API route needs a session except sign-in and the callback (CLAUDE.md rule 6). Upload and admin routes check the role on the server.
+- Storage: guest list table (BattleTag, may upload, added at, added by); uploads already record `uploadedBy`.
+- Unit tests for the access rules (core), route tests for 401/403.
+- Manual: create the app at develop.battle.net with redirect URLs for localhost and `wow.vestras.nl`; client id and secret in `.env.local` and the TrueNAS app config.
 
 ### WEB-07 Docker image and deploy to TrueNAS
 - Multi-stage Dockerfile (Next.js standalone, non-root user), `/data` volume, health endpoint, migrations run at start.
 - GitHub Actions on tag `v*` on `main`: build and push to GHCR (`:<tag>`, `:latest`).
-- `deploy/` with the TrueNAS Custom App compose YAML, the nginx server block for `wow.vestras.nl` (TLS, proxy headers, `client_max_body_size`), and a step-by-step `deploy/README.md`.
-- Manual: Hostnet DNS record, nginx config and certificate, dataset and app on TrueNAS, first login, first upload.
+- `deploy/` with the TrueNAS 25.10 Custom App compose YAML, the nginx server block for `wow.vestras.nl` (TLS, proxy headers, `client_max_body_size`), and a step-by-step `deploy/README.md`.
+- Manual: DNS record at Hostnet, nginx config and certificate, dataset and app on TrueNAS, first sign-in, first upload.
 
-## E4 Views (after WEB-02's workshop)
+## E4 Design foundations
 
-### WEB-08 Upload page
-- Per `docs/DESIGN.md`: drag and drop, result summary from WEB-05's diff, history list. Admin only.
+### WEB-15 Tokens, fonts and the app shell
+- `src/styles/tokens.css` with every token of `docs/DESIGN.md` §3 (surfaces, sea and land, gold, text, status, class colours, type, space, radius, elevation, motion); CSS Modules for components, no runtime CSS-in-JS.
+- Fonts with `next/font/google`: Marcellus SC, Marcellus, Inter (tabular numbers for data); type scale of §3.
+- App shell per the boards: `TopBar` (brand with site name from data, Map / Roster / Professions, data age "Data uploaded just now", Upload for admin and members, user menu with sign out), phone `TabBar`, footer credit "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted".
+- Shared components: `DataAgeBadge`, `FactionTag`, `FilterChip` and `Segmented` (`aria-pressed`), `Banner` (site data 7+ days old), `EmptyState`, `Skeleton`, class disc with initials and level badge.
+- Design system board as reference: a `/dev/components` page (admin only) that shows every component in every state.
 
-### WEB-09 Alts and roster
-- Per `docs/DESIGN.md`: people with their characters, sort and filter, character detail page.
+### WEB-16 Atmosphere
+- `Atmosphere` component: drifting fog, light shafts, embers, animated sea (waves, surf, foam, Maelstrom, moonlight) with the loop times of `docs/DESIGN.md` §6.
+- Alive on the map and sign-in pages; data pages are calm (same palette, no ambient motion).
+- Reduced motion: everything off, static fog. A user toggle "Motion" in the user menu, stored in `localStorage` (default: follow the system).
+- Performance: CSS and SVG only, no WebGL; no layout shift; animations pause when the tab is hidden.
 
-### WEB-10 Professions
-- Per `docs/DESIGN.md`: matrix of people/characters by profession with skill bars, group gaps. Profession IDs and names from a sourced table (rule 10).
+## E5 Screens
 
-### WEB-11 World map
-- Per `docs/DESIGN.md`: last known location per character on the map of Azeroth.
-- Core: a zone name → map position table (Vanilla zones and dungeons, sourced, rule 10); unknown zones are listed in an "elsewhere" tray instead of being dropped; age of each sighting.
+### WEB-17 Sign-in screens
+- Boards: `sign-in`, `sign-in-states`.
+- "Where is everyone in Azeroth tonight?", "Sign in with Battle.net" over the drifting map, "We only read your BattleTag, nothing else".
+- States:
+  - **not on the list**: "Stranger#1234 isn't on the Doombringers guest list. Send Nico your BattleTag and he can add you." Buttons: use another Battle.net account, sign out.
+  - **Battle.net didn't answer**: try again
+  - **signing in**: "Checking the guest list… Back from Battle.net as Femke#3307", then straight to the map
 
-## E5 Later
+### WEB-18 Admin page: guest list
+- Admin only. Members (from the data, read-only, with their source), guests (add by BattleTag, remove, "may upload"), who signed in last.
+- Validation of BattleTag format; adding an existing member says so.
+
+### WEB-19 Upload page and states
+- Boards: `upload`, `upload-states`. Admin and members (WEB-06).
+- Dropzone and "Choose file"; the whole page accepts a drop ("Let go to upload"); where to find the file (`WTF › Account › [ACCOUNT] › SavedVariables`, "/reload first").
+- States:
+  - **reading**: "Reading the ledger…", "10 characters from 5 friends"
+  - **wrong file**: "That's not our ledger", naming the file if it is another addon's (e.g. `Questie.lua`); nothing changed
+  - **newer addon version**: "This file is from a newer addon. It uses data format N; the site reads up to M"
+  - **nothing new**: "Same data as your upload of today 21:14. Did the game save yet?"
+- History: time, uploader, summary line ("5 levels gained · 4 skill gains · 1 new character"), Done / Rejected with reason; a line links to its session report.
+
+### WEB-20 Session report
+- Board: `upload-report`. Shown after an upload and from the history.
+- Header "Session report, uploaded today at 21:14 by Nico · new data from 4 friends"; counters (levels gained, skill gains, new characters, new sightings).
+- Sections:
+  - level ups ("LEVEL UP ×2", 37 → 39)
+  - new face ("Femke's new Orc Warlock · level 15 · Durotar")
+  - who sent data
+  - skill gains with "CAP REACHED"
+  - gear (item level 31 → 34)
+  - new sightings, with "See them drop in on the map" (WEB-26)
+- Motion: staggered rise, bars grow, LEVEL UP shine (§6); static with reduced motion. "Replay" and "Upload another".
+
+### WEB-21 Roster: cards
+- Board: `roster-cards`.
+- Header "6 friends · 10 characters · Sanne has no addon yet", Cards/Table switch, search, filters (class, role, level, profession), sort (last played).
+- "Who is around which level": level spread with dungeon bands and fits.
+- Quick answers: healers, tanks, level 30–40, level 60.
+- Friend panels: avatar, name, BattleTag, character count, data age badge ("Data 2 days ago · via Bob").
+- Character rows: class disc with level, name, race, class, main tree, role, faction tag, top professions, last played, last seen zone, item level ("ilvl —" when missing). A row opens the character.
+
+### WEB-22 Roster: table
+- Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.
+- On a phone the table becomes the card list, and sort and filters move into a sheet.
+
+### WEB-23 Character detail
+- Board: `character`.
+- Header: name, level, race, class, faction, ruleset (WEB-13), played by, last played, data age and source ("own addon" / "via X").
+- Level block with "21 levels to 60" and dungeon fit; at a glance (item level, role, main tree, faction, ruleset); talents bars; professions with "Compare with the group"; quest log (titles only, "as the addon recorded them 2 h ago"); last-seen mini map ("Lia is here too", "On the map"); the owner's other characters.
+
+### WEB-24 Professions
+- Board: `professions`.
+- Summary: covered / thin / gaps with the professions named.
+- Cards per profession: best in the group, everyone's skill bars on the 300 scale with the cap shaded and ticks at 75/150/225, status badge; secondary professions marked.
+- Character × profession matrix (brighter cell = higher skill); "No professions yet".
+- Recipe search placeholder: "Recipe search arrives when the addon shares known recipes."
+
+### WEB-25 World map
+- Boards: `map`, `map-states`. The map page is the home page.
+- Server-rendered SVG from `zones.json` with the layers of `docs/DESIGN.md` §5; HTML overlay for markers.
+- Zone states: idle, occupied (gold tint by recency), hover (bright edge, name in the corner), terrain (no hover).
+- Markers per freshness state (§4), hover/focus card (name, level, race, class, spec, zone, seen, player, item level, "Open character"), selected state.
+- Clusters: count and class ring; 2–5 fan out (spring, 30 ms stagger), 6 or more open a list; dungeon badge.
+- Continent switch (Azeroth, Kalimdor, Eastern Kingdoms) in the top bar.
+
+### WEB-26 Map zoom, pan and motion
+- Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
+- Fly to a character (600 ms pan + zoom; jump with reduced motion).
+- New sightings after an upload: drop + one ripple (from the session report link).
+
+### WEB-27 Roll call panel
+- Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
+- Filters: everyone or one friend, last 24 h, faction, level range; legend (live, days, week+).
+- Rows grouped by age with zone, owner, "via", age; picking one flies the map to the character.
+- Unknown whereabouts tray and the no-addon line.
+
+### WEB-28 Phone map
+- Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
+- Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
+
+### WEB-29 Empty site, loading and stale data
+- Boards: `empty-site`, `loading`.
+- Before the first upload: "The map is still empty", "Upload the first file" for admin and members; for guests: "Nico hasn't uploaded any data yet. Check back after the next session."; the guest list shown in the roll call.
+- Loading: zones paint at once, markers fade in, a thin gold line only after 300 ms; skeletons that keep the layout still.
+- Stale: the site-wide banner (last upload 7 days or more), a friend's amber badge after 7 days.
+
+## E6 Later
 
 ### WEB-12 Automatic uploader
-- A small program on Nico's PC that watches the SavedVariables file and uploads it after the game writes it, with an admin-scoped API token (new API route). Language and packaging decided in the story.
+- A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route). Language and packaging decided in the story.
 
 ### Backlog (unordered, not yet stories)
+- Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
-- Recipes, once addon CF-38 ships ("who can craft X").
 - Dungeons: who has which dungeon quests.
+- Final emblem and logo for the site.
