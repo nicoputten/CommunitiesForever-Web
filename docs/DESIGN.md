@@ -225,6 +225,6 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Top bar Upload is an icon plus "Upload" on every page (the map board has a 36 px icon-only button; the upload board has the labelled link) | Clearer, one control everywhere, 44 px target without tricks | Nico |
 | 2026-10-26 | Phone app bar (no board): data age as a short meta line before the avatar ("Updated 2 h ago", as on the phone map); Upload moves into the user menu | No board shows them on phone | Nico |
 | 2026-10-26 | Class disc initials: first letter of the first and last word of the name ("VD"), display only, never a key | The boards show initials; the one exception to "never split names" | Nico |
-| 2026-10-26 | Footer credit in `--text-faint` (#7E8898), not the sign-in board's #6E7888 | #6E7888 is under 4.5 : 1 on the page; every text pairing must pass (design-system board) | WEB-15, to confirm |
-| 2026-10-26 | Stale-site banner without the loading board's second line ("Nico uploads after a play session.") | Members upload too, so the line is no longer true | WEB-15, to confirm |
+| 2026-10-26 | Footer credit in `--text-faint` (#7E8898), not the sign-in board's #6E7888 | #6E7888 is under 4.5 : 1 on the page; every text pairing must pass (design-system board) | Nico |
+| 2026-10-26 | Stale-site banner without the loading board's second line ("Nico uploads after a play session.") | Members upload too, so the line is no longer true | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
