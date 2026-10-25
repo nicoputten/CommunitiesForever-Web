@@ -1,13 +1,23 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import {
+  battleTagKey,
+  battleTagsOf,
+  checkFile,
+  type FileRejection,
+  mayUpload,
+  rejectionText,
+  sameBattleTag,
+} from "@/core/access";
 import { diff, type UploadSummary } from "@/core/diff";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
 import { dict, normalize, NormalizeError } from "@/core/normalize";
+import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
-import { characters, locations, meta, people, presence, uploads } from "./db/schema";
+import { characters, locations, members, meta, people, presence, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
 // the derived tables hold the merge of all ok uploads and can be rebuilt from them at any time.
@@ -22,12 +32,22 @@ export class UploadTooLargeError extends Error {
   }
 }
 
+/** The uploader may not upload (WEB-06): nothing is stored. Routes answer 403. */
+export class UploadForbiddenError extends Error {
+  constructor(readonly user: string) {
+    super(`${user} may not upload.`);
+    this.name = "UploadForbiddenError";
+  }
+}
+
 export interface UploadResult {
   id: number;
   status: "ok" | "rejected";
-  /** The same file was uploaded before: nothing changed, this is the earlier upload's result. */
+  /** The same file was uploaded before by the same uploader: nothing changed, this is the earlier upload's result. */
   duplicate: boolean;
   reason?: string;
+  /** Why a readable file was not taken: not the uploader's own file, or another community (WEB-06). */
+  rejection?: FileRejection;
   summary?: UploadSummary;
 }
 
@@ -46,19 +66,33 @@ function read(bytes: Uint8Array): Read {
 
 /**
  * Stores an uploaded SavedVariables file and merges it into the derived tables, all in one transaction.
- * A file that does not parse or normalize is stored as rejected with its reason and changes nothing else.
- * The same file again (same SHA-256) is a no-op that returns the earlier result.
+ * Only someone who may upload can store anything (else UploadForbiddenError). A file that does not parse or
+ * normalize, is not the uploader's own or is of another community (src/core/access.ts) is stored as rejected with
+ * its reason and changes nothing else. An accepted file makes every BattleTag it names a member.
+ * The same file again from the same uploader (same SHA-256) is a no-op that returns the earlier result.
  */
-export function upload(db: Db, file: Uint8Array, user: string, now = Math.floor(Date.now() / 1000)): UploadResult {
+export function upload(
+  db: Db,
+  file: Uint8Array,
+  user: string,
+  now = Math.floor(Date.now() / 1000),
+  admin = adminBattleTag(),
+): UploadResult {
   if (file.byteLength > MAX_UPLOAD_BYTES) throw new UploadTooLargeError(file.byteLength);
+  if (!mayUpload(user, loadAccessList(db, admin))) throw new UploadForbiddenError(user);
   const sha256 = createHash("sha256").update(file).digest("hex");
-  const known = findBySha(db, sha256);
-  if (known !== undefined) return known;
+  const known = findBySha(db, sha256, user);
+  if (known !== undefined && !retry(known)) return known;
 
   const result = read(file);
   return db.transaction((tx) => {
-    const again = findBySha(tx, sha256);
-    if (again !== undefined) return again;
+    const again = findBySha(tx, sha256, user);
+    if (again !== undefined) {
+      if (!retry(again)) return again;
+      // Same bytes, so the new row replaces the earlier attempt without losing anything.
+      tx.delete(uploads).where(eq(uploads.id, again.id)).run();
+    }
+    const rejection = result.ok ? checkFile(user, result.data, adminCommunity(tx, admin), admin) : undefined;
 
     const { id } = tx
       .insert(uploads)
@@ -69,33 +103,77 @@ export function upload(db: Db, file: Uint8Array, user: string, now = Math.floor(
         size: file.byteLength,
         raw: gzipSync(file),
         schemaVersion: result.ok ? result.data.schemaVersion : result.schemaVersion,
-        status: result.ok ? "ok" : "rejected",
-        reason: result.ok ? null : result.reason,
+        community: result.ok ? (result.data.community.id ?? null) : null,
+        status: result.ok && rejection === undefined ? "ok" : "rejected",
+        reason: !result.ok ? result.reason : rejection !== undefined ? rejectionText(rejection) : null,
+        rejection: rejection?.code ?? null,
       })
       .returning({ id: uploads.id })
       .get();
     if (!result.ok) return { id, status: "rejected", duplicate: false, reason: result.reason };
+    if (rejection !== undefined) {
+      return { id, status: "rejected", duplicate: false, reason: rejectionText(rejection), rejection };
+    }
 
     const before = loadState(tx);
     const after = before === undefined ? result.data : merge(before.data, result.data);
     const summary = diff(before?.data, after);
     writeState(tx, after, sourcesFor(before, after, id));
+    addMembers(tx, result.data, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
     return { id, status: "ok", duplicate: false, summary };
   });
 }
 
-function findBySha(db: Db | Tx, sha256: string): UploadResult | undefined {
+function findBySha(db: Db | Tx, sha256: string, user: string): UploadResult | undefined {
   const row = db
-    .select({ id: uploads.id, status: uploads.status, reason: uploads.reason, summary: uploads.summary })
+    .select({
+      id: uploads.id,
+      status: uploads.status,
+      reason: uploads.reason,
+      rejection: uploads.rejection,
+      summary: uploads.summary,
+    })
     .from(uploads)
-    .where(eq(uploads.sha256, sha256))
+    .where(and(eq(uploads.sha256, sha256), eq(uploads.uploadedBy, user)))
     .get();
   if (row === undefined) return undefined;
   const result: UploadResult = { id: row.id, status: row.status, duplicate: true };
   if (row.reason !== null) result.reason = row.reason;
+  if (row.rejection !== null) result.rejection = { code: row.rejection };
   if (row.summary !== null) result.summary = row.summary;
   return result;
+}
+
+/**
+ * A file rejected for the community depends on the admin's uploads, not on the file alone: the same file again is
+ * checked again (the admin may have uploaded since). Every other earlier result stands.
+ */
+function retry(earlier: UploadResult): boolean {
+  return earlier.rejection?.code === "no-community-yet" || earlier.rejection?.code === "other-community";
+}
+
+/** The community of the admin's newest accepted upload that names one; undefined before that. */
+function adminCommunity(db: Db | Tx, admin: string | undefined): string | undefined {
+  if (admin === undefined) return undefined;
+  const rows = db
+    .select({ uploadedBy: uploads.uploadedBy, community: uploads.community })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.community)))
+    .orderBy(desc(uploads.id))
+    .all();
+  return rows.find((r) => sameBattleTag(r.uploadedBy, admin))?.community ?? undefined;
+}
+
+/** Every BattleTag of an accepted file becomes a member; the first upload that named it is kept. */
+function addMembers(tx: Tx, data: Dataset, uploadId: number): void {
+  insertAll(battleTagsOf(data), (slice) =>
+    tx
+      .insert(members)
+      .values(slice.map((battleTag) => ({ key: battleTagKey(battleTag), battleTag, firstUpload: uploadId })))
+      .onConflictDoNothing()
+      .run(),
+  );
 }
 
 export interface RebuildResult {
@@ -104,16 +182,24 @@ export interface RebuildResult {
 }
 
 /**
- * Recomputes the derived tables, and each upload's status, reason and summary, from all stored uploads in upload
- * order. Rejected uploads are read again too: after a site update a file with a newer schema may now be ok.
+ * Recomputes the derived tables and members, and each upload's status, reason and summary, from all stored uploads
+ * in upload order. Rejected uploads are read again too: after a site update a file with a newer schema may now be ok,
+ * when it is the uploader's own and of the community. Whether the uploader may upload was checked when the file was
+ * stored and is not asked again. Blocks and the guest list are not derived and stay as they are.
  */
-export function rebuild(db: Db): RebuildResult {
+export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
   return db.transaction((tx) => {
     const ids = tx.select({ id: uploads.id }).from(uploads).orderBy(asc(uploads.id)).all();
     let state: State | undefined;
+    let community: string | undefined;
     const counts: RebuildResult = { ok: 0, rejected: 0 };
+    tx.delete(members).run();
     for (const { id } of ids) {
-      const row = tx.select({ raw: uploads.raw }).from(uploads).where(eq(uploads.id, id)).get();
+      const row = tx
+        .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy })
+        .from(uploads)
+        .where(eq(uploads.id, id))
+        .get();
       if (row === undefined) continue;
       const result = read(gunzipSync(row.raw));
       if (!result.ok) {
@@ -122,7 +208,26 @@ export function rebuild(db: Db): RebuildResult {
           .set({
             status: "rejected",
             reason: result.reason,
+            rejection: null,
             schemaVersion: result.schemaVersion ?? null,
+            community: null,
+            summary: null,
+          })
+          .where(eq(uploads.id, id))
+          .run();
+        continue;
+      }
+      const fileCommunity = result.data.community.id ?? null;
+      const rejection = checkFile(row.uploadedBy, result.data, community, admin);
+      if (rejection !== undefined) {
+        counts.rejected++;
+        tx.update(uploads)
+          .set({
+            status: "rejected",
+            reason: rejectionText(rejection),
+            rejection: rejection.code,
+            schemaVersion: result.data.schemaVersion,
+            community: fileCommunity,
             summary: null,
           })
           .where(eq(uploads.id, id))
@@ -130,11 +235,20 @@ export function rebuild(db: Db): RebuildResult {
         continue;
       }
       counts.ok++;
+      if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
       const after = state === undefined ? result.data : merge(state.data, result.data);
       const summary = diff(state?.data, after);
       state = { data: after, ...sourcesFor(state, after, id) };
+      addMembers(tx, result.data, id);
       tx.update(uploads)
-        .set({ status: "ok", reason: null, schemaVersion: result.data.schemaVersion, summary })
+        .set({
+          status: "ok",
+          reason: null,
+          rejection: null,
+          schemaVersion: result.data.schemaVersion,
+          community: fileCommunity,
+          summary,
+        })
         .where(eq(uploads.id, id))
         .run();
     }

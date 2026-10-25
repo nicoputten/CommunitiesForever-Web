@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { canonical } from "@/core/merge";
 import { dataDir, openDatabase, type Db } from "@/server/db";
 import { characters, locations, people, uploads } from "@/server/db/schema";
@@ -16,11 +16,14 @@ let dir: string;
 let db: Db;
 
 beforeEach(() => {
+  // Ada is the admin: these tests are about storing and merging, tests/server/access.test.ts about who may upload.
+  vi.stubEnv("ADMIN_BATTLETAG", "Ada#1001");
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
   db = openDatabase(path.join(dir, "test.sqlite"));
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   db.$client.close();
   rmSync(dir, { recursive: true, force: true });
 });

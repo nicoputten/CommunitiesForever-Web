@@ -1,4 +1,4 @@
-import { blob, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { Character, Dataset, Person } from "@/core/model";
 
@@ -6,26 +6,36 @@ import type { Character, Dataset, Person } from "@/core/model";
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
 
 /** Raw uploads: the source of truth. Everything below them is derived and rebuilt by rebuild(). */
-export const uploads = sqliteTable("uploads", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  /** Unix seconds. */
-  uploadedAt: integer("uploaded_at").notNull(),
-  /** BattleTag of the admin who uploaded. */
-  uploadedBy: text("uploaded_by").notNull(),
-  /** Hex SHA-256 of the raw bytes; the same file again is a no-op. */
-  sha256: text("sha256").notNull().unique(),
-  /** Size of the raw file in bytes. */
-  size: integer("size").notNull(),
-  /** The raw file, gzip. */
-  raw: blob("raw", { mode: "buffer" }).notNull(),
-  /** The file's schemaVersion, when it could be read. */
-  schemaVersion: integer("schema_version"),
-  status: text("status", { enum: ["ok", "rejected"] }).notNull(),
-  /** Why the file was rejected (parse or normalize error). */
-  reason: text("reason"),
-  /** What this upload changed (ok uploads). */
-  summary: text("summary", { mode: "json" }).$type<UploadSummary>(),
-});
+export const uploads = sqliteTable(
+  "uploads",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Unix seconds. */
+    uploadedAt: integer("uploaded_at").notNull(),
+    /** BattleTag of who uploaded. */
+    uploadedBy: text("uploaded_by").notNull(),
+    /** Hex SHA-256 of the raw bytes. */
+    sha256: text("sha256").notNull(),
+    /** Size of the raw file in bytes. */
+    size: integer("size").notNull(),
+    /** The raw file, gzip. */
+    raw: blob("raw", { mode: "buffer" }).notNull(),
+    /** The file's schemaVersion, when it could be read. */
+    schemaVersion: integer("schema_version"),
+    status: text("status", { enum: ["ok", "rejected"] }).notNull(),
+    /** Why the file was rejected (parse or normalize error). */
+    reason: text("reason"),
+    /** What this upload changed (ok uploads). */
+    summary: text("summary", { mode: "json" }).$type<UploadSummary>(),
+    /** The file's community (`settings.clubId`), when it could be read: the admin's uploads set the community. */
+    community: text("community"),
+    /** Why a readable file was not taken (WEB-06, src/core/access.ts); null for unreadable files. */
+    rejection: text("rejection", { enum: ["not-your-file", "other-community", "no-community-yet"] }),
+  },
+  // The same file from the same uploader is a no-op (WEB-06: per uploader, so a file rejected as someone else's
+  // does not block its owner from uploading it).
+  (t) => [uniqueIndex("uploads_sha256_uploaded_by_unique").on(t.sha256, t.uploadedBy)],
+);
 
 // Derived tables: the merged Dataset (src/core/model.ts), one row per key. `data` holds the core object as JSON;
 // the other columns are copies for queries.
@@ -65,4 +75,36 @@ export const meta = sqliteTable("meta", {
   data: text("data", { mode: "json" })
     .$type<Pick<Dataset, "schemaVersion" | "version" | "uploader" | "community">>()
     .notNull(),
+});
+
+// Access (WEB-06, docs/ARCHITECTURE.md "Access"). Keys are battleTagKey() (src/core/access.ts); `battle_tag` keeps the
+// BattleTag as written.
+
+/** Members: every BattleTag in an accepted upload. Derived: rebuilt with the uploads. */
+export const members = sqliteTable("members", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  /** The first accepted upload that named this BattleTag. */
+  firstUpload: integer("first_upload")
+    .notNull()
+    .references(() => uploads.id),
+});
+
+/** Blocked BattleTags (admin page). Kept apart from members, so a rebuild never lifts a block. */
+export const blocks = sqliteTable("blocks", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  /** Unix seconds. */
+  blockedAt: integer("blocked_at").notNull(),
+  blockedBy: text("blocked_by").notNull(),
+});
+
+/** The guest list (admin page): may sign in; may upload only when ticked. */
+export const guests = sqliteTable("guests", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  mayUpload: integer("may_upload", { mode: "boolean" }).notNull(),
+  /** Unix seconds. */
+  addedAt: integer("added_at").notNull(),
+  addedBy: text("added_by").notNull(),
 });
