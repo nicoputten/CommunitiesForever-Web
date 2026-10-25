@@ -1,0 +1,19 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-display);
+  line-height: var(--lh-name);
+  color: var(--gold-bright);
+}
+
+.sub {
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}

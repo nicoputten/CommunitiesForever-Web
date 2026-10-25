@@ -19,7 +19,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 ## Hard rules
 1. `src/core/*` is pure TypeScript: no React, no Next.js, no Node APIs, no database, no I/O. All input via function arguments. Fully unit tested with Vitest.
 2. Uploaded files are untrusted input. Never `eval` or execute them; parse with our own parser, enforce size and depth limits, strip WoW escape sequences (`|`) from every string, render as text only (no `dangerouslySetInnerHTML`).
-3. GUID is the character key. Never parse or split character names.
+3. GUID is the character key. Never parse or split character names. Only exception: display initials on a class disc or marker (`initials()` in `src/core/views/text.ts`, approved by Nico for WEB-15).
 4. **Backwards compatible with every addon release.** The site must read SavedVariables of every released addon version, because the addon's schema evolves. The addon's golden fixtures are copied to `tests/fixtures/addon/<release>/` and never edited; `tests/compat` must keep passing on all of them. Code reading uploaded data handles missing fields (undefined) everywhere.
 5. **Own database: forward-only migrations.** Every schema change is a new migration file; released migrations are never edited.
 6. Every page and API route requires login, except the login page and the auth callback. Roles (admin, member, guest; `docs/ARCHITECTURE.md` Access) are checked on the server: uploading needs admin, member or a guest with "may upload", and only the uploader's own file of the same community is accepted; the admin page needs admin. The admin can never be blocked.

@@ -12,8 +12,8 @@ test("sends a visitor without a session to sign-in", async ({ page }) => {
 test("shows the home page to the admin", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("CommunitiesForever");
-  await expect(page.getByText(`Signed in as ${E2E.admin}.`)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Map");
+  await expect(page.getByRole("button", { name: `Account ${E2E.admin}` })).toBeVisible();
 });
 
 test("tells someone not on the list", async ({ page, context, baseURL }) => {

@@ -25,13 +25,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E4 Design foundations
 
-### WEB-15 Tokens, fonts and the app shell
-- `src/styles/tokens.css` with every token of `docs/DESIGN.md` §3 (surfaces, sea and land, gold, text, status, class colours, type, space, radius, elevation, motion); CSS Modules for components, no runtime CSS-in-JS.
-- Fonts with `next/font/google`: Marcellus SC, Marcellus, Inter (tabular numbers for data); type scale of §3.
-- App shell per the boards: `TopBar` (brand with site name from data, Map / Roster / Professions, data age "Data uploaded just now", Upload for admin and members, user menu with sign out), phone `TabBar`, footer credit "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted".
-- Shared components: `DataAgeBadge`, `FactionTag`, `FilterChip` and `Segmented` (`aria-pressed`), `Banner` (site data 7+ days old), `EmptyState`, `Skeleton`, class disc with initials and level badge.
-- Design system board as reference: a `/dev/components` page (admin only) that shows every component in every state.
-
 ### WEB-30 Design checks
 - Goal: drifting from the design system fails the build, not a review.
 - **Token lint** (Vitest, no new dependency): scans `src/**/*.module.css` and `src/**/*.tsx` and fails on raw colours (hex, `rgb()`, `hsl()`), font sizes, font families, radii, shadows and durations outside `src/styles/tokens.css`; a value that is really needed goes into the tokens. Allowed: `0`, `100%`, `1px` borders using a token colour.

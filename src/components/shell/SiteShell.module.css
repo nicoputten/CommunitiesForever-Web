@@ -1,0 +1,65 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.skip {
+  position: absolute;
+  left: var(--s-2);
+  top: var(--s-2);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-nav);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-weight: var(--fw-semibold);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.banner,
+.main {
+  width: 100%;
+  /* 1280 of content plus the gutters, as on the boards */
+  max-width: calc(var(--page-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.banner {
+  padding-top: var(--s-4);
+}
+
+.main {
+  flex: 1;
+  padding-top: var(--s-7);
+  padding-bottom: var(--s-12);
+}
+
+.main:focus {
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  /* Room for the fixed tab bar under the footer. */
+  .shell {
+    padding-bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom));
+  }
+
+  .banner,
+  .main {
+    padding-inline: var(--gutter-phone);
+  }
+
+  .main {
+    padding-top: var(--s-5);
+    padding-bottom: var(--s-8);
+  }
+}

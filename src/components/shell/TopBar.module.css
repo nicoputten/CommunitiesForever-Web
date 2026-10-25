@@ -1,0 +1,157 @@
+.bar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: var(--size-bar);
+  padding: 0 var(--gutter);
+  border-bottom: var(--border) solid var(--line-bar);
+}
+
+/* Over the map: a fade instead of a line (map board). */
+.bar[data-variant="map"] {
+  background: linear-gradient(180deg, var(--bar-fade-top), var(--bar-fade-end));
+  border-bottom-color: transparent;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  min-height: var(--size-touch);
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  letter-spacing: var(--ls-brand);
+  color: var(--gold-bright);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--gold-pale);
+}
+
+.emblem {
+  flex: none;
+  width: var(--size-emblem);
+  height: var(--size-emblem);
+  color: var(--gold);
+}
+
+.nav {
+  display: flex;
+  gap: var(--s-1);
+}
+
+.navLink {
+  padding: var(--s-2) var(--s-3-5);
+  border-radius: var(--r-nav);
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.navLink:hover {
+  color: var(--text-strong);
+}
+
+.navLink[aria-current="page"] {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  background: var(--tint-active);
+  box-shadow: var(--shadow-current);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.age {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.agePhone {
+  display: none;
+}
+
+.upload {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-nav);
+  border: var(--border) solid var(--line-strong);
+  background: var(--control-bg);
+  color: var(--text-strong);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.upload:hover {
+  color: var(--text-strong);
+  background: var(--tint-active);
+}
+
+.upload[aria-current="page"] {
+  border-color: transparent;
+  background: var(--tint-active);
+}
+
+.uploadIcon {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--gold);
+}
+
+/* Phone app bar (phone-map board): brand, data age, user. The tab bar takes the navigation; Upload is in the menu. */
+@media (max-width: 767px) {
+  .bar,
+  .bar[data-variant="map"] {
+    flex-wrap: nowrap;
+    gap: var(--s-2);
+    min-height: var(--size-bar-phone);
+    padding: 0 var(--s-3) 0 var(--gutter-phone);
+    background: linear-gradient(180deg, var(--bar-phone-top), var(--bar-phone-end));
+    border-bottom: var(--border) solid var(--line-bar-phone);
+  }
+
+  .brand {
+    gap: var(--s-2);
+    min-width: 0;
+    font-size: var(--fs-brand-phone);
+    letter-spacing: var(--ls-title);
+  }
+
+  .brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .emblem {
+    width: var(--size-emblem-phone);
+    height: var(--size-emblem-phone);
+  }
+
+  .nav,
+  .upload,
+  .ageDesktop {
+    display: none;
+  }
+
+  .age {
+    font-size: var(--fs-meta-sm);
+    white-space: nowrap;
+  }
+
+  .agePhone {
+    display: inline;
+  }
+}

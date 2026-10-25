@@ -22,7 +22,8 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
+    { name: "phone", use: { ...devices["Pixel 7"], viewport: { width: 375, height: 812 } } },
   ],
   webServer: {
     command: "npm run start",

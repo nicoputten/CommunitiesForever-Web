@@ -1,0 +1,34 @@
+.banner {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: linear-gradient(90deg, var(--stale-tint), var(--surface-aside));
+  border: var(--border) solid var(--stale-banner-line);
+}
+
+.icon {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  margin-top: var(--s-px);
+  color: var(--stale-text);
+}
+
+.text {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+
+.text b,
+.text strong {
+  font-weight: var(--fw-semibold);
+}
+
+.detail {
+  margin-top: var(--s-0-5);
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}

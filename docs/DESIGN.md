@@ -112,6 +112,17 @@ Initials on a class fill use `--on-gold` (#0B0F14), except Shaman (white). Use t
 
 Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, desktop canvas 1440, phone 375–390.
 
+### Derived from the boards (WEB-15)
+
+`src/styles/tokens.css` has the tokens above as written (part 1) and, in part 2, values the boards use that this section has no token for, each with the board it comes from (decided with Nico, 2026-10-26). They change nothing visually; they give the WEB-30 token lint a name for every value. Groups:
+- **Type scale:** `--fs-*` sizes (the sizes inside a range above are the ones the boards use), `--fw-*`, `--lh-*`, `--ls-*` letter spacing.
+- **Tints and lines:** `--tint-active` (current nav link, gold 14%), `--tint-pressed` (16%), `--tint-selected` (20%), `--tint-hover`, `--line-bar`, `--line-control`, `--line-neutral` (chip, neutral badge), `--text-chip`, fresh/stale badge lines, banner tint, faction tag tints.
+- **Surfaces:** `--control-bg`, `--surface-modal`, `--surface-panel`, `--surface-aside`, row surface, top-bar fades (map and phone), `--avatar` (#2A3446), `--avatar-muted`, skeleton shimmer, `--on-shaman`.
+- **Space and radius:** extra steps `--s-px`, `--s-0-5`, `--s-0-75`, `--s-1-5`, `--s-2-5`, `--s-3-5`, `--s-7`, `--s-10`; radii `--r-badge` 4, `--r-nav` 8, `--r-control` 9, `--r-card` 12.
+- **Glow, blur, sizes, motion:** disc/avatar glow, `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
+
+A value a screen needs and no token has goes into part 2 with its source, never inline.
+
 ## 4. Data age (one scale everywhere)
 
 | State | Age | Marker | Elsewhere |
@@ -211,4 +222,9 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
 | 2026-10-25 | Map (WEB-31): Thousand Needles dry; Mount Hyjal a zone, not terrain; three new zones (The Riverglades, Shen'dralas carved from Feralas, Zephras Isle as an inset island) in the normal zone style. The boards still show the Cataclysm lake and no new zones | The map shows WoW: Forever, not Cataclysm; nothing else about the map changes | Nico |
 | 2026-10-25 | Full character names wherever the boards show a first word ("with Lia, Tok and Bob", "Tok ★", "Ves item level 31 → 34") | Names are never split (CLAUDE.md rule 3) | Nico |
+| 2026-10-26 | Top bar Upload is an icon plus "Upload" on every page (the map board has a 36 px icon-only button; the upload board has the labelled link) | Clearer, one control everywhere, 44 px target without tricks | Nico |
+| 2026-10-26 | Phone app bar (no board): data age as a short meta line before the avatar ("Updated 2 h ago", as on the phone map); Upload moves into the user menu | No board shows them on phone | Nico |
+| 2026-10-26 | Class disc initials: first letter of the first and last word of the name ("VD"), display only, never a key | The boards show initials; the one exception to "never split names" | Nico |
+| 2026-10-26 | Footer credit in `--text-faint` (#7E8898), not the sign-in board's #6E7888 | #6E7888 is under 4.5 : 1 on the page; every text pairing must pass (design-system board) | Nico |
+| 2026-10-26 | Stale-site banner without the loading board's second line ("Nico uploads after a play session.") | Members upload too, so the line is no longer true | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
