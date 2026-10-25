@@ -44,7 +44,7 @@
   - zone aliases: the addon's zone text → `zones.json` zone id, also for cities ("Orgrimmar", "Stormwind City") and for dungeon names (→ the dungeon's zone). Unknown text: "elsewhere", never dropped.
 - `tools/map/build_zones.py`: add every Vanilla dungeon and raid to `DUNGEONS` (positions placed by hand on our map, source of the level ranges named), and Alterac Mountains if the source SVG allows a separate shape (otherwise an alias to Hillsbrad). Rebuild `zones.json`.
 - Unit tests: every zone in `zones.json` has an alias; every dungeon's zone exists; every class has its tokens.
-- Decided: dungeon level ranges from the addon's planner table (`Dungeons.STATIC`), raids "typical 60" (Zul'Gurub 58–60) from warcraft.wiki.gg; Blackrock Mountain and its instances in Burning Steppes, where the source map puts it; Alterac Mountains aliases to Hillsbrad (the source SVG has no shape for it); battlegrounds and other unknown text resolve to "elsewhere".
+- Decided: dungeon level ranges from the addon's planner table (`Dungeons.STATIC`), raids "typical 60" (Zul'Gurub 58–60) from warcraft.wiki.gg; Blackrock Mountain and its instances in Burning Steppes, where the source map puts it; Alterac Mountains aliases to Hillsbrad (the source SVG has no shape for it); battlegrounds resolve to "battleground" and other unknown text to "elsewhere" (both off the map); PvP realms: the beta realm and "Forever PvP" (launch).
 - Done: `src/core/gamedata/` (`classes`, `races`, `professions`, `rulesets`, `dungeons`, `zones` with `resolveZone`); 26 dungeons and raids in `tools/map/build_zones.py` and `zones.json` (`--dungeons-only` rewrites just that list, so the outlines stay byte for byte); tests in `tests/unit/gamedata.test.ts`.
 
 ### WEB-02 Design prompt for Claude Design

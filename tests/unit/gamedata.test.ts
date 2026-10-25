@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   DUNGEONS,
+  BATTLEGROUND,
   ELSEWHERE,
   PROFESSIONS,
   RACES,
@@ -119,8 +120,10 @@ describe("professions", () => {
 });
 
 describe("rulesets", () => {
-  it("shows the beta realm as PvP and every other realm as PvE", () => {
+  it("shows the beta and launch realms as PvP and every other realm as PvE", () => {
     expect(rulesetOf("CAMWOW EU4 Realm 2 PvP")).toBe("PvP");
+    expect(rulesetOf("Forever PvP")).toBe("PvP");
+    expect(rulesetOf("Classic Beta PvP")).toBe("PvE");
     expect(rulesetOf("Some PvP Realm")).toBe("PvE");
     expect(rulesetOf(undefined)).toBeUndefined();
   });
@@ -196,6 +199,12 @@ describe("zone aliases", () => {
     const texts = new Set(datasets.flatMap((d) => Object.values(d.locations).map((l) => l.zone)));
     expect([...texts].sort()).toEqual(["Durotar", "Mulgore"]);
     for (const text of texts) expect(resolveZone(text).zone).not.toBe(ELSEWHERE);
+  });
+
+  it("puts the battlegrounds off the map as battleground", () => {
+    for (const text of ["Warsong Gulch", "Arathi Basin", "Alterac Valley"]) {
+      expect(resolveZone(text)).toEqual({ zone: BATTLEGROUND, text });
+    }
   });
 
   it("keeps unknown text as elsewhere", () => {

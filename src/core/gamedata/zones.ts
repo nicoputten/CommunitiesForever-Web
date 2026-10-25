@@ -6,9 +6,16 @@ import { DUNGEONS, type DungeonInfo } from "./dungeons";
 // Commons, tools/map); the capitals' zones from the map (each capital is drawn inside its zone); Alterac Mountains
 // shares the Hillsbrad shape, as the source SVG has no shape of its own for it (docs/DESIGN.md §5); Blackrock
 // Mountain is in Burning Steppes, where the source map puts it. Dungeon texts come from src/core/gamedata/dungeons.ts.
-// Text that matches nothing resolves to "elsewhere": a sighting is never dropped.
+// The Vanilla battlegrounds (warcraft.wiki.gg "Battleground", https://warcraft.wiki.gg/wiki/Battleground) are not on
+// the map: they resolve to "battleground" (someone who logged off inside one). Text that matches nothing resolves to
+// "elsewhere": a sighting is never dropped.
 
+/** Off the map: the text names a battleground. */
+export const BATTLEGROUND = "battleground";
+/** Off the map: text the site does not know. */
 export const ELSEWHERE = "elsewhere";
+
+export const BATTLEGROUNDS: ReadonlySet<string> = new Set(["Warsong Gulch", "Arathi Basin", "Alterac Valley"]);
 
 export const ZONE_ALIASES: Readonly<Record<string, string>> = {
   // Kalimdor
@@ -66,7 +73,7 @@ export const ZONE_ALIASES: Readonly<Record<string, string>> = {
 const dungeonByText = new Map<string, DungeonInfo>(DUNGEONS.flatMap((d) => d.zoneTexts.map((t) => [t, d] as const)));
 
 export interface ZonePlace {
-  /** zones.json zone id, or "elsewhere" for text the site does not know. */
+  /** zones.json zone id, "battleground", or "elsewhere" for text the site does not know. */
   zone: string;
   /** The instance, when the text names one. */
   dungeon?: DungeonInfo;
@@ -74,11 +81,12 @@ export interface ZonePlace {
   text: string;
 }
 
-/** Where a sighting's zone text is on the map. Unknown text is "elsewhere", never dropped. */
+/** Where a sighting's zone text is on the map. Battlegrounds are "battleground", unknown text "elsewhere"; never dropped. */
 export function resolveZone(zoneText: string): ZonePlace {
   const text = zoneText.trim();
   const dungeon = dungeonByText.get(text);
   if (dungeon) return { zone: dungeon.zone, dungeon, text };
+  if (BATTLEGROUNDS.has(text)) return { zone: BATTLEGROUND, text };
   const zone = Object.hasOwn(ZONE_ALIASES, text) ? ZONE_ALIASES[text] : undefined;
   return { zone: zone ?? ELSEWHERE, text };
 }
