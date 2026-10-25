@@ -1,17 +1,24 @@
 import map from "../map/zones.json";
+import { ELSEWHERE } from "./places";
 
-// Vanilla dungeons and raids: one entry per instance entrance (the place a marker goes), wings listed under it.
-// Sources:
-// - names, zones and wings: warcraft.wiki.gg "Instance" (https://warcraft.wiki.gg/wiki/Instance), the original game's
-//   dungeons and raids; zone ids are those of src/core/map/zones.json. Blackrock Mountain is placed in Burning Steppes,
-//   where the source map (Eastern_Kingdoms.svg) puts its dot.
-// - dungeon levels: the addon's planner table (CommunitiesForever src/core/Dungeons.lua, Dungeons.STATIC), the ranges
-//   the group sees in game; an instance's range spans its wings. These are typical ranges, not limits: label them so.
-// - raid levels: warcraft.wiki.gg Classic articles ("Onyxia's Lair (Classic)": 60, "Zul'Gurub (Classic)": 58-60);
-//   the other raids are level-60 content of the original game.
-// - zone texts: the English client's zone name inside the instance, plus the addon's quest-log headers for it
-//   (Dungeons.STATIC `areas`).
-// - map positions: zones.json `dungeons` (hand-placed in tools/map/build_zones.py), joined by name.
+// WoW: Forever's dungeons and raids (docs/WOW-FOREVER.md): one entry per instance entrance (the place a marker goes),
+// wings listed under it. All level ranges are typical, not limits: label them so. Sources:
+// - Vanilla dungeons (names, zones, wings): warcraft.wiki.gg "Instance" (https://warcraft.wiki.gg/wiki/Instance). Zone
+//   ids are those of src/core/map/zones.json; Blackrock Mountain is in Burning Steppes, where the source map
+//   (Eastern_Kingdoms.svg) puts its dot.
+// - Vanilla dungeon levels: the addon's planner table (CommunitiesForever src/core/Dungeons.lua, Dungeons.STATIC), the
+//   ranges the group sees in game; an instance's range spans its wings.
+// - Forever's nine new dungeons (names, zones): Blizzard, "Explore the New Dungeons of World of Warcraft: Forever"
+//   (https://news.blizzard.com/en-us/article/24301455). Levels: the beta Group Finder where it lists the dungeon
+//   (CommunitiesForever docs/API-FINDINGS.md V46, what the addon shows), else Blizzard's article (decided by Nico).
+// - Raids: Blizzard, "World of Warcraft: Forever Raid Overview" (https://news.blizzard.com/en-us/article/24303009):
+//   Onyxia's Lair, The Barrow Deeps and Hyjal Summit, all level 60. The other Vanilla raids are not announced for
+//   Forever and stay out until they are (decided by Nico).
+// - Zone texts: the client's zone name inside the instance (GetInstanceInfo, e.g. "Ruins of Lordaeron"), the Group
+//   Finder name, and the addon's quest-log headers for it (Dungeons.STATIC `areas`).
+// - Krol'dok Stronghold is in The Riverglades, which our map does not draw yet: its zone is "elsewhere" and it has no
+//   marker. The Mount Hyjal raids sit on the Hyjal (terrain) shape.
+// - Map positions: zones.json `dungeons` (hand-placed in tools/map/build_zones.py), joined by name.
 
 export type InstanceKind = "dungeon" | "raid";
 
@@ -29,7 +36,7 @@ export interface DungeonInfo {
   id: string;
   name: string;
   kind: InstanceKind;
-  /** Zone id in zones.json the entrance is in. */
+  /** Zone id in zones.json the entrance is in, or "elsewhere" when the map does not draw its zone. */
   zone: string;
   /** Typical level range (label it "typical"). */
   typicalLevels: LevelRange;
@@ -212,39 +219,93 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zoneTexts: ["Onyxia's Lair"],
   },
   {
-    id: "mc",
-    name: "Molten Core",
-    kind: "raid",
-    zone: "burning",
-    typicalLevels: typical(60),
-    zoneTexts: ["Molten Core"],
+    id: "thanes",
+    name: "Hall of Thanes",
+    kind: "dungeon",
+    zone: "dunmorogh",
+    typicalLevels: typical(13, 20),
+    zoneTexts: ["Hall of Thanes"],
   },
   {
-    id: "bwl",
-    name: "Blackwing Lair",
-    kind: "raid",
-    zone: "burning",
-    typicalLevels: typical(60),
-    zoneTexts: ["Blackwing Lair"],
-  },
-  { id: "zg", name: "Zul'Gurub", kind: "raid", zone: "stv", typicalLevels: typical(58, 60), zoneTexts: ["Zul'Gurub"] },
-  {
-    id: "aq20",
-    name: "Ruins of Ahn'Qiraj",
-    kind: "raid",
-    zone: "silithus",
-    typicalLevels: typical(60),
-    zoneTexts: ["Ruins of Ahn'Qiraj"],
+    id: "lordaeron",
+    name: "Ruins of Lordaeron",
+    kind: "dungeon",
+    zone: "tirisfal",
+    typicalLevels: typical(15, 22),
+    zoneTexts: ["Ruins of Lordaeron"],
   },
   {
-    id: "aq40",
-    name: "Temple of Ahn'Qiraj",
-    kind: "raid",
-    zone: "silithus",
-    typicalLevels: typical(60),
-    zoneTexts: ["Temple of Ahn'Qiraj", "Ahn'Qiraj"],
+    id: "excavation",
+    name: "Excavation Site",
+    kind: "dungeon",
+    zone: "wetlands",
+    typicalLevels: typical(26, 33),
+    zoneTexts: ["Excavation Site", "Excavation Site: Wetlands"],
   },
-  { id: "naxx", name: "Naxxramas", kind: "raid", zone: "epl", typicalLevels: typical(60), zoneTexts: ["Naxxramas"] },
+  {
+    id: "dalaran",
+    name: "City of Dalaran",
+    kind: "dungeon",
+    zone: "hillsbrad",
+    typicalLevels: typical(28, 35),
+    zoneTexts: ["City of Dalaran"],
+  },
+  {
+    id: "drowned",
+    name: "The Drowned City",
+    kind: "dungeon",
+    zone: "stv",
+    typicalLevels: typical(35, 40),
+    zoneTexts: ["The Drowned City", "Drowned City"],
+  },
+  {
+    id: "kroldok",
+    name: "Krol'dok Stronghold",
+    kind: "dungeon",
+    zone: ELSEWHERE,
+    typicalLevels: typical(40, 45),
+    zoneTexts: ["Krol'dok Stronghold"],
+  },
+  {
+    id: "alcaz",
+    name: "Alcaz Prison",
+    kind: "dungeon",
+    zone: "dustwallow",
+    typicalLevels: typical(48, 53),
+    zoneTexts: ["Alcaz Prison"],
+  },
+  {
+    id: "blackmaw",
+    name: "Blackmaw Hold",
+    kind: "dungeon",
+    zone: "azshara",
+    typicalLevels: typical(55, 60),
+    zoneTexts: ["Blackmaw Hold"],
+  },
+  {
+    id: "shaper",
+    name: "Shaper's Terrace",
+    kind: "dungeon",
+    zone: "ungoro",
+    typicalLevels: typical(58, 60),
+    zoneTexts: ["Shaper's Terrace"],
+  },
+  {
+    id: "barrow",
+    name: "The Barrow Deeps",
+    kind: "raid",
+    zone: "hyjal",
+    typicalLevels: typical(60),
+    zoneTexts: ["The Barrow Deeps", "Barrow Deeps"],
+  },
+  {
+    id: "summit",
+    name: "Hyjal Summit",
+    kind: "raid",
+    zone: "hyjal",
+    typicalLevels: typical(60),
+    zoneTexts: ["Hyjal Summit"],
+  },
 ];
 
 export interface MapPoint {

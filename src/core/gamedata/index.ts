@@ -2,6 +2,7 @@
 export * from "./classes";
 export * from "./dungeons";
 export * from "./professions";
+export * from "./places";
 export * from "./races";
 export * from "./rulesets";
 export * from "./zones";

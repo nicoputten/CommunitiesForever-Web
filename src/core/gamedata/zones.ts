@@ -1,4 +1,5 @@
 import { DUNGEONS, type DungeonInfo } from "./dungeons";
+import { BATTLEGROUND, ELSEWHERE } from "./places";
 
 // The addon stores a sighting's zone as the English client's zone name text (GetRealZoneText, C_Club member zone),
 // not as an ID; inside an instance it is the instance's name. This table maps that text to a zones.json zone id.
@@ -6,16 +7,20 @@ import { DUNGEONS, type DungeonInfo } from "./dungeons";
 // Commons, tools/map); the capitals' zones from the map (each capital is drawn inside its zone); Alterac Mountains
 // shares the Hillsbrad shape, as the source SVG has no shape of its own for it (docs/DESIGN.md §5); Blackrock
 // Mountain is in Burning Steppes, where the source map puts it. Dungeon texts come from src/core/gamedata/dungeons.ts.
-// The Vanilla battlegrounds (warcraft.wiki.gg "Battleground", https://warcraft.wiki.gg/wiki/Battleground) are not on
-// the map: they resolve to "battleground" (someone who logged off inside one). Text that matches nothing resolves to
-// "elsewhere": a sighting is never dropped.
+// WoW: Forever (docs/WOW-FOREVER.md): Mount Hyjal is playable and resolves to the Hyjal shape (drawn as terrain);
+// the new zones The Riverglades, Zephras Isle and Shen'dralas are not on our map yet and resolve to "elsewhere"
+// (decided by Nico) until the map draws them.
+// Battlegrounds are not on the map: they resolve to "battleground" (someone who logged off inside one). The Vanilla
+// ones (warcraft.wiki.gg "Battleground", https://warcraft.wiki.gg/wiki/Battleground) and Forever's Darkspear Islands
+// (Game Informer, https://gameinformer.com/blizzcon-2026/2026/09/12/blizzard-announces-world-of-warcraft-forever-expanding-vanilla-wow-with).
+// Text that matches nothing resolves to "elsewhere": a sighting is never dropped.
 
-/** Off the map: the text names a battleground. */
-export const BATTLEGROUND = "battleground";
-/** Off the map: text the site does not know. */
-export const ELSEWHERE = "elsewhere";
-
-export const BATTLEGROUNDS: ReadonlySet<string> = new Set(["Warsong Gulch", "Arathi Basin", "Alterac Valley"]);
+export const BATTLEGROUNDS: ReadonlySet<string> = new Set([
+  "Warsong Gulch",
+  "Arathi Basin",
+  "Alterac Valley",
+  "Darkspear Islands",
+]);
 
 export const ZONE_ALIASES: Readonly<Record<string, string>> = {
   // Kalimdor
@@ -37,6 +42,7 @@ export const ZONE_ALIASES: Readonly<Record<string, string>> = {
   "Un'Goro Crater": "ungoro",
   Tanaris: "tanaris",
   Silithus: "silithus",
+  "Mount Hyjal": "hyjal",
   // Eastern Kingdoms
   "Tirisfal Glades": "tirisfal",
   "Western Plaguelands": "wpl",

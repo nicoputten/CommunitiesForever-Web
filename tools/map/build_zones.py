@@ -127,7 +127,7 @@ CITIES = [
 ]
 CITY_OVERRIDES = {"Darnassus": (148, 146)}   # world px; the source label sits off the island
 
-# Vanilla dungeons and raids (WEB-13): marker positions in world px, placed by hand inside the zone. Where the source
+# Dungeons and raids (WEB-13, docs/WOW-FOREVER.md): marker positions in world px, placed by hand inside the zone. Where the source
 # SVG marks the entrance with a dot (Uldaman, Gnomeregan, Blackrock Mountain, Zul'Farrak, Dire Maul, Maraudon,
 # Stratholme) the marker sits on that dot, the Blackrock Mountain instances around it; Zul'Gurub sits by its label;
 # the rest are placed where the entrance is in the game. Names match src/core/gamedata/dungeons.ts.
@@ -152,12 +152,20 @@ DUNGEONS = [
     {"name": "Scholomance", "zone": "wpl", "x": 828, "y": 206},
     {"name": "Stratholme", "zone": "epl", "x": 862.7, "y": 103.9},
     {"name": "Onyxia's Lair", "zone": "dustwallow", "x": 350, "y": 655},
-    {"name": "Molten Core", "zone": "burning", "x": 764, "y": 587},
-    {"name": "Blackwing Lair", "zone": "burning", "x": 771, "y": 585},
-    {"name": "Zul'Gurub", "zone": "stv", "x": 785, "y": 757},
-    {"name": "Ruins of Ahn'Qiraj", "zone": "silithus", "x": 146, "y": 806},
-    {"name": "Temple of Ahn'Qiraj", "zone": "silithus", "x": 156, "y": 818},
-    {"name": "Naxxramas", "zone": "epl", "x": 876, "y": 116},
+    # WoW: Forever's new dungeons and raids (docs/WOW-FOREVER.md); Krol'dok Stronghold has no marker (The Riverglades
+    # is not on the map). Placed by Blizzard's location text: beneath Ironforge, above the Undercity, western Wetlands,
+    # Alterac Mountains, the islet off Stranglethorn's west coast, Alcaz Island, Azshara (no exact spot published),
+    # northern Un'Goro, Mount Hyjal (Hyjal Summit by the source's Nordrassil label).
+    {"name": "Hall of Thanes", "zone": "dunmorogh", "x": 752, "y": 476},
+    {"name": "Ruins of Lordaeron", "zone": "tirisfal", "x": 711, "y": 184},
+    {"name": "Excavation Site", "zone": "wetlands", "x": 780, "y": 392},
+    {"name": "City of Dalaran", "zone": "hillsbrad", "x": 736, "y": 236},
+    {"name": "The Drowned City", "zone": "stv", "x": 679.5, "y": 773.5},
+    {"name": "Alcaz Prison", "zone": "dustwallow", "x": 394, "y": 575},
+    {"name": "Blackmaw Hold", "zone": "azshara", "x": 420, "y": 380},
+    {"name": "Shaper's Terrace", "zone": "ungoro", "x": 270, "y": 700},
+    {"name": "The Barrow Deeps", "zone": "hyjal", "x": 310, "y": 345},
+    {"name": "Hyjal Summit", "zone": "hyjal", "x": 340, "y": 288},
 ]
 
 SOURCE_NOTE = ("Wikimedia Commons Kalimdor_english.svg / Eastern_Kingdoms.svg (zone outlines), "

@@ -1,7 +1,10 @@
-// Vanilla professions by skill line ID (the keys of the addon's Char.professions, from GetProfessionInfo).
-// Source: skill line IDs and English names of the game client's SkillLine table, as listed on warcraft.wiki.gg
-// "TradeSkillLineID" (https://warcraft.wiki.gg/wiki/TradeSkillLineID); Cooking 185 and Mining 186 also appear in the addon
-// fixtures. Rank caps: Apprentice 75, Journeyman 150, Expert 225, Artisan 300 (warcraft.wiki.gg "Profession").
+// Professions by skill line ID (the keys of the addon's Char.professions, from GetProfessionInfo). WoW: Forever keeps
+// the twelve Vanilla professions and their skill lines; its Camping is part of the professions, not a profession of its
+// own (docs/WOW-FOREVER.md). Sources: skill line IDs and English names of the client's SkillLine table, as listed on
+// warcraft.wiki.gg "TradeSkillLineID" (https://warcraft.wiki.gg/wiki/TradeSkillLineID); confirmed on the Forever beta
+// client for Mining 186, Cooking 185, First Aid 129 and Fishing 356 (CommunitiesForever docs/API-FINDINGS.md).
+// Rank caps: Apprentice 75, Journeyman 150, Expert 225, Artisan 300 (warcraft.wiki.gg "Profession"; 75 and 150 seen
+// on the beta).
 
 export type ProfessionKind = "primary" | "secondary";
 

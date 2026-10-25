@@ -75,9 +75,11 @@ describe("classes", () => {
 });
 
 describe("races", () => {
-  it("has the eight Vanilla races, four per faction", () => {
-    expect(Object.keys(RACES).map(Number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
-    expect(Object.values(RACES).filter((r) => r.faction === "Horde")).toHaveLength(4);
+  it("has the eight Vanilla races and Skyborne for each faction", () => {
+    expect(Object.keys(RACES).map(Number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 95, 96]);
+    expect(Object.values(RACES).filter((r) => r.faction === "Horde")).toHaveLength(5);
+    expect([raceInfo(95)?.faction, raceInfo(96)?.faction]).toEqual(["Alliance", "Horde"]);
+    expect(raceInfo(95)?.name).toBe("Skyborne");
   });
 
   it("matches the faction the addon recorded", () => {
@@ -142,16 +144,32 @@ describe("dungeons", () => {
     expect(new Set(DUNGEONS.map((d) => d.name)).size).toBe(DUNGEONS.length);
   });
 
-  it.each(DUNGEONS)("$name is in an existing zone, with a map position inside it", (d) => {
+  const onMap = DUNGEONS.filter((d) => d.zone !== ELSEWHERE);
+
+  it.each(onMap)("$name is in an existing zone, with a map position inside it", (d) => {
     const zone = zones.get(d.zone);
-    expect(zone?.kind).toBe("zone");
+    expect(zone).toBeDefined();
     const at = dungeonPosition(d);
     expect(at).toBeDefined();
     expect(insidePath(zone!.d, at!.x, at!.y)).toBe(true);
   });
 
   it("matches the map's dungeon list", () => {
-    expect(map.dungeons.map((d) => [d.name, d.zone]).sort()).toEqual(DUNGEONS.map((d) => [d.name, d.zone]).sort());
+    expect(map.dungeons.map((d) => [d.name, d.zone]).sort()).toEqual(onMap.map((d) => [d.name, d.zone]).sort());
+  });
+
+  it("keeps a dungeon in a zone the map does not draw off the map", () => {
+    const kroldok = DUNGEONS.find((d) => d.id === "kroldok")!;
+    expect(kroldok.zone).toBe(ELSEWHERE);
+    expect(dungeonPosition(kroldok)).toBeUndefined();
+  });
+
+  it("lists only the raids announced for Forever", () => {
+    expect(DUNGEONS.filter((d) => d.kind === "raid").map((d) => d.name)).toEqual([
+      "Onyxia's Lair",
+      "The Barrow Deeps",
+      "Hyjal Summit",
+    ]);
   });
 
   it.each(DUNGEONS)("$name has a typical range that spans its wings", (d) => {
@@ -172,8 +190,16 @@ describe("zone aliases", () => {
     expect(ZONE_ALIASES[z.name]).toBe(z.id);
   });
 
-  it("only points at playable zones", () => {
-    for (const id of Object.values(ZONE_ALIASES)) expect(zones.get(id)?.kind).toBe("zone");
+  it("only points at zones on the map, terrain only for Mount Hyjal", () => {
+    for (const [text, id] of Object.entries(ZONE_ALIASES)) {
+      expect(zones.get(id)?.kind).toBe(text === "Mount Hyjal" ? "terrain" : "zone");
+    }
+  });
+
+  it("keeps Forever's zones the map does not draw yet as elsewhere", () => {
+    for (const text of ["The Riverglades", "Riverglades", "Zephras Isle", "Shen'dralas"]) {
+      expect(resolveZone(text).zone).toBe(ELSEWHERE);
+    }
   });
 
   it("puts the capitals in their zone", () => {
@@ -202,7 +228,7 @@ describe("zone aliases", () => {
   });
 
   it("puts the battlegrounds off the map as battleground", () => {
-    for (const text of ["Warsong Gulch", "Arathi Basin", "Alterac Valley"]) {
+    for (const text of ["Warsong Gulch", "Arathi Basin", "Alterac Valley", "Darkspear Islands"]) {
       expect(resolveZone(text)).toEqual({ zone: BATTLEGROUND, text });
     }
   });
