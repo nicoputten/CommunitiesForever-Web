@@ -7,3 +7,4 @@ export * from "./report";
 export * from "./rollCall";
 export * from "./roster";
 export * from "./site";
+export * from "./text";

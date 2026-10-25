@@ -11,11 +11,13 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
+    { name: "phone", use: { ...devices["Pixel 7"], viewport: { width: 375, height: 812 } } },
   ],
   webServer: {
     command: "npm run start",
-    env: { PORT: String(port), HOSTNAME: "localhost" },
+    // DEV_VIEWER: the signed-in admin until WEB-06 replaces the stub (src/app/viewer.ts).
+    env: { PORT: String(port), HOSTNAME: "localhost", DEV_VIEWER: "Nico#2201:admin" },
     port,
     reuseExistingServer: !process.env.CI,
   },

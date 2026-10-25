@@ -1,4 +1,5 @@
 # Changelog
 
 ## Unreleased
+- The site gets its look: the "Night over Azeroth" colours and type, a top bar with the community's name, Map / Roster / Professions, how old the data is, Upload and the account menu with sign out, a tab bar on phones, the footer credit, and a banner when the last upload is a week old or more.
 - Map data: Thousand Needles is dry canyon again instead of the Cataclysm lake; Mount Hyjal, The Riverglades, Shen'dralas and Zephras Isle are zones on the map, so characters there (and in Krol'dok Stronghold, The Barrow Deeps and Hyjal Summit) are placed on it instead of "elsewhere".

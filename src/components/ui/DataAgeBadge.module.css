@@ -1,0 +1,19 @@
+.badge {
+  display: inline-block;
+  padding: var(--s-0-75) var(--s-2);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-neutral);
+  color: var(--text-muted);
+  font-size: var(--fs-meta-sm);
+  white-space: nowrap;
+}
+
+.badge[data-tone="fresh"] {
+  border-color: var(--fresh-line);
+  color: var(--fresh-text);
+}
+
+.badge[data-tone="stale"] {
+  border-color: var(--stale-line);
+  color: var(--stale-text);
+}

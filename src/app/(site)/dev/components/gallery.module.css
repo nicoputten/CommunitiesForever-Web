@@ -1,0 +1,150 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.note {
+  margin-top: calc(-1 * var(--s-2));
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: var(--border) solid var(--line);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.label {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.type {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.displayXl {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-xl);
+  letter-spacing: var(--ls-display-xl);
+  line-height: var(--lh-tight);
+  color: var(--gold-pale);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  letter-spacing: var(--ls-display);
+  color: var(--gold-bright);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.sectionType {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--fs-name);
+  color: var(--warlock-text);
+}
+
+.body {
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.overline {
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-overline);
+  color: var(--text-faint);
+}
+
+.empties {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--size-empty)), 1fr));
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.skeletonPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  max-width: var(--size-empty);
+  padding: var(--s-4);
+  border-radius: var(--r-panel);
+  background: var(--surface-panel);
+  border: var(--border) solid var(--line);
+}
+
+.skeletonHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2-5);
+  border-radius: var(--r-btn);
+  background: var(--surface-row);
+}
+
+.skeletonLines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.grow {
+  flex: 1;
+}

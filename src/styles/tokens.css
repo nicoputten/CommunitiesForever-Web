@@ -1,0 +1,239 @@
+/*
+ * Design tokens: docs/DESIGN.md §3 (direction A, "Night over Azeroth"). The only place in src/ with raw colours,
+ * font sizes, spacing, radii, shadows and durations (CLAUDE.md rule 11; the WEB-30 token lint enforces it).
+ * Part 1 is §3 as written. Part 2 holds values the boards in design/boards/ use that §3 has no token for, with the
+ * board they come from (approved by Nico for WEB-15; listed in DESIGN.md §3 "Derived from the boards").
+ */
+
+/* ── Part 1: DESIGN.md §3 ─────────────────────────────────────────────────────────────────────── */
+:root {
+  /* surfaces */
+  --bg-abyss: #050a12; /* map pages */
+  --bg-night: #070c15; /* data pages */
+  --surface: rgba(12, 18, 30, 0.78); /* + backdrop-filter: blur(14px) */
+  --surface-strong: rgba(12, 18, 30, 0.84);
+  --surface-raised: #121b2a;
+  --track: #1f2837;
+  --line: rgba(212, 175, 106, 0.2);
+  --line-strong: rgba(212, 175, 106, 0.35);
+
+  /* sea & land */
+  --sea-light: #10233a;
+  --sea: #0a172a;
+  --sea-deep: #040811;
+  --land-top: #26354d;
+  --land-bottom: #151e2e;
+  --terrain: #0c121b; /* Uldum, Gilneas, Grim Batol */
+  --zone-line: rgba(201, 164, 92, 0.36);
+  --coast: #a9c8ea; /* @55% */
+  --surf: #5e93c9;
+  --wave: #7fa9d6;
+  --foam: #cfe3f7;
+
+  /* gold */
+  --gold: #d4af6a;
+  --gold-bright: #f0d08e;
+  --gold-pale: #f3dfae;
+
+  /* text */
+  --text-strong: #f3ebda;
+  --text: #e6e1d6;
+  --text-muted: #aeb6c3;
+  --text-dim: #8e98a8;
+  --text-faint: #7e8898;
+  --on-gold: #0b0f14;
+
+  /* status */
+  --fresh: #7fd99a;
+  --fresh-text: #9be3b0;
+  --stale: #e08a4a;
+  --stale-text: #f0a774;
+  --horde: #b5302a;
+  --horde-text: #f08a80;
+  --alliance: #3a6bd6;
+  --alliance-text: #8db0ff;
+  --bnet-top: #1a8cff;
+  --bnet-bottom: #0b66d6;
+  --ember: #f2b866;
+
+  /* class: fill / text on dark */
+  --warrior: #c69b6d;
+  --paladin: #f48cba;
+  --hunter: #aad372;
+  --rogue: #fff468;
+  --priest: #ffffff;
+  --shaman: #0070dd;
+  --shaman-text: #4da3ff;
+  --mage: #3fc7eb;
+  --warlock: #8788ee;
+  --warlock-text: #a9aaf5;
+  --druid: #ff7c0a;
+  --druid-text: #ff9a45;
+
+  /* type: next/font sets --font-*-face on <html> (src/styles/fonts.ts); the names after it are the fallbacks */
+  --font-display: var(--font-marcellus-sc-face), "Marcellus SC", serif; /* titles, nav brand, map labels */
+  --font-name: var(--font-marcellus-face), "Marcellus", serif; /* character names, big numbers */
+  --font-ui: var(--font-inter-face), "Inter", system-ui, sans-serif; /* all data, tabular-nums */
+
+  /* space, radius */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-12: 48px;
+  --r-tag: 6px;
+  --r-btn: 10px;
+  --r-panel: 14px;
+  --r-sheet: 18px;
+  --r-modal: 20px;
+  --r-pill: 999px;
+
+  /* elevation */
+  --shadow-card: 0 18px 40px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(240, 208, 142, 0.15);
+  --shadow-sheet: 0 -12px 30px rgba(0, 0, 0, 0.45);
+
+  /* motion */
+  --dur-instant: 80ms;
+  --dur-fast: 120ms;
+  --dur-card: 160ms;
+  --dur-fan: 220ms;
+  --dur-zone: 250ms;
+  --dur-sheet: 280ms;
+  --dur-drop: 400ms;
+  --dur-fly: 600ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Part 2: derived from the boards ──────────────────────────────────────────────────────────── */
+:root {
+  /* type scale (DESIGN.md §3 "Type scale"; sizes inside a range are the ones the boards use) */
+  --fs-display-xl: 48px;
+  --fs-display: 34px;
+  --fs-title-lg: 22px; /* design-system section headings */
+  --fs-title: 20px; /* panels, brand */
+  --fs-heading: 28px; /* empty-site: centre card title (Marcellus) */
+  --fs-name-lg: 21px;
+  --fs-name: 17px; /* roster-cards: character rows */
+  --fs-name-sm: 15px;
+  --fs-brand-phone: 17px; /* phone-map: app bar brand */
+  --fs-section: 16px;
+  --fs-cta: 15px; /* empty-site: gold button */
+  --fs-body: 14px;
+  --fs-body-sm: 13px;
+  --fs-meta: 12px;
+  --fs-meta-sm: 11px;
+  --fs-overline: 11px;
+  --fs-tiny: 10px; /* roster-cards: level badge, faction tag */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --lh-tight: 1;
+  --lh-name: 1.15;
+  --lh-body: 1.5;
+  --lh-relaxed: 1.6;
+  --ls-display-xl: 0.06em;
+  --ls-display: 0.05em;
+  --ls-title: 0.06em;
+  --ls-brand: 0.08em; /* map, roster-cards: top bar brand */
+  --ls-section: 0.08em;
+  --ls-overline: 0.12em;
+  --ls-tag: 0.04em;
+
+  /* tints and lines (gold, status, faction) */
+  --tint-active: rgba(212, 175, 106, 0.14); /* map: current nav link, upload link */
+  --tint-pressed: rgba(212, 175, 106, 0.16); /* design-system: pressed FilterChip */
+  --tint-selected: rgba(212, 175, 106, 0.2); /* map, roster-cards: pressed Segmented option */
+  --tint-hover: rgba(212, 175, 106, 0.07); /* roster-cards: row hover */
+  --line-bar: rgba(212, 175, 106, 0.15); /* roster-cards: top bar bottom border */
+  --line-bar-phone: rgba(212, 175, 106, 0.18); /* phone-map: app bar bottom border */
+  --line-control: rgba(212, 175, 106, 0.3); /* map: Segmented border */
+  --line-chip-on: rgba(212, 175, 106, 0.4); /* roster-cards: chip with a value */
+  --line-modal: rgba(212, 175, 106, 0.4); /* empty-site: centre card */
+  --line-neutral: rgba(174, 182, 195, 0.25); /* roster-cards: chip, neutral age badge */
+  --text-chip: #c9cfd9; /* roster-cards: chip text */
+  --fresh-line: rgba(127, 217, 154, 0.4); /* roster-cards: fresh age badge */
+  --stale-line: rgba(224, 138, 74, 0.5); /* roster-cards: old age badge */
+  --stale-banner-line: rgba(224, 138, 74, 0.45); /* loading: stale-site banner */
+  --stale-tint: rgba(224, 138, 74, 0.14); /* loading: stale-site banner */
+  --horde-tint: rgba(181, 48, 42, 0.18); /* roster-cards: faction tag */
+  --alliance-tint: rgba(58, 107, 214, 0.2); /* roster-cards: faction tag */
+
+  /* surfaces of controls and bars */
+  --control-bg: rgba(12, 18, 30, 0.6); /* map: Segmented, upload button */
+  --surface-modal: rgba(10, 16, 28, 0.78); /* empty-site: centre card */
+  --surface-panel: rgba(12, 18, 30, 0.75); /* roster-cards: friend panel */
+  --surface-aside: rgba(12, 18, 30, 0.8); /* map: roll call panel; loading: banner */
+  --surface-row: rgba(255, 255, 255, 0.025); /* roster-cards: character row */
+  --line-row: rgba(255, 255, 255, 0.05); /* roster-cards: character row */
+  --bar-fade-top: rgba(5, 10, 18, 0.95); /* map: top bar gradient over the map */
+  --bar-fade-end: rgba(5, 10, 18, 0); /* map */
+  --bar-phone-top: rgba(5, 10, 18, 0.96); /* phone-map: app bar */
+  --bar-phone-end: rgba(5, 10, 18, 0.75); /* phone-map */
+  --avatar: #2a3446; /* map, roster-cards: user and friend avatar */
+  --avatar-muted: #1c2433; /* roster-cards: friend without the addon */
+  --on-shaman: #ffffff; /* DESIGN.md §3: initials on the Shaman fill are white */
+  --skeleton-base: #141c2a; /* loading: shimmer */
+  --skeleton-shine: #1e2838; /* loading: shimmer */
+  --page-glow: #12233a; /* design-system: page top glow */
+
+  /* blur */
+  --blur-surface: 14px;
+  --blur-modal: 16px;
+
+  /* extra steps on the space and radius scales */
+  --s-px: 1px;
+  --s-0-5: 2px;
+  --s-0-75: 3px; /* phone-map: tab bar icon to label */
+  --s-1-5: 6px;
+  --s-2-5: 10px;
+  --s-3-5: 14px;
+  --s-7: 28px;
+  --s-10: 40px;
+  --r-badge: 4px; /* roster-cards: faction tag, data-age tag */
+  --r-nav: 8px; /* map: nav link, upload button */
+  --r-control: 9px; /* roster-cards: Segmented, search */
+  --r-card: 12px; /* empty-site: gold button; loading: banner */
+
+  /* glow (class colour is added by the component): roster-cards disc, design-system marker */
+  --glow-disc: 0 0 14px;
+  --glow-avatar: 0 0 16px;
+  --shadow-current: inset 0 -2px 0 var(--gold); /* map: underline of the current nav link */
+  --text-glow: 0 0 30px rgba(240, 208, 142, 0.3); /* design-system: hero title */
+
+  /* sizes */
+  --size-touch: 44px;
+  --size-bar: 64px; /* top bar */
+  --size-bar-phone: 56px; /* phone app bar */
+  --size-tabbar: 72px; /* phone tab bar */
+  --size-tabbar-inset: 14px; /* phone tab bar: room above the home indicator */
+  --size-emblem: 26px;
+  --size-emblem-phone: 22px;
+  --size-avatar: 30px;
+  --size-avatar-phone: 32px;
+  --size-disc: 44px;
+  --size-disc-sm: 28px;
+  --size-level-w: 22px;
+  --size-level-h: 18px;
+  --size-icon: 16px;
+  --size-icon-sm: 14px;
+  --size-tab-icon: 22px;
+  --size-cta: 48px;
+  --size-menu: 220px;
+  --size-empty: 440px; /* empty-site: centre card width */
+  --page-max: 1280px;
+  --gutter: 24px;
+  --gutter-phone: 16px;
+  --border: 1px;
+  --border-strong: 2px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* motion */
+  --dur-shimmer: 1.6s; /* loading: skeleton */
+  --dur-pulse: 2.6s; /* DESIGN.md §6: live pulse */
+}

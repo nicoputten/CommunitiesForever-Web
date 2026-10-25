@@ -79,6 +79,16 @@
   - a person's data age is their record's `version` (set by the owner's addon), else `receivedAt`, else their newest character update
 - Done: `src/core/views/` (`age`, `site`, `characters`, `rollCall`, `roster`, `character`, `professions`, `report`), `src/core/people.ts` (data time, "via" names), `src/core/gamedata/levels.ts` (level cap 60, talent points, 31-point trees); `diff` extended with `itemLevelGains`, `capReached`, `senders` and `counts`; tests in `tests/unit/views/` with the design prompt's sample group (`sample.ts`), the addon fixtures and the real beta file.
 
+### WEB-15 Tokens, fonts and the app shell
+- `src/styles/tokens.css` with every token of `docs/DESIGN.md` §3 (surfaces, sea and land, gold, text, status, class colours, type, space, radius, elevation, motion); CSS Modules for components, no runtime CSS-in-JS.
+- Fonts with `next/font/google`: Marcellus SC, Marcellus, Inter (tabular numbers for data); type scale of §3.
+- App shell per the boards: `TopBar` (brand with site name from data, Map / Roster / Professions, data age "Data uploaded just now", Upload for admin and members, user menu with sign out), phone `TabBar`, footer credit "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted".
+- Shared components: `DataAgeBadge`, `FactionTag`, `FilterChip` and `Segmented` (`aria-pressed`), `Banner` (site data 7+ days old), `EmptyState`, `Skeleton`, class disc with initials and level badge.
+- Design system board as reference: a `/dev/components` page (admin only) that shows every component in every state.
+- Decided with Nico (2026-10-26): board values without a §3 token become derived tokens in `tokens.css` part 2 (DESIGN.md §3 "Derived from the boards"); Upload as icon + label on every page; on phone the data age sits in the app bar and Upload in the user menu; display initials on the class disc (CLAUDE.md rule 3 exception); `getViewer()` stub until WEB-06.
+- Done: `src/styles/tokens.css`, `globals.css`, `fonts.ts` (next/font, `--font-*-face`); shell in `src/components/shell/` (`SiteShell`, `TopBar`, `UserMenu`, `TabBar`, `SiteFooter`) through `src/app/(site)/layout.tsx`, so pages outside the group (sign-in) have no shell; components in `src/components/ui/` (`ClassDisc`, `DataAgeBadge`, `FactionTag`, `FilterChip`, `Segmented`, `Banner`, `EmptyState`, `Skeleton`, `PageTitle`, icons); `/dev/components`; placeholder pages for Map, Roster, Professions and Upload; `timeAgo`, `initials` in `src/core/views`; Playwright `tests/e2e/shell.spec.ts` (phone project now 375 px wide).
+- Seams for WEB-06: `src/app/viewer.ts` (`getViewer`, `isAdmin`: `DEV_VIEWER` until then), `src/app/actions.ts` (`signOut` stub), `src/app/site.ts` (site name uses the merged community name, as uploads do not store their own `clubName` yet).
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):

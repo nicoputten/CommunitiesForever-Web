@@ -1,0 +1,53 @@
+.disc {
+  --disc: var(--avatar);
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-disc);
+  height: var(--size-disc);
+  border-radius: var(--r-pill);
+  background: var(--disc);
+  color: var(--on-gold);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.disc[data-size="sm"] {
+  width: var(--size-disc-sm);
+  height: var(--size-disc-sm);
+  font-size: var(--fs-tiny);
+}
+
+.disc[data-class="shaman"] {
+  color: var(--on-shaman);
+}
+
+.disc[data-class="unknown"] {
+  color: var(--gold-bright);
+}
+
+.disc[data-live] {
+  box-shadow: var(--glow-disc) color-mix(in srgb, var(--disc) 45%, transparent);
+}
+
+.level {
+  position: absolute;
+  right: calc(-1 * var(--s-1-5));
+  bottom: calc(-1 * var(--s-1));
+  min-width: var(--size-level-w);
+  height: var(--size-level-h);
+  padding: 0 var(--s-0-75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--on-gold);
+  border: var(--border) solid var(--gold);
+  color: var(--gold-bright);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+}

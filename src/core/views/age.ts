@@ -32,3 +32,20 @@ export function daysOld(at: number, now: number): number {
 export function isOld(at: number | undefined, now: number): boolean {
   return at !== undefined && ageSeconds(at, now) >= OLD_AFTER;
 }
+
+/**
+ * How long ago `at` was, as the screens say it (lower case; "Data uploaded just now", "Yesterday" capitalised by the
+ * caller): just now (< 1 min), N min ago, N h ago, yesterday (24–48 h), N days ago (< 14 d), N weeks ago (< 60 d),
+ * N months ago (30-day months).
+ */
+export function timeAgo(at: number, now: number): string {
+  const age = ageSeconds(at, now);
+  if (age < 60) return "just now";
+  if (age < HOUR) return `${Math.floor(age / 60)} min ago`;
+  if (age < DAY) return `${Math.floor(age / HOUR)} h ago`;
+  const days = Math.floor(age / DAY);
+  if (days < 2) return "yesterday";
+  if (days < 14) return `${days} days ago`;
+  if (days < 60) return `${Math.floor(days / 7)} weeks ago`;
+  return `${Math.floor(days / 30)} months ago`;
+}
