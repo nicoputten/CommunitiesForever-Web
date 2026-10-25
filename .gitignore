@@ -9,3 +9,5 @@ playwright-report/
 /data/
 *.sqlite
 *.sqlite-journal
+next-env.d.ts
+*.tsbuildinfo

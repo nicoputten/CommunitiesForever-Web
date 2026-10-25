@@ -26,7 +26,11 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 10. Never invent game data (zone positions, class colors, profession IDs). Every table of game data names its source in a comment.
 
 ## Commands
-(Filled in by WEB-01.)
+- Node.js 24 LTS (`.nvmrc`). Shells started before the install need `C:\Program Files\nodejs` on PATH (Git Bash: `export PATH="/c/Program Files/nodejs:$PATH"`).
+- `npm run lint`: ESLint (incl. the `src/core` layering rule), Prettier check (code only, Markdown is excluded), `tsc --noEmit`
+- `npm test`: Vitest (`tests/unit`, `tests/compat`)
+- `npm run build`, then `npm run test:e2e`: Playwright on the production build, desktop and phone
+- `npm run format`: Prettier write
 
 ## Branches
 Gitflow: `feature/web-XX-<slug>` off `develop`, PRs into `develop`. `main` receives releases.
