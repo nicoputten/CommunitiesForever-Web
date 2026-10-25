@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { siteName } from "@/core/views";
+import { adminBattleTag } from "@/server/access";
 import { getDb } from "@/server/db";
 import { meta, uploads } from "@/server/db/schema";
 
@@ -21,7 +22,7 @@ export function getSiteInfo(): SiteInfo {
   // Uploads do not store their own clubName yet, so every upload carries the merged community name (WEB-06 makes
   // every accepted upload the same community). siteName() still picks the admin's uploads only.
   const communityName = db.select().from(meta).where(eq(meta.id, 1)).get()?.data.community.name;
-  const admin = process.env.ADMIN_BATTLETAG ?? "";
+  const admin = adminBattleTag() ?? "";
   const name = siteName(
     ok.map((u) => ({ ...u, communityName })),
     admin,

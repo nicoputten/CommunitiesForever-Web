@@ -1,8 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { signOut as authSignOut } from "@/server/auth";
 
-/** Sign out. STUB until WEB-06, which replaces the body with Auth.js signOut(). */
+/** Sign out (user menu): ends the Auth.js session and goes to sign-in. */
 export async function signOut(): Promise<void> {
-  redirect("/");
+  await authSignOut({ redirectTo: "/signin" });
 }

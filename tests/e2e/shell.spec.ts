@@ -1,7 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
+import { E2E } from "../../playwright.config";
+import { signInAs } from "./session";
 
 // WEB-15: the app shell and /dev/components at desktop and phone size (playwright.config.ts projects).
-// The server runs with DEV_VIEWER = admin (the stub until WEB-06).
+// Signed in as the e2e admin (tests/e2e/session.ts).
+
+test.beforeEach(async ({ context, baseURL }) => {
+  await signInAs(context, baseURL!, E2E.admin);
+});
+
+const ACCOUNT = `Account ${E2E.admin}`;
 
 const FOOTER =
   "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted";
@@ -36,7 +44,7 @@ test.describe("app shell", () => {
       { useInnerText: true },
     );
     await expect(page.getByRole("contentinfo")).toHaveText(FOOTER);
-    await expect(page.getByRole("button", { name: "Account Nico#2201" })).toBeVisible();
+    await expect(page.getByRole("button", { name: ACCOUNT })).toBeVisible();
 
     // Top bar on desktop, tab bar on phone: the other one is hidden, so the role query finds one.
     const nav = page.getByRole("navigation", { name: "Main" });
@@ -65,7 +73,7 @@ test.describe("app shell", () => {
 
   test("user menu opens, offers sign out, closes with Escape", async ({ page }) => {
     await page.goto("/roster");
-    const trigger = page.getByRole("button", { name: "Account Nico#2201" });
+    const trigger = page.getByRole("button", { name: ACCOUNT });
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
     await trigger.click();
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -85,7 +93,7 @@ test.describe("app shell", () => {
     test.skip(!isPhone(page), "phone only");
     await page.goto("/roster");
     await expectTouchTargets(page);
-    await page.getByRole("button", { name: "Account Nico#2201" }).click();
+    await page.getByRole("button", { name: ACCOUNT }).click();
     await expectTouchTargets(page);
   });
 });

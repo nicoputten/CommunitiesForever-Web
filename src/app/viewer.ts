@@ -1,22 +1,24 @@
-import type { Viewer, ViewerRole } from "@/components/shell/viewer";
+import type { Viewer } from "@/components/shell/viewer";
+import { mayAdmin, mayUpload, roleOf } from "@/core/access";
+import { adminBattleTag, loadAccessList } from "@/server/access";
+import { auth } from "@/server/auth";
+import { getDb } from "@/server/db";
 
-// STUB until WEB-06: the signed-in user and their role. WEB-06 replaces the body of getViewer() with the Auth.js
-// session and the access rules; its callers (the shell, the admin guard of /dev/components) stay as they are.
-// Until then the viewer comes from DEV_VIEWER ("BattleTag#1234:role", .env.example); unset means signed out.
+// The signed-in user as the shell shows them: BattleTag from the session, role read from the database per request
+// (WEB-06), so a block or guest list change shows at once.
 
-const ROLES: readonly ViewerRole[] = ["admin", "member", "guest"];
-
+/** Undefined without a session or for someone not on the list (src/proxy.ts sends them away before a page renders). */
 export async function getViewer(): Promise<Viewer | undefined> {
-  const raw = process.env.DEV_VIEWER;
-  if (raw === undefined || raw === "") return undefined;
-  const at = raw.lastIndexOf(":");
-  const battleTag = raw.slice(0, at);
-  const role = raw.slice(at + 1) as ViewerRole;
-  if (at <= 0 || !ROLES.includes(role)) return undefined;
-  return { battleTag, role, mayUpload: role !== "guest" };
+  const battleTag = (await auth())?.user?.name ?? undefined;
+  if (battleTag === undefined) return undefined;
+  const list = loadAccessList(getDb(), adminBattleTag());
+  const role = roleOf(battleTag, list);
+  if (role === undefined) return undefined;
+  return { battleTag, role, mayUpload: mayUpload(battleTag, list) };
 }
 
-/** The admin guard: true for the admin. WEB-06 replaces it with its server-side role check. */
+/** The admin guard for admin-only pages (/dev/components). */
 export async function isAdmin(): Promise<boolean> {
-  return (await getViewer())?.role === "admin";
+  const battleTag = (await auth())?.user?.name ?? undefined;
+  return battleTag !== undefined && mayAdmin(battleTag, loadAccessList(getDb(), adminBattleTag()));
 }

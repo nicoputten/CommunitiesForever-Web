@@ -17,24 +17,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E3 Access and hosting
 
-### WEB-06 Battle.net sign-in and access rules
-- Auth.js with the Battle.net provider (EU). Session cookie; JWT unless the guest list needs revocation at once (decide in the story).
-- Who may sign in:
-  - **admin**: `ADMIN_BATTLETAG` (Nico). Can never be blocked.
-  - **members**: every BattleTag in the community data (`self`, `people`, `presence`) of an accepted upload from the community (see below).
-  - **guests**: BattleTags on the guest list (admin page, WEB-18)
-  - everyone else: "not on the list" (WEB-17)
-- Who may upload: admin, members, and guests with "may upload" ticked. Other guests view only.
-- An upload is accepted only when:
-  - the uploader may upload
-  - **it is the uploader's own file**: the file's `self.battleTag` equals the signed-in BattleTag, so nobody can upload someone else's or a made-up file under their name
-  - **it is the same community**: its `settings.clubId` equals the community of the admin's uploads. Until the admin's first upload, only the admin can upload.
-- Every accepted upload adds its BattleTags as members. Membership never ends automatically (someone gone from the data stays a member); the admin can block a member on the admin page, and a blocked BattleTag can't sign in.
-- Every page and API route needs a session except sign-in and the callback (CLAUDE.md rule 6). Upload and admin routes check the role on the server.
-- Storage: guest list table (BattleTag, may upload, added at, added by); members table (BattleTag, first seen in upload, blocked at/by); uploads already record `uploadedBy`. Members are derived from accepted uploads and rebuilt with them; blocks are kept apart so a rebuild never lifts one.
-- Unit tests for the access rules (core): roles, own-file check, same-community check, blocked members, the admin never blocked. Route tests for 401/403.
-- Manual: create the app at develop.battle.net with redirect URLs for localhost and `wow.vestras.nl`; client id and secret in `.env.local` and the TrueNAS app config.
-
 ### WEB-07 Docker image and deploy to TrueNAS
 - Multi-stage Dockerfile (Next.js standalone, non-root user), `/data` volume, health endpoint, migrations run at start.
 - GitHub Actions on tag `v*` on `main`: build and push to GHCR (`:<tag>`, `:latest`).

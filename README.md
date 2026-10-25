@@ -24,3 +24,4 @@ npm run dev                       # http://localhost:3000
 | `npm run test:e2e` | Playwright on the production build, desktop and phone (build first) |
 
 Configuration: copy `.env.example` to `.env.local`.
+Signing in needs a Battle.net app (`AUTH_BATTLENET_ID`, `AUTH_BATTLENET_SECRET`, redirect URL `http://localhost:3000/api/auth/callback/battlenet`), `AUTH_SECRET` and your BattleTag as `ADMIN_BATTLETAG`. The tests don't need any of it: they sign in with a minted session cookie.
