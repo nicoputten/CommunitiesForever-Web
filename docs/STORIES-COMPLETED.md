@@ -33,6 +33,21 @@
 - Decided with Nico: derived state in tables; the diff is saved on the upload row; `rebuild()` retries rejected uploads; upload limit 25 MiB (parser limit raised to match), larger files refused and not stored. `@types/better-sqlite3` added.
 - Done: `src/server/db/` (schema, `openDatabase`, `DATA_DIR`), `drizzle/0000_init.sql`, `src/server/uploads.ts` (`upload`, `rebuild`, `loadState`), `src/core/diff.ts`; tests in `tests/server/uploads.test.ts`, `tests/unit/diff.test.ts`.
 
+### WEB-13 Game data tables and map data
+- Goal: every table of game data the screens need, sourced (CLAUDE.md rule 10), in `src/core/gamedata/`.
+- Tables:
+  - classes: `classFile` → name, colour token, text-colour token (values in `docs/DESIGN.md` §3)
+  - races: `raceID` → name, faction
+  - professions: skill line ID → name, primary or secondary; caps 75/150/225/300
+  - rulesets: show **PvP** or **PvE**. The group plays on the PvP ruleset, so the table lists the PvP realm name(s) (the beta realm now, the launch name on launch day) and every other realm shows PvE. Never parse the realm name.
+  - dungeons and raids: name, zone, typical level range (labelled "typical"), map position
+  - zone aliases: the addon's zone text → `zones.json` zone id, also for cities ("Orgrimmar", "Stormwind City") and for dungeon names (→ the dungeon's zone). Unknown text: "elsewhere", never dropped.
+- `tools/map/build_zones.py`: add every Vanilla dungeon and raid to `DUNGEONS` (positions placed by hand on our map, source of the level ranges named), and Alterac Mountains if the source SVG allows a separate shape (otherwise an alias to Hillsbrad). Rebuild `zones.json`.
+- Unit tests: every zone in `zones.json` has an alias; every dungeon's zone exists; every class has its tokens.
+- WoW: Forever's changes are researched in `docs/WOW-FOREVER.md` (with sources) and applied: Skyborne (raceIDs 95/96), nine new dungeons, only the announced raids (Onyxia's Lair, The Barrow Deeps, Hyjal Summit), Mount Hyjal on the Hyjal shape, new zones not on the map yet resolve to "elsewhere".
+- Decided: Vanilla dungeon level ranges from the addon's planner table (`Dungeons.STATIC`), new ones from the beta Group Finder or else Blizzard; Blackrock Mountain and its instances in Burning Steppes, where the source map puts it; Alterac Mountains aliases to Hillsbrad (the source SVG has no shape for it); battlegrounds (incl. Darkspear Islands) resolve to "battleground" and other unknown text to "elsewhere" (both off the map); PvP realms: the beta realm and "Forever PvP" (launch).
+- Done: `src/core/gamedata/` (`classes`, `races`, `professions`, `rulesets`, `dungeons`, `zones` with `resolveZone`); 30 dungeon and raid markers in `tools/map/build_zones.py` and `zones.json` (`--dungeons-only` rewrites just that list, so the outlines stay byte for byte); tests in `tests/unit/gamedata.test.ts`.
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):

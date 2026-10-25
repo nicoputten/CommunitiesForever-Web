@@ -5,6 +5,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 ## Read first
 - `docs/ARCHITECTURE.md`: core rules, layering, stack, data flow, storage, hosting
 - `docs/SOURCE-DATA.md`: the SavedVariables file we read, field by field, and what each addon release writes
+- `docs/WOW-FOREVER.md`: how WoW: Forever differs from Vanilla (races, professions, zones, dungeons, raids, rulesets), with sources and what is confirmed
 - `docs/DESIGN.md`: the design decisions (tokens, data age scale, map, motion, components). `design/boards/`: the Claude Design boards per screen (`design/README.md`, `npm run design` to view)
 - `docs/STORIES.md`: open stories with acceptance criteria, in build order (done ones: `docs/STORIES-COMPLETED.md`)
 - The addon repo's `docs/ARCHITECTURE.md` "Data model" is the source of truth for the uploaded data. When it and `docs/SOURCE-DATA.md` disagree, the addon wins and this repo gets fixed.
@@ -25,7 +26,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 7. No secrets in the repo. Configuration via environment variables, documented in `.env.example`.
 8. English strings, hardcoded. No localization system.
 9. No dependencies beyond those listed in `docs/ARCHITECTURE.md` without asking.
-10. Never invent game data (zone positions, class colors, profession IDs, dungeon levels). Every table of game data names its source in a comment.
+10. Never invent game data (zone positions, class colors, profession IDs, dungeon levels). Every table of game data names its source in a comment. `docs/WOW-FOREVER.md` is the reference for what Forever changes from Vanilla: check it first, and update it (with sources) when a table changes.
 11. **Always follow the design system.** Every screen uses the tokens (`src/styles/tokens.css`), type scale, components, data age scale and motion of `docs/DESIGN.md`, and matches its board in `design/boards/`. No raw colours, font sizes, spacing, radii, shadows or durations outside `tokens.css`; no new component when a design system one fits. The boards are a visual reference only: never copy their markup or runtime. Accessible (semantic HTML, focus states, 44 px touch targets, reduced motion) and working at 375 px. The site name comes from the data, never hardcoded.
 12. **Deviating from the design only when Nico says so.** If something can't be built as designed, or seems better another way, ask first. An approved deviation is written in `docs/DESIGN.md` "Deviations" (what, why, date) in the same PR. The design checks (`npm run test:design`, WEB-30) must pass; a changed screenshot baseline is only committed after Nico approved the new look.
 

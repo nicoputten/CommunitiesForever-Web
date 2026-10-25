@@ -12,6 +12,11 @@ Requirements:
 
 Usage:
     python tools/map/build_zones.py --ek tools/map/source/Eastern_Kingdoms.svg --kal tools/map/source/Kalimdor_english.svg --out src/core/map/zones.json
+    python tools/map/build_zones.py --dungeons-only --out src/core/map/zones.json
+
+--dungeons-only rewrites only the "dungeons" list of an existing zones.json and keeps everything else byte for byte:
+a full rebuild moves outline points and city positions by fractions of a pixel (browser sampling and text measurement),
+which would rewrite every path for a change that only adds dungeons.
 
 How it works:
     1. A headless browser renders each SVG and samples every path outline (getPointAtLength), so curves,
@@ -73,7 +78,7 @@ EASTERN_KINGDOMS = [
     ("wpl",         "Western Plaguelands",   "zone",    ["#5582B0"]),
     ("epl",         "Eastern Plaguelands",   "zone",    ["#7E92B7"]),
     ("silverpine",  "Silverpine Forest",     "zone",    ["#B72467"]),
-    ("hillsbrad",   "Hillsbrad Foothills",   "zone",    ["#F05A94"]),   # includes Alterac Mountains
+    ("hillsbrad",   "Hillsbrad Foothills",   "zone",    ["#F05A94"]),   # includes Alterac Mountains: the source has no shape of its own
     ("hinterlands", "The Hinterlands",       "zone",    ["#A587BE"]),
     ("arathi",      "Arathi Highlands",      "zone",    ["#A767AA"]),
     ("gilneas",     "Gilneas",               "terrain", ["#A20069"]),
@@ -122,11 +127,48 @@ CITIES = [
 ]
 CITY_OVERRIDES = {"Darnassus": (148, 146)}   # world px; the source label sits off the island
 
+# Dungeons and raids (WEB-13, docs/WOW-FOREVER.md): marker positions in world px, placed by hand inside the zone. Where the source
+# SVG marks the entrance with a dot (Uldaman, Gnomeregan, Blackrock Mountain, Zul'Farrak, Dire Maul, Maraudon,
+# Stratholme) the marker sits on that dot, the Blackrock Mountain instances around it; Zul'Gurub sits by its label;
+# the rest are placed where the entrance is in the game. Names match src/core/gamedata/dungeons.ts.
 DUNGEONS = [
     {"name": "The Deadmines", "zone": "westfall", "x": 648, "y": 742},
+    {"name": "Ragefire Chasm", "zone": "durotar", "x": 386, "y": 428},
+    {"name": "Wailing Caverns", "zone": "barrens", "x": 296, "y": 500},
+    {"name": "Shadowfang Keep", "zone": "silverpine", "x": 668, "y": 272},
+    {"name": "Blackfathom Deeps", "zone": "ashenvale", "x": 196, "y": 362},
+    {"name": "The Stockade", "zone": "elwynn", "x": 699, "y": 633},
+    {"name": "Gnomeregan", "zone": "dunmorogh", "x": 684.9, "y": 477.4},
+    {"name": "Razorfen Kraul", "zone": "barrens", "x": 285, "y": 610},
+    {"name": "Scarlet Monastery", "zone": "tirisfal", "x": 752, "y": 140},
+    {"name": "Razorfen Downs", "zone": "barrens", "x": 305, "y": 650},
+    {"name": "Uldaman", "zone": "badlands", "x": 855.6, "y": 522},
+    {"name": "Zul'Farrak", "zone": "tanaris", "x": 317.4, "y": 699},
+    {"name": "Maraudon", "zone": "desolace", "x": 122.9, "y": 525.2},
+    {"name": "Sunken Temple", "zone": "swamp", "x": 870, "y": 700},
+    {"name": "Blackrock Depths", "zone": "burning", "x": 767.4, "y": 582.4},
+    {"name": "Blackrock Spire", "zone": "burning", "x": 773, "y": 579},
+    {"name": "Dire Maul", "zone": "feralas", "x": 186.3, "y": 614.1},
+    {"name": "Scholomance", "zone": "wpl", "x": 828, "y": 206},
+    {"name": "Stratholme", "zone": "epl", "x": 862.7, "y": 103.9},
+    {"name": "Onyxia's Lair", "zone": "dustwallow", "x": 350, "y": 655},
+    # WoW: Forever's new dungeons and raids (docs/WOW-FOREVER.md); Krol'dok Stronghold has no marker (The Riverglades
+    # is not on the map). Placed by Blizzard's location text: beneath Ironforge, above the Undercity, western Wetlands,
+    # Alterac Mountains, the islet off Stranglethorn's west coast, Alcaz Island, Azshara (no exact spot published),
+    # northern Un'Goro, Mount Hyjal (Hyjal Summit by the source's Nordrassil label).
+    {"name": "Hall of Thanes", "zone": "dunmorogh", "x": 752, "y": 476},
+    {"name": "Ruins of Lordaeron", "zone": "tirisfal", "x": 711, "y": 184},
+    {"name": "Excavation Site", "zone": "wetlands", "x": 780, "y": 392},
+    {"name": "City of Dalaran", "zone": "hillsbrad", "x": 736, "y": 236},
+    {"name": "The Drowned City", "zone": "stv", "x": 679.5, "y": 773.5},
+    {"name": "Alcaz Prison", "zone": "dustwallow", "x": 394, "y": 575},
+    {"name": "Blackmaw Hold", "zone": "azshara", "x": 420, "y": 380},
+    {"name": "Shaper's Terrace", "zone": "ungoro", "x": 270, "y": 700},
+    {"name": "The Barrow Deeps", "zone": "hyjal", "x": 310, "y": 345},
+    {"name": "Hyjal Summit", "zone": "hyjal", "x": 340, "y": 288},
 ]
 
-SOURCE_NOTE = ("Zone outlines: Wikimedia Commons Kalimdor_english.svg / Eastern_Kingdoms.svg, "
+SOURCE_NOTE = ("Wikimedia Commons Kalimdor_english.svg / Eastern_Kingdoms.svg (zone outlines), "
                "recoloured and trimmed to Vanilla zones")
 
 # ---------------------------------------------------------------- 1. sample outlines in a browser
@@ -225,10 +267,23 @@ def geom_d(g):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--ek", required=True, type=Path, help="Eastern_Kingdoms.svg")
-    ap.add_argument("--kal", required=True, type=Path, help="Kalimdor_english.svg")
+    ap.add_argument("--ek", type=Path, help="Eastern_Kingdoms.svg")
+    ap.add_argument("--kal", type=Path, help="Kalimdor_english.svg")
     ap.add_argument("--out", default=Path("zones.json"), type=Path)
+    ap.add_argument("--dungeons-only", action="store_true", help="only rewrite the dungeons of an existing --out file")
     args = ap.parse_args()
+
+    if args.dungeons_only:
+        text = args.out.read_text(encoding="utf-8")
+        data = json.loads(text)
+        old = json.dumps(data["dungeons"], separators=(",", ":"))
+        if text.count(old) != 1:
+            raise SystemExit(f"{args.out}: dungeons list not found as written by this script")
+        args.out.write_text(text.replace(old, json.dumps(DUNGEONS, separators=(",", ":"))), encoding="utf-8")
+        print(f"wrote {args.out} · {len(DUNGEONS)} dungeons")
+        return
+    if not args.ek or not args.kal:
+        ap.error("--ek and --kal are required for a full build")
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch()

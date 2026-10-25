@@ -8,7 +8,15 @@ python -m venv .venv-map
 .venv-map/Scripts/python -I tools/map/build_zones.py --ek tools/map/source/Eastern_Kingdoms.svg --kal tools/map/source/Kalimdor_english.svg --out src/core/map/zones.json
 ```
 
-A rebuild reproduces the committed file within sub-pixel differences (0.3–0.6 px in some path points and city positions, from sampling and text measurement in the browser). Commit the output only when the map is meant to change.
+A full rebuild reproduces the committed file only within sub-pixel differences: the browser's outline sampling and text measurement differ slightly between machines and Chromium versions, so path points move by fractions of a pixel, the simplifier then keeps a few more or fewer points, and city positions move by about 0.5 px. That rewrites every path, so commit a full rebuild only when the outlines are meant to change.
+
+When only `DUNGEONS` changed (WEB-13), rewrite just that list and keep the rest of the file byte for byte:
+
+```bash
+.venv-map/Scripts/python -I tools/map/build_zones.py --dungeons-only --out src/core/map/zones.json
+```
+
+Dungeon names in `DUNGEONS` match `src/core/gamedata/dungeons.ts`; `tests/unit/gamedata.test.ts` checks that every marker lies inside its zone.
 
 ## Sources and licence
 | File | Source | Author | Licence |
