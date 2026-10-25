@@ -33,6 +33,26 @@
 - Decided with Nico: derived state in tables; the diff is saved on the upload row; `rebuild()` retries rejected uploads; upload limit 25 MiB (parser limit raised to match), larger files refused and not stored. `@types/better-sqlite3` added.
 - Done: `src/server/db/` (schema, `openDatabase`, `DATA_DIR`), `drizzle/0000_init.sql`, `src/server/uploads.ts` (`upload`, `rebuild`, `loadState`), `src/core/diff.ts`; tests in `tests/server/uploads.test.ts`, `tests/unit/diff.test.ts`.
 
+### WEB-06 Battle.net sign-in and access rules
+- Auth.js with the Battle.net provider (EU). Session cookie; JWT unless the guest list needs revocation at once (decide in the story).
+- Who may sign in:
+  - **admin**: `ADMIN_BATTLETAG` (Nico). Can never be blocked.
+  - **members**: every BattleTag in the community data (`self`, `people`, `presence`) of an accepted upload from the community (see below).
+  - **guests**: BattleTags on the guest list (admin page, WEB-18)
+  - everyone else: "not on the list" (WEB-17)
+- Who may upload: admin, members, and guests with "may upload" ticked. Other guests view only.
+- An upload is accepted only when:
+  - the uploader may upload
+  - **it is the uploader's own file**: the file's `self.battleTag` equals the signed-in BattleTag, so nobody can upload someone else's or a made-up file under their name
+  - **it is the same community**: its `settings.clubId` equals the community of the admin's uploads. Until the admin's first upload, only the admin can upload.
+- Every accepted upload adds its BattleTags as members. Membership never ends automatically (someone gone from the data stays a member); the admin can block a member on the admin page, and a blocked BattleTag can't sign in.
+- Every page and API route needs a session except sign-in and the callback (CLAUDE.md rule 6). Upload and admin routes check the role on the server.
+- Storage: guest list table (BattleTag, may upload, added at, added by); members table (BattleTag, first seen in upload, blocked at/by); uploads already record `uploadedBy`. Members are derived from accepted uploads and rebuilt with them; blocks are kept apart so a rebuild never lifts one.
+- Unit tests for the access rules (core): roles, own-file check, same-community check, blocked members, the admin never blocked. Route tests for 401/403.
+- Manual: create the app at develop.battle.net with redirect URLs for localhost and `wow.vestras.nl`; client id and secret in `.env.local` and the TrueNAS app config.
+- Decided: Auth.js v5 (`next-auth` 5.0.0-beta.32, pinned); JWT sessions with only the BattleTag, the role read from the database on every request (`src/proxy.ts`), so blocks and guest list removals take effect at once; BattleTags compared without case; blocks apply to members and guests; the community is that of the admin's newest upload, the admin's own file is not held to it; a file without `self.battleTag` is not your file, without `settings.clubId` another community; rejected-for-access files are stored as rejected (history), duplicates are per uploader, a community rejection is checked again on the next try; `rebuild()` re-applies the own-file and community checks but not "may upload".
+- Done: `src/core/access.ts` (roles, permissions, `checkFile`, `battleTagsOf`), `src/server/access.ts` (access list, guest list, blocks, members), `src/server/auth.ts`, `src/server/session.ts` (`guard`), `src/proxy.ts`, `drizzle/0001_access.sql`, routes `/api/uploads`, `/api/admin/guests`, `/api/admin/blocks`, placeholder pages `/signin` and `/not-on-list`; tests in `tests/unit/access.test.ts`, `tests/server/access.test.ts`, `tests/server/routes.test.ts`, `tests/e2e/smoke.spec.ts`.
+
 ### WEB-13 Game data tables and map data
 - Goal: every table of game data the screens need, sourced (CLAUDE.md rule 10), in `src/core/gamedata/`.
 - Tables:

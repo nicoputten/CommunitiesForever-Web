@@ -12,7 +12,7 @@
 |---|---|---|
 | Language | TypeScript (strict) | |
 | Framework | Next.js (App Router), React | React is known; one app for UI and API; standalone output runs in a small container |
-| Auth | Auth.js (`next-auth`) with the Battle.net provider | built-in provider, gives the BattleTag |
+| Auth | Auth.js (`next-auth` v5) with the Battle.net provider, JWT sessions | built-in provider, gives the BattleTag |
 | Database | SQLite via `better-sqlite3` (+ `@types/better-sqlite3`), Drizzle ORM, `drizzle-kit` migrations | one file on a TrueNAS dataset, easy backup through snapshots |
 | Tests | Vitest (unit, compat), Playwright (end to end, design checks: WEB-30), `@axe-core/playwright` (accessibility, WEB-30) | |
 | Lint/format | ESLint, Prettier | |
@@ -30,6 +30,8 @@ Every dependency beyond this list needs Nico's OK (CLAUDE.md rule 9).
 Version pins (WEB-01): TypeScript `~6.0` and ESLint `^9`, because `typescript-eslint` (via `eslint-config-next`) supports TypeScript below 6.1 and `eslint-plugin-react` supports ESLint 9 at most. Lift them when those catch up.
 npm's install-script allow-list (`allowScripts` in `package.json`): `unrs-resolver` denied (its postinstall only fetches a fallback binary); `better-sqlite3` approved (WEB-05: builds or fetches its native binding; npm pins the approved version, so an upgrade needs `npm install-scripts approve better-sqlite3` again). `esbuild` (via `drizzle-kit`) is left unapproved: its postinstall only checks the platform binary, which `drizzle-kit generate` does not need.
 Type packages: `@types/better-sqlite3` (dev, WEB-05; the package ships no types).
+`next-auth` is pinned exactly at `5.0.0-beta.32` (WEB-06): v5 is the App Router version of Auth.js (`AUTH_*` variables, `auth()`, proxy support) and has stayed on the `beta` tag; the stable 4.x line is the Pages Router API. An upgrade is a deliberate bump with the e2e sign-in test. It adds no install scripts.
+Locally on Windows without Visual Studio, `npm ci --ignore-scripts` is needed: npm runs `node-gyp rebuild` for the approved `better-sqlite3`, which fails there, while the package ships prebuilt binaries in `prebuilds/` that it loads anyway.
 
 ## Layering
 ```
@@ -39,6 +41,7 @@ src/core/views/    view models (WEB-14): data age, site name, roll call, roster,
 src/core/map/      zones.json (built by tools/map, CC BY-SA 4.0) and map helpers
 src/server/        database (Drizzle schema, migrations, queries), upload service, auth config
 src/app/           Next.js routes: pages (React) and route handlers (API)
+src/proxy.ts       Next.js proxy: a session and a role for every route (WEB-06)
 src/components/    React UI components (CSS Modules)
 src/styles/        tokens.css, global styles
 design/            Claude Design board exports: visual reference only, never imported (design/README.md)
@@ -61,15 +64,17 @@ upload (.lua) ──▶ store raw (gzip, sha256) ──▶ core.parseLua ──�
 
 ## Storage
 Schema: `src/server/db/schema.ts`; service: `src/server/uploads.ts` (WEB-05).
-- `uploads`: id, uploadedAt, uploadedBy, sha256 (duplicate upload: no-op, returns the earlier result), size, raw (gzip blob), schemaVersion, status (ok / rejected + reason), summary (JSON: what the upload changed, `src/core/diff.ts`).
+- `uploads`: id, uploadedAt, uploadedBy (the signed-in BattleTag), sha256, size, raw (gzip blob), schemaVersion, community (the file's `settings.clubId`), status (ok / rejected + reason), rejection (`not-your-file`, `other-community`, `no-community-yet`; null for unreadable files), summary (JSON: what the upload changed, `src/core/diff.ts`). The same file again from the same uploader (sha256 + uploadedBy, WEB-06) is a no-op that returns the earlier result, except after a community rejection, which depends on the admin's uploads: then the new attempt replaces the earlier one and is checked again.
 - Derived (rebuildable, rewritten in the upload's transaction): `people` (key, data JSON), `characters` (GUID key, owner, updatedAt, source upload, via, data JSON), `locations` (GUID, zone, seenAt, source upload), `presence` (GUID, BattleTag, lastSeen), `meta` (one row: schemaVersion, version, uploader, community). Together they are the merged `Dataset`.
-- `rebuild()` re-reads every stored upload in upload order, rejected ones too (a file with a newer schema can become ok after a site update), and recomputes statuses, summaries and the derived tables.
+- `members` (WEB-06, derived): key, BattleTag, first upload that named it. Every BattleTag of an accepted upload (`self`, `people`, `presence`); rewritten with the upload and by `rebuild()`.
+- Kept by the admin page, never derived: `guests` (key, BattleTag, may upload, added at, added by) and `blocks` (key, BattleTag, blocked at, blocked by). `rebuild()` does not touch them, so it never lifts a block. Keys are the BattleTag in lower case (`battleTagKey`): BattleTags are compared without case.
+- `rebuild()` re-reads every stored upload in upload order, rejected ones too (a file with a newer schema can become ok after a site update), applies the own-file and community checks (not "may upload": that was checked when the file was stored) and recomputes statuses, summaries, members and the derived tables.
 - Migrations: `npm run db:generate -- --name <what>` writes `drizzle/NNNN_<what>.sql`; `openDatabase` applies them on open. Released migration files are never edited (CLAUDE.md rule 5).
-- Sessions per Auth.js adapter or JWT (decided in WEB-06). Guest list table (WEB-06).
+- Sessions: JWT cookies (Auth.js, no session table) holding only the BattleTag; the role is read from the database on every request (see Access).
 - Data directory: `DATA_DIR` (`.env.example`; `./data` locally, `/data` in the container), file `communitiesforever.sqlite`, a TrueNAS dataset on the host.
 
 ## Access
-Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in an in-game community. Membership therefore comes from the data. Details in WEB-06.
+Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope `openid`) only gives the BattleTag; it cannot tell who is in an in-game community. Membership therefore comes from the data (WEB-06). The rules are pure functions in `src/core/access.ts`; `src/server/access.ts` reads the access list from the database.
 
 | Role | Who | Sign in | Upload | Admin page |
 |---|---|---|---|---|
@@ -80,7 +85,14 @@ Battle.net OAuth (region EU) only gives the BattleTag; it cannot tell who is in 
 
 - An upload is accepted only from someone who may upload, only for **their own file** (the file's `self.battleTag` equals the signed-in BattleTag) and only for **the same community** (the file's `settings.clubId` equals that of the admin's uploads; before the admin's first upload only the admin can upload).
 - Every accepted upload adds its BattleTags as members. Membership never ends automatically; the admin can block a member (the admin can't be blocked). Blocks are stored apart from the derived members, so `rebuild()` never lifts one.
-- Roles are checked on the server for every route (CLAUDE.md rule 6).
+- A file without `self.battleTag` is "not your file"; one without `settings.clubId` is "other community" (every released addon writes both). The admin's own file is not held to the community: the community is that of the admin's newest accepted upload that names one.
+- Roles are checked on the server for every route (CLAUDE.md rule 6):
+  - Sessions are JWT cookies with only the BattleTag (Auth.js, 30 days). The role is never in the cookie: `src/proxy.ts` reads it from the database on every request, so a block or a guest list removal takes effect at once, without a session table or adapter.
+  - `src/proxy.ts`: open are only `/signin`, `/not-on-list` (where a refused sign-in lands) and Auth.js's `/api/auth/*` (the Battle.net callback among them). Without a session pages redirect to `/signin`, API routes answer 401; someone not on the list (or blocked) goes to `/not-on-list`, or 403.
+  - Route handlers that need more call `guard(req, "upload" | "admin")` (`src/server/session.ts`): 401 / 403 again on the server. `upload()` itself refuses someone who may not upload (`UploadForbiddenError`) and stores nothing.
+  - The Auth.js `signIn` callback refuses anyone not on the list.
+- Routes (WEB-06): `POST /api/uploads` (multipart field `file`; upload role), `GET/PUT/DELETE /api/admin/guests` and `/api/admin/blocks` (admin; for the admin page, WEB-18).
+- Tests never call Battle.net: they mint the session cookie with the test `AUTH_SECRET` (`tests/server/routes.test.ts`, `tests/e2e/session.ts`).
 - Later (WEB-12): an API token for an automatic uploader, upload scope only.
 
 ## UI
