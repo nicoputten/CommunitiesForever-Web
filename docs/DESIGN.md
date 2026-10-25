@@ -123,7 +123,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 | Unknown | no location | not on map | "Unknown whereabouts" tray |
 
 - "Seen" always means *seen by the addon*. Show "via X" when data was relayed.
-- Site-wide banner when the last upload is older than **3 days** (proposal).
+- Site-wide banner when the last upload is **7 days** old or more (decided; same as a friend's amber badge).
 
 ## 5. Map
 
@@ -175,7 +175,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 ## 8. Decisions and rules
 
 - Covered / thin / gap professions: covered ≥ 225, thin 175–224, gap < 175 (to refine during implementation).
-- WoW: Forever has no realms: show **ruleset** (PvP / PvE) instead.
+- WoW: Forever has no realms: show the **ruleset** (Normal, PvP, RP, Hardcore) instead, through the rulesets table (WEB-13).
 - Character names always contain a space; never split.
 - Item level may be missing → "—".
 - Talent points = level − 9; tree bars out of 31.
@@ -196,6 +196,15 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 
 - Final emblem/logo for Doombringers.
 - Exact addon data-format versioning (the "format 2 / 3" copy is a placeholder).
-- Stale thresholds (3 days site, 7 days friend) to confirm.
+- ~~Stale thresholds to confirm.~~ Decided: 7 days for both the site banner and a friend's data (§11).
 - Recipe search UI once the addon shares recipes.
 - ~~Confirm the licence and attribution text of the source map SVGs.~~ Done: CC BY-SA 4.0, Syrio.
+
+## 11. Deviations
+
+Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one; add it here in the PR that builds it.
+
+| Date | What | Why | Approved |
+|---|---|---|---|
+| 2026-10-25 | Stale-site banner after 7 days (the `loading` board says 3) | One threshold for site and friend data | Nico |
+| 2026-10-25 | Rulesets Normal, PvP, RP, Hardcore (boards show PvP / PvE) | Forever's actual rulesets | Nico |

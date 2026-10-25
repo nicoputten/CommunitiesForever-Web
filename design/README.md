@@ -4,6 +4,8 @@ Exports from the Claude Design workshop (WEB-02), direction A "Night over Azerot
 
 The boards are **visual references only**, never production code: replicate their values (colour, type, spacing, radii, shadows, layout) in our own components with the tokens. Each folder is one export, unzipped unchanged; replace the whole folder when a board is re-exported. `support.js` and `vendor/` are the tool's runtime that renders the board, not part of the design. `assets/*.json` is the same file as `src/core/map/zones.json`.
 
+Where a board and `docs/DESIGN.md` disagree, `docs/DESIGN.md` wins (for example the stale-site banner: 7 days, the `loading` board still says 3).
+
 View them: `npm run design`, then open http://localhost:4400.
 
 | Folder | Board | Screen |
