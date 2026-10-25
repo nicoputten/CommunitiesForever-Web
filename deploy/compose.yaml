@@ -1,0 +1,28 @@
+# CommunitiesForever on TrueNAS SCALE 25.10: Apps > Discover Apps > ⋮ > Install via YAML (WEB-07, deploy/README.md).
+# Replace every <...> before installing. The values live in the app's config on TrueNAS, never in the repo.
+services:
+  web:
+    # A release tag (README step 9). `latest` works too, but a tag makes updates and rollbacks explicit.
+    image: ghcr.io/nicoputten/communitiesforever-web:v0.1.0
+    restart: unless-stopped
+    # The dataset's owner: TrueNAS's `apps` user and group (568). The image's files are world-readable, so any UID
+    # works as long as it may write the dataset.
+    user: "568:568"
+    ports:
+      # LAN only: no port forward to 3000 on the router; nginx proxies to it.
+      - "3000:3000"
+    volumes:
+      # The dataset (README step 3) holds communitiesforever.sqlite and its WAL files.
+      - type: bind
+        source: /mnt/<pool>/apps/cf
+        target: /data
+    environment:
+      DATA_DIR: /data
+      # `openssl rand -base64 33`; changing it signs everyone out.
+      AUTH_SECRET: "<random secret>"
+      AUTH_URL: https://wow.vestras.nl
+      # The Battle.net app at https://develop.battle.net, redirect URL https://wow.vestras.nl/api/auth/callback/battlenet
+      AUTH_BATTLENET_ID: "<client id>"
+      AUTH_BATTLENET_SECRET: "<client secret>"
+      # The admin's BattleTag, e.g. Nico#1234.
+      ADMIN_BATTLETAG: "<Name#1234>"

@@ -1,0 +1,10 @@
+# Allow-list (WEB-07): the image build needs only the app sources, the migrations and the build config.
+# design/, tools/, tests/, docs, local data, .env files and node_modules stay out.
+*
+!package.json
+!package-lock.json
+!next.config.ts
+!tsconfig.json
+!src/
+!drizzle/
+!public/

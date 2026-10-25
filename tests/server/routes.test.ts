@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DELETE as unblockRoute, GET as blocksRoute, PUT as blockRoute } from "@/app/api/admin/blocks/route";
 import { GET as guestsRoute, PUT as putGuestRoute } from "@/app/api/admin/guests/route";
+import { GET as healthRoute } from "@/app/api/health/route";
 import { POST as uploadRoute } from "@/app/api/uploads/route";
 import { isPublic, proxy } from "@/proxy";
 import { putGuest } from "@/server/access";
@@ -85,8 +86,8 @@ describe("session cookie", () => {
 });
 
 describe("proxy", () => {
-  it("leaves sign-in, the Auth.js routes and the not-on-the-list page open", async () => {
-    for (const p of ["/signin", "/not-on-list", "/api/auth/callback/battlenet", "/api/auth/csrf"]) {
+  it("leaves sign-in, the Auth.js routes, the not-on-the-list page and the health check open", async () => {
+    for (const p of ["/signin", "/not-on-list", "/api/auth/callback/battlenet", "/api/auth/csrf", "/api/health"]) {
       expect(isPublic(p)).toBe(true);
       expect((await proxy(await request(p))).headers.get("x-middleware-next")).toBe("1");
     }
@@ -189,5 +190,23 @@ describe("admin routes", () => {
       await request("/api/admin/blocks", ADMIN, { method: "DELETE", json: { battleTag: "Gwen#4004" } }),
     );
     expect(await lift.json()).toEqual({ unblocked: true });
+  });
+});
+
+describe("health route", () => {
+  it("tells only ok and the version", async () => {
+    const res = healthRoute();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(await res.json()).toEqual({ ok: true, version: "dev" });
+  });
+
+  it("names the image version", async () => {
+    process.env.APP_VERSION = "v1.2.3";
+    try {
+      expect(await healthRoute().json()).toEqual({ ok: true, version: "v1.2.3" });
+    } finally {
+      delete process.env.APP_VERSION;
+    }
   });
 });

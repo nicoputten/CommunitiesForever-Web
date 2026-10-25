@@ -69,7 +69,7 @@ Schema: `src/server/db/schema.ts`; service: `src/server/uploads.ts` (WEB-05).
 - `members` (WEB-06, derived): key, BattleTag, first upload that named it. Every BattleTag of an accepted upload (`self`, `people`, `presence`); rewritten with the upload and by `rebuild()`.
 - Kept by the admin page, never derived: `guests` (key, BattleTag, may upload, added at, added by) and `blocks` (key, BattleTag, blocked at, blocked by). `rebuild()` does not touch them, so it never lifts a block. Keys are the BattleTag in lower case (`battleTagKey`): BattleTags are compared without case.
 - `rebuild()` re-reads every stored upload in upload order, rejected ones too (a file with a newer schema can become ok after a site update), applies the own-file and community checks (not "may upload": that was checked when the file was stored) and recomputes statuses, summaries, members and the derived tables.
-- Migrations: `npm run db:generate -- --name <what>` writes `drizzle/NNNN_<what>.sql`; `openDatabase` applies them on open. Released migration files are never edited (CLAUDE.md rule 5).
+- Migrations: `npm run db:generate -- --name <what>` writes `drizzle/NNNN_<what>.sql`; `openDatabase` applies them on open, and the server opens the database at start (`src/instrumentation.ts`, WEB-07). Released migration files are never edited (CLAUDE.md rule 5).
 - Sessions: JWT cookies (Auth.js, no session table) holding only the BattleTag; the role is read from the database on every request (see Access).
 - Data directory: `DATA_DIR` (`.env.example`; `./data` locally, `/data` in the container), file `communitiesforever.sqlite`, a TrueNAS dataset on the host.
 
@@ -88,7 +88,7 @@ Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope 
 - A file without `self.battleTag` is "not your file"; one without `settings.clubId` is "other community" (every released addon writes both). The admin's own file is not held to the community: the community is that of the admin's newest accepted upload that names one.
 - Roles are checked on the server for every route (CLAUDE.md rule 6):
   - Sessions are JWT cookies with only the BattleTag (Auth.js, 30 days). The role is never in the cookie: `src/proxy.ts` reads it from the database on every request, so a block or a guest list removal takes effect at once, without a session table or adapter.
-  - `src/proxy.ts`: open are only `/signin`, `/not-on-list` (where a refused sign-in lands) and Auth.js's `/api/auth/*` (the Battle.net callback among them). Without a session pages redirect to `/signin`, API routes answer 401; someone not on the list (or blocked) goes to `/not-on-list`, or 403.
+  - `src/proxy.ts`: open are only `/signin`, `/not-on-list` (where a refused sign-in lands), Auth.js's `/api/auth/*` (the Battle.net callback among them) and `/api/health` (WEB-07: ok and the version, nothing about the data). Without a session pages redirect to `/signin`, API routes answer 401; someone not on the list (or blocked) goes to `/not-on-list`, or 403.
   - Route handlers that need more call `guard(req, "upload" | "admin")` (`src/server/session.ts`): 401 / 403 again on the server. `upload()` itself refuses someone who may not upload (`UploadForbiddenError`) and stores nothing.
   - The Auth.js `signIn` callback refuses anyone not on the list.
 - Routes (WEB-06): `POST /api/uploads` (multipart field `file`; upload role), `GET/PUT/DELETE /api/admin/guests` and `/api/admin/blocks` (admin; for the admin page, WEB-18).
@@ -104,7 +104,13 @@ Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope 
 - The design system is binding (CLAUDE.md rules 11 and 12): deviations only with Nico's OK, listed in `docs/DESIGN.md` "Deviations". The design checks (WEB-30) enforce it: token lint, computed styles, touch targets, accessibility, screenshot baselines.
 
 ## Hosting
-- TrueNAS SCALE 25.10, Custom App (Docker Compose): image from GHCR, `/data` on a dataset, port 3000 on the LAN only.
-- The existing nginx reverse proxy terminates TLS for `wow.vestras.nl` and proxies to the app. `client_max_body_size` above the upload limit.
-- DNS at Hostnet: `wow` record to the home IP.
-- Deploy: tag `v*` on `main` → GitHub Actions builds and pushes `ghcr.io/nicoputten/communitiesforever-web:<tag>` and `:latest` → update the app on TrueNAS.
+Step by step: `deploy/README.md` (WEB-07).
+- TrueNAS SCALE 25.10, Custom App installed from `deploy/compose.yaml`: image from GHCR, `/data` on the dataset `/mnt/<pool>/apps/cf` (owned by `apps`, 568:568; the container runs as that user), port 3000 on the LAN only, `restart: unless-stopped`.
+- nginx, an app on the same TrueNAS, terminates TLS for `wow.vestras.nl` (Let's Encrypt) and proxies to `<truenas-ip>:3000`: `client_max_body_size 30m` (uploads ≤ 25 MiB), 120 s timeouts, `Host` / `X-Forwarded-*` headers. Auth.js runs with `trustHost: true` and `AUTH_URL=https://wow.vestras.nl`. Reference server block: `deploy/nginx/wow.vestras.nl.conf`.
+- DNS at Hostnet: `wow` A record to the home IP; the router forwards 80/443 to nginx, never 3000.
+- Image (`Dockerfile`): multi-stage on `node:24-slim`. The build stage runs `npm ci` (with python3/make/g++ for better-sqlite3's approved `node-gyp rebuild`) and `next build`; the runtime stage holds only the standalone server, static files, `drizzle/` and the whole `better-sqlite3` package (its prebuilt binding is picked at run time). User `node`, `DATA_DIR=/data` as a volume, `HOSTNAME=0.0.0.0`, `APP_VERSION` from the build arg, `HEALTHCHECK` on `/api/health`. `.dockerignore` is an allow-list: no `design/`, `tools/`, `tests/`, docs or `.env*`.
+- Start: `src/instrumentation.ts` opens the database when the server starts, which applies pending migrations (Storage); a database that can't be opened fails the start.
+- Health: `GET /api/health` is open without a session (the one exception to CLAUDE.md rule 6) and answers only `{ ok, version }`, 503 when the database doesn't open.
+- Deploy: tag `v*` on `main` (only on Nico's go-ahead) → `.github/workflows/release.yml` checks the tag is on `main`, builds and pushes `ghcr.io/nicoputten/communitiesforever-web:<tag>` and `:latest` (GITHUB_TOKEN, `packages: write`, `org.opencontainers.image.source` label) → set the tag in the TrueNAS app. A manual run rebuilds an existing tag. The package is public, so TrueNAS pulls without credentials.
+- CI builds the image on every PR without pushing and checks that it starts, migrates a fresh `/data` and answers the health check.
+- Backup: periodic ZFS snapshots of the dataset, and one before every update (migrations only go forward, so a rollback is snapshot plus old tag).

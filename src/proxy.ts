@@ -4,11 +4,11 @@ import { getDb } from "@/server/db";
 import { sessionBattleTag } from "@/server/session";
 
 // Every page and API route needs a session (CLAUDE.md rule 6, WEB-06), except sign-in, Auth.js's own routes (the
-// callback among them) and the "not on the list" page a refused sign-in lands on. The role is read from the database
-// on every request, so a block takes effect at once. Upload and admin routes check their permission again
-// (src/server/session.ts guard).
+// callback among them), the "not on the list" page a refused sign-in lands on and the health check (WEB-07, which
+// tells only ok and the version). The role is read from the database on every request, so a block takes effect at
+// once. Upload and admin routes check their permission again (src/server/session.ts guard).
 
-const PUBLIC = ["/signin", "/not-on-list"];
+const PUBLIC = ["/signin", "/not-on-list", "/api/health"];
 
 export function isPublic(pathname: string): boolean {
   return PUBLIC.includes(pathname) || pathname.startsWith("/api/auth/");

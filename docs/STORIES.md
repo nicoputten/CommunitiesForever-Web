@@ -17,12 +17,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E3 Access and hosting
 
-### WEB-07 Docker image and deploy to TrueNAS
-- Multi-stage Dockerfile (Next.js standalone, non-root user), `/data` volume, health endpoint, migrations run at start.
-- GitHub Actions on tag `v*` on `main`: build and push to GHCR (`:<tag>`, `:latest`).
-- `deploy/` with the TrueNAS 25.10 Custom App compose YAML, the nginx server block for `wow.vestras.nl` (TLS, proxy headers, `client_max_body_size`), and a step-by-step `deploy/README.md`.
-- Manual: DNS record at Hostnet, nginx config and certificate, dataset and app on TrueNAS, first sign-in, first upload.
-
 ## E4 Design foundations
 
 ### WEB-30 Design checks
