@@ -117,4 +117,24 @@ describe("roster", () => {
     expect(names(r.quickAnswers.level30to40)).toEqual(["Ves Doombringer", "Lia Thornwhisper", "Tok Ironhide"]);
     expect(names(r.quickAnswers.level60)).toEqual(["Mira Sunstrider"]);
   });
+
+  it("searches names, owners and BattleTags without case or accents (WEB-21)", () => {
+    expect(list({ search: "ves" })).toEqual(["Ves Doombringer"]);
+    expect(list({ search: "  BOB " })).toEqual(["Bob Example", "Tok Ironhide"]);
+    expect(list({ search: "#4410" })).toEqual(["Ruk Bloodhoof"]);
+    expect(list({ search: "thörn" })).toEqual(["Lia Thornwhisper"]);
+    expect(list({ search: "" })).toHaveLength(10);
+    expect(list({ search: "nobody" })).toEqual([]);
+  });
+
+  it("sorts by profession: the chosen one's skill, else the best rank (WEB-21)", () => {
+    expect(list({}, "profession").slice(0, 3)).toEqual(["Mira Sunstrider", "Tok Ironhide", "Bob Example"]);
+    expect(list({}, "profession").at(-1)).toBe("Zul Kazrek");
+    expect(list({ profession: "182" }, "profession")).toEqual(["Tok Ironhide", "Sela Moonbrook"]);
+  });
+
+  it("counts each friend's characters before the filter", () => {
+    const nico = roster(sample(), NOW, { filter: { roles: ["tank"] } }).friends[0]!;
+    expect([nico.characters.length, nico.total]).toEqual([1, 3]);
+  });
 });

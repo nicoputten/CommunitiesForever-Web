@@ -7,6 +7,9 @@
 }
 
 .option {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   padding: var(--s-2) var(--s-3-5);
   border: 0;
   background: transparent;
@@ -21,7 +24,8 @@
   color: var(--text-strong);
 }
 
-.option[aria-pressed="true"] {
+.option[aria-pressed="true"],
+.option[aria-current="page"] {
   background: var(--tint-selected);
   color: var(--text-strong);
   font-weight: var(--fw-semibold);

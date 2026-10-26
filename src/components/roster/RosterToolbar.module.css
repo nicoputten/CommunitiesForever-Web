@@ -1,0 +1,111 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.searchForm {
+  display: flex;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: var(--size-search-min);
+  height: var(--size-search);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.search:focus-within {
+  border-color: var(--line-chip-on);
+}
+
+/* The ring goes around the whole field, not the bare input inside it. */
+.search:has(.input:focus-visible) {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.icon {
+  flex: none;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--text-dim);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+.shown {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.clear {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sortLabel {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+/* Phone (no board, decided with Nico for WEB-21): search full width, chips wrap under it, sort at the end. */
+@media (max-width: 767px) {
+  .searchForm,
+  .search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search {
+    height: var(--size-touch);
+  }
+
+  .end {
+    width: 100%;
+  }
+
+  .shown {
+    margin-right: auto;
+  }
+
+  .clear {
+    min-height: var(--size-touch);
+  }
+}

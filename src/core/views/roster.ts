@@ -27,14 +27,22 @@ export interface RosterFilter {
   playedWithinDays?: number;
   /** Only this person's characters (person key). */
   person?: string;
+  /** Part of the character's name, the owner's name or BattleTag, case-insensitive (WEB-21). */
+  search?: string;
 }
 
-export type RosterSort = "lastPlayed" | "level" | "name" | "ilvl" | "class" | "role" | "player";
+/**
+ * `profession`: the skill in the filter's profession, or the best profession rank without one (WEB-21, Nico
+ * 2026-10-26).
+ */
+export type RosterSort = "lastPlayed" | "level" | "name" | "ilvl" | "class" | "role" | "player" | "profession";
 
 export interface RosterFriend {
   person: PersonView;
   /** Filtered and sorted. */
   characters: CharacterView[];
+  /** All of the person's characters with a record, before the filter ("1 of 3 characters"). */
+  total: number;
 }
 
 export interface DungeonBand {
@@ -75,8 +83,18 @@ export interface Roster {
   quickAnswers: QuickAnswers;
 }
 
-function matches(c: CharacterView, filter: RosterFilter, now: number): boolean {
+/** Case-insensitive, accents count as their base letter ("lia" finds "Lía"). */
+function fold(text: string): string {
+  return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("en");
+}
+
+function matches(c: CharacterView, filter: RosterFilter, now: number, battleTags: Map<string, string>): boolean {
   if (filter.person !== undefined && c.owner !== filter.person) return false;
+  const search = filter.search === undefined ? "" : fold(filter.search.trim());
+  if (search !== "") {
+    const owner = c.owner === undefined ? undefined : battleTags.get(c.owner);
+    if (![c.name, c.ownerName, owner].some((t) => t !== undefined && fold(t).includes(search))) return false;
+  }
   if (filter.classFiles !== undefined && (c.classFile === undefined || !filter.classFiles.includes(c.classFile))) {
     return false;
   }
@@ -96,7 +114,13 @@ function matches(c: CharacterView, filter: RosterFilter, now: number): boolean {
 const ROLE_ORDER: Record<Role, number> = { tank: 0, heal: 1, dps: 2 };
 const roleRank = (c: CharacterView) => (c.role !== undefined ? ROLE_ORDER[c.role] : 3);
 
-function sorter(sort: RosterSort): (a: CharacterView, b: CharacterView) => number {
+/** The skill the profession sort uses: in `skillLine`, or the best rank of any profession. */
+function skill(c: CharacterView, skillLine: string | undefined): number | undefined {
+  const ranks = c.professions.filter((p) => skillLine === undefined || p.skillLine === skillLine).map((p) => p.rank);
+  return ranks.length === 0 ? undefined : Math.max(...ranks);
+}
+
+function sorter(sort: RosterSort, profession?: string): (a: CharacterView, b: CharacterView) => number {
   const key = (a: CharacterView, b: CharacterView): number => {
     switch (sort) {
       case "lastPlayed":
@@ -113,6 +137,8 @@ function sorter(sort: RosterSort): (a: CharacterView, b: CharacterView) => numbe
         return roleRank(a) - roleRank(b);
       case "player":
         return compareText(a.ownerName, b.ownerName);
+      case "profession":
+        return compareDesc(skill(a, profession), skill(b, profession));
     }
   };
   return (a, b) => key(a, b) || byLevel(a, b);
@@ -164,16 +190,18 @@ export function quickAnswers(characters: readonly CharacterView[]): QuickAnswers
 
 export function roster(d: Dataset, now: number, options: { filter?: RosterFilter; sort?: RosterSort } = {}): Roster {
   const filter = options.filter ?? {};
-  const compare = sorter(options.sort ?? "lastPlayed");
+  const compare = sorter(options.sort ?? "lastPlayed", filter.profession);
   const people = peopleViews(d, now);
+  const battleTags = new Map(people.flatMap((p) => (p.battleTag === undefined ? [] : [[p.key, p.battleTag]])));
   const all = recordCharacters(d, now);
-  const shown = all.filter((c) => matches(c, filter, now)).sort(compare);
+  const shown = all.filter((c) => matches(c, filter, now, battleTags)).sort(compare);
 
   const friends: RosterFriend[] = [];
   for (const person of people) {
     if (!person.hasAddon) continue;
     const characters = shown.filter((c) => c.owner === person.key);
-    if (characters.length > 0) friends.push({ person, characters });
+    const total = all.filter((c) => c.owner === person.key).length;
+    if (characters.length > 0) friends.push({ person, characters, total });
   }
   return {
     friends,
