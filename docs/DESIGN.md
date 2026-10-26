@@ -119,7 +119,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 - **Tints and lines:** `--tint-active` (current nav link, gold 14%), `--tint-pressed` (16%), `--tint-selected` (20%), `--tint-hover`, `--line-bar`, `--line-control`, `--line-neutral` (chip, neutral badge), `--text-chip`, fresh/stale badge lines, banner tint, faction tag tints.
 - **Surfaces:** `--control-bg`, `--surface-modal`, `--surface-panel`, `--surface-aside`, row surface, top-bar fades (map and phone), `--avatar` (#2A3446), `--avatar-muted`, skeleton shimmer, `--on-shaman`.
 - **Space and radius:** extra steps `--s-px`, `--s-0-5`, `--s-0-75`, `--s-1-5`, `--s-2-5`, `--s-3-5`, `--s-7`, `--s-10`; radii `--r-badge` 4, `--r-nav` 8, `--r-control` 9, `--r-card` 12.
-- **Glow, blur, sizes, motion:** disc/avatar glow, `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
+- **Glow, blur, sizes, motion:** disc/avatar glow, `--glow-disc-mix` (live disc glow at 45% of the class colour, WEB-30), `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
 
 A value a screen needs and no token has goes into part 2 with its source, never inline.
 

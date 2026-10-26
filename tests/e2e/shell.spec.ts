@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { E2E } from "../../playwright.config";
+import { expectTouchTargets, isPhone } from "../design/checks";
 import { signInAs } from "./session";
 
 // WEB-15: the app shell and /dev/components at desktop and phone size (playwright.config.ts projects).
@@ -13,21 +14,6 @@ const ACCOUNT = `Account ${E2E.admin}`;
 
 const FOOTER =
   "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted";
-
-const isPhone = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;
-
-/** Every visible interactive element is at least 44 × 44 px (CLAUDE.md rule 11; WEB-30 checks every screen). */
-async function expectTouchTargets(page: Page) {
-  const small = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>("a[href], button, input, select, textarea, [tabindex]")]
-      .filter((el) => el.tabIndex >= 0 && el.checkVisibility())
-      .map((el) => ({ el, r: el.getBoundingClientRect() }))
-      // The skip link sits above the page until it has focus.
-      .filter(({ r }) => r.bottom > 0 && (r.width < 44 || r.height < 44))
-      .map(({ el, r }) => `${el.tagName} "${el.textContent?.trim()}" ${Math.round(r.width)}×${Math.round(r.height)}`),
-  );
-  expect(small).toEqual([]);
-}
 
 test.describe("app shell", () => {
   test("shows the brand, navigation, data age, footer and user", async ({ page }) => {

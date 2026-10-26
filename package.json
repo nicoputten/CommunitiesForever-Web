@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:design": "vitest run tests/design && playwright test -c playwright.design.config.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
