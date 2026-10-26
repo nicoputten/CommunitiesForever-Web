@@ -45,10 +45,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - new sightings, with "See them drop in on the map" (WEB-26)
 - Motion: staggered rise, bars grow, LEVEL UP shine (§6); static with reduced motion. "Replay" and "Upload another".
 
-### WEB-22 Roster: table
-- Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.
-- On a phone the table becomes the card list, and sort and filters move into a sheet.
-
 ### WEB-23 Character detail
 - Board: `character`.
 - Header: name, level, race, class, faction, ruleset (WEB-13), played by, last played, data age and source ("own addon" / "via X").
