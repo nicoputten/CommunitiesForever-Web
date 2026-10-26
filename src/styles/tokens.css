@@ -262,6 +262,19 @@
   --stale-note: #c08a5a; /* roster-cards: "Jorrit's data reached us through …" */
   --opacity-old: 0.8; /* roster-cards: rows of a friend whose data is 7+ days old */
 
+  /* roster table (WEB-22): the roster-table board */
+  --surface-thead: #0c1320; /* roster-table: column headers */
+  --line-thead: rgba(212, 175, 106, 0.25); /* roster-table: under the column headers */
+  --tint-row: rgba(212, 175, 106, 0.06); /* roster-table: row hover, the viewer's own rows */
+  --surface-pill: rgba(255, 255, 255, 0.05); /* roster-table: profession pill */
+  --ls-th: 0.1em; /* roster-table: column headers */
+  --s-1-75: 7px; /* roster-table: profession pill padding */
+  --r-pill-sm: 5px; /* roster-table: profession pill */
+  --size-disc-xs: 26px; /* roster-table: class disc */
+  --size-table-bar: 60px; /* roster-table: level bar width */
+  --size-table-bar-h: 4px; /* roster-table: level bar height */
+  --sheet-backdrop: rgba(5, 10, 18, 0.6); /* roster table on phone (no board): behind the filter sheet */
+
   /* atmosphere (WEB-16): ambient loops of DESIGN.md §6; the ones §6 does not list come from the board named */
   --dur-wave-a: 7s;
   --dur-wave-b: 9s;

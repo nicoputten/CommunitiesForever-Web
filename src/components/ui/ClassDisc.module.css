@@ -22,6 +22,12 @@
   font-size: var(--fs-tiny);
 }
 
+.disc[data-size="xs"] {
+  width: var(--size-disc-xs);
+  height: var(--size-disc-xs);
+  font-size: var(--fs-tiny);
+}
+
 .disc[data-class="shaman"] {
   color: var(--on-shaman);
 }

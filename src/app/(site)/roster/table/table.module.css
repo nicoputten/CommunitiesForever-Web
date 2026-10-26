@@ -1,0 +1,22 @@
+/* The table from 768 px; below, the card list (WEB-22, decided with Nico). Only one of them is ever displayed. */
+.narrow {
+  display: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+@media (max-width: 767px) {
+  .wide {
+    display: none;
+  }
+
+  .narrow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+}
