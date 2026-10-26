@@ -142,9 +142,26 @@ test("the continent switch flies, follows a pan, and Azeroth centres the whole w
 test("the session report's link drops the new sightings in, once", async ({ page }) => {
   await page.goto("/upload/1");
   await page.getByRole("link", { name: "See them drop in on the map →" }).click();
-  await expect(page.locator("[data-drop]").first()).toBeVisible();
+  // A place is a point (0 × 0), so it is attached rather than visible; its marker drops in.
+  await expect(page.locator("[data-drop]").first()).toBeAttached();
   // The drop plays once: the parameter is gone, so a reload shows the map as usual.
   await expect(page).not.toHaveURL(/drop=/);
   await page.reload();
   await expect(page.locator("[data-drop]")).toHaveCount(0);
+});
+
+test("dragged past the edge, the map gives way only partly and springs back to the land", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: a mouse drag");
+  await page.goto("/");
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(stage(page)).toHaveAttribute("data-level", "continent");
+  const before = await transform(page);
+  await page.mouse.move(600, 400);
+  await page.mouse.down();
+  for (let x = 700; x <= 2600; x += 100) await page.mouse.move(x, 400);
+  // Far past the west edge, the map moved less than the pointer.
+  const dragged = Number(/translate\((-?[\d.]+)px/.exec(await transform(page))?.[1]);
+  expect(dragged - Number(/translate\((-?[\d.]+)px/.exec(before)?.[1])).toBeLessThan(2000);
+  await page.mouse.up();
+  await expect(marker(page, "Ruk Bloodhoof")).toBeInViewport();
 });

@@ -1,5 +1,5 @@
-/* Pan, zoom and pinch (WEB-26, DESIGN.md §5–§6, boards map and map-states): the zoom buttons, the continent frames
- * the switch flies to, dungeon entrances at zone zoom and the new-sighting drop. */
+/* Pan, zoom and pinch (WEB-26, DESIGN.md §5–§6, boards map and map-states): the zoom buttons,
+ * dungeon entrances at zone zoom and the new-sighting drop. */
 
 .wrapper,
 .content {
@@ -15,16 +15,6 @@
 .wrapper:focus-visible {
   outline: var(--focus-width) solid var(--gold-bright);
   outline-offset: calc(-1 * var(--focus-width));
-}
-
-/* What the continent switch frames (map.ts continentViewBox): invisible, measured by the zoom. */
-.frame {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: var(--w);
-  height: var(--h);
-  pointer-events: none;
 }
 
 /* Dungeon entrances with their names at zone zoom (4×, map-states board), the badge of a dungeon sighting. */

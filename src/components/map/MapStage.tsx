@@ -12,7 +12,12 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
-import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import {
+  TransformComponent,
+  TransformWrapper,
+  useTransformContext,
+  type ReactZoomPanPinchRef,
+} from "react-zoom-pan-pinch";
 import { classInfo } from "@/core/gamedata/classes";
 import {
   ZOOM_MAX,
@@ -59,6 +64,8 @@ export interface MapStageProps {
 const CARD_GRACE_MS = 160;
 /** Quiet time after the last transform before the view settles (continent switch, zone, bounds). */
 const SETTLE_MS = 120;
+/** Dragged past the edge of the world, the map moves this share of the pointer: resistance (story WEB-26). */
+const EDGE_GIVE = 0.35;
 /** Pixels an arrow key pans. */
 const PAN_STEP = 80;
 
@@ -69,7 +76,10 @@ function writeParams(params: Record<string, string | undefined>) {
     if (value === undefined) url.searchParams.delete(key);
     else url.searchParams.set(key, value);
   }
-  window.history.replaceState(window.history.state, "", url);
+  // Unchanged: leave the history entry (and Next.js's state in it, for Back) alone.
+  if (url.href === window.location.href) return;
+  // null state: Next.js then syncs useSearchParams (the top bar's continent switch) with the new URL.
+  window.history.replaceState(null, "", url);
 }
 
 const PHONE = "(max-width: 767px)";
@@ -86,6 +96,16 @@ function motionMs(token: string): number {
   const n = Number.parseFloat(value);
   if (!Number.isFinite(n)) return 0;
   return value.endsWith("ms") ? n : n * 1000;
+}
+
+/**
+ * Reports every transform the zoom applies, its first one on init included: the wrapper's onTransform only reports
+ * the ones it is asked for, so a view could settle before the map got there.
+ */
+function TransformWatch({ onApplied }: { onApplied: (state: { scale: number }) => void }) {
+  const instance = useTransformContext();
+  useEffect(() => instance.onTransform(onApplied), [instance, onApplied]);
+  return null;
 }
 
 /**
@@ -189,57 +209,146 @@ export function MapStage({
     anchor.dataset.v = fy > 0.7 ? "up" : fy < 0.25 ? "down" : "mid";
   }, []);
 
-  /** The screen centre in world units, from the stage as it is drawn now. */
-  const centre = useCallback(() => {
-    const frame = zoomer.current?.instance.wrapperComponent;
+  /**
+   * The frame, and the stage inside the zoom's content unscaled (px from the content's own origin, which may sit
+   * offset in the frame): where a world point is at 1×.
+   */
+  const layout = useCallback(() => {
+    const z = zoomer.current;
+    const frame = z?.instance.wrapperComponent;
+    const content = z?.instance.contentComponent;
     const stage = root.current;
-    if (frame == null || stage === null) return undefined;
+    if (z == null || frame == null || content == null || stage === null) return undefined;
+    // Layout offsets, which no transform changes, and the transform the library is applying: measured rects lag
+    // behind it while it applies a new one.
+    let left = 0;
+    let top = 0;
+    for (let el: HTMLElement | null = stage; el !== null && el !== frame; el = el.offsetParent as HTMLElement | null) {
+      left += el.offsetLeft;
+      top += el.offsetTop;
+    }
     const f = frame.getBoundingClientRect();
-    const s = stage.getBoundingClientRect();
-    const cx = f.left + f.width / 2;
-    const cy = f.top + f.height / 2;
+    // A panel over the map's right side (the roll call, WEB-27: `data-map-panel`) narrows the part the centre is in.
+    let right = f.right;
+    for (const panel of document.querySelectorAll("[data-map-panel]")) {
+      const p = panel.getBoundingClientRect();
+      if (p.width > 0 && p.left > f.left + f.width / 2 && p.left < right) right = p.left;
+    }
+    const { scale, positionX, positionY } = z.instance.state;
     return {
-      client: { x: cx, y: cy },
-      world: { x: box.x + ((cx - s.left) / s.width) * box.width, y: box.y + ((cy - s.top) / s.height) * box.height },
+      z,
+      frame: f,
+      scale,
+      positionX,
+      positionY,
+      /** The centre of the visible map, from the frame's top left. */
+      cx: (right - f.left) / 2,
+      cy: f.height / 2,
+      // Where the content sits in the frame before its transform, and the stage in the content (unscaled).
+      originX: content.offsetLeft,
+      originY: content.offsetTop,
+      left: left - content.offsetLeft,
+      top: top - content.offsetTop,
+      width: stage.offsetWidth,
+      height: stage.offsetHeight,
     };
-  }, [box]);
+  }, []);
+
+  /** The world point (and scale) the map means to show in the centre; kept when the frame changes size. */
+  const view = useRef<{ x: number; y: number; scale: number } | undefined>(undefined);
+  /** Panned or zoomed by hand since the last settle: then the centre on screen becomes the view. */
+  const byHand = useRef(false);
+
+  /** Puts a world point in the centre at a scale: a fly (DESIGN.md §6), or a jump when `time` is 0. */
+  const goTo = useCallback(
+    (
+      x: number,
+      y: number,
+      scale: number,
+      time: number,
+      type: "easeInOutCubic" | "easeOutCubic" | "easeOut" = "easeInOutCubic",
+    ) => {
+      const l = layout();
+      if (l === undefined) return Promise.resolve();
+      view.current = { x, y, scale };
+      const px = l.cx - l.originX - scale * (l.left + ((x - box.x) / box.width) * l.width);
+      const py = l.cy - l.originY - scale * (l.top + ((y - box.y) / box.height) * l.height);
+      return l.z.setTransform(px, py, scale, time, type);
+    },
+    [layout, box],
+  );
+
+  /** The screen centre in world units, from the transform as it is now. */
+  const centre = useCallback(() => {
+    const l = layout();
+    if (l === undefined) return undefined;
+    const { scale, positionX, positionY } = l;
+    return {
+      world: {
+        x: box.x + (((l.cx - l.originX - positionX) / scale - l.left) / l.width) * box.width,
+        y: box.y + (((l.cy - l.originY - positionY) / scale - l.top) / l.height) * box.height,
+      },
+    };
+  }, [layout, box]);
 
   /** After a pan or zoom: keep the world on screen, name the continent and (at 4×) the zone in the centre. */
   const settled = useCallback(() => {
     const z = zoomer.current;
     const c = centre();
-    if (z === null || c === undefined || split === undefined) return;
-    const { scale, positionX, positionY } = z.instance.state;
+    const scale = layout()?.scale;
+    if (z === null || c === undefined || scale === undefined || split === undefined) return;
     placeCard();
-    if (wholeWorld(scale) && (positionX !== 0 || positionY !== 0)) {
-      z.setTransform(0, 0, 1, motionMs("--dur-card"), "easeOut");
+    const moved = byHand.current;
+    if (moved) {
+      byHand.current = false;
+      view.current = { ...c.world, scale };
+    }
+    // At 1× the land sits in the middle; zoomed in, the centre stays over the world.
+    const whole = wholeWorld(scale);
+    const x = whole ? box.x + box.width / 2 : Math.min(Math.max(c.world.x, box.x), box.x + box.width);
+    const y = whole ? box.y + box.height / 2 : Math.min(Math.max(c.world.y, box.y), box.y + box.height);
+    if (Math.abs(x - c.world.x) > 0.5 || Math.abs(y - c.world.y) > 0.5) {
+      byHand.current = moved;
+      // Springs back (no spring without motion).
+      void goTo(x, y, whole ? 1 : scale, motionMs("--dur-fan"), "easeOutCubic");
       return;
     }
-    const x = Math.min(Math.max(c.world.x, box.x), box.x + box.width);
-    const y = Math.min(Math.max(c.world.y, box.y), box.y + box.height);
-    if (x !== c.world.x || y !== c.world.y) {
-      const stage = root.current!.getBoundingClientRect();
-      const dx = ((c.world.x - x) / box.width) * stage.width;
-      const dy = ((c.world.y - y) / box.height) * stage.height;
-      z.setTransform(positionX + dx, positionY + dy, scale, motionMs("--dur-card"), "easeOut");
-      return;
-    }
+    // The switch follows a pan or zoom by hand; a fly (the switch, a link) already set it.
     const now = continentAt(c.world.x, scale, split);
-    if (now !== shownContinent.current) {
+    if (moved && now !== shownContinent.current) {
       shownContinent.current = now;
       writeParams({ continent: now === "azeroth" ? undefined : now });
     }
+    // The zone under the centre, by geometry (the SVG's user units are world units), so no card or marker over the
+    // centre gets in the way.
+    const point = new DOMPoint(c.world.x, c.world.y);
     const hit =
       zoomLevel(scale) === "zone"
-        ? document.elementsFromPoint(c.client.x, c.client.y).find((el) => el.hasAttribute("data-zone"))
+        ? [...(root.current?.querySelectorAll<SVGPathElement>("path[data-zone]") ?? [])].find((p) =>
+            p.isPointInFill(point),
+          )
         : undefined;
     const id = hit?.getAttribute("data-zone");
     const name = hit?.getAttribute("data-name");
     setFocusZone((was) => (id == null || name == null ? undefined : was?.id === id ? was : { id, name }));
-  }, [box, centre, placeCard, split]);
+  }, [box, centre, goTo, layout, placeCard, split]);
+
+  /** While dragging past the world's edge: hold the overshoot back, so it gives way only partly. */
+  const resist = useCallback(() => {
+    const l = layout();
+    const c = centre();
+    if (l === undefined || c === undefined) return;
+    const whole = wholeWorld(l.scale);
+    const x = whole ? box.x + box.width / 2 : Math.min(Math.max(c.world.x, box.x), box.x + box.width);
+    const y = whole ? box.y + box.height / 2 : Math.min(Math.max(c.world.y, box.y), box.y + box.height);
+    if (x === c.world.x && y === c.world.y) return;
+    const dx = ((c.world.x - x) / box.width) * l.width * l.scale * (1 - EDGE_GIVE);
+    const dy = ((c.world.y - y) / box.height) * l.height * l.scale * (1 - EDGE_GIVE);
+    void l.z.setTransform(l.positionX + dx, l.positionY + dy, l.scale, 0);
+  }, [layout, centre, box]);
 
   const onTransform = useCallback(
-    (_: ReactZoomPanPinchRef, state: { scale: number }) => {
+    (state: { scale: number }) => {
       root.current?.style.setProperty("--zoom", String(state.scale));
       setLevel(zoomLevel(state.scale));
       setScaleEnd(wholeWorld(state.scale) ? "min" : zoomLevel(state.scale) === "zone" ? "max" : "mid");
@@ -249,52 +358,55 @@ export function MapStage({
     [settled],
   );
 
-  /** Frames a continent (the switch), or the whole world for Azeroth. */
-  const frameContinent = useCallback((to: Continent, animate: boolean) => {
-    const z = zoomer.current;
-    if (z === null) return;
-    shownContinent.current = to;
-    const time = animate ? motionMs("--dur-fly") : 0;
-    if (to === "azeroth") {
-      void z.setTransform(0, 0, 1, time, "easeInOutCubic");
-      return;
-    }
-    const target = root.current?.querySelector<HTMLElement>(`[data-frame="${to}"]`);
-    if (target != null)
-      void z.zoomToElement(target, {
-        minScale: 1,
-        maxScale: ZOOM_MAX,
-        animationTime: time,
-        animationType: "easeInOutCubic",
-      });
-  }, []);
+  // The frame or the stage can change size after a fly (the page's scrollbar, late styles, a turned phone): keep the
+  // same world point centred.
+  useEffect(() => {
+    const frame = zoomer.current?.instance.wrapperComponent;
+    if (!zoomable || frame == null) return;
+    const observer = new ResizeObserver(() => {
+      const v = view.current;
+      if (v !== undefined) void goTo(v.x, v.y, v.scale, 0);
+    });
+    observer.observe(frame);
+    if (root.current !== null) observer.observe(root.current);
+    return () => observer.disconnect();
+  }, [zoomable, goTo]);
+
+  /** Frames a continent (the switch), or both for Azeroth: the land centred (map.ts continentViewBox). */
+  const frameContinent = useCallback(
+    (to: Continent, animate: boolean) => {
+      const l = layout();
+      if (l === undefined || frames === undefined) return;
+      shownContinent.current = to;
+      writeParams({ continent: to === "azeroth" ? undefined : to });
+      const f = frames[to];
+      const fit = Math.min(
+        (2 * l.cx) / ((f.width / box.width) * l.width),
+        l.frame.height / ((f.height / box.height) * l.height),
+      );
+      const scale = to === "azeroth" ? 1 : Math.min(Math.max(fit, 1), ZOOM_MAX);
+      void goTo(f.x + f.width / 2, f.y + f.height / 2, scale, animate ? motionMs("--dur-fly") : 0);
+    },
+    [layout, frames, box, goTo],
+  );
 
   /** Flies to a character's place at zone zoom (DESIGN.md §6: 600 ms pan + zoom, a jump without motion). */
   const flyTo = useCallback(
     (guid: string) => {
       const place = places.find((p) => p.markers.some((m) => m.guid === guid));
-      const target =
-        place === undefined
-          ? null
-          : root.current?.querySelector<HTMLElement>(`[data-place="${CSS.escape(place.zone)}"]`);
-      if (target == null) return;
-      void zoomer.current?.zoomToElement(target, {
-        scale: ZOOM_MAX,
-        animationTime: motionMs("--dur-fly"),
-        animationType: "easeInOutCubic",
-      });
+      if (place !== undefined) void goTo(place.x, place.y, ZOOM_MAX, motionMs("--dur-fly"));
     },
-    [places],
+    [places, goTo],
   );
 
-  // First view: the selected character (a link), else the continent from the URL.
+  // First view: the selected character (a link), else the continent from the URL (Azeroth: the land centred).
   const started = useRef(false);
   useEffect(() => {
     if (!zoomable || started.current) return;
     started.current = true;
     shownContinent.current = continent;
     if (initial !== undefined && places.some((p) => p.markers.some((m) => m.guid === initial))) flyTo(initial);
-    else if (continent !== "azeroth") frameContinent(continent, false);
+    else frameContinent(continent, false);
   }, [zoomable, continent, initial, places, flyTo, frameContinent]);
 
   // The continent switch: a new `?continent=` that the map did not write itself flies there.
@@ -331,17 +443,19 @@ export function MapStage({
     };
   }, [focusZone]);
 
-  /** + and −: the next level, around the centre of the screen; 0 the whole world. */
-  const zoomTo = useCallback((scale: number) => {
-    const z = zoomer.current;
-    const frame = z?.instance.wrapperComponent;
-    if (z == null || frame == null) return;
-    const { scale: from, positionX, positionY } = z.instance.state;
-    const cx = frame.clientWidth / 2;
-    const cy = frame.clientHeight / 2;
-    const k = scale / from;
-    void z.setTransform(cx - (cx - positionX) * k, cy - (cy - positionY) * k, scale, motionMs("--dur-zone"), "easeOut");
-  }, []);
+  /** + and −: the next level, around the centre of the screen; 1× is the whole world, centred. */
+  const zoomTo = useCallback(
+    (scale: number) => {
+      const c = centre();
+      if (c === undefined) return;
+      if (wholeWorld(scale)) frameContinent("azeroth", true);
+      else {
+        byHand.current = true;
+        void goTo(c.world.x, c.world.y, scale, motionMs("--dur-zone"), "easeOut");
+      }
+    },
+    [centre, goTo, frameContinent],
+  );
   const stepZoom = (direction: 1 | -1) => {
     const scale = zoomer.current?.instance.state.scale ?? 1;
     zoomTo(zoomStep(scale, direction));
@@ -359,6 +473,7 @@ export function MapStage({
     const by = pan[e.key];
     if (by !== undefined) {
       if (wholeWorld(z.instance.state.scale)) return;
+      byHand.current = true;
       void z.panBy(by[0], by[1], motionMs("--dur-fast"), "easeOut");
     } else if (e.key === "+" || e.key === "=") stepZoom(1);
     else if (e.key === "-" || e.key === "_") stepZoom(-1);
@@ -422,22 +537,6 @@ export function MapStage({
         >
           {children}
           <div className={styles.overlay}>
-            {frames !== undefined &&
-              (["kalimdor", "eastern-kingdoms"] as const).map((c) => (
-                <span
-                  key={c}
-                  className={zoom.frame}
-                  data-frame={c}
-                  aria-hidden="true"
-                  style={
-                    {
-                      ...at(frames[c].x, frames[c].y),
-                      "--w": `${(frames[c].width / box.width) * 100}%`,
-                      "--h": `${(frames[c].height / box.height) * 100}%`,
-                    } as CSSProperties
-                  }
-                />
-              ))}
             {dungeons.map((d) => (
               <span key={d.name} className={zoom.dungeon} style={at(d.x, d.y)} aria-hidden="true">
                 <span className={zoom.dungeonMark}>
@@ -504,11 +603,20 @@ export function MapStage({
           limitToBounds={false}
           doubleClick={{ disabled: true }}
           panning={{ excluded: ["input", "textarea"] }}
-          onTransform={onTransform}
+
           onPanning={() => {
             dragged.current = true;
+            byHand.current = true;
+            resist();
+          }}
+          onWheel={() => {
+            byHand.current = true;
+          }}
+          onPinch={() => {
+            byHand.current = true;
           }}
         >
+          <TransformWatch onApplied={onTransform} />
           <TransformComponent
             wrapperClass={zoom.wrapper}
             contentClass={zoom.content}
