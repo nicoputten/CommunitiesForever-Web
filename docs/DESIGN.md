@@ -119,7 +119,12 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 - **Tints and lines:** `--tint-active` (current nav link, gold 14%), `--tint-pressed` (16%), `--tint-selected` (20%), `--tint-hover`, `--line-bar`, `--line-control`, `--line-neutral` (chip, neutral badge), `--text-chip`, fresh/stale badge lines, banner tint, faction tag tints.
 - **Surfaces:** `--control-bg`, `--surface-modal`, `--surface-panel`, `--surface-aside`, row surface, top-bar fades (map and phone), `--avatar` (#2A3446), `--avatar-muted`, skeleton shimmer, `--on-shaman`.
 - **Space and radius:** extra steps `--s-px`, `--s-0-5`, `--s-0-75`, `--s-1-5`, `--s-2-5`, `--s-3-5`, `--s-7`, `--s-10`; radii `--r-badge` 4, `--r-nav` 8, `--r-control` 9, `--r-card` 12.
+<<<<<<< HEAD
+- **Glow, blur, sizes, motion:** disc/avatar glow, `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
+- **Atmosphere (WEB-16):** ambient loop durations (`--dur-wave-a` … `--dur-drift`), fog, light-shaft and vignette tints, glint and Maelstrom colours, sign-in sea edge and land, fog blurs, ember size and glow, `--size-map-w/h` (world 1440 × 900), `--page-glow-bg` (data pages).
+=======
 - **Glow, blur, sizes, motion:** disc/avatar glow, `--glow-disc-mix` (live disc glow at 45% of the class colour, WEB-30), `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
+>>>>>>> origin/develop
 
 A value a screen needs and no token has goes into part 2 with its source, never inline.
 
@@ -160,6 +165,12 @@ A value a screen needs and no token has goes into part 2 with its source, never 
 | New sighting | after upload | 400 ms drop + 1 ripple | spring | appear |
 | Session report | page load | staggered rise 0.55 s, bars grow 1.1 s, LEVEL UP shine | ease-out/spring | static |
 | Ambient | always (map, sign-in) | pulse 2.6 s · waves 7/9 s · surf 6 s · foam 40 s · Maelstrom 50 s · moonlight 18 s · fog 40–56 s | loops | all off, static fog |
+
+Ambient details (WEB-16, Nico 2026-10-26):
+- **Motion setting:** the user menu's "Motion" switch follows the system's `prefers-reduced-motion` until the user flips it; the choice is stored per browser (`localStorage`) and applied before first paint as `<html data-motion="on|off">`. Off works as reduced motion everywhere; an explicit On animates even when the system asks for reduced motion.
+- **Where:** desktop map: fog (3 banks) and two light shafts over the sea (no embers); phone map: one fog bank; sign-in: the drifting map, fog and embers, phone too; data pages: the static top glow only.
+- **Loops from the boards** that the table does not list: light shafts 14 s, embers 16 s (gone without motion), sign-in fog 46 s, sign-in map drift 60 s.
+- Loops pause while the tab is hidden; they animate only transform and opacity (the foam's dash offset moves in steps).
 
 ## 7. Components
 
@@ -227,4 +238,8 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Class disc initials: first letter of the first and last word of the name ("VD"), display only, never a key | The boards show initials; the one exception to "never split names" | Nico |
 | 2026-10-26 | Footer credit in `--text-faint` (#7E8898), not the sign-in board's #6E7888 | #6E7888 is under 4.5 : 1 on the page; every text pairing must pass (design-system board) | Nico |
 | 2026-10-26 | Stale-site banner without the loading board's second line ("Nico uploads after a play session.") | Members upload too, so the line is no longer true | Nico |
+| 2026-10-26 | Surf (WEB-16): a static 9-wide stroke under a 15-wide one that fades in and out, instead of the board's stroke-width 9 → 15 swell | Ambient loops animate only transform and opacity; it looks nearly the same | Nico |
+| 2026-10-26 | Foam (WEB-16): the dash offset moves in 220 steps per 40 s loop, not continuously | A dash march has no transform equivalent; steps repaint about 5× a second instead of every frame | Nico |
+| 2026-10-26 | Motion switch in the user menu (WEB-16, no board): a two-wave line icon, "Motion" and an On/Off meta text, gold when on | No board draws the item | Nico |
+| 2026-10-26 | Without motion every ambient layer rests on its first keyframe (fog and shafts still, embers gone) | The boards only show the moving state; their still state drops the animation | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |

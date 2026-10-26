@@ -103,6 +103,16 @@
   color: var(--gold);
 }
 
+.state {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.item[aria-checked="true"] .state {
+  color: var(--gold);
+}
+
 .phoneOnly {
   display: none;
 }

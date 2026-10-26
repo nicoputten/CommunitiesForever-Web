@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Atmosphere } from "@/components/atmosphere/Atmosphere";
 import { Banner } from "@/components/ui/Banner";
 import { timeAgo } from "@/core/views/age";
 import { staleBanner } from "@/core/views/site";
@@ -20,11 +21,15 @@ export interface SiteShellProps {
   children: ReactNode;
 }
 
-/** The app shell around every signed-in page: top bar, stale-site banner, content, footer credit, phone tab bar. */
+/**
+ * The app shell around every signed-in page: top bar, stale-site banner, content, footer credit, phone tab bar. Pages
+ * are calm by default (the data-page glow); the map page adds its own <Atmosphere variant="map"> over it.
+ */
 export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, children }: SiteShellProps) {
   const stale = staleBanner(lastUploadAt, now);
   return (
     <div className={styles.shell}>
+      <Atmosphere variant="calm" />
       <a href="#content" className={styles.skip}>
         Skip to content
       </a>

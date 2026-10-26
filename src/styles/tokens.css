@@ -237,4 +237,49 @@
   /* motion */
   --dur-shimmer: 1.6s; /* loading: skeleton */
   --dur-pulse: 2.6s; /* DESIGN.md §6: live pulse */
+
+  /* atmosphere (WEB-16): ambient loops of DESIGN.md §6; the ones §6 does not list come from the board named */
+  --dur-wave-a: 7s;
+  --dur-wave-b: 9s;
+  --dur-surf: 6s;
+  --dur-foam: 40s;
+  --dur-maelstrom: 50s;
+  --dur-glint: 18s;
+  --dur-fog-a: 40s; /* map */
+  --dur-fog-b: 56s; /* map */
+  --dur-fog-signin: 46s; /* sign-in */
+  --dur-shaft: 14s; /* map: light shafts */
+  --dur-ember: 16s; /* sign-in: embers */
+  --dur-drift: 60s; /* sign-in: the slowly drifting map behind the panel */
+  --sea-edge: #03070d; /* sign-in: outer stop of the sea gradient */
+  --land-top-signin: #22304a; /* sign-in */
+  --land-bottom-signin: #121a28; /* sign-in */
+  --zone-line-signin: rgba(201, 164, 92, 0.28); /* sign-in */
+  --glint: #9ec3ea; /* map: moonlight glint, at --glint-opacity in the centre */
+  --glint-opacity: 0.22;
+  --maelstrom: #6e9ccb; /* map: Maelstrom rings, at 45% */
+  --fog-1: rgba(150, 175, 210, 0.16); /* map, sign-in: fog banks, strongest to faintest */
+  --fog-2: rgba(150, 175, 210, 0.14); /* phone-map */
+  --fog-3: rgba(150, 175, 210, 0.13); /* map */
+  --fog-4: rgba(150, 175, 210, 0.12); /* sign-in */
+  --fog-5: rgba(150, 175, 210, 0.11); /* map */
+  --fog-end: rgba(150, 175, 210, 0);
+  --shaft-1: rgba(170, 200, 240, 0.09); /* map: light shafts */
+  --shaft-2: rgba(170, 200, 240, 0.07);
+  --shaft-end: rgba(170, 200, 240, 0);
+  --vignette-1: rgba(5, 10, 18, 0.15); /* sign-in: vignette over the drifting map */
+  --vignette-2: rgba(5, 10, 18, 0.55);
+  --vignette-3: rgba(5, 10, 18, 0.92);
+  --glow-ember: 0 0 8px var(--ember); /* sign-in */
+  --blur-fog: 48px; /* map */
+  --blur-fog-signin: 50px; /* sign-in */
+  --blur-fog-phone: 36px; /* phone-map */
+  --size-ember: 3px; /* sign-in */
+  --size-map-w: 1440px; /* DESIGN.md §5: world coordinates */
+  --size-map-h: 900px;
+  --page-glow-bg: radial-gradient(
+    1200px 500px at 30% -10%,
+    var(--page-glow),
+    rgba(7, 12, 21, 0) 70%
+  ); /* roster-cards, upload: calm data pages */
 }

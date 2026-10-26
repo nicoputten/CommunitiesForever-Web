@@ -19,12 +19,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E4 Design foundations
 
-### WEB-16 Atmosphere
-- `Atmosphere` component: drifting fog, light shafts, embers, animated sea (waves, surf, foam, Maelstrom, moonlight) with the loop times of `docs/DESIGN.md` §6.
-- Alive on the map and sign-in pages; data pages are calm (same palette, no ambient motion).
-- Reduced motion: everything off, static fog. A user toggle "Motion" in the user menu, stored in `localStorage` (default: follow the system).
-- Performance: CSS and SVG only, no WebGL; no layout shift; animations pause when the tab is hidden.
-
 ## E5 Screens
 
 ### WEB-17 Sign-in screens

@@ -1,0 +1,50 @@
+/* Sign-in board: the map at 75%, a slow Ken Burns drift on a centred 1440 × 900 stage. Transform only. */
+
+@keyframes drift {
+  from {
+    transform: scale(1.08) translate(-1.5%, 1%);
+  }
+  to {
+    transform: scale(1.18) translate(1.5%, -1%);
+  }
+}
+
+.drift {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--size-map-w);
+  height: var(--size-map-h);
+  margin-left: calc(var(--size-map-w) / -2);
+  opacity: 0.75;
+  transform: scale(1.08) translate(-1.5%, 1%);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  animation: drift var(--dur-drift) ease-in-out infinite alternate;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.landTop {
+  stop-color: var(--land-top-signin);
+}
+
+.landBottom {
+  stop-color: var(--land-bottom-signin);
+}
+
+.zone {
+  stroke: var(--zone-line-signin);
+  stroke-width: 0.7;
+}
+
+.coast {
+  fill: none;
+  stroke: var(--coast);
+  stroke-opacity: 0.45;
+  stroke-width: 1.1;
+}
