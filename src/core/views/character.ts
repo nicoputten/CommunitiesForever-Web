@@ -129,3 +129,23 @@ export function characterPage(d: Dataset, guid: string, now: number): CharacterP
   if (fit !== undefined) page.dungeonFit = fit;
   return page;
 }
+
+/** What a "here too" line calls a character: its full name, or whose it is for a friend without the addon. */
+function hereName(c: CharacterView): string {
+  if (c.name !== undefined) return c.name;
+  return c.ownerName === undefined ? "Someone" : `${c.ownerName}'s character`;
+}
+
+/**
+ * "Lia Thornwhisper is here too" / "A and B are here too" / "A, B and C are here too" / "A, B and 2 others are here
+ * too" (decided with Nico for WEB-23); undefined when nobody else is.
+ */
+export function hereToo(sameZone: readonly CharacterView[]): string | undefined {
+  const names = sameZone.map(hereName);
+  const [a, b, c] = names;
+  if (a === undefined) return undefined;
+  if (b === undefined) return `${a} is here too`;
+  if (names.length === 2) return `${a} and ${b} are here too`;
+  if (names.length === 3) return `${a}, ${b} and ${c} are here too`;
+  return `${a}, ${b} and ${names.length - 2} others are here too`;
+}

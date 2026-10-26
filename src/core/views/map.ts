@@ -21,21 +21,26 @@ export interface ViewBox {
 /** Room around a continent's zones when it is framed on its own (world units). */
 const CONTINENT_MARGIN = 24;
 
-function bounds(cont: "K" | "E"): ViewBox {
+/** The smallest box around zone paths. */
+function extent(paths: readonly string[]): { minX: number; minY: number; maxX: number; maxY: number } {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-  for (const z of map.zones) {
-    if (z.cont !== cont) continue;
+  for (const d of paths) {
     // zones.json paths are absolute polygons ("M x,y x,y … Z"), so every number pair is a point.
-    for (const [, x, y] of z.d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
+    for (const [, x, y] of d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
       minX = Math.min(minX, Number(x));
       maxX = Math.max(maxX, Number(x));
       minY = Math.min(minY, Number(y));
       maxY = Math.max(maxY, Number(y));
     }
   }
+  return { minX, minY, maxX, maxY };
+}
+
+function bounds(cont: "K" | "E"): ViewBox {
+  const { minX, minY, maxX, maxY } = extent(map.zones.filter((z) => z.cont === cont).map((z) => z.d));
   return {
     x: Math.max(0, Math.floor(minX - CONTINENT_MARGIN)),
     y: Math.max(0, Math.floor(minY - CONTINENT_MARGIN)),
@@ -53,6 +58,40 @@ const VIEW_BOXES: Record<Continent, ViewBox> = {
 /** The part of the 1440 × 900 world a continent switch shows (Zephras Isle, `cont` K, counts as Kalimdor). */
 export function continentViewBox(continent: Continent): ViewBox {
   return VIEW_BOXES[continent];
+}
+
+// The character page's mini map (WEB-23, board `character`): the board frames Stranglethorn Vale in 170 × 150
+// world units, so a zone gets at least that, three quarters of its own size when it is larger, centred on its anchor.
+const MINI_MIN_WIDTH = 170;
+const MINI_RATIO = 170 / 150;
+const MINI_SHARE = 0.75;
+
+/** The part of the world the mini map shows around a zone (zones.json id); undefined for an unknown id. */
+export function zoneViewBox(zoneId: string): ViewBox | undefined {
+  const zone = zoneById.get(zoneId);
+  if (zone === undefined) return undefined;
+  const { minX, minY, maxX, maxY } = extent([zone.d]);
+  const width = Math.max(MINI_MIN_WIDTH, MINI_SHARE * Math.max(maxX - minX, (maxY - minY) * MINI_RATIO));
+  const height = width / MINI_RATIO;
+  const round = (n: number) => Math.round(n * 10) / 10;
+  return { x: round(zone.lx - width / 2), y: round(zone.ly - height / 2), width: round(width), height: round(height) };
+}
+
+export interface MiniMapView {
+  /** The zone the character was last seen in, with everyone last seen there (newest first). */
+  place: MapPlace;
+  box: ViewBox;
+  /** The occupied tint of every zone, as on the world map. */
+  occupied: Record<string, DataAge>;
+}
+
+/** The mini map of a character's last sighting; undefined when it has no place on the map (none, battleground…). */
+export function miniMap(d: Dataset, guid: string, now: number): MiniMapView | undefined {
+  const world = worldMap(d, now);
+  const place = world.places.find((p) => p.markers.some((m) => m.guid === guid));
+  const box = place === undefined ? undefined : zoneViewBox(place.zone);
+  if (place === undefined || box === undefined) return undefined;
+  return { place, box, occupied: world.occupied };
 }
 
 export interface WorldMapView {
