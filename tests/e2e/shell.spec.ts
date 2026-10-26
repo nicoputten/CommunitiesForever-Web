@@ -12,11 +12,8 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 const ACCOUNT = `Account ${E2E.admin}`;
 
-const FOOTER =
-  "Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted";
-
 test.describe("app shell", () => {
-  test("shows the brand, navigation, data age, footer and user", async ({ page }) => {
+  test("shows the brand, navigation, data age and user", async ({ page }) => {
     await page.goto("/roster");
     const header = page.getByRole("banner");
     const brand = header.getByRole("link").first();
@@ -29,7 +26,8 @@ test.describe("app shell", () => {
       isPhone(page) ? /^(No data yet|Updated .+)$/ : /^(No data yet|Data uploaded .+)$/,
       { useInnerText: true },
     );
-    await expect(page.getByRole("contentinfo")).toHaveText(FOOTER);
+    // No footer (WEB-17, Nico): the credits come back elsewhere later.
+    await expect(page.getByRole("contentinfo")).toHaveCount(0);
     await expect(page.getByRole("button", { name: ACCOUNT })).toBeVisible();
 
     // Top bar on desktop, tab bar on phone: the other one is hidden, so the role query finds one.

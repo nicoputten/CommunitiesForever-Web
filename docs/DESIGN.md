@@ -9,7 +9,7 @@ Decisions from the design workshop (WEB-02). The canvas "Doombringers — wow.ve
 - Atmosphere goes **around** the data, never over it.
 - The **map** is alive (ambient motion). **Data screens** (roster, professions, character, upload) are calm: same palette, no ambient motion except small accents.
 - Name: **Doombringers**. Emblem: shield with cross (placeholder, original).
-- Footer credit: *Private fan site · not affiliated with Blizzard Entertainment · Zone outlines: Syrio, Wikimedia Commons (CC BY-SA 4.0), adapted*. Licence checked: both source SVGs are CC BY-SA 4.0 by Syrio (`tools/map/README.md`).
+- No footer (Nico, 2026-10-27, §11); the credits (private fan site, not affiliated with Blizzard, zone outlines by Syrio, Wikimedia Commons, CC BY-SA 4.0, adapted; licence checked in `tools/map/README.md`) come back in another place later.
 
 ## 2. Screens (canvas boards)
 
@@ -278,3 +278,10 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | New-sighting drop (WEB-26): plays for the sightings of the upload whose session report linked to the map (`/?drop=<upload id>`), once, not "since your last visit" | No per-viewer visit tracking | Nico (proposal 6) |
 | 2026-10-26 | Map at 2× and 4× (WEB-26, no board): a fan the zoom keeps open has a centre that is no control; in a fan the name tags lean outward | Open fans would otherwise overlap their hub's touch target and each other's names | Nico |
 | 2026-10-26 | Map pan (WEB-26): dragged past the world's edge the map follows the pointer at 35%, and on release springs back in 220 ms (ease-out cubic, the library has no spring curve); a jump without motion | "Bounded, springy pan" | Nico |
+| 2026-10-27 | No footer on any page (the boards have the credit line at the bottom) | Nico doesn't want it; the credits come back in another place later | Nico |
+| 2026-10-27 | Sign-in (WEB-17): the site name from the data instead of "Doombringers"; the admin named by the part of `ADMIN_BATTLETAG` before the `#` ("Send Vestras your BattleTag") | The site name never is hardcoded; Nico is Vestras on the site | Nico |
+| 2026-10-27 | Sign-in pings: decoration at the board's four spots, not where anyone is; without motion the ring rests on the dot's edge | The sign-in page is public and shows no data | Nico |
+| 2026-10-27 | Sign-in states on the drifting map, panel 420 px wide and blurred like the sign-in panel (the states board shows them on a plain gradient, about 373 px wide, without blur) | The states board is an overview sheet; on the site a state takes the panel's place | Nico |
+| 2026-10-27 | Signing in: a welcome step after Battle.net, about a second, then on; "Then straight to the page you opened" when sign-in started from another page than the map. "Sign out" is a text button with a 44 px target | The guest list check happens before any page shows; the board only draws the moment | Nico |
+| 2026-10-27 | "Not on the list" without a known BattleTag says "This BattleTag isn't on the … guest list"; a blocked BattleTag sees the same copy | The BattleTag comes from a short-lived cookie that may be gone; a block isn't announced | Nico |
+| 2026-10-27 | "Use another Battle.net account" signs out of the site and of Battle.net, then lands back on sign-in, where "Sign in with Battle.net" asks for an account (no board shows what it does) | Battle.net remembers the last login and ignores `prompt=login`; its logout with `ref` back to the site works (tried by Nico) | Nico |

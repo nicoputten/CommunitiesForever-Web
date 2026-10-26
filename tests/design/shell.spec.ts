@@ -18,8 +18,8 @@ import {
 import { ADMIN } from "./sample";
 
 // WEB-30: design checks of the app shell, the screens that are placeholders until their story, and /dev/components
-// (WEB-15). Every screen story has its own spec (README.md). Sign-in and "not on the
-// list" are unstyled WEB-06 placeholders; WEB-17 designs them and adds their checks.
+// (WEB-15). Every screen story has its own spec (README.md). Sign-in and its states
+// have their own spec (signin.spec.ts, WEB-17).
 
 /** Signed-in screens with the shell. `map`: the page sits on --bg-abyss. */
 const SHELL_SCREENS = [
@@ -49,7 +49,6 @@ test.describe("signed in", () => {
           color: "var(--text-dim)",
         });
         await expectStyles(page.getByRole("navigation", { name: "Main" }).getByRole("link"), DATA);
-        await expectStyles(page.getByRole("contentinfo"), { ...TYPE.metaSm, color: "var(--text-faint)" });
       });
 
       test("touch targets", async ({ page }) => {

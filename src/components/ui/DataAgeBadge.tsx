@@ -9,6 +9,17 @@ export type DataAgeBadgeProps = Pick<PersonView, "hasAddon" | "dataAt" | "dataAg
   showOwn?: boolean;
 };
 
+type PersonFields = Pick<DataAgeBadgeProps, "hasAddon" | "dataAt" | "dataAge" | "old" | "daysOld" | "via">;
+
+/**
+ * Only the badge's own fields of a person. Spreading a whole `PersonView` would also pass its `key` (the person key),
+ * which React takes as the element key and warns about.
+ */
+export function dataAgeProps(person: PersonFields): PersonFields {
+  const { hasAddon, dataAt, dataAge, old, daysOld, via } = person;
+  return { hasAddon, dataAt, dataAge, old, daysOld, via };
+}
+
 export type DataAgeTone = "fresh" | "stale" | "neutral";
 
 /** Green when live, amber at 7 days, neutral otherwise or without the addon. */

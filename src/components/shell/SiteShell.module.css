@@ -48,7 +48,7 @@
 }
 
 @media (max-width: 767px) {
-  /* Room for the fixed tab bar under the footer. */
+  /* Room for the fixed tab bar under the content. */
   .shell {
     padding-bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom));
   }

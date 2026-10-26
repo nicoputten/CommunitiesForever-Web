@@ -21,14 +21,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E5 Screens
 
-### WEB-17 Sign-in screens
-- Boards: `sign-in`, `sign-in-states`.
-- "Where is everyone in Azeroth tonight?", "Sign in with Battle.net" over the drifting map, "We only read your BattleTag, nothing else".
-- States:
-  - **not on the list**: "Stranger#1234 isn't on the Doombringers guest list. Send Nico your BattleTag and he can add you." Buttons: use another Battle.net account, sign out.
-  - **Battle.net didn't answer**: try again
-  - **signing in**: "Checking the guest list… Back from Battle.net as Femke#3307", then straight to the map
-
 ### WEB-18 Admin page: guest list
 - Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
 - Validation of BattleTag format; adding an existing member says so.

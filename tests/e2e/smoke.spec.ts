@@ -5,7 +5,7 @@ import { signInAs } from "./session";
 test("sends a visitor without a session to sign-in", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/signin$/);
-  await expect(page).toHaveTitle("CommunitiesForever");
+  await expect(page).toHaveTitle(/^Sign in · .+/);
   await expect(page.getByRole("button", { name: "Sign in with Battle.net" })).toBeVisible();
 });
 
@@ -21,7 +21,8 @@ test("tells someone not on the list", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, "Stranger#9999");
   await page.goto("/");
   await expect(page).toHaveURL(/\/not-on-list$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("You're not on the list");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("The gate stays closed");
+  await expect(page.getByText("Stranger#9999", { exact: true })).toBeVisible();
 });
 
 test("answers the API without a session with 401", async ({ request }) => {

@@ -149,10 +149,10 @@ test.describe("upload page, as a member", () => {
       dt.items.add(new File(["QuestieConfig = {}"], "Questie.lua", { type: "text/plain" }));
       return dt;
     });
-    await page.dispatchEvent("footer", "dragenter", { dataTransfer: data });
+    await page.dispatchEvent("header", "dragenter", { dataTransfer: data });
     await expect(zone(page)).toHaveAttribute("data-state", "dragging");
     await expect(zone(page).getByText("Let go to upload", { exact: true })).toBeVisible();
-    await page.dispatchEvent("footer", "drop", { dataTransfer: data });
+    await page.dispatchEvent("header", "drop", { dataTransfer: data });
     await expect(zone(page)).toHaveAttribute("data-state", "wrong-file");
   });
 

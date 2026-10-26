@@ -3,6 +3,7 @@ import BattleNet from "next-auth/providers/battlenet";
 import { maySignIn } from "@/core/access";
 import { loadAccessList } from "./access";
 import { getDb } from "./db";
+import { rememberRefused } from "./refused";
 
 // Auth.js with Battle.net, EU (WEB-06, docs/ARCHITECTURE.md "Access"). Battle.net gives the BattleTag and nothing
 // else; who may sign in comes from the database (src/server/access.ts).
@@ -13,6 +14,15 @@ import { getDb } from "./db";
 
 /** Battle.net's EU OpenID issuer (https://eu.battle.net/oauth/.well-known/openid-configuration). */
 export const BATTLENET_ISSUER = "https://eu.battle.net/oauth";
+
+/**
+ * Battle.net's own logout (WEB-17). It ends the Battle.net login and sends the browser on to `ref`, so the next sign-in
+ * asks for an account again. Battle.net ignores OIDC `prompt=login`, and its OIDC end_session_endpoint
+ * (/oauth/logout) answers 400; both tried by Nico on 2026-10-27.
+ */
+export function battleNetLogoutUrl(back: string): string {
+  return `https://eu.battle.net/login/logout?ref=${encodeURIComponent(back)}`;
+}
 
 /** Days a session lasts without a visit. */
 const SESSION_DAYS = 30;
@@ -40,8 +50,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt", maxAge: SESSION_DAYS * 24 * 60 * 60 },
   pages: { signIn: "/signin", error: "/signin" },
   callbacks: {
-    signIn({ profile }) {
-      return maySignIn(battleTagOf(profile), loadAccessList(getDb())) ? true : "/not-on-list";
+    async signIn({ profile }) {
+      const tag = battleTagOf(profile);
+      if (maySignIn(tag, loadAccessList(getDb()))) return true;
+      // "not on the list" shows who came back from Battle.net (WEB-17); there is no session to read it from.
+      if (tag !== undefined) await rememberRefused(tag);
+      return "/not-on-list";
     },
     jwt({ token, profile }) {
       const tag = battleTagOf(profile);

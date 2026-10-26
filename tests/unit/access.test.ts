@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   type AccessList,
   battleTagKey,
+  battleTagName,
   battleTagsOf,
   checkFile,
   fileOwner,
+  isBattleTag,
   mayAdmin,
   mayBlock,
   maySignIn,
@@ -176,5 +178,33 @@ describe("battleTagsOf", () => {
   it("finds everyone in the real beta file", () => {
     const d = normalize(parseLua(fixture("real/beta-2026-10.lua")));
     expect(battleTagsOf(d).sort()).toEqual(["Ada#1001", "Bob#2002", "Cleo#3003", "Dax#4004", "Esme#5005", "Finn#6006"]);
+  });
+});
+
+describe("BattleTag text (WEB-17)", () => {
+  it("accepts a BattleTag, accented names too", () => {
+    expect(isBattleTag("Stranger#1234")).toBe(true);
+    expect(isBattleTag("Zoë#21")).toBe(true);
+  });
+
+  it("refuses anything else", () => {
+    for (const v of [
+      undefined,
+      "",
+      "Stranger",
+      "#1234",
+      "Str anger#1234",
+      "a#b",
+      "|cffff0000Red|r#1",
+      "x".repeat(33) + "#1",
+    ]) {
+      expect(isBattleTag(v)).toBe(false);
+    }
+  });
+
+  it("names the admin by the part before the #", () => {
+    expect(battleTagName("Vestras#2201")).toBe("Vestras");
+    expect(battleTagName(" Vestras#2201 ")).toBe("Vestras");
+    expect(battleTagName("Vestras")).toBe("Vestras");
   });
 });
