@@ -431,6 +431,26 @@ CommunitiesForeverDB = {
               ["points"] = 19,
             },
           },
+          ["quests"] = {
+            [9101] = {
+              ["title"] = "Tiger Mastery",
+            },
+            [9102] = {
+              ["title"] = "Panther Mastery",
+            },
+            [9103] = {
+              ["title"] = "Raptor Mastery",
+            },
+            [9104] = {
+              ["title"] = "Bloodscalp Ears",
+            },
+            [9105] = {
+              ["title"] = "The Defense of Grom'gol",
+            },
+            [9106] = {
+              ["title"] = "Hostile Takeover",
+            },
+          },
           ["updatedAt"] = 1792947600,
         },
         ["Player-1-0000A002"] = {

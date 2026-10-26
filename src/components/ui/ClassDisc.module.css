@@ -69,3 +69,9 @@
   font-size: var(--fs-tiny);
   font-weight: var(--fw-semibold);
 }
+
+.disc[data-size="avatar"] {
+  width: var(--size-avatar);
+  height: var(--size-avatar);
+  font-size: var(--fs-tiny);
+}
