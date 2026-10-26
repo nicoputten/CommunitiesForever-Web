@@ -173,7 +173,10 @@ test.describe("who may upload", () => {
     await context.clearCookies();
     await signInAs(context, baseURL!, guest);
     expect((await page.goto("/upload"))?.status()).toBe(404);
-    expect((await page.goto("/upload/1"))?.status()).toBe(404);
+    // Anyone signed in may read a session report (WEB-20), but only someone who may upload gets "Upload another".
+    expect((await page.goto("/upload/1"))?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Session report");
+    await expect(page.getByRole("link", { name: "Upload another" })).toHaveCount(0);
     const res = await page.request.post("/api/uploads", {
       multipart: { file: { name: LEDGER, mimeType: "text/plain", buffer: Buffer.from("return {}") } },
     });

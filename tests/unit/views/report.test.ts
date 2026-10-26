@@ -3,7 +3,7 @@ import { diff } from "@/core/diff";
 import { parseLua } from "@/core/lua";
 import { merge } from "@/core/merge";
 import { normalize } from "@/core/normalize";
-import { uploadReport } from "@/core/views";
+import { sessionReport, shortAge, uploadReport } from "@/core/views";
 import { D, H, NOW } from "./sample";
 
 const upload = (body: string) => normalize(parseLua(`return { schemaVersion = 1, ${body} }`));
@@ -125,5 +125,100 @@ describe("session report", () => {
   it("knows when an upload brought nothing new", () => {
     const state = merge(before, file);
     expect(uploadReport(diff(state, state), NOW).nothingNew).toBe(true);
+  });
+});
+
+describe("session report page (WEB-20)", () => {
+  const state = merge(before, file);
+  const page = sessionReport(diff(before, state), NOW, state, "Nico", false);
+
+  it("has the board's four counters, singular where one", () => {
+    expect(page.counters).toEqual([
+      { value: 4, label: "levels gained" },
+      { value: 2, label: "skill gains" },
+      { value: 1, label: "new character" },
+      { value: 3, label: "new sightings" },
+    ]);
+    expect(page.friendsWithNewData).toBe(4);
+  });
+
+  it("level ups: badge, and bars as shares of level 60", () => {
+    expect(page.levelUps[0]).toMatchObject({
+      name: "Ves Doombringer",
+      badge: "LEVEL UP ×2",
+      fromShare: 37 / 60,
+      toShare: 39 / 60,
+    });
+  });
+
+  it("new faces: owner, class, level and the upload's own sighting", () => {
+    expect(page.newFaces).toEqual([
+      {
+        guid: "Z",
+        name: "Zul Kazrek",
+        ownName: "Zul Kazrek",
+        classFile: "WARLOCK",
+        line: "Femke's new Warlock · level 15 · Durotar",
+      },
+    ]);
+  });
+
+  it("skill gains on the 300 scale, with the profession name from the game data when the addon left it out", () => {
+    expect(page.skillGains.map((g) => [g.name, g.profession, g.from, g.to, g.capReached, g.toShare])).toEqual([
+      ["Tok Ironhide", "First Aid", 210, 225, true, 225 / 300],
+      ["Ves Doombringer", "Tailoring", 150, 187, false, 187 / 300],
+    ]);
+  });
+
+  it("who sent data, as the chips say it", () => {
+    expect(page.senders.map((s) => [s.text, s.age, s.quiet])).toEqual([
+      ["Nico · just now", "live", false],
+      ["Femke · 1 h", "live", false],
+      ["Mira · 2 days, via Bob", "recent", false],
+      ["Bob · 5 days", "days", false],
+      ["Sanne · no addon", undefined, true],
+    ]);
+    const again = sessionReport(diff(state, state), NOW + 9 * D, state, "Nico", false);
+    expect(again.senders[3]).toMatchObject({ text: "Bob · nothing new (14 days)", age: "week", quiet: true });
+    expect(again.nothingNew).toBe(true);
+  });
+
+  it("sightings per zone, full names", () => {
+    expect(page.sightings.map((s) => [s.characters.map((c) => c.name), s.place])).toEqual([
+      [["Lia Thornwhisper", "Ves Doombringer"], "Stranglethorn Vale"],
+      [["Zul Kazrek"], "Durotar"],
+    ]);
+    expect(page.gear).toEqual([{ guid: "V", name: "Ves Doombringer", ownName: "Ves Doombringer", from: 31, to: 34 }]);
+  });
+
+  it("first upload: counts characters with a record and their owners; a stub is named after its owner", () => {
+    const first = sessionReport(diff(undefined, state), NOW, state, "Nico", true);
+    expect([first.first, first.characters, first.friends]).toEqual([true, 5, 4]);
+    expect(first.newFaces.at(-1)).toMatchObject({
+      name: "Sanne's character",
+      line: "Sanne's new character · Location unknown",
+    });
+    expect(first.newFaces.at(-1)?.ownName).toBeUndefined();
+  });
+
+  it("names removed characters and works without current data", () => {
+    const without = upload(`self = { battleTag = "Nico#2201", version = ${NOW + D}, chars = {} }`);
+    const after = merge(state, without);
+    const gone = sessionReport(diff(state, after), NOW + D, undefined, "Nico", false);
+    expect(gone.removed).toEqual(["Ves Doombringer"]);
+  });
+});
+
+describe("shortAge", () => {
+  it("says just now, minutes, hours and days", () => {
+    expect([0, 4 * 60, 5 * 60, H, 23 * H, D, 2 * D].map(shortAge)).toEqual([
+      "just now",
+      "just now",
+      "5 min",
+      "1 h",
+      "23 h",
+      "1 day",
+      "2 days",
+    ]);
   });
 });
