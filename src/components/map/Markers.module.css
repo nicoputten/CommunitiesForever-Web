@@ -96,6 +96,11 @@
   pointer-events: auto;
 }
 
+/* A marker that only shows (the character page's own marker, a friend without the addon there). */
+.marker[data-static] {
+  cursor: default;
+}
+
 .disc {
   --mk: var(--avatar);
   --mk-text: var(--gold-bright);

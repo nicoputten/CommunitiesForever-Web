@@ -29,3 +29,20 @@ export function wavePath(group: 0 | 1, top = 70): string {
   }
   return parts.join("");
 }
+
+/**
+ * The character board's mini map sea: smaller curls on a denser grid (16 apart, rows 9 apart, each nudged by the same
+ * hash) over the given world box. Decoration, not game data.
+ */
+export function miniWavePath(box: { x: number; y: number; width: number; height: number }): string {
+  const parts: string[] = [];
+  const x0 = Math.floor(box.x / 16) * 16;
+  const y0 = Math.floor(box.y / 9) * 9;
+  for (let y = y0; y < box.y + box.height; y += 9) {
+    for (let x = x0; x < box.x + box.width; x += 16) {
+      const j = jitter(x, y);
+      parts.push(`M${(x + j * 8).toFixed(1)} ${(y + (j - 0.5) * 4).toFixed(1)}q1.5 -1 3 0t3 0`);
+    }
+  }
+  return parts.join("");
+}

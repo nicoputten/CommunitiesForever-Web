@@ -162,3 +162,13 @@ describe("mini map", () => {
     expect(miniMap(bg, "Player-1-VES", NOW)).toBeUndefined();
   });
 });
+
+describe("mini map contents", () => {
+  it("keeps only the zones and coasts inside the frame", () => {
+    const view = miniMap(sample(), "Player-1-VES", NOW)!;
+    expect(view.zones).toContain("stv");
+    expect(view.zones).toContain("westfall");
+    expect(view.zones).not.toContain("durotar");
+    expect(view.coasts).toEqual(["E"]);
+  });
+});

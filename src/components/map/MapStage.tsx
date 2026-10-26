@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { MapMarker, MapPlace } from "@/core/views/mapMarkers";
 import { CharacterCard } from "./CharacterCard";
-import { CharacterMarker, FAN_MAX, ZoneCluster, fanOffsets } from "./Markers";
+import { FAN_MAX, fanOffsets } from "@/core/views/mapMarkers";
+import { CharacterMarker, ZoneCluster } from "./Markers";
 import styles from "./Markers.module.css";
 
 export interface MapStageProps {

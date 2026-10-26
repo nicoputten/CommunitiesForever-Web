@@ -76,7 +76,8 @@ describe("character page", () => {
 });
 
 describe("here too", () => {
-  const c = (name?: string, ownerName?: string) => ({ guid: name ?? "x", hasRecord: true, name, ownerName }) as CharacterView;
+  const c = (name?: string, ownerName?: string) =>
+    ({ guid: name ?? "x", hasRecord: true, name, ownerName }) as CharacterView;
 
   it("names everyone in full, up to three, then counts the rest", () => {
     expect(hereToo([])).toBeUndefined();

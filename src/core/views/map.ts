@@ -49,10 +49,12 @@ function bounds(cont: "K" | "E"): ViewBox {
   };
 }
 
+const CONTINENT_BOXES = { K: bounds("K"), E: bounds("E") };
+
 const VIEW_BOXES: Record<Continent, ViewBox> = {
   azeroth: { x: 0, y: 0, width: map.width, height: map.height },
-  kalimdor: bounds("K"),
-  "eastern-kingdoms": bounds("E"),
+  kalimdor: CONTINENT_BOXES.K,
+  "eastern-kingdoms": CONTINENT_BOXES.E,
 };
 
 /** The part of the 1440 × 900 world a continent switch shows (Zephras Isle, `cont` K, counts as Kalimdor). */
@@ -69,9 +71,9 @@ const MINI_SHARE = 0.75;
 /** The part of the world the mini map shows around a zone (zones.json id); undefined for an unknown id. */
 export function zoneViewBox(zoneId: string): ViewBox | undefined {
   const zone = zoneById.get(zoneId);
-  if (zone === undefined) return undefined;
-  const { minX, minY, maxX, maxY } = extent([zone.d]);
-  const width = Math.max(MINI_MIN_WIDTH, MINI_SHARE * Math.max(maxX - minX, (maxY - minY) * MINI_RATIO));
+  const own = zoneBox(zoneId);
+  if (zone === undefined || own === undefined) return undefined;
+  const width = Math.max(MINI_MIN_WIDTH, MINI_SHARE * Math.max(own.width, own.height * MINI_RATIO));
   const height = width / MINI_RATIO;
   const round = (n: number) => Math.round(n * 10) / 10;
   return { x: round(zone.lx - width / 2), y: round(zone.ly - height / 2), width: round(width), height: round(height) };
@@ -81,6 +83,10 @@ export interface MiniMapView {
   /** The zone the character was last seen in, with everyone last seen there (newest first). */
   place: MapPlace;
   box: ViewBox;
+  /** zones.json ids of the zones and terrain inside the box: the rest is left out of the page. */
+  zones: string[];
+  /** The continents whose coast runs through the box. */
+  coasts: ("K" | "E")[];
   /** The occupied tint of every zone, as on the world map. */
   occupied: Record<string, DataAge>;
 }
@@ -91,7 +97,26 @@ export function miniMap(d: Dataset, guid: string, now: number): MiniMapView | un
   const place = world.places.find((p) => p.markers.some((m) => m.guid === guid));
   const box = place === undefined ? undefined : zoneViewBox(place.zone);
   if (place === undefined || box === undefined) return undefined;
-  return { place, box, occupied: world.occupied };
+  const zones = map.zones.filter((z) => overlaps(zoneBox(z.id)!, box)).map((z) => z.id);
+  const coasts = (["K", "E"] as const).filter((c) => overlaps(CONTINENT_BOXES[c], box));
+  return { place, box, zones, coasts, occupied: world.occupied };
+}
+
+const overlaps = (a: ViewBox, b: ViewBox) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+const zoneBoxes = new Map<string, ViewBox>();
+
+/** The smallest box around one zone (cached). */
+function zoneBox(id: string): ViewBox | undefined {
+  let box = zoneBoxes.get(id);
+  const zone = zoneById.get(id);
+  if (box === undefined && zone !== undefined) {
+    const { minX, minY, maxX, maxY } = extent([zone.d]);
+    box = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    zoneBoxes.set(id, box);
+  }
+  return box;
 }
 
 export interface WorldMapView {

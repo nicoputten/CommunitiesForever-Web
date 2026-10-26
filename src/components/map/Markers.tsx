@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import { classInfo } from "@/core/gamedata/classes";
-import { markerLabel, placeLabel, type MapMarker, type MapPlace } from "@/core/views/mapMarkers";
+import { FAN_MAX, fanOffsets, markerLabel, placeLabel, type MapMarker, type MapPlace } from "@/core/views/mapMarkers";
 import { DungeonIcon } from "@/components/ui/icons";
 import styles from "./Markers.module.css";
 
@@ -20,42 +21,68 @@ export interface MarkerEvents {
   onHover: (guid: string | undefined) => void;
 }
 
-interface CharacterMarkerProps extends MarkerEvents {
+interface CharacterMarkerProps extends Partial<MarkerEvents> {
   marker: MapMarker;
   selected: boolean;
   /** Show the dungeon badge (a lone marker in a dungeon; a cluster shows its own). */
   badge?: boolean;
+  /** A link instead of a button (the character page's mini map, WEB-23); without href or onSelect, a picture. */
+  href?: string;
 }
 
 /**
  * One character (DESIGN.md §4 marker per freshness, map-states board): class disc with initials in a 44 px button,
  * glow and pulse when new, ring and age tag when older, gold ring when selected.
  */
-export function CharacterMarker({ marker: m, selected, badge = false, onSelect, onHover }: CharacterMarkerProps) {
-  return (
-    <span className={styles.item}>
+export function CharacterMarker({ marker: m, selected, badge = false, href, onSelect, onHover }: CharacterMarkerProps) {
+  const look = {
+    className: styles.marker,
+    "data-age": m.age,
+    "data-class": classInfo(m.classFile)?.classFile.toLowerCase() ?? "unknown",
+    "data-selected": selected || undefined,
+    "aria-label": markerLabel(m),
+    style: classStyle(m.classFile),
+  };
+  const disc = (
+    <span className={styles.disc} aria-hidden="true" data-initials={m.initials}>
+      {m.age === "live" && <span className={styles.pulse} data-ambient="" />}
+    </span>
+  );
+  let control;
+  if (href !== undefined) {
+    control = (
+      <Link {...look} href={href}>
+        {disc}
+      </Link>
+    );
+  } else if (onSelect === undefined) {
+    control = (
+      <span {...look} role="img" data-static="">
+        {disc}
+      </span>
+    );
+  } else {
+    control = (
       <button
         type="button"
-        className={styles.marker}
-        data-age={m.age}
-        data-class={classInfo(m.classFile)?.classFile.toLowerCase() ?? "unknown"}
-        data-selected={selected || undefined}
-        aria-label={markerLabel(m)}
+        {...look}
         aria-pressed={selected}
-        style={classStyle(m.classFile)}
         onClick={(e) => {
           e.stopPropagation();
           onSelect(m.guid);
         }}
-        onPointerEnter={() => onHover(m.guid)}
-        onPointerLeave={() => onHover(undefined)}
-        onFocus={() => onHover(m.guid)}
-        onBlur={() => onHover(undefined)}
+        onPointerEnter={() => onHover?.(m.guid)}
+        onPointerLeave={() => onHover?.(undefined)}
+        onFocus={() => onHover?.(m.guid)}
+        onBlur={() => onHover?.(undefined)}
       >
-        <span className={styles.disc} aria-hidden="true" data-initials={m.initials}>
-          {m.age === "live" && <span className={styles.pulse} data-ambient="" />}
-        </span>
+        {disc}
       </button>
+    );
+  }
+  return (
+    <span className={styles.item}>
+      {control}
       {m.ageTag !== undefined && (
         <span className={styles.ageTag} data-age={m.age} aria-hidden="true">
           {m.ageTag}
@@ -73,20 +100,6 @@ function DungeonBadge() {
     </span>
   );
 }
-
-/** Where the n markers of an open fan sit around the hub (px): an arc above it, the board's 2-fan at ±50°. */
-export function fanOffsets(n: number): { dx: number; dy: number }[] {
-  const radius = 34; // map-states board: spoke length (--size-spoke)
-  const from = n === 2 ? -140 : -165;
-  const to = n === 2 ? -40 : -15;
-  return Array.from({ length: n }, (_, i) => {
-    const a = ((from + ((to - from) * i) / (n - 1)) * Math.PI) / 180;
-    return { dx: Math.round(Math.cos(a) * radius), dy: Math.round(Math.sin(a) * radius) };
-  });
-}
-
-/** Clusters of up to this many fan out; more open a list (DESIGN.md §5). */
-export const FAN_MAX = 5;
 
 interface ZoneClusterProps extends MarkerEvents {
   place: MapPlace;
