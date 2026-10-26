@@ -1,0 +1,239 @@
+/* Sign-in (WEB-17): the sign-in board's panel and the sign-in-states board's states, over <Atmosphere variant="signin">. */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scene {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.center {
+  min-height: 100dvh;
+  display: grid;
+  /* minmax(0, 1fr): the panel's max-width 100% is then the viewport's, not its own 420 px */
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--s-8) var(--gutter-phone);
+}
+
+.panel,
+.state {
+  width: var(--size-signin);
+  max-width: 100%;
+  border-radius: var(--r-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.panel {
+  padding: var(--s-10) var(--s-9) var(--s-7-5);
+  gap: var(--s-4);
+  background: var(--surface-signin);
+  backdrop-filter: blur(var(--blur-signin));
+  border: var(--border) solid var(--line-modal);
+  box-shadow: var(--shadow-modal);
+}
+
+.emblem {
+  width: var(--size-emblem-signin);
+  height: var(--size-emblem-signin);
+  fill: var(--surface-raised);
+  color: var(--gold-bright);
+  filter: drop-shadow(var(--glow-emblem-signin));
+}
+
+.siteName {
+  font-family: var(--font-display);
+  font-size: var(--fs-signin);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-signin);
+  letter-spacing: var(--ls-display-xl);
+  color: var(--gold-pale);
+  text-shadow: var(--text-glow-signin);
+  overflow-wrap: break-word;
+}
+
+.tagline {
+  font-family: var(--font-name);
+  font-size: var(--fs-tagline);
+  line-height: var(--lh-tagline);
+  color: var(--text-tagline);
+}
+
+.form {
+  width: 100%;
+}
+
+.panel .form {
+  margin-top: var(--s-2-5);
+}
+
+.bnet,
+.btnPrimary,
+.btnOutline {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2-5);
+  border-radius: var(--r-card);
+  font-family: var(--font-ui);
+  font-size: var(--fs-cta);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.bnet,
+.btnPrimary {
+  border: 0;
+  background: var(--bnet);
+  color: var(--on-bnet);
+}
+
+.bnet {
+  min-height: var(--size-bnet);
+  box-shadow: var(--shadow-bnet);
+}
+
+.btnPrimary,
+.btnOutline {
+  min-height: var(--size-cta);
+}
+
+.btnOutline {
+  border: var(--border) solid var(--button-line-gold);
+  background: transparent;
+  color: var(--gold-bright);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.btnOutline:hover {
+  background: var(--tint-hover);
+}
+
+.lock {
+  width: var(--size-icon-md);
+  height: var(--size-icon-md);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+.note {
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+/* states */
+
+.state {
+  min-height: var(--size-signin-state);
+  padding: var(--s-8-5) var(--s-7-5) var(--s-6-5);
+  gap: var(--s-3-5);
+  background: var(--surface-modal);
+  /* the states board has no map behind its states; on the site they sit on it like the sign-in panel */
+  backdrop-filter: blur(var(--blur-signin));
+  border: var(--border) solid var(--line-strong);
+  box-shadow: var(--shadow-signin-state);
+}
+
+.icon {
+  width: var(--size-signin-icon);
+  height: var(--size-signin-icon);
+  fill: none;
+}
+
+.iconShield {
+  fill: var(--surface-raised);
+  stroke: var(--stale-text);
+  stroke-width: 1.8;
+}
+
+.iconCross {
+  stroke: var(--stale-text);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.iconRing {
+  stroke: var(--stale-text);
+  stroke-width: 2;
+}
+
+.iconBang {
+  stroke: var(--stale-text);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.spin {
+  animation: spin var(--dur-spin-signin) linear infinite;
+}
+
+.spinTrack {
+  stroke: var(--track);
+  stroke-width: 4;
+}
+
+.spinArc {
+  stroke: var(--gold);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.stateTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-signin-state);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-name);
+  color: var(--text-strong);
+}
+
+.text {
+  font-size: var(--fs-body);
+  line-height: var(--lh-prose);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.textSmall {
+  font-size: var(--fs-body-sm);
+}
+
+.tag {
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+
+.grow {
+  flex: 1;
+}
+
+.foot {
+  font-size: var(--fs-meta);
+  line-height: var(--lh-prose);
+  color: var(--text-faint);
+}
+
+.quiet {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.quiet:hover {
+  color: var(--gold-bright);
+}

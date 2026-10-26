@@ -68,7 +68,7 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
           <span className={styles.sectionType}>Skill gains</span>
           <span className={styles.name}>Ves Doombringer</span>
           <span className={styles.body}>Level 39 Undead Warlock · Destruction · 1,234,567</span>
-          <span className={styles.meta}>Stranglethorn Vale · Nico · 2 h ago</span>
+          <span className={styles.meta}>Stranglethorn Vale · Vestras · 2 h ago</span>
           <span className={styles.overline}>New</span>
         </div>
       </Section>

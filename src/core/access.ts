@@ -27,6 +27,20 @@ export function battleTagKey(battleTag: string): string {
   return battleTag.trim().toLowerCase();
 }
 
+/** Name#digits; the name part may hold any letters (Battle.net allows accented ones). */
+const BATTLE_TAG = /^[^\s#|]{1,32}#\d{1,10}$/u;
+
+/** A string that looks like a BattleTag; used before showing one that came from a cookie (WEB-17). */
+export function isBattleTag(value: string | undefined): value is string {
+  return value !== undefined && BATTLE_TAG.test(value);
+}
+
+/** The name part of a BattleTag ("Vestras#2201" → "Vestras"): how the site names the admin (WEB-17). */
+export function battleTagName(battleTag: string): string {
+  const name = battleTag.trim().split("#")[0];
+  return name === undefined || name === "" ? battleTag.trim() : name;
+}
+
 export function sameBattleTag(a: string | undefined, b: string | undefined): boolean {
   return a !== undefined && b !== undefined && battleTagKey(a) === battleTagKey(b);
 }

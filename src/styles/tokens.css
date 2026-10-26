@@ -528,4 +528,34 @@
   --minimap-wave: 0.4; /* character: wave curls */
   --minimap-wave-opacity: 0.15; /* character: the waves at rest (first keyframe of the board loop) */
   --minimap-halo: 1.6; /* character: label halo */
+
+  /* sign-in (WEB-17): the sign-in and sign-in-states boards */
+  --size-signin: 420px; /* sign-in: panel width */
+  --size-signin-state: 430px; /* sign-in-states: panel min height */
+  --surface-signin: rgba(10, 16, 28, 0.72); /* sign-in: panel */
+  --blur-signin: 18px; /* sign-in: panel */
+  --shadow-signin-state: 0 30px 80px rgba(0, 0, 0, 0.5); /* sign-in-states: panel */
+  --s-7-5: 30px; /* sign-in: panel bottom and side padding */
+  --s-8-5: 34px; /* sign-in-states: panel top padding */
+  --s-9: 36px; /* sign-in: panel side padding */
+  --fs-signin: 36px; /* sign-in: site name (Marcellus SC) */
+  --lh-signin: 1.05; /* sign-in: site name */
+  --fs-tagline: 17px; /* sign-in: "Where is everyone in Azeroth tonight?" (Marcellus) */
+  --lh-tagline: 1.4;
+  --fs-signin-state: 26px; /* sign-in-states: state title (Marcellus) */
+  --lh-prose: 1.55; /* sign-in-states: state text */
+  --text-tagline: #c9cfd9; /* sign-in: tagline */
+  --text-glow-signin: 0 0 24px rgba(240, 208, 142, 0.3); /* sign-in: site name */
+  --glow-emblem-signin: 0 0 14px rgba(240, 208, 142, 0.35); /* sign-in: shield, as a drop-shadow */
+  --size-emblem-signin: 56px; /* sign-in: shield */
+  --size-signin-icon: 52px; /* sign-in-states: state icon */
+  --size-bnet: 52px; /* sign-in: "Sign in with Battle.net" height */
+  --size-icon-md: 18px; /* sign-in: lock on the Battle.net button */
+  --bnet: linear-gradient(180deg, var(--bnet-top), var(--bnet-bottom)); /* sign-in: Battle.net button */
+  --shadow-bnet: 0 8px 24px rgba(11, 102, 214, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25); /* sign-in */
+  --on-bnet: #ffffff; /* sign-in: Battle.net button text */
+  --dur-spin-signin: 1.2s; /* sign-in-states: "Checking the guest list…" spinner */
+  --size-ping: 10px; /* sign-in: pings on the drifting map */
+  --glow-ping: 0 0 12px var(--gold-bright); /* sign-in */
+  --dur-ping: 2.8s; /* sign-in: ping ring */
 }

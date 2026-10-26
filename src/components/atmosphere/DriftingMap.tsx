@@ -2,9 +2,12 @@ import map from "@/core/map/zones.json";
 import { SeaLayers } from "./SeaLayers";
 import styles from "./DriftingMap.module.css";
 
+const PINGS = [1, 2, 3, 4] as const;
+
 /**
  * The sign-in board's backdrop: the world map, dimmed, drifting slowly (60 s) under the fog. Decorative; it goes inside
- * <Atmosphere variant="signin">. WEB-17 adds the live pings on top.
+ * <Atmosphere variant="signin">. The four gold pings sit where the sign-in board has them: decoration, not where anyone
+ * is, so the public sign-in page shows no data (WEB-17, Nico).
  */
 export function DriftingMap() {
   return (
@@ -23,6 +26,9 @@ export function DriftingMap() {
         <path className={styles.coast} d={map.coast.K} />
         <path className={styles.coast} d={map.coast.E} />
       </svg>
+      {PINGS.map((n) => (
+        <i key={n} className={`${styles.ping} ${styles[`ping${n}`]}`} />
+      ))}
     </div>
   );
 }
