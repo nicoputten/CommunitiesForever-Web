@@ -95,7 +95,7 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
       >
         <Example label="New · recent · days with via · week+ · no addon · no data">
           <DataAgeBadge hasAddon dataAt={now - 60} dataAge="live" old={false} now={now} />
-          <DataAgeBadge hasAddon dataAt={now - 9 * H} dataAge="recent" old={false} now={now} />
+          <DataAgeBadge hasAddon dataAt={now - 40 * H} dataAge="recent" old={false} now={now} />
           <DataAgeBadge
             hasAddon
             dataAt={now - 2 * D}
