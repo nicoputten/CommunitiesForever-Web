@@ -1,5 +1,5 @@
 import type { CharacterView, PersonView } from "@/core/views/characters";
-import { DataAgeBadge } from "@/components/ui/DataAgeBadge";
+import { DataAgeBadge, dataAgeProps } from "@/components/ui/DataAgeBadge";
 import { CharacterRow } from "./CharacterRow";
 import styles from "./FriendPanel.module.css";
 
@@ -32,7 +32,7 @@ export function FriendPanel({ person, characters, total, now }: FriendPanelProps
           <h2 className={styles.name}>{person.displayName}</h2>
           <p className={styles.tag}>{tag}</p>
         </div>
-        <DataAgeBadge {...person} now={now} />
+        <DataAgeBadge {...dataAgeProps(person)} now={now} />
       </div>
       {person.hasAddon ? (
         characters.map((c) => <CharacterRow key={c.guid} character={c} now={now} old={person.old} />)
