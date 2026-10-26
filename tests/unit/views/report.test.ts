@@ -103,7 +103,7 @@ describe("session report", () => {
     expect(report.senders.map((s) => [s.displayName, s.status, s.age, s.ageAtUpload, s.old])).toEqual([
       ["Nico", "newer", "live", 0, false],
       ["Femke", "newer", "live", H, false],
-      ["Mira", "newer", "days", 2 * D, false],
+      ["Mira", "newer", "recent", 2 * D, false],
       ["Bob", "newer", "days", 5 * D, false],
       ["Sanne", "noAddon", "unknown", undefined, false],
     ]);

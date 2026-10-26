@@ -15,7 +15,7 @@ describe("roll call", () => {
   });
 
   it("groups sightings into the last 24 hours and earlier, newest first", () => {
-    expect(names(call.last24h)).toEqual(["Lia Thornwhisper", "Ves Doombringer", "Bob Example", "Tok Ironhide"]);
+    expect(names(call.live)).toEqual(["Lia Thornwhisper", "Ves Doombringer", "Bob Example", "Tok Ironhide"]);
     expect(names(call.earlier)).toEqual([
       "Mira Sunstrider",
       "Grom Ashfeller",
@@ -26,7 +26,7 @@ describe("roll call", () => {
   });
 
   it("gives each row its zone, data age and owner", () => {
-    const [lia, , bob] = call.last24h;
+    const [lia, , bob] = call.live;
     expect(lia?.sighting).toMatchObject({ zoneText: "Stranglethorn Vale", zone: "stv", seenAt: NOW - H, age: "live" });
     expect(lia?.person).toMatchObject({ displayName: "Femke", old: false });
     expect(bob?.sighting).toMatchObject({
@@ -57,8 +57,8 @@ describe("roll call", () => {
 
   it("filters by person, last 24 hours, faction, level and age", () => {
     const d = sample();
-    expect(names(rollCall(d, NOW, { person: "Bob#2002" }).last24h)).toEqual(["Bob Example", "Tok Ironhide"]);
-    const recent = rollCall(d, NOW, { last24h: true });
+    expect(names(rollCall(d, NOW, { person: "Bob#2002" }).live)).toEqual(["Bob Example", "Tok Ironhide"]);
+    const recent = rollCall(d, NOW, { liveOnly: true });
     expect([recent.located, recent.total, recent.earlier.length, recent.unknown.length]).toEqual([4, 4, 0, 0]);
     const alliance = rollCall(d, NOW, { faction: "Alliance" });
     expect([...names(alliance.earlier), ...alliance.unknown.map((u) => u.character.name)]).toEqual([
@@ -80,11 +80,11 @@ describe("roll call", () => {
     );
     const stubs = rollCall(d, NOW);
     expect([stubs.located, stubs.total]).toEqual([3, 3]);
-    expect(stubs.last24h.map((r) => [r.character.guid, r.character.hasRecord, r.person?.displayName])).toEqual([
+    expect(stubs.live.map((r) => [r.character.guid, r.character.hasRecord, r.person?.displayName])).toEqual([
       ["C1", false, "Cleo"],
       ["X", false, undefined],
     ]);
-    expect(stubs.last24h[1]?.sighting.zone).toBe("elsewhere");
+    expect(stubs.live[1]?.sighting.zone).toBe("elsewhere");
     expect(stubs.noAddon.map((p) => p.displayName)).toEqual(["Cleo"]);
     expect(stubs.unknown).toEqual([]);
   });

@@ -101,3 +101,75 @@ export function MotionIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** The ledger (upload board): a page with lines, a gold upload disc on its corner. `drag`: without the disc. */
+export function LedgerIcon({ drag = false, ...props }: IconProps & { drag?: boolean }) {
+  const page = drag ? "var(--gold-bright)" : "var(--gold)";
+  return (
+    <Icon viewBox="0 0 84 84" strokeWidth={drag ? 2.4 : 2} {...props}>
+      <path d="M22 12h30l12 12v48H22z" style={{ fill: "var(--surface-raised)", stroke: page }} />
+      <path d="M52 12v12h12" style={{ stroke: page }} />
+      <path
+        d="M30 38h26M30 46h26M30 54h18"
+        strokeWidth={2}
+        style={{ stroke: drag ? "var(--text-muted)" : "var(--text-dim)" }}
+      />
+      {!drag && (
+        <>
+          <circle cx="62" cy="64" r="13" style={{ fill: "var(--gold)", stroke: "none" }} />
+          <path d="M62 70V58M57 63l5-5 5 5" strokeWidth={2.2} style={{ stroke: "var(--on-gold)" }} />
+        </>
+      )}
+    </Icon>
+  );
+}
+
+/** Reading spinner (upload-states): a track and a gold quarter arc; the caller spins it. */
+export function SpinnerIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 56 56" strokeWidth={4} {...props}>
+      <circle cx="28" cy="28" r="22" style={{ stroke: "var(--track)" }} />
+      <path d="M28 6a22 22 0 0 1 22 22" style={{ stroke: "var(--gold)" }} />
+    </Icon>
+  );
+}
+
+/** Warning triangle (upload-states: wrong file and the other refusals). */
+export function AlertIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 48 48" strokeWidth={2.4} {...props}>
+      <path d="M24 6L44 40H4z" />
+      <path d="M24 19v10M24 34v.01" strokeWidth={2.6} />
+    </Icon>
+  );
+}
+
+/** Clock (upload-states: newer addon version). */
+export function NewerIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 48 48" strokeWidth={2.4} {...props}>
+      <circle cx="24" cy="24" r="19" />
+      <path d="M24 14v12l7 4" />
+    </Icon>
+  );
+}
+
+/** Circle with a dash (upload-states: nothing new). */
+export function NothingNewIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 48 48" strokeWidth={2.4} {...props}>
+      <circle cx="24" cy="24" r="19" />
+      <path d="M15 24h18" />
+    </Icon>
+  );
+}
+
+/** Info (upload board: the /reload hint). */
+export function InfoIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.5} {...props}>
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M8 7v4M8 5v.01" />
+    </Icon>
+  );
+}

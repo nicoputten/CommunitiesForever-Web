@@ -7,7 +7,7 @@ export type DataAgeBadgeProps = Pick<PersonView, "hasAddon" | "dataAt" | "dataAg
   now: number;
 };
 
-/** How old a friend's data is (roster-cards board): green when live, amber at 7 days, "via X" when relayed. */
+/** How old a friend's data is (roster-cards board): green when new (under 32 h), amber at 7 days, "via X" when relayed. */
 export function DataAgeBadge({ hasAddon, dataAt, dataAge, old, daysOld, via, now }: DataAgeBadgeProps) {
   const tone = !hasAddon ? "neutral" : old ? "stale" : dataAge === "live" ? "fresh" : "neutral";
   let text: string;

@@ -23,20 +23,26 @@ const desktop = { ...devices["Desktop Chrome"] };
 // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
 const phone = { ...devices["Pixel 7"], viewport: { width: 375, height: 812 } };
 
+/** Run by their own projects, in order: empty, seed, roster. */
+const OTHERS = /(\.empty|\.setup|roster\.spec)\.ts$/;
+
 // Runs against the production build: `npm run build` first (CI does).
 export default defineConfig({
   testDir: "tests/e2e",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
-  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
-  testIgnore: /\.(empty|setup)\.ts$/,
+  // Clock times are the viewer's local time (WEB-19): one zone, so they read the same on every machine.
+  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure", timezoneId: "Europe/Amsterdam" },
   projects: [
     { name: "empty-desktop", testMatch: /\.empty\.ts$/, testIgnore: [], use: desktop },
     { name: "empty-phone", testMatch: /\.empty\.ts$/, testIgnore: [], use: phone },
     { name: "seed", testMatch: /seed\.setup\.ts$/, testIgnore: [], dependencies: ["empty-desktop", "empty-phone"] },
-    { name: "desktop", dependencies: ["seed"], use: desktop },
-    { name: "phone", dependencies: ["seed"], use: phone },
+    // The roster checks the sample as seeded, before the upload tests (WEB-19) add members and characters.
+    { name: "roster-desktop", testMatch: /roster\.spec\.ts$/, testIgnore: [], dependencies: ["seed"], use: desktop },
+    { name: "roster-phone", testMatch: /roster\.spec\.ts$/, testIgnore: [], dependencies: ["seed"], use: phone },
+    { name: "desktop", testIgnore: OTHERS, dependencies: ["roster-desktop", "roster-phone"], use: desktop },
+    { name: "phone", testIgnore: OTHERS, dependencies: ["roster-desktop", "roster-phone"], use: phone },
   ],
   webServer: {
     command: "npm run start",

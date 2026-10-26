@@ -15,6 +15,13 @@
       "when": 1792969790537,
       "tag": "0001_access",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793004194928,
+      "tag": "0002_upload_unreadable",
+      "breakpoints": true
     }
   ]
 }

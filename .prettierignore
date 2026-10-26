@@ -10,3 +10,4 @@ package-lock.json
 drizzle/
 design/
 src/core/map/zones.json
+.claude/

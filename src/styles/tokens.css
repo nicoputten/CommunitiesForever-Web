@@ -239,7 +239,6 @@
   --dur-pulse: 2.6s; /* DESIGN.md §6: live pulse */
 
   /* roster (WEB-21): the roster-cards board */
-  --s-4-5: 18px; /* roster-cards: no-addon box padding, level spread bottom padding */
   --s-5-5: 22px; /* roster-cards: between the page's sections */
   --fs-friend: 19px; /* roster-cards: friend name (Marcellus SC) */
   --size-avatar-friend: 34px; /* roster-cards: friend avatar */
@@ -307,4 +306,41 @@
     var(--page-glow),
     rgba(7, 12, 21, 0) 70%
   ); /* roster-cards, upload: calm data pages */
+
+  /* upload (WEB-19): the upload and upload-states boards */
+  --dur-breathe: 5s; /* upload: dropzone glow and floating ledger */
+  --dur-over: 2.4s; /* upload-states: dragging glow, reading bar */
+  --dur-bob: 1.6s; /* upload-states: dragging ledger */
+  --dur-spin: 1.4s; /* upload-states: reading spinner */
+  --fs-drop: 24px; /* upload: "Drop CommunitiesForever.lua here" (Marcellus) */
+  --fs-state: 20px; /* upload-states: state message (Marcellus) */
+  --lh-state: 1.25;
+  --s-4-5: 18px; /* upload: column gap, history padding; roster-cards: no-addon box, level spread bottom padding */
+  --size-dropzone: 380px; /* upload: dropzone min height; the states take its place */
+  --size-ledger: 84px; /* upload: ledger icon */
+  --size-ledger-drag: 64px; /* upload-states */
+  --size-spinner: 56px; /* upload-states */
+  --size-state-icon: 48px; /* upload-states */
+  --size-progress: 4px; /* upload-states: reading bar */
+  --r-progress: 2px;
+  --size-history-time: 120px; /* upload: history time column */
+  --size-history: 360px; /* upload: history panel basis */
+  --size-upload-main: 640px; /* upload: dropzone column basis */
+  --drop-line: rgba(212, 175, 106, 0.5); /* upload: dashed dropzone border */
+  --drop-glow: rgba(212, 175, 106, 0.06); /* upload: dropzone centre */
+  --drop-fill: rgba(12, 18, 30, 0.8); /* upload: dropzone edge */
+  --shadow-breathe-rest: 0 0 0 0 rgba(212, 175, 106, 0), inset 0 0 40px rgba(212, 175, 106, 0.04); /* upload */
+  --shadow-breathe-peak: 0 0 30px 0 rgba(212, 175, 106, 0.12), inset 0 0 60px rgba(212, 175, 106, 0.08);
+  --over-glow: rgba(240, 208, 142, 0.16); /* upload-states: dragging, centre */
+  --shadow-over-rest: 0 0 0 0 rgba(240, 208, 142, 0), inset 0 0 40px rgba(240, 208, 142, 0.15); /* upload-states */
+  --shadow-over-peak: 0 0 34px 2px rgba(240, 208, 142, 0.35), inset 0 0 70px rgba(240, 208, 142, 0.25);
+  --state-fill: rgba(12, 18, 30, 0.85); /* upload-states: state frames */
+  --alert-line: rgba(224, 138, 74, 0.55); /* upload-states: wrong file, newer format */
+  --alert-tint: rgba(224, 138, 74, 0.1); /* upload-states: top of the alert frame */
+  --button-line-gold: rgba(212, 175, 106, 0.45); /* upload-states: "What changed in format 3" */
+  --button-line-neutral: rgba(174, 182, 195, 0.35); /* upload-states: "Try again" */
+  --hint-bg: rgba(12, 18, 30, 0.7); /* upload: /reload hint */
+  --hint-line: rgba(174, 182, 195, 0.15); /* upload: /reload hint */
+  --done-tint: rgba(127, 217, 154, 0.12); /* upload: history "Done" */
+  --rejected-tint: rgba(224, 138, 74, 0.15); /* upload: history "Rejected" */
 }

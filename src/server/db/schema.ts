@@ -31,6 +31,8 @@ export const uploads = sqliteTable(
     community: text("community"),
     /** Why a readable file was not taken (WEB-06, src/core/access.ts); null for unreadable files. */
     rejection: text("rejection", { enum: ["not-your-file", "other-community", "no-community-yet"] }),
+    /** Why the file could not be read (WEB-19, src/core/normalize.ts `Unreadable`); null for readable files. */
+    unreadable: text("unreadable", { enum: ["not-ledger", "damaged", "newer-format"] }),
   },
   // The same file from the same uploader is a no-op (WEB-06: per uploader, so a file rejected as someone else's
   // does not block its owner from uploading it).

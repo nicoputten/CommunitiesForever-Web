@@ -58,6 +58,7 @@ export default defineConfig([
     "playwright-report/**",
     "next-env.d.ts",
     "design/**",
+    ".claude/**",
     ".venv-map/**",
   ]),
 ]);

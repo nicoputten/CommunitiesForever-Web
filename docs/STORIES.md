@@ -33,18 +33,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
 - Validation of BattleTag format; adding an existing member says so.
 
-### WEB-19 Upload page and states
-- Boards: `upload`, `upload-states`. Admin and members (WEB-06).
-- Dropzone and "Choose file"; the whole page accepts a drop ("Let go to upload"); where to find the file (`WTF › Account › [ACCOUNT] › SavedVariables`, "/reload first").
-- States:
-  - **reading**: "Reading the ledger…", "10 characters from 5 friends"
-  - **wrong file**: "That's not our ledger", naming the file if it is another addon's (e.g. `Questie.lua`); nothing changed
-  - **newer addon version**: "This file is from a newer addon. It uses data format N; the site reads up to M"
-  - **nothing new**: "Same data as your upload of today 21:14. Did the game save yet?"
-  - **not your file**: the file belongs to another BattleTag ("This is Bob's ledger, sign in as Bob to upload it"); nothing changed
-  - **other community**: the file's addon has another community selected ("This ledger is for another community"); nothing changed
-- History: time, uploader, summary line ("5 levels gained · 4 skill gains · 1 new character"), Done / Rejected with reason; a line links to its session report.
-
 ### WEB-20 Session report
 - Board: `upload-report`. Shown after an upload and from the history.
 - Header "Session report, uploaded today at 21:14 by Nico · new data from 4 friends"; counters (levels gained, skill gains, new characters, new sightings).
@@ -88,7 +76,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ### WEB-27 Roll call panel
 - Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
-- Filters: everyone or one friend, last 24 h, faction, level range; legend (live, days, week+).
+- Filters: everyone or one friend, New (under 32 h), faction, level range; legend (new, days, week+).
 - Rows grouped by age with zone, owner, "via", age; picking one flies the map to the character.
 - Unknown whereabouts tray and the no-addon line.
 

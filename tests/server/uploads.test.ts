@@ -7,7 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { canonical } from "@/core/merge";
 import { dataDir, openDatabase, type Db } from "@/server/db";
 import { characters, locations, people, uploads } from "@/server/db/schema";
-import { loadState, MAX_UPLOAD_BYTES, rebuild, upload, UploadTooLargeError } from "@/server/uploads";
+import {
+  displayNames,
+  getUpload,
+  listUploads,
+  loadState,
+  MAX_UPLOAD_BYTES,
+  rebuild,
+  upload,
+  UploadTooLargeError,
+} from "@/server/uploads";
 
 const fixture = (p: string) => readFileSync(new URL(`../fixtures/${p}`, import.meta.url));
 const lua = (body: string) => new TextEncoder().encode(`return { schemaVersion = 1, ${body} }`);
@@ -109,7 +118,7 @@ describe("upload", () => {
     upload(db, day1, "Ada#1001", 1000);
     const before = derived(db);
     const result = upload(db, new TextEncoder().encode("CommunitiesForeverDB = {\n  oops\n"), "Ada#1001", 2000);
-    expect(result).toMatchObject({ id: 2, status: "rejected", duplicate: false });
+    expect(result).toMatchObject({ id: 2, status: "rejected", duplicate: false, unreadable: "damaged" });
     expect(result.reason).toMatch(/^line 2, column 3: /);
     expect(db.select().from(uploads).where(eq(uploads.id, 2)).get()).toMatchObject({
       status: "rejected",
@@ -123,7 +132,12 @@ describe("upload", () => {
   it("stores a newer schema as rejected with its version", () => {
     const result = upload(db, new TextEncoder().encode("return { schemaVersion = 2 }"), "Ada#1001", 1000);
     expect(result.reason).toContain("schema version 2");
-    expect(db.select().from(uploads).get()).toMatchObject({ status: "rejected", schemaVersion: 2 });
+    expect(result).toMatchObject({ unreadable: "newer-format", schemaVersion: 2 });
+    expect(db.select().from(uploads).get()).toMatchObject({
+      status: "rejected",
+      schemaVersion: 2,
+      unreadable: "newer-format",
+    });
     expect(loadState(db)).toBeUndefined();
   });
 
@@ -233,5 +247,59 @@ describe("rebuild", () => {
     upload(db, new TextEncoder().encode("nonsense"), "Ada#1001", 1000);
     expect(rebuild(db)).toEqual({ ok: 0, rejected: 1 });
     expect(loadState(db)).toBeUndefined();
+  });
+});
+
+describe("upload screen (WEB-19)", () => {
+  it("marks another addon's file as not our ledger", () => {
+    const result = upload(db, new TextEncoder().encode("QuestieConfig = { global = {} }"), "Ada#1001", 1000);
+    expect(result).toMatchObject({ status: "rejected", unreadable: "not-ledger", uploadedAt: 1000 });
+  });
+
+  it("gives a duplicate the earlier upload's time and an accepted upload the uploader's previous one", () => {
+    const first = upload(db, day1, "Ada#1001", 1000);
+    expect(first.previousUploadAt).toBeUndefined();
+    expect(upload(db, day1, "Ada#1001", 1500)).toMatchObject({ duplicate: true, uploadedAt: 1000 });
+    expect(upload(db, day2, "Ada#1001", 2000)).toMatchObject({ uploadedAt: 2000, previousUploadAt: 1000 });
+  });
+
+  it("names the owner again for a duplicate that was not the uploader's file", () => {
+    upload(db, day1, "Ada#1001", 1000);
+    vi.stubEnv("ADMIN_BATTLETAG", "Bob#2002");
+    const first = upload(db, day1, "Bob#2002", 1100);
+    expect(first.rejection).toEqual({ code: "not-your-file", owner: "Ada#1001" });
+    expect(upload(db, day1, "Bob#2002", 1200)).toMatchObject({
+      duplicate: true,
+      rejection: { code: "not-your-file", owner: "Ada#1001" },
+    });
+  });
+
+  it("lists everyone's uploads newest first, marking the first accepted one", () => {
+    upload(db, new TextEncoder().encode("nope"), "Ada#1001", 900);
+    upload(db, day1, "Ada#1001", 1000);
+    upload(db, day2, "Ada#1001", 2000);
+    const list = listUploads(db);
+    expect(list.map((u) => [u.id, u.status, u.first])).toEqual([
+      [3, "ok", false],
+      [2, "ok", true],
+      [1, "rejected", false],
+    ]);
+    expect(list[2]).toMatchObject({ uploadedBy: "Ada#1001", unreadable: "damaged" });
+    expect(list[0]?.summary?.counts.levelsGained).toBe(2);
+    expect(listUploads(db, 1)).toHaveLength(1);
+    expect(getUpload(db, 2)).toEqual(list[1]);
+    expect(getUpload(db, 99)).toBeUndefined();
+  });
+
+  it("keeps the unreadable reason through a rebuild", () => {
+    upload(db, new TextEncoder().encode("return { schemaVersion = 2 }"), "Ada#1001", 1000);
+    db.update(uploads).set({ unreadable: null }).run();
+    rebuild(db);
+    expect(getUpload(db, 1)).toMatchObject({ unreadable: "newer-format", schemaVersion: 2 });
+  });
+
+  it("knows display names by BattleTag", () => {
+    upload(db, day1, "Ada#1001", 1000);
+    expect(displayNames(db).get("ada#1001")).toBe("Ada");
   });
 });
