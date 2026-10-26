@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:design": "vitest run tests/design && playwright test -c playwright.design.config.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -27,6 +28,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.19.2",

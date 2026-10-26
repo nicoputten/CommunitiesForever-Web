@@ -38,7 +38,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 - `npm run build`, then `npm run test:e2e`: Playwright on the production build, desktop and phone
 - `npm run format`: Prettier write
 - `npm run design`: serves the design boards at http://localhost:4400
-- `npm run test:design`: design checks (WEB-30): token lint, computed-style and accessibility checks, screenshot baselines
+- `npm run test:design` (after `npm run build`): design checks (WEB-30): token lint, computed styles, touch targets, accessibility, reduced motion, screenshot baselines. Screenshots are checked on Linux only (CI); a new baseline comes from the CI artifact after Nico approved it. How a screen adds its checks: `tests/design/README.md`
 - Map data: `tools/map/README.md` (Python venv; rebuild only when the map should change)
 
 ## Branches

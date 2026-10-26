@@ -58,13 +58,14 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
         className={styles.trigger}
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={`Account ${viewer.battleTag}`}
         onClick={() => setOpen((o) => !o)}
       >
         <span aria-hidden="true" className={styles.avatar}>
           {Array.from(viewer.battleTag)[0]?.toUpperCase()}
         </span>
-        <span aria-hidden="true" className={styles.tag}>
+        {/* The name comes from the visible text ("Account" for screen readers only), so it contains what is shown. */}
+        <span className={styles.tag}>
+          <span className="visually-hidden">Account </span>
           {viewer.battleTag}
         </span>
       </button>
