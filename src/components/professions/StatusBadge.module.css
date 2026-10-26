@@ -1,0 +1,24 @@
+.badge {
+  padding: var(--s-0-75) var(--s-1-75);
+  border-radius: var(--r-pill-sm);
+  font-size: var(--fs-tiny);
+  letter-spacing: var(--ls-section);
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge[data-status="covered"] {
+  background: var(--covered-badge);
+  color: var(--fresh-text);
+}
+
+.badge[data-status="thin"] {
+  background: var(--tint-pressed);
+  color: var(--gold-bright);
+}
+
+.badge[data-status="gap"] {
+  background: var(--gap-badge);
+  color: var(--stale-text);
+}
