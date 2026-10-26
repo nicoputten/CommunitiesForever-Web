@@ -2,6 +2,7 @@
 export * from "./age";
 export * from "./character";
 export * from "./characters";
+export * from "./map";
 export * from "./clock";
 export * from "./professions";
 export * from "./report";

@@ -24,7 +24,6 @@ import { ADMIN } from "./sample";
 
 /** Signed-in screens with the shell. `map`: the page sits on --bg-abyss. */
 const SHELL_SCREENS = [
-  { name: "map", url: "/", map: true },
   { name: "professions", url: "/professions", map: false },
   { name: "components", url: "/dev/components", map: false },
 ];

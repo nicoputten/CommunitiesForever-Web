@@ -398,4 +398,70 @@
   --on-shine: #1a1206; /* upload-report: LEVEL UP text */
   --glow-dot: 0 0 6px; /* upload-report: glow of a new data dot (DESIGN.md §4), colour added by the component */
   --glow-face-mix: 50%; /* upload-report: new face disc glow, class colour at 50% */
+
+  /* world map (WEB-25): the map and map-states boards */
+  --zone-edge: #0a0f18; /* map: dark seam between zone fills, 2 wide */
+  --zone-line-terrain: rgba(201, 164, 92, 0.12); /* map: terrain border */
+  --zone-tint-live: 0.2; /* map: occupied gold tint by the newest sighting (DESIGN.md §5: 3–20%) */
+  --zone-tint-recent: 0.12;
+  --zone-tint-days: 0.07;
+  --zone-tint-week: 0.03;
+  --zone-tint-hover: 0.12; /* map: hovered zone at least this, else its tint + 6% */
+  --zone-tint-hover-add: 0.06;
+  --zone-stroke: 0.7; /* map: zone border width */
+  --zone-stroke-hover: 1.6; /* DESIGN.md §5: hover stroke */
+  --coast-opacity: 0.55; /* DESIGN.md §3: coast @55% */
+  --coast-stroke: 1.1;
+  --label-idle: #a4aebf; /* map: zone label */
+  --label-occupied: #d3d9e3;
+  --label-terrain: #56627a;
+  --label-halo: #070b12; /* map: dark stroke under labels */
+  --capital: #e2be74; /* map: capital diamond */
+  --capital-label: #e8cf97;
+  --capital-edge: #070a0f;
+  --map-ink: #c9a45c; /* map: compass rose, continent names */
+  --map-ink-compass: 0.45;
+  --map-ink-names: 0.32;
+  --maelstrom-label: 0.75; /* map: "The Maelstrom" at 75% */
+  --ls-continent: 0.55em; /* map: KALIMDOR, EASTERN KINGDOMS */
+  --ls-maelstrom: 0.18em;
+  --ls-place: 0.07em; /* map: zone labels */
+  --ls-terrain: 0.04em;
+  --ls-hover-name: 0.1em; /* map: hovered zone name in the corner */
+  --fs-continent: 18px;
+  --shadow-hover-name: 0 1px 6px #000; /* map: hovered zone name */
+  --size-marker: 30px; /* map: character marker (hit area --size-touch) */
+  --size-cluster: 36px; /* map: cluster, 2–5 */
+  --size-cluster-many: 38px; /* map-states: cluster of 6 or more */
+  --size-cluster-ring: 4px; /* map: class ring around the count */
+  --size-badge: 18px; /* map: dungeon badge */
+  --size-badge-icon: 11px;
+  --size-avatar-card: 36px; /* map: disc in the hover card */
+  --size-card-map: 248px; /* map: hover card */
+  --size-cluster-list: 160px; /* map-states: list of a cluster of 6 or more */
+  --size-spoke: 34px; /* map-states: fan spoke */
+  --fan-x: 26px; /* map-states: fan offset of the first two markers */
+  --fan-y: 22px;
+  --marker-ring-bg: #121822; /* map: fill of a "days" marker */
+  --cluster-core: #0e1520; /* map: cluster centre */
+  --badge-bg: #1b2433; /* map: dungeon badge */
+  --age-tag-bg: rgba(5, 10, 18, 0.78); /* map: "3d" next to a marker */
+  --age-tag-text: #9aa3b2;
+  --opacity-days: 0.7; /* DESIGN.md §4: days marker */
+  --opacity-week: 0.5; /* DESIGN.md §4: week+ marker */
+  --opacity-spoke: 0.75;
+  --glow-marker: 0 0 18px; /* map-states: live marker glow, class colour at --glow-marker-mix */
+  --glow-marker-mix: 70%;
+  --glow-cluster: 0 0 14px; /* map: cluster with a new sighting, colour at --glow-cluster-mix */
+  --glow-cluster-mix: 35%;
+  --ring-selected: 0 0 0 3px rgba(240, 208, 142, 0.25); /* map: selected marker, gold halo */
+  --marker-hover-scale: 1.15; /* DESIGN.md §6 */
+  --pulse-scale: 2.6; /* map: live pulse ring */
+  --card-rise: 8px; /* DESIGN.md §6: hover card fades and rises 8px */
+  --dur-stagger: 30ms; /* DESIGN.md §6: cluster fan stagger */
+  --fs-name-card: 18px; /* map: name in the hover card (Marcellus) */
+  --size-dot-seen: 6px; /* map: green dot after "Seen" when new */
+  --size-hub-dot: 6px; /* map: centre of an open fan */
+  --compass-star: 0.12;
+  --compass-n: 0.7;
 }

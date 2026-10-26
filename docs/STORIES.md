@@ -45,14 +45,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Character × profession matrix (brighter cell = higher skill); "No professions yet".
 - Recipe search placeholder: "Recipe search arrives when the addon shares known recipes."
 
-### WEB-25 World map
-- Boards: `map`, `map-states`. The map page is the home page.
-- Server-rendered SVG from `zones.json` with the layers of `docs/DESIGN.md` §5; HTML overlay for markers.
-- Zone states: idle, occupied (gold tint by recency), hover (bright edge, name in the corner), terrain (no hover).
-- Markers per freshness state (§4), hover/focus card (name, level, race, class, spec, zone, seen, player, item level, "Open character"), selected state.
-- Clusters: count and class ring; 2–5 fan out (spring, 30 ms stagger), 6 or more open a list; dungeon badge.
-- Continent switch (Azeroth, Kalimdor, Eastern Kingdoms) in the top bar.
-
 ### WEB-26 Map zoom, pan and motion
 - Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
 - Fly to a character (600 ms pan + zoom; jump with reduced motion).
