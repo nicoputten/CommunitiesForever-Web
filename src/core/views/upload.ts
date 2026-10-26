@@ -132,6 +132,38 @@ export function ledgerCountsText({ characters, friends }: LedgerCounts): string 
   return `${plural(characters, "character")} from ${plural(friends, "friend")}`;
 }
 
+/**
+ * What a stored upload's report page shows instead of a report (WEB-20): its rejection as the upload screen states
+ * it, or "nothing new" for an accepted upload that changed nothing; undefined when there is a report to show.
+ */
+export function storedOutcome(
+  u: Pick<StoredUpload, "status" | "rejection" | "unreadable" | "schemaVersion" | "summary" | "uploadedAt">,
+): Exclude<UploadOutcome, { kind: "done" | "too-large" | "failed" }> | undefined {
+  if (u.status === "ok") {
+    return u.summary === undefined || uploadReport(u.summary, u.uploadedAt).nothingNew
+      ? { kind: "nothing-new" }
+      : undefined;
+  }
+  switch (u.unreadable) {
+    case "newer-format":
+      return u.schemaVersion !== undefined
+        ? { kind: "newer-format", format: u.schemaVersion, supported: SUPPORTED_SCHEMA }
+        : { kind: "newer-format", supported: SUPPORTED_SCHEMA };
+    case "not-ledger":
+      return { kind: "wrong-file" };
+    case "damaged":
+      return { kind: "damaged" };
+  }
+  switch (u.rejection) {
+    case "other-community":
+      return { kind: "other-community" };
+    case "no-community-yet":
+      return { kind: "no-community-yet" };
+    default:
+      return { kind: "not-your-file" };
+  }
+}
+
 // --- history --------------------------------------------------------------------------------------------------
 
 /** A stored upload as the history reads it (src/server/uploads.ts `listUploads`). */

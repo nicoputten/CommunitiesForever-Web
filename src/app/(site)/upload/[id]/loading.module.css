@@ -1,0 +1,67 @@
+/* The report's skeleton (WEB-20): the session report's layout without its content. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  max-width: var(--size-report);
+  margin-inline: auto;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-6-5) 0 var(--s-2);
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-report);
+}
+
+.columns .box {
+  align-items: stretch;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+@media (max-width: 767px) {
+  .counters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

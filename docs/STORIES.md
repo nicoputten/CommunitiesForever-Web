@@ -33,18 +33,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
 - Validation of BattleTag format; adding an existing member says so.
 
-### WEB-20 Session report
-- Board: `upload-report`. Shown after an upload and from the history.
-- Header "Session report, uploaded today at 21:14 by Nico · new data from 4 friends"; counters (levels gained, skill gains, new characters, new sightings).
-- Sections:
-  - level ups ("LEVEL UP ×2", 37 → 39)
-  - new face ("Femke's new Orc Warlock · level 15 · Durotar")
-  - who sent data
-  - skill gains with "CAP REACHED"
-  - gear (item level 31 → 34)
-  - new sightings, with "See them drop in on the map" (WEB-26)
-- Motion: staggered rise, bars grow, LEVEL UP shine (§6); static with reduced motion. "Replay" and "Upload another".
-
 ### WEB-22 Roster: table
 - Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.
 - On a phone the table becomes the card list, and sort and filters move into a sheet.

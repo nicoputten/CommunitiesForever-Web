@@ -181,6 +181,20 @@
 - Decided with Nico (2026-10-26): the boards' motion stays as this page's small accents; history footnote reworded (members upload too); copy for the states without a board; everyone's uploads in the history with summary-line rules; clock times in the viewer's local time; the browser reads the file for the counts; the newer-format button opens the addon's GitHub releases (all in `docs/DESIGN.md` §8 and §11).
 - Done: `src/app/(site)/upload/page.tsx` (`notFound` for anyone who may not upload), `src/components/upload/` (`Dropzone`: dropzone, whole-page drop, every state, `aria-live` status, focus to the state's action; `UploadHistory`), `LocalTime` in `src/components/ui`, a plain `/upload/<id>` that WEB-20 replaces; `src/core/views/upload.ts` (`uploadOutcome`, `checkBeforeUpload`, `ledgerCounts`, `summaryLine`, `historyLine`) and `clock.ts` (`clockTime`); the server returns `uploadedAt`, `unreadable`, `schemaVersion` and `previousUploadAt` and lists uploads (`listUploads`, `getUpload`, `displayNames`), with migration `0002_upload_unreadable`. Tests: `tests/unit/views/upload.test.ts`, `tests/server/uploads.test.ts`, Playwright `tests/e2e/upload.spec.ts` (per-project members, so parallel projects don't race on the admin's own record) and design checks `tests/design/upload.spec.ts` (states from canned answers, so the design database stays the same).
 
+### WEB-20 Session report
+- Board: `upload-report`. Shown after an upload and from the history.
+- Header "Session report, uploaded today at 21:14 by Nico · new data from 4 friends"; counters (levels gained, skill gains, new characters, new sightings).
+- Sections:
+  - level ups ("LEVEL UP ×2", 37 → 39)
+  - new face ("Femke's new Orc Warlock · level 15 · Durotar")
+  - who sent data
+  - skill gains with "CAP REACHED"
+  - gear (item level 31 → 34)
+  - new sightings, with "See them drop in on the map" (WEB-26)
+- Motion: staggered rise, bars grow, LEVEL UP shine (§6); static with reduced motion. "Replay" and "Upload another".
+- Decided with Nico (2026-10-26): class and race come from the current data (the stored summary has none), level and place from the summary; level bars out of 60, skill bars out of 300 (gold gradient for a reached cap), the bars grow with a transform; the hero's rays, halo, embers and the badge shine stay as this screen's accent, off without motion; zero counters dim, empty sections hidden; lists show 6 rows, then "Show N more"; "First upload by Nico · N characters from M friends"; removed characters and characters without a record named; "Uploaded today at 21:14" in the viewer's time zone; "who sent data" dots follow the data age scale; a rejected or nothing-new upload shows its upload screen state; every signed-in viewer may open a report ("Upload another" for uploaders only); phone layout in one column (all in `docs/DESIGN.md` §11).
+- Done: `/upload/<id>` (`src/app/(site)/upload/[id]/`: page, `loading.tsx`, `error.tsx`), `src/components/report/` (`SessionReport`, `ReportControls`: "Show N more", "Replay"), `UploadStateCard` in `Dropzone.tsx`, `ClassDisc` size `report`, report tokens in `tokens.css` part 2; `sessionReport` and `shortAge` in `src/core/views/report.ts`, `storedOutcome` in `upload.ts`, `clockTimeAt` in `clock.ts`. Tests: `tests/unit/views/report.test.ts`, `upload.test.ts`, Playwright `tests/e2e/report.spec.ts`, design checks `tests/design/report.spec.ts` (the design seed now uploads the day before first, so upload 2 has a full report).
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):

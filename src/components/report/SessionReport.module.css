@@ -1,0 +1,586 @@
+/* The session report (board `upload-report`, WEB-20). Elements get their board delay as --d (steps of
+ * --dur-step). Entrances fill backwards, so an element rests on its last frame when the animation is off (reduced
+ * motion, Motion off: the root is [data-ambient]). */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-4));
+  }
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(var(--start));
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes ember {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--size-ember-drift), var(--size-ember-rise));
+    opacity: 0;
+  }
+}
+
+/* The board moves the badge's background; here a bright band crosses it (transform only). */
+@keyframes shine {
+  0%,
+  60% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.report {
+  --d: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  max-width: var(--size-report);
+  margin-inline: auto;
+}
+
+/* The board's gold glow over the top of the page. */
+.report::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-1 * var(--s-7));
+  width: var(--size-report-glow-w);
+  max-width: 100vw;
+  height: var(--size-report-glow-h);
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, var(--report-glow), transparent);
+  pointer-events: none;
+}
+
+.rise {
+  animation: rise var(--dur-rise) var(--ease-out) calc(var(--d) * var(--dur-step)) backwards;
+}
+
+.pop {
+  animation: pop var(--dur-pop) var(--ease-spring) calc(var(--d) * var(--dur-step)) backwards;
+}
+
+/* --- hero ------------------------------------------------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-6-5) 0 var(--s-2);
+  overflow: hidden;
+  text-align: center;
+}
+
+.rays {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--size-rays) * -150 / 520);
+  width: var(--size-rays);
+  height: var(--size-rays);
+  margin-left: calc(var(--size-rays) / -2);
+  border-radius: var(--r-pill);
+  background: repeating-conic-gradient(var(--rays) 0deg 6deg, transparent 6deg 18deg);
+  mask-image: radial-gradient(circle, var(--on-gold) 20%, transparent 68%);
+  animation: spin var(--dur-rays) linear infinite;
+}
+
+.halo {
+  position: absolute;
+  left: 50%;
+  top: var(--s-2-5);
+  width: var(--size-halo-w);
+  height: var(--size-halo-h);
+  margin-left: calc(var(--size-halo-w) / -2);
+  border-radius: var(--r-pill);
+  background: radial-gradient(closest-side, var(--halo), transparent);
+  filter: blur(var(--blur-halo));
+  opacity: 0.55;
+  animation: glow var(--dur-halo) ease-in-out infinite;
+}
+
+.ember {
+  position: absolute;
+  width: var(--size-ember);
+  height: var(--size-ember);
+  border-radius: var(--r-pill);
+  background: var(--ember);
+  box-shadow: var(--glow-ember);
+  opacity: 0;
+  animation: ember var(--dur-report-ember) linear infinite;
+}
+
+.ember1 {
+  left: 38%;
+  top: 180px;
+}
+
+.ember2 {
+  left: 58%;
+  top: 190px;
+  animation-delay: calc(var(--dur-report-ember) / -3);
+}
+
+.ember3 {
+  left: 47%;
+  top: 200px;
+  animation-delay: calc(var(--dur-report-ember) * -2 / 3);
+}
+
+.ember4 {
+  left: 63%;
+  top: 170px;
+  animation-delay: calc(var(--dur-report-ember) / -2);
+}
+
+.emblem {
+  position: relative;
+  width: var(--size-report-emblem);
+  height: var(--size-report-emblem);
+  fill: var(--surface-raised);
+  color: var(--gold-bright);
+}
+
+.title {
+  position: relative;
+  margin-top: var(--s-2-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-display-xl);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-display-xl);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+  text-shadow: var(--text-glow-report);
+}
+
+.sub {
+  position: relative;
+  margin-top: var(--s-1-5);
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+}
+
+/* --- counters and panels --------------------------------------------------------------------------------------- */
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-report);
+}
+
+.counter {
+  align-items: center;
+  gap: var(--s-0-5);
+}
+
+.count {
+  font-family: var(--font-name);
+  font-size: var(--fs-counter);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter[data-zero] .count {
+  color: var(--text-dim);
+}
+
+.countLabel {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.boxTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: var(--size-report-lead) minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.face [role="img"] {
+  box-shadow: var(--glow-avatar) color-mix(in srgb, var(--disc) var(--glow-face-mix), transparent);
+}
+
+.cell {
+  min-width: 0;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-family: var(--font-name);
+  font-size: var(--fs-section);
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.who {
+  color: var(--text);
+}
+
+.skill {
+  font-size: var(--fs-body);
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.big {
+  font-family: var(--font-name);
+  font-size: var(--fs-gain);
+  color: var(--text-strong);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.was {
+  font-size: var(--fs-section);
+  color: var(--text-dim);
+}
+
+.strong {
+  font-weight: var(--fw-semibold);
+}
+
+/* --- bars and badges ------------------------------------------------------------------------------------------- */
+
+.track {
+  position: relative;
+  display: block;
+  height: var(--size-report-track);
+  margin-top: var(--s-1-5);
+  border-radius: var(--r-report-track);
+  background: var(--track-report);
+  overflow: hidden;
+}
+
+.old,
+.new {
+  position: absolute;
+  inset: 0 auto 0 0;
+}
+
+.old {
+  width: calc(var(--from) * 100%);
+  background: var(--track-report-old);
+}
+
+.new {
+  width: calc(var(--to) * 100%);
+  border-radius: var(--r-report-track);
+  background: var(--gold);
+  transform-origin: left;
+  animation: grow var(--dur-grow) var(--ease-out) calc(var(--d) * var(--dur-step)) both;
+}
+
+.new[data-gain="bright"] {
+  background: var(--bar-gain);
+}
+
+.badge {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  padding: var(--s-1) var(--s-1-5);
+  border-radius: var(--r-badge);
+  background: linear-gradient(100deg, var(--gold), var(--gold-pale) 50%, var(--gold));
+  color: var(--on-shine);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-badge);
+  line-height: var(--lh-tight);
+}
+
+.badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--shine) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shine var(--dur-shine) ease-in-out calc(var(--shine-at) * var(--dur-step) * -20) infinite;
+}
+
+/* --- chips, lists, links --------------------------------------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  padding: var(--s-1-5) var(--s-2-5);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-report-chip);
+  font-size: var(--fs-meta);
+  color: var(--text-chip);
+}
+
+.chip[data-quiet] {
+  color: var(--text-dim);
+}
+
+/* DESIGN.md §4 at upload time: new a bright dot with glow, recent a solid dot, days a ring, week+ an amber ring. */
+.dot {
+  flex: none;
+  width: var(--size-report-dot);
+  height: var(--size-report-dot);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+}
+
+.dot[data-age="live"] {
+  background: var(--fresh);
+  box-shadow: var(--glow-dot) var(--fresh);
+}
+
+.dot[data-age="days"] {
+  background: none;
+  border: var(--border) solid var(--gold);
+}
+
+.dot[data-age="week"] {
+  background: none;
+  border: var(--border) solid var(--stale-note);
+}
+
+.gear {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-6);
+  font-size: var(--fs-body);
+}
+
+.sightings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+
+.more {
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold);
+  font-size: var(--fs-meta);
+  cursor: pointer;
+}
+
+.more:hover,
+.link:hover {
+  color: var(--gold-bright);
+}
+
+/* --- actions --------------------------------------------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2-5);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: 0;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary {
+  padding-inline: var(--s-5-5);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-weight: var(--fw-semibold);
+}
+
+.primary:hover {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+.outline {
+  border: var(--border) solid var(--line-chip-on);
+  color: var(--gold-bright);
+}
+
+.outline:hover {
+  background: var(--tint-hover);
+}
+
+.quiet {
+  color: var(--text-muted);
+}
+
+.quiet:hover {
+  color: var(--text-strong);
+}
+
+/* Without motion there is nothing to replay. */
+html[data-motion="off"] .replay {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) .replay {
+    display: none;
+  }
+}
+
+/* --- phone (no board; Nico, WEB-20) ---------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .title {
+    font-size: var(--fs-display);
+    letter-spacing: var(--ls-display);
+  }
+
+  .counters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* One column in the board's stagger order: the columns give way and the sections are ordered. */
+  .columns {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .column {
+    display: contents;
+  }
+
+  /* A long name wraps above its badge instead of being cut off. */
+  .line {
+    flex-wrap: wrap;
+    row-gap: var(--s-1);
+  }
+
+  .name {
+    white-space: normal;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

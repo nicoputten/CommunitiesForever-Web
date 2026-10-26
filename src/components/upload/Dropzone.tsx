@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AlertIcon, LedgerIcon, NewerIcon, NothingNewIcon, SpinnerIcon } from "@/components/ui/icons";
@@ -202,6 +203,40 @@ export function Dropzone({ community, isAdmin }: DropzoneProps) {
   );
 }
 
+export interface UploadStateCardProps {
+  outcome: Exclude<UploadOutcome, { kind: "done" | "too-large" | "failed" }>;
+  community: string;
+  isAdmin: boolean;
+  /** Shows "Upload another" as the way on. */
+  mayUpload: boolean;
+}
+
+const noop = () => {};
+
+/**
+ * A stored upload's state on its report page (WEB-20, Nico): a rejected or "nothing new" upload shows the upload
+ * screen's frame and copy instead of a report, with "Upload another" (newer format: its own link) as the way on.
+ */
+export function UploadStateCard({ outcome, community, isAdmin, mayUpload }: UploadStateCardProps) {
+  const view = viewOf(outcome, { community, isAdmin, stored: true, choose: noop, idle: noop, retry: noop });
+  const action =
+    outcome.kind === "newer-format" ? (
+      view.action
+    ) : mayUpload ? (
+      <Link href="/upload" className={`${styles.button} ${styles.primary}`}>
+        Upload another
+      </Link>
+    ) : undefined;
+  return (
+    <div className={`${styles.zone} ${styles[view.tone]}`} data-state={outcome.kind}>
+      {view.icon}
+      <h2 className={styles.message}>{view.title}</h2>
+      {view.body !== undefined && <p className={styles.small}>{view.body}</p>}
+      {action}
+    </div>
+  );
+}
+
 interface View {
   tone: "idle" | "over" | "reading" | "alert" | "neutral";
   icon?: ReactNode;
@@ -223,6 +258,8 @@ const DRAGGING: View = {
 interface Actions {
   community: string;
   isAdmin: boolean;
+  /** A stored upload on its report page (WEB-20): the file's owner wasn't kept. */
+  stored?: boolean;
   choose: () => void;
   idle: () => void;
   retry: () => void;
@@ -349,11 +386,17 @@ function viewOf(phase: Phase, a: Actions): View {
             </>,
             `It belongs to ${phase.owner}. Sign in as ${phase.owner} to upload it. Nothing was changed.`,
           )
-        : alert(
-            "This is someone else's ledger",
-            "This ledger doesn't say whose it is. Nothing was changed.",
-            "This ledger doesn't say whose it is. Nothing was changed.",
-          );
+        : a.stored
+          ? alert(
+              "This is someone else's ledger",
+              "It belongs to another BattleTag. Nothing was changed.",
+              "It belongs to another BattleTag. Nothing was changed.",
+            )
+          : alert(
+              "This is someone else's ledger",
+              "This ledger doesn't say whose it is. Nothing was changed.",
+              "This ledger doesn't say whose it is. Nothing was changed.",
+            );
     case "other-community":
       return alert(
         "This ledger is for another community",

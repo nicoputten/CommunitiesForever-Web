@@ -5,6 +5,7 @@ import { normalize, SUPPORTED_SCHEMA } from "@/core/normalize";
 import {
   checkBeforeUpload,
   clockTime,
+  clockTimeAt,
   historyLine,
   ledgerCounts,
   ledgerCountsText,
@@ -13,6 +14,7 @@ import {
   shownFileName,
   summaryLine,
   type StoredUpload,
+  storedOutcome,
   type UploadResponse,
   uploadOutcome,
 } from "@/core/views";
@@ -220,5 +222,36 @@ describe("clockTime", () => {
   it("names weekday, day and month for older times, with the year when it isn't this year", () => {
     expect(clockTime(Date.UTC(2026, 9, 23, 21, 40) / 1000, now, zone)).toBe("Fri 23 Oct, 23:40");
     expect(clockTime(Date.UTC(2025, 11, 31, 12, 0) / 1000, now, zone)).toBe("Wed 31 Dec 2025, 13:00");
+  });
+
+  it("reads as a phrase after 'uploaded' (WEB-20)", () => {
+    expect(clockTimeAt(now, now, zone)).toBe("today at 21:14");
+    expect(clockTimeAt(Date.UTC(2026, 9, 25, 21, 5) / 1000, now, zone)).toBe("yesterday at 22:05");
+    expect(clockTimeAt(Date.UTC(2026, 9, 23, 21, 40) / 1000, now, zone)).toBe("on Fri 23 Oct at 23:40");
+    expect(clockTimeAt(Date.UTC(2025, 11, 31, 12, 0) / 1000, now, zone)).toBe("on Wed 31 Dec 2025 at 13:00");
+  });
+});
+
+describe("storedOutcome (report page, WEB-20)", () => {
+  const at = { uploadedAt: 1000 };
+  it("has a report for an accepted upload that changed something", () => {
+    expect(storedOutcome({ ...at, status: "ok", summary: changed })).toBeUndefined();
+  });
+  it("is nothing new for an accepted upload that changed nothing", () => {
+    expect(storedOutcome({ ...at, status: "ok", summary: unchanged })).toEqual({ kind: "nothing-new" });
+    expect(storedOutcome({ ...at, status: "ok" })).toEqual({ kind: "nothing-new" });
+  });
+  it("names the rejection as the upload screen does", () => {
+    const of = (u: Partial<StoredUpload>) => storedOutcome({ ...at, status: "rejected", ...u })?.kind;
+    expect(of({ unreadable: "not-ledger" })).toBe("wrong-file");
+    expect(of({ unreadable: "damaged" })).toBe("damaged");
+    expect(storedOutcome({ ...at, status: "rejected", unreadable: "newer-format", schemaVersion: 9 })).toEqual({
+      kind: "newer-format",
+      format: 9,
+      supported: SUPPORTED_SCHEMA,
+    });
+    expect(of({ rejection: "not-your-file" })).toBe("not-your-file");
+    expect(of({ rejection: "other-community" })).toBe("other-community");
+    expect(of({ rejection: "no-community-yet" })).toBe("no-community-yet");
   });
 });
