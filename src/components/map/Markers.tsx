@@ -7,6 +7,9 @@ import { FAN_MAX, fanOffsets, markerLabel, placeLabel, type MapMarker, type MapP
 import { DungeonIcon } from "@/components/ui/icons";
 import styles from "./Markers.module.css";
 
+// Pure helpers live in core (a server component can call them, WEB-23); re-exported for the map.
+export { FAN_MAX, fanOffsets };
+
 /** The marker's class colour (fill) and class text colour, as custom properties for Markers.module.css. */
 export function classStyle(classFile: string | undefined): CSSProperties | undefined {
   const info = classInfo(classFile);

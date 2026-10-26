@@ -56,7 +56,7 @@ export function WorldMap({ view, continent, selected }: WorldMapProps) {
                   <path d={map.coast.E} />
                 </clipPath>
               </defs>
-              <SeaLayers coastK={map.coast.K} coastE={map.coast.E} idPrefix="map-sea" />
+              <SeaLayers coastK={map.coast.K} coastE={map.coast.E} idPrefix="map-sea" infinite />
               <g aria-hidden="true" className={styles.decor}>
                 <text x={MAELSTROM_LABEL.x} y={MAELSTROM_LABEL.y} className={styles.maelstromLabel}>
                   The Maelstrom

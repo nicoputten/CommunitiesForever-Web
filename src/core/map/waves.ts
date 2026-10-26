@@ -13,13 +13,20 @@ function jitter(x: number, y: number): number {
 }
 
 /**
- * One SVG path (all curls as subpaths) for wave group 0 or 1; group 1 sits half a cell off group 0.
- * `top` is the first row (the map board starts at 70, the sign-in board at 40).
+ * The world map's sea goes on past the world (WEB-25, Nico 2026-10-26): its waves are one tile of this size, repeated
+ * around the world. 26 columns of 56 and 27 rows of 34, so the grid runs on unbroken across tile edges.
  */
-export function wavePath(group: 0 | 1, top = 70): string {
+export const WAVE_TILE = { width: 26 * 56, height: 27 * 34, top: 2 } as const;
+
+/**
+ * One SVG path (all curls as subpaths) for wave group 0 or 1; group 1 sits half a cell off group 0.
+ * `top` is the first row (the map board starts at 70, the sign-in board at 40); `width` and `height` bound the grid
+ * (the world, or WAVE_TILE).
+ */
+export function wavePath(group: 0 | 1, top = 70, width = WIDTH, height = HEIGHT): string {
   const parts: string[] = [];
-  for (let y = top + group * 17; y < HEIGHT; y += 34) {
-    for (let x = 10 + group * 28; x < WIDTH; x += 56) {
+  for (let y = top + group * 17; y < height; y += 34) {
+    for (let x = 10 + group * 28; x < width; x += 56) {
       const j = jitter(x, y);
       const w = 6 + j * 6;
       const px = (x + j * 24).toFixed(1);
