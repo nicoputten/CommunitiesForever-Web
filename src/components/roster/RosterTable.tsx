@@ -7,7 +7,7 @@ import { defaultSortDir, type RosterFriend, type RosterSort } from "@/core/views
 import { ROLE_NAMES, rosterSearch, TABLE_SORTS, type RosterQuery } from "@/core/views/rosterQuery";
 import { capitalize, talentsText } from "@/core/views/text";
 import { ClassDisc } from "@/components/ui/ClassDisc";
-import { DataAgeBadge } from "@/components/ui/DataAgeBadge";
+import { DataAgeBadge, dataAgeProps } from "@/components/ui/DataAgeBadge";
 import { characterHref } from "./CharacterRow";
 import styles from "./RosterTable.module.css";
 
@@ -67,7 +67,7 @@ export function RosterTable({ query, characters, friends, people, ownKey, now }:
                   <span className={styles.friendTag}>
                     {[f.person.battleTag, countText(f)].filter((p) => p !== undefined).join(" · ")}
                   </span>
-                  <DataAgeBadge {...f.person} now={now} />
+                  <DataAgeBadge {...dataAgeProps(f.person)} now={now} />
                 </th>
               </tr>
               {f.characters.map(row)}
