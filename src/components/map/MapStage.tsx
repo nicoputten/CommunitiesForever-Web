@@ -83,15 +83,10 @@ export function MapStage({ places, box, selected: initial, children }: MapStageP
       "--y": `${((y - box.y) / box.height) * 100}%`,
     }) as CSSProperties;
 
-  // On one continent only its own characters (the other continent's scenery shows around it, without markers).
-  const shown = places.filter(
-    (p) => p.x >= box.x && p.x <= box.x + box.width && p.y >= box.y && p.y <= box.y + box.height,
-  );
-
   // The card shows for the marker pointed at or focused, else for the selected one.
   const cardGuid = hovered ?? selected;
   let card: { marker: MapMarker; place: MapPlace; dx: number; dy: number } | undefined;
-  for (const place of shown) {
+  for (const place of places) {
     const i = place.markers.findIndex((m) => m.guid === cardGuid);
     if (i < 0) continue;
     const offset =
@@ -113,7 +108,7 @@ export function MapStage({ places, box, selected: initial, children }: MapStageP
     >
       {children}
       <div className={styles.overlay}>
-        {shown.map((place) => {
+        {places.map((place) => {
           const holdsSelection = place.markers.some((m) => m.guid === selected);
           return (
             <div key={place.zone} className={styles.place} style={at(place.x, place.y)} data-map-item="">

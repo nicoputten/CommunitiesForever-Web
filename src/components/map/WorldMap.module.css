@@ -1,9 +1,10 @@
 /* The world map (DESIGN.md §5, map board): full width under the top bar, the world fitted inside without cropping. */
 
+/* clip, not hidden: focusing a marker outside the frame must not scroll the map. */
 .frame {
   position: relative;
   height: calc(100dvh - var(--size-bar));
-  overflow: hidden;
+  overflow: clip;
 }
 
 .fit {

@@ -152,7 +152,7 @@
 - Continent switch (Azeroth, Kalimdor, Eastern Kingdoms) in the top bar.
 - Decided with Nico (2026-10-26):
   - WEB-25 is the map at a fixed framing. Pan, zoom, the zoom-level rules and fly-to are WEB-26; the roll call WEB-27 (the map is full width until then); the phone sheets WEB-28; the empty-site panel and skeletons WEB-29 (before the first upload the map shows without markers).
-  - Continent switch: Kalimdor and Eastern Kingdoms frame that continent's zones (Zephras Isle counts as Kalimdor) without animation, with the rest of the world around it and only that continent's markers; the choice is in the URL (`?continent=`), so Back works. Hidden on phone until WEB-28.
+  - Continent switch: Kalimdor and Eastern Kingdoms frame that continent's zones (Zephras Isle counts as Kalimdor) without animation, with the rest of the world (and its markers) around it; the choice is in the URL (`?continent=`), so Back works. Hidden on phone until WEB-28.
   - Occupied tint by the newest sighting in the zone: new 20%, recent 12%, days 7%, week+ 3%; zone label pale gold with a new sighting, light grey when occupied.
   - Age tag ("2d") on recent, days and week+ (amber); none on new.
   - A sighted friend without the addon: a neutral "?" marker; the card shows only zone, seen and player, no "Open character".
