@@ -4,6 +4,8 @@
 .wrapper,
 .content {
   overflow: visible;
+  /* The zoom animates itself (a jump without motion); the global reduced-motion fade must not ease its transform. */
+  transition-property: none;
 }
 
 /* The pannable area is the whole map frame; it clips, the frame paints the sea past the world. */
