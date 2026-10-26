@@ -10,8 +10,8 @@ test.beforeEach(async ({ context, baseURL }) => {
 });
 
 const panel = (page: Page, name: string) => page.getByRole("region", { name, exact: true });
-const rowNames = (page: Page, friend: string) =>
-  panel(page, friend).getByRole("link").locator("span[class*=name]").allInnerTexts();
+// A locator, so each check retries until the new view has rendered (the URL changes first).
+const rowNames = (page: Page, friend: string) => panel(page, friend).getByRole("link").locator("span[class*=name]");
 
 test("shows the group, the level spread and the quick answers", async ({ page }) => {
   await page.goto("/roster");
@@ -46,7 +46,7 @@ test("filters by class and role from the menus, and Back undoes it", async ({ pa
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu", { name: "Class" })).toBeHidden();
   await expect(page.getByRole("button", { name: "Class · 2" })).toBeFocused();
-  expect(await rowNames(page, "Femke")).toEqual(["Lia Thornwhisper", "Zul Kazrek"]);
+  await expect(rowNames(page, "Femke")).toHaveText(["Lia Thornwhisper", "Zul Kazrek"]);
   await expect(panel(page, "Femke")).toContainText("Femke#3307 · 2 characters");
   await expect(panel(page, "Nico")).toContainText(`${E2E.admin} · 1 of 3 characters`);
 
@@ -62,7 +62,7 @@ test("filters by class and role from the menus, and Back undoes it", async ({ pa
 
 test("filters by level with the keyboard, and shows no matches", async ({ page }) => {
   await page.goto("/roster?level=60");
-  expect(await rowNames(page, "Mira")).toEqual(["Mira Sunstrider"]);
+  await expect(rowNames(page, "Mira")).toHaveText(["Mira Sunstrider"]);
   await page.getByRole("button", { name: "Level 60" }).focus();
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("menuitemradio", { name: "60" })).toBeFocused();
@@ -81,25 +81,25 @@ test("searches as you type, by character or friend", async ({ page }) => {
   await page.goto("/roster");
   await page.getByRole("searchbox", { name: "Search characters" }).fill("bob");
   await expect(page).toHaveURL(/\/roster\?q=bob$/);
-  expect(await rowNames(page, "Bob")).toEqual(["Bob Example", "Tok Ironhide"]);
+  await expect(rowNames(page, "Bob")).toHaveText(["Bob Example", "Tok Ironhide"]);
   await expect(panel(page, "Nico")).toHaveCount(0);
   await page.getByRole("searchbox", { name: "Search characters" }).fill("thorn");
   await expect(page).toHaveURL(/\/roster\?q=thorn$/);
-  expect(await rowNames(page, "Femke")).toEqual(["Lia Thornwhisper"]);
+  await expect(rowNames(page, "Femke")).toHaveText(["Lia Thornwhisper"]);
 });
 
 test("sorts within each friend", async ({ page }) => {
   await page.goto("/roster");
-  expect(await rowNames(page, "Nico")).toEqual(["Ves Doombringer", "Grom Ashfeller", "Sela Moonbrook"]);
+  await expect(rowNames(page, "Nico")).toHaveText(["Ves Doombringer", "Grom Ashfeller", "Sela Moonbrook"]);
   await page.getByRole("button", { name: "Sort: Last played" }).click();
   await page.getByRole("menuitemradio", { name: "Name" }).click();
   await expect(page).toHaveURL(/\/roster\?sort=name$/);
   await expect(page.getByRole("button", { name: "Sort: Name" })).toBeVisible();
-  expect(await rowNames(page, "Nico")).toEqual(["Grom Ashfeller", "Sela Moonbrook", "Ves Doombringer"]);
+  await expect(rowNames(page, "Nico")).toHaveText(["Grom Ashfeller", "Sela Moonbrook", "Ves Doombringer"]);
   await page.getByRole("button", { name: "Sort: Name" }).click();
   await page.getByRole("menuitemradio", { name: "Profession" }).click();
   await expect(page).toHaveURL(/sort=profession$/);
-  expect(await rowNames(page, "Nico")).toEqual(["Ves Doombringer", "Grom Ashfeller", "Sela Moonbrook"]);
+  await expect(rowNames(page, "Nico")).toHaveText(["Ves Doombringer", "Grom Ashfeller", "Sela Moonbrook"]);
 });
 
 test("opens a character, and the table link keeps the view", async ({ page }) => {

@@ -11,7 +11,8 @@ test.beforeEach(async ({ context, baseURL }) => {
 });
 
 const table = (page: Page) => page.getByRole("table");
-const rowNames = (page: Page) => table(page).locator("tbody tr td:first-child a").allInnerTexts();
+// Locators, so each check retries until the new view has rendered (the URL changes first).
+const rowNames = (page: Page) => table(page).locator("tbody tr td:first-child a");
 const header = (page: Page, name: string) => table(page).getByRole("columnheader", { name, exact: false });
 
 test.describe("desktop", () => {
@@ -20,7 +21,7 @@ test.describe("desktop", () => {
   test("shows every character, newest played first", async ({ page }) => {
     await page.goto("/roster/table");
     await expect(page.getByText("10 characters · sorted by last played")).toBeVisible();
-    expect(await rowNames(page)).toHaveLength(10);
+    await expect(rowNames(page)).toHaveCount(10);
     await expect(header(page, "Last played")).toHaveAttribute("aria-sort", "descending");
     const ruk = table(page).getByRole("row", { name: /Ruk Bloodhoof/ });
     await expect(ruk).toContainText("Jorrit · 9 d old");
@@ -38,14 +39,14 @@ test.describe("desktop", () => {
     await header(page, "Level").getByRole("link").click();
     await expect(page).toHaveURL(/\/roster\/table\?sort=level$/);
     await expect(header(page, "Level")).toHaveAttribute("aria-sort", "descending");
-    expect((await rowNames(page))[0]).toBe("Mira Sunstrider");
+    await expect(rowNames(page).first()).toHaveText("Mira Sunstrider");
     await header(page, "Level").getByRole("link").click();
     await expect(page).toHaveURL(/sort=level&dir=asc$/);
     await expect(header(page, "Level")).toHaveAttribute("aria-sort", "ascending");
-    expect((await rowNames(page))[0]).toBe("Sela Moonbrook");
+    await expect(rowNames(page).first()).toHaveText("Sela Moonbrook");
     await header(page, "Last seen in").getByRole("link").click();
     await expect(page).toHaveURL(/sort=seen$/);
-    expect((await rowNames(page)).at(-1)).toBe("Sela Moonbrook");
+    await expect(rowNames(page).last()).toHaveText("Sela Moonbrook");
     await page.goBack();
     await expect(page).toHaveURL(/sort=level&dir=asc$/);
   });
@@ -54,7 +55,7 @@ test.describe("desktop", () => {
     await page.goto("/roster?class=warlock");
     await page.getByRole("navigation", { name: "View" }).getByRole("link", { name: "Table" }).click();
     await expect(page).toHaveURL(/\/roster\/table\?class=warlock$/);
-    expect(await rowNames(page)).toEqual(["Ves Doombringer", "Zul Kazrek"]);
+    await expect(rowNames(page)).toHaveText(["Ves Doombringer", "Zul Kazrek"]);
     await expect(page.getByText("2 of 10 characters")).toBeVisible();
     await page.getByRole("button", { name: "Role" }).click();
     await page.getByRole("menuitemcheckbox", { name: "Damage" }).click();
@@ -64,7 +65,7 @@ test.describe("desktop", () => {
     await expect(page).toHaveURL(/\/roster\/table\?class=warlock&role=dps&sort=name$/);
     await page.getByRole("link", { name: "Clear filters" }).click();
     await expect(page).toHaveURL(/\/roster\/table\?sort=name$/);
-    expect(await rowNames(page)).toHaveLength(10);
+    await expect(rowNames(page)).toHaveCount(10);
   });
 
   test("groups by friend", async ({ page }) => {
@@ -76,7 +77,7 @@ test.describe("desktop", () => {
     const groups = table(page).locator("tbody");
     await expect(groups).toHaveCount(5);
     await expect(groups.first().getByRole("rowheader")).toContainText(`Nico${E2E.admin} · 3 characters`);
-    expect(await groups.first().locator("tr td:first-child a").allInnerTexts()).toEqual([
+    await expect(groups.first().locator("tr td:first-child a")).toHaveText([
       "Ves Doombringer",
       "Grom Ashfeller",
       "Sela Moonbrook",
@@ -114,8 +115,10 @@ test.describe("phone", () => {
     await sheet.getByRole("button", { name: "Done" }).click();
     await expect(sheet).toBeHidden();
     await expect(page.getByRole("button", { name: "Filters & sort · 1" })).toBeVisible();
-    const names = await page.getByRole("main").locator("a span[class*=name]:visible").allInnerTexts();
-    expect(names).toEqual(["Zul Kazrek", "Ves Doombringer"]);
+    await expect(page.getByRole("main").locator("a span[class*=name]:visible")).toHaveText([
+      "Zul Kazrek",
+      "Ves Doombringer",
+    ]);
 
     await page.getByRole("button", { name: "Filters & sort · 1" }).click();
     await sheet.getByRole("button", { name: "Group by friend" }).click();
