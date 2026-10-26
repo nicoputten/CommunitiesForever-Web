@@ -23,8 +23,8 @@ const desktop = { ...devices["Desktop Chrome"] };
 // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
 const phone = { ...devices["Pixel 7"], viewport: { width: 375, height: 812 } };
 
-/** Run by their own projects, in order: empty, seed, roster and professions. */
-const OTHERS = /(\.empty|\.setup|(roster(-table)?|professions)\.spec)\.ts$/;
+/** Run by their own projects, in order: empty, seed, roster, professions and character. */
+const OTHERS = /(\.empty|\.setup|(roster(-table)?|professions|character)\.spec)\.ts$/;
 
 // Runs against the production build: `npm run build` first (CI does).
 export default defineConfig({
@@ -38,17 +38,17 @@ export default defineConfig({
     { name: "empty-desktop", testMatch: /\.empty\.ts$/, testIgnore: [], use: desktop },
     { name: "empty-phone", testMatch: /\.empty\.ts$/, testIgnore: [], use: phone },
     { name: "seed", testMatch: /seed\.setup\.ts$/, testIgnore: [], dependencies: ["empty-desktop", "empty-phone"] },
-    // The roster and professions check the sample as seeded, before the upload tests (WEB-19) add members and characters.
+    // The roster, professions and character pages check the sample as seeded, before the upload tests (WEB-19) add members and characters.
     {
       name: "roster-desktop",
-      testMatch: /(roster(-table)?|professions)\.spec\.ts$/,
+      testMatch: /(roster(-table)?|professions|character)\.spec\.ts$/,
       testIgnore: [],
       dependencies: ["seed"],
       use: desktop,
     },
     {
       name: "roster-phone",
-      testMatch: /(roster(-table)?|professions)\.spec\.ts$/,
+      testMatch: /(roster(-table)?|professions|character)\.spec\.ts$/,
       testIgnore: [],
       dependencies: ["seed"],
       use: phone,

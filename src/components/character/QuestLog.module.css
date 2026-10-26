@@ -1,0 +1,31 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: var(--s-1-75) 0;
+  border-bottom: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+}
+
+.quest:last-child {
+  border-bottom: 0;
+}
+
+/* The board's gold diamond. */
+.quest::before {
+  content: "";
+  flex: none;
+  width: var(--size-quest-mark);
+  height: var(--size-quest-mark);
+  transform: rotate(45deg);
+  background: var(--gold);
+}

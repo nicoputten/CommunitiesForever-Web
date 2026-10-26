@@ -108,3 +108,17 @@ export function continentAt(x: number, scale: number, split: number): Continent 
   if (wholeWorld(scale)) return "azeroth";
   return x < split ? "kalimdor" : "eastern-kingdoms";
 }
+
+/** Where the n markers of an open fan sit around the hub (px): an arc above it, the board's 2-fan at ±50°. */
+export function fanOffsets(n: number): { dx: number; dy: number }[] {
+  const radius = 34; // map-states board: spoke length (--size-spoke)
+  const from = n === 2 ? -140 : -165;
+  const to = n === 2 ? -40 : -15;
+  return Array.from({ length: n }, (_, i) => {
+    const a = ((from + ((to - from) * i) / (n - 1)) * Math.PI) / 180;
+    return { dx: Math.round(Math.cos(a) * radius), dy: Math.round(Math.sin(a) * radius) };
+  });
+}
+
+/** Clusters of up to this many fan out; more open a list (DESIGN.md §5). */
+export const FAN_MAX = 5;

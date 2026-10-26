@@ -11,6 +11,8 @@ import {
   worldMap,
   zoomLevel,
   zoomStep,
+  miniMap,
+  zoneViewBox,
 } from "@/core/views";
 import type { Dataset } from "@/core/model";
 import { parseLua } from "@/core/lua";
@@ -166,5 +168,47 @@ describe("map zoom", () => {
     // Between the land: Kalimdor's zones end at x 547.7, the Eastern Kingdoms' start at 592 (zones.json).
     expect(CONTINENT_SPLIT).toBeGreaterThan(547.7);
     expect(CONTINENT_SPLIT).toBeLessThan(592);
+  });
+});
+
+describe("mini map", () => {
+  const d = sample();
+
+  it("frames a zone around its anchor at the board's 170 × 150, larger for a larger zone", () => {
+    const stv = zoneViewBox("stv")!;
+    const zone = map.zones.find((z) => z.id === "stv")!;
+    expect(stv.width).toBe(170);
+    expect(stv.height).toBe(150);
+    expect(stv.x + stv.width / 2).toBeCloseTo(zone.lx, 0);
+    expect(stv.y + stv.height / 2).toBeCloseTo(zone.ly, 0);
+    const barrens = zoneViewBox("barrens")!;
+    expect(barrens.width).toBeGreaterThan(170);
+    expect(barrens.width / barrens.height).toBeCloseTo(170 / 150, 1);
+    expect(zoneViewBox("nowhere")).toBeUndefined();
+  });
+
+  it("shows the character's zone with everyone seen there and the world's tint", () => {
+    const view = miniMap(d, "Player-1-VES", NOW)!;
+    expect(view.place.zone).toBe("stv");
+    expect(view.place.markers.map((m) => m.name)).toContain("Ves Doombringer");
+    expect(view.box).toEqual(zoneViewBox("stv"));
+    expect(view.occupied).toEqual(worldMap(d, NOW).occupied);
+  });
+
+  it("has no mini map without a place on the map", () => {
+    expect(miniMap(d, "Player-1-SELA", NOW)).toBeUndefined();
+    const bg: Dataset = sample();
+    bg.locations["Player-1-VES"] = { ...bg.locations["Player-1-VES"]!, zone: "Warsong Gulch" };
+    expect(miniMap(bg, "Player-1-VES", NOW)).toBeUndefined();
+  });
+});
+
+describe("mini map contents", () => {
+  it("keeps only the zones and coasts inside the frame", () => {
+    const view = miniMap(sample(), "Player-1-VES", NOW)!;
+    expect(view.zones).toContain("stv");
+    expect(view.zones).toContain("westfall");
+    expect(view.zones).not.toContain("durotar");
+    expect(view.coasts).toEqual(["E"]);
   });
 });
