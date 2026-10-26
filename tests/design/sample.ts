@@ -59,6 +59,8 @@ interface Sample {
   lastPlayed: number;
   /** Zone and seconds before NOW; none for a character never seen. */
   seen?: [string, number];
+  /** Made this many seconds before NOW: missing from earlier sample files (a new character). */
+  made?: number;
 }
 
 const NICO: Sample[] = [
@@ -151,6 +153,7 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 1 * D,
         seen: ["Hillsbrad Foothills", 1 * D],
+        made: 1.5 * D,
       },
     ],
   },
@@ -275,7 +278,7 @@ function lua(value: Lua, indent = ""): string {
   return items.length === 0 ? "{}" : `{\n${items.join("\n")}\n${indent}}`;
 }
 
-function char(c: Sample): Lua {
+function char(c: Sample, now: number): Lua {
   const trees = TREES[c.classFile]!;
   const most = c.talents.indexOf(Math.max(...c.talents));
   return {
@@ -283,7 +286,7 @@ function char(c: Sample): Lua {
     faction: c.faction,
     guid: c.guid,
     ...(c.ilvl !== undefined && { ilvl: c.ilvl }),
-    lastPlayed: NOW - c.lastPlayed,
+    lastPlayed: now - c.lastPlayed,
     level: c.level,
     mainTree: most + 1,
     name: c.name,
@@ -292,43 +295,87 @@ function char(c: Sample): Lua {
     realm: REALM,
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),
-    updatedAt: NOW - c.lastPlayed,
+    updatedAt: now - c.lastPlayed,
   };
 }
 
+/** Days of sample files: day 3 is the design sample; days 1 and 2 are the same group one and two days earlier. */
+export type SampleDay = 1 | 2 | 3;
+
+/**
+ * A character as a file written `ago` seconds before "now" saw it (WEB-21 sample files): not there before it was
+ * made; one level, a few skill points and an item level lower for every day boundary it has been played across
+ * since, last played and seen a few hours before that file.
+ */
+function asOf(c: Sample, ago: number): Sample | undefined {
+  if (ago === 0) return c;
+  if (c.made !== undefined && c.made <= ago) return undefined;
+  let steps = 0;
+  for (let k = D; k <= ago; k += D) if (c.lastPlayed < k) steps++;
+  if (steps === 0) return c;
+  const before = ago + 3 * H;
+  const most = c.talents.indexOf(Math.max(...c.talents));
+  return {
+    ...c,
+    level: Math.max(1, c.level - steps),
+    ...(c.ilvl !== undefined && { ilvl: Math.max(1, c.ilvl - steps) }),
+    talents: c.talents.map((t, i) => (i === most ? Math.max(0, t - steps) : t)) as Sample["talents"],
+    professions: c.professions.map(([name, rank, max]) => [name, Math.max(1, rank - 6 * steps), max]),
+    lastPlayed: before,
+    ...(c.seen !== undefined && { seen: [c.seen[0], before] }),
+  };
+}
+
+export interface SampleOptions {
+  /** The uploader's BattleTag (`self.battleTag`); the admin by default. */
+  self?: string;
+  /** Unix seconds every time is relative to; the design checks' NOW by default. */
+  now?: number;
+  /** Which of the consecutive days' files; 3 (the design sample) by default. */
+  day?: SampleDay;
+}
+
 /** The sample as the SavedVariables file the game writes. */
-export function sampleSavedVariables(): string {
-  const all = [...NICO, ...FRIENDS.flatMap((f) => f.chars)];
+export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3 }: SampleOptions = {}): string {
+  const ago = (3 - day) * D;
+  const later = (t: number) => (ago === 0 ? t : Math.max(t, ago + H));
+  const mine = NICO.map((c) => asOf(c, ago)).filter((c) => c !== undefined);
+  const friends = FRIENDS.map((f) => ({ ...f, chars: f.chars.map((c) => asOf(c, ago)).filter((c) => c !== undefined) }));
+  const all = [...mine, ...friends.flatMap((f) => f.chars)];
   const locations: Record<string, Lua> = {};
-  for (const c of all) if (c.seen !== undefined) locations[c.guid] = { seenAt: NOW - c.seen[1], zone: c.seen[0] };
+  for (const c of all) if (c.seen !== undefined) locations[c.guid] = { seenAt: now - c.seen[1], zone: c.seen[0] };
   const presence: Record<string, Lua> = {};
-  for (const f of FRIENDS) for (const c of f.chars) presence[c.guid] = { battleTag: f.battleTag, lastSeen: NOW - c.lastPlayed };
+  for (const f of friends) for (const c of f.chars) presence[c.guid] = { battleTag: f.battleTag, lastSeen: now - c.lastPlayed };
   // Sanne is in the community but doesn't run the addon: one character seen online, no record.
-  presence["Player-1-0000F001"] = { battleTag: "Sanne#5150", lastSeen: NOW - 3 * D };
+  presence["Player-1-0000F001"] = { battleTag: "Sanne#5150", lastSeen: now - later(3 * D) };
 
   const global: Lua = {
     locations,
     people: Object.fromEntries(
-      FRIENDS.map((f) => [
+      friends.map((f) => [
         f.battleTag,
         {
-          chars: Object.fromEntries(f.chars.map((c) => [c.guid, char(c)])),
+          chars: Object.fromEntries(f.chars.map((c) => [c.guid, char(c, now)])),
           displayName: f.displayName,
-          receivedAt: NOW - f.receivedAgo,
+          receivedAt: now - later(f.receivedAgo),
           ...(f.via !== undefined && { via: f.via }),
-          version: NOW - f.receivedAgo,
+          version: now - later(f.receivedAgo),
         },
       ]),
     ),
     presence,
     schemaVersion: 1,
     self: {
-      battleTag: ADMIN,
-      chars: Object.fromEntries(NICO.map((c) => [c.guid, char(c)])),
+      battleTag: self,
+      chars: Object.fromEntries(mine.map((c) => [c.guid, char(c, now)])),
       displayName: "Nico",
-      version: NOW - H,
+      version: now - ago - H,
     },
     settings: { clubId: "40000001", clubName: "Doombringers" },
   };
-  return `\nCommunitiesForeverDB = {\n  ["global"] = ${lua(global, "  ")},\n}\n`;
+  return `
+CommunitiesForeverDB = {
+  ["global"] = ${lua(global, "  ")},
+}
+`;
 }

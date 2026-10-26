@@ -1,0 +1,139 @@
+.row {
+  --class: var(--avatar);
+  --class-text: var(--text);
+  display: grid;
+  grid-template-columns: var(--size-row-lead) minmax(0, 1fr) var(--size-row-prof) var(--size-row-seen);
+  gap: var(--s-3-5);
+  align-items: center;
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-row);
+  border: var(--border) solid var(--line-row);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.row:hover {
+  background: var(--tint-hover);
+  border-color: var(--line-hover);
+  color: var(--text);
+}
+
+/* Old data: the disc and level bar fade as on the board; the text keeps its contrast (DESIGN.md §11). */
+.row[data-old] .lead > *,
+.row[data-old] .bar {
+  opacity: var(--opacity-old);
+}
+
+.lead {
+  display: flex;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--fs-name);
+  line-height: var(--lh-name);
+  color: var(--class-text);
+}
+
+.sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1-5);
+  margin-top: var(--s-0-5);
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.bar {
+  position: relative;
+  height: var(--size-level-bar);
+  margin-top: var(--s-1-5);
+  border-radius: var(--r-level-bar);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(var(--level) * 100%);
+  background: var(--class);
+}
+
+.bar[data-max]::after {
+  background: linear-gradient(90deg, var(--class), var(--gold-bright));
+}
+
+.professions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-75);
+  font-size: var(--fs-meta-sm);
+  color: var(--text-muted);
+}
+
+.profession b {
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
+.none {
+  color: var(--text-faint);
+}
+
+.seen {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.played {
+  font-size: var(--fs-meta);
+  color: var(--text);
+}
+
+.place {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+/* Phone (no board, decided with Nico for WEB-21): disc and name on top, then professions and "when · where · ilvl"
+   on full-width lines. */
+@media (max-width: 767px) {
+  .row {
+    grid-template-columns: var(--size-row-lead) minmax(0, 1fr);
+    row-gap: var(--s-2);
+  }
+
+  .professions,
+  .seen {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0;
+    text-align: left;
+  }
+
+  .profession + .profession::before,
+  .seen > * + *::before {
+    content: " · ";
+    white-space: pre;
+    color: var(--text-dim);
+  }
+
+  .seen > * {
+    font-size: var(--fs-meta);
+  }
+}

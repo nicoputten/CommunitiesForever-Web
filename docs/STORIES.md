@@ -45,14 +45,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
   - new sightings, with "See them drop in on the map" (WEB-26)
 - Motion: staggered rise, bars grow, LEVEL UP shine (§6); static with reduced motion. "Replay" and "Upload another".
 
-### WEB-21 Roster: cards
-- Board: `roster-cards`.
-- Header "6 friends · 10 characters · Sanne has no addon yet", Cards/Table switch, search, filters (class, role, level, profession), sort (last played).
-- "Who is around which level": level spread with dungeon bands and fits.
-- Quick answers: healers, tanks, level 30–40, level 60.
-- Friend panels: avatar, name, BattleTag, character count, data age badge ("Data 2 days ago · via Bob").
-- Character rows: class disc with level, name, race, class, main tree, role, faction tag, top professions, last played, last seen zone, item level ("ilvl —" when missing). A row opens the character.
-
 ### WEB-22 Roster: table
 - Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.
 - On a phone the table becomes the card list, and sort and filters move into a sheet.

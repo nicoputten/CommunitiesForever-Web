@@ -7,6 +7,8 @@ export * from "./professions";
 export * from "./report";
 export * from "./rollCall";
 export * from "./roster";
+export * from "./rosterQuery";
+export * from "./spreadLayout";
 export * from "./site";
 export * from "./text";
 export * from "./upload";

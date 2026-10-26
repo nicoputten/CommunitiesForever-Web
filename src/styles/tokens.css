@@ -238,6 +238,30 @@
   --dur-shimmer: 1.6s; /* loading: skeleton */
   --dur-pulse: 2.6s; /* DESIGN.md §6: live pulse */
 
+  /* roster (WEB-21): the roster-cards board */
+  --s-5-5: 22px; /* roster-cards: between the page's sections */
+  --fs-friend: 19px; /* roster-cards: friend name (Marcellus SC) */
+  --size-avatar-friend: 34px; /* roster-cards: friend avatar */
+  --size-search: 36px; /* roster-cards: search field height */
+  --size-search-min: 240px; /* roster-cards: search field min width */
+  --size-row-lead: 48px; /* roster-cards: character row, disc column */
+  --size-row-prof: 168px; /* roster-cards: character row, professions column */
+  --size-row-seen: 112px; /* roster-cards: character row, last played column */
+  --size-level-bar: 3px; /* roster-cards: level bar under the name */
+  --r-level-bar: 2px;
+  --size-dot: 12px; /* roster-cards: level spread dot */
+  --size-label-row: 16px; /* roster-cards: name label rows above the track (4 and 20 px tops) */
+  --size-track-line: 20px; /* roster-cards: the line with the dots */
+  --size-tick: 12px; /* roster-cards: level ticks */
+  --size-band: 20px; /* roster-cards: dungeon band */
+  --size-band-row: 26px; /* roster-cards: band rows 0 and 26 px */
+  --r-band: 5px;
+  --track-line: linear-gradient(90deg, var(--avatar), var(--gold)); /* roster-cards: level spread track */
+  --line-quick: rgba(212, 175, 106, 0.18); /* roster-cards: quick answer cards */
+  --line-hover: rgba(212, 175, 106, 0.3); /* roster-cards: character row hover */
+  --stale-note: #c08a5a; /* roster-cards: "Jorrit's data reached us through …" */
+  --opacity-old: 0.8; /* roster-cards: rows of a friend whose data is 7+ days old */
+
   /* atmosphere (WEB-16): ambient loops of DESIGN.md §6; the ones §6 does not list come from the board named */
   --dur-wave-a: 7s;
   --dur-wave-b: 9s;
@@ -291,7 +315,7 @@
   --fs-drop: 24px; /* upload: "Drop CommunitiesForever.lua here" (Marcellus) */
   --fs-state: 20px; /* upload-states: state message (Marcellus) */
   --lh-state: 1.25;
-  --s-4-5: 18px; /* upload: column gap, history padding */
+  --s-4-5: 18px; /* upload: column gap, history padding; roster-cards: no-addon box, level spread bottom padding */
   --size-dropzone: 380px; /* upload: dropzone min height; the states take its place */
   --size-ledger: 84px; /* upload: ledger icon */
   --size-ledger-drag: 64px; /* upload-states */
