@@ -22,7 +22,8 @@ export default defineConfig({
   // Screenshot baselines are made on Linux in the Playwright image (CI); see tests/design/README.md.
   snapshotPathTemplate: "{testDir}/__screenshots__/{testFileName}/{arg}-{projectName}{ext}",
   expect: { toHaveScreenshot: { animations: "disabled", caret: "hide", scale: "device" } },
-  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
+  // Clock times are the viewer's local time (WEB-19): one zone, so they read the same on every machine.
+  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure", timezoneId: "Europe/Amsterdam" },
   projects: [
     { name: "seed", testMatch: /seed\.setup\.ts$/ },
     {

@@ -1,0 +1,262 @@
+/* Dropzone and its states: boards `upload` (idle) and `upload-states` (dragging, reading, refusals, nothing new). */
+
+.zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--size-dropzone);
+  padding: var(--s-8);
+  border-radius: var(--r-sheet);
+  text-align: center;
+}
+
+/* upload: dashed gold border, breathing glow */
+.idle {
+  gap: var(--s-3-5);
+  border: var(--border-strong) dashed var(--drop-line);
+  background: radial-gradient(circle at 50% 40%, var(--drop-glow), var(--drop-fill) 70%);
+  cursor: pointer;
+  animation: breathe var(--dur-breathe) ease-in-out infinite;
+}
+
+/* upload-states "Dragging over" */
+.over {
+  border: var(--border-strong) solid var(--gold-bright);
+  background: radial-gradient(circle at 50% 45%, var(--over-glow), var(--state-fill) 70%);
+  animation: over var(--dur-over) ease-in-out infinite;
+}
+
+/* upload-states "Reading" */
+.reading {
+  border: var(--border) solid var(--line-control);
+  background: var(--state-fill);
+}
+
+/* upload-states "Wrong file", "Newer addon version" and the other refusals */
+.alert {
+  border: var(--border) solid var(--alert-line);
+  background: linear-gradient(180deg, var(--alert-tint), var(--state-fill) 60%);
+}
+
+/* upload-states "Nothing new" */
+.neutral {
+  border: var(--border) solid var(--line-neutral);
+  background: var(--state-fill);
+}
+
+.ledger {
+  width: var(--size-ledger);
+  height: var(--size-ledger);
+}
+
+.dragIcon {
+  width: var(--size-ledger-drag);
+  height: var(--size-ledger-drag);
+}
+
+.spinner {
+  width: var(--size-spinner);
+  height: var(--size-spinner);
+}
+
+.stateIcon {
+  width: var(--size-state-icon);
+  height: var(--size-state-icon);
+  color: var(--stale-text);
+}
+
+.neutral .stateIcon {
+  color: var(--text-dim);
+}
+
+.float {
+  animation: float var(--dur-breathe) ease-in-out infinite;
+}
+
+.bob {
+  animation: bob var(--dur-bob) ease-in-out infinite;
+}
+
+.spin {
+  animation: spin var(--dur-spin) linear infinite;
+}
+
+.drop {
+  font-family: var(--font-name);
+  font-size: var(--fs-drop);
+  line-height: var(--lh-name);
+  color: var(--text-strong);
+}
+
+.fileName {
+  color: var(--gold-bright);
+  overflow-wrap: anywhere;
+}
+
+.or {
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.where {
+  margin-top: var(--s-1-5);
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.path {
+  color: var(--text-chip);
+}
+
+.message {
+  font-family: var(--font-name);
+  font-size: var(--fs-state);
+  line-height: var(--lh-state);
+  color: var(--text-strong);
+}
+
+.small {
+  max-width: var(--size-empty);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.em {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-5);
+  border-radius: var(--r-btn);
+  border: 0;
+  background: none;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.primary {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.primary:hover {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+.goldButton {
+  padding: 0 var(--s-4-5);
+  border: var(--border) solid var(--button-line-gold);
+  color: var(--gold-bright);
+}
+
+.goldButton:hover {
+  background: var(--tint-hover);
+  color: var(--gold-bright);
+}
+
+.neutralButton {
+  padding: 0 var(--s-4-5);
+  border: var(--border) solid var(--button-line-neutral);
+  color: var(--text-chip);
+}
+
+.neutralButton:hover {
+  background: var(--tint-hover);
+}
+
+.progress {
+  width: 80%;
+  height: var(--size-progress);
+  border-radius: var(--r-progress);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar {
+  display: block;
+  width: 78%;
+  height: 100%;
+  background: var(--gold);
+  animation: bar var(--dur-over) var(--ease-out) infinite alternate;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: var(--shadow-breathe-rest);
+  }
+
+  50% {
+    box-shadow: var(--shadow-breathe-peak);
+  }
+}
+
+@keyframes over {
+  0%,
+  100% {
+    box-shadow: var(--shadow-over-rest);
+  }
+
+  50% {
+    box-shadow: var(--shadow-over-peak);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(calc(-1 * var(--s-1-5)));
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(var(--s-2));
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bar {
+  from {
+    width: 8%;
+  }
+
+  to {
+    width: 78%;
+  }
+}
+
+@media (max-width: 767px) {
+  .zone {
+    padding: var(--s-6) var(--s-4);
+  }
+}

@@ -9,9 +9,16 @@ import { cleanName, stripEscapes } from "./sanitize";
 /** Highest addon schemaVersion this site reads. */
 export const SUPPORTED_SCHEMA = 1;
 
+/**
+ * Why a file can't be read (the upload screen shows each, WEB-19): not a CommunitiesForever file at all, one that is
+ * broken (doesn't parse, no schemaVersion), or one from a newer addon than the site reads.
+ */
+export type Unreadable = "not-ledger" | "damaged" | "newer-format";
+
 export class NormalizeError extends Error {
   constructor(
     message: string,
+    readonly code: Unreadable,
     /** The file's schemaVersion, when it has one. */
     readonly schemaVersion?: number,
   ) {
@@ -87,12 +94,14 @@ function findGlobal(chunk: LuaChunk): Table | undefined {
 
 export function normalize(chunk: LuaChunk): Dataset {
   const global = findGlobal(chunk);
-  if (global === undefined) throw new NormalizeError("This is not a CommunitiesForever SavedVariables file.");
+  if (global === undefined)
+    throw new NormalizeError("This is not a CommunitiesForever SavedVariables file.", "not-ledger");
   const schemaVersion = field(global, "schemaVersion");
-  if (typeof schemaVersion !== "number") throw new NormalizeError("The file has no schemaVersion.");
+  if (typeof schemaVersion !== "number") throw new NormalizeError("The file has no schemaVersion.", "damaged");
   if (schemaVersion > SUPPORTED_SCHEMA) {
     throw new NormalizeError(
       `The file has schema version ${schemaVersion}; this site reads up to ${SUPPORTED_SCHEMA}. Update the site.`,
+      "newer-format",
       schemaVersion,
     );
   }

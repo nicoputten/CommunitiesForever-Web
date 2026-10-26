@@ -121,6 +121,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 - **Space and radius:** extra steps `--s-px`, `--s-0-5`, `--s-0-75`, `--s-1-5`, `--s-2-5`, `--s-3-5`, `--s-7`, `--s-10`; radii `--r-badge` 4, `--r-nav` 8, `--r-control` 9, `--r-card` 12.
 - **Glow, blur, sizes, motion:** disc/avatar glow, `--glow-disc-mix` (live disc glow at 45% of the class colour, WEB-30), `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
 - **Atmosphere (WEB-16):** ambient loop durations (`--dur-wave-a` … `--dur-drift`), fog, light-shaft and vignette tints, glint and Maelstrom colours, sign-in sea edge and land, fog blurs, ember size and glow, `--size-map-w/h` (world 1440 × 900), `--page-glow-bg` (data pages).
+- **Upload (WEB-19):** dropzone and state frames (`--size-dropzone`, drop line and glow, dragging glow, `--state-fill`, `--alert-line` / `--alert-tint`), their icon sizes, `--fs-drop` 24 / `--fs-state` 20, the accent loops (`--dur-breathe` 5 s, `--dur-over` 2.4 s, `--dur-bob` 1.6 s, `--dur-spin` 1.4 s), outline button lines, the `/reload` hint box, history Done / Rejected tints, `--s-4-5` 18.
 
 A value a screen needs and no token has goes into part 2 with its source, never inline.
 
@@ -160,6 +161,7 @@ A value a screen needs and no token has goes into part 2 with its source, never 
 | Fly to character | roll call pick | 600 ms pan + zoom | ease-in-out | jump |
 | New sighting | after upload | 400 ms drop + 1 ripple | spring | appear |
 | Session report | page load | staggered rise 0.55 s, bars grow 1.1 s, LEVEL UP shine | ease-out/spring | static |
+| Upload accents (WEB-19) | idle dropzone; dragging; reading | glow breathes and ledger floats 5 s; dragging glow 2.4 s, ledger bobs 1.6 s; spinner 1.4 s, bar 2.4 s | ease-in-out / linear | static |
 | Ambient | always (map, sign-in) | pulse 2.6 s · waves 7/9 s · surf 6 s · foam 40 s · Maelstrom 50 s · moonlight 18 s · fog 40–56 s | loops | all off, static fog |
 
 Ambient details (WEB-16, Nico 2026-10-26):
@@ -201,6 +203,10 @@ Ambient details (WEB-16, Nico 2026-10-26):
 - Dungeon level bands on the roster are typical ranges, labelled as such. A band shows for every dungeon (not raids) where at least two characters fit; the one with the most fits gets the "fits ..." line (WEB-14, Nico 2026-10-25).
 - Character dungeon fit: other friends' characters in the typical range (not the owner's alts), any data age; the dungeon with the most of them, ties to the narrower range (WEB-14, Nico 2026-10-25).
 - Error copy: wrong file, newer data format, nothing new, not on the guest list, Battle.net unreachable (see UploadStates / SignInStates).
+- Upload states without a board (WEB-19, Nico 2026-10-26) use the amber frame of "wrong file" with "Choose another file" or "Try again": not your file ("This is someone else's ledger · It belongs to Bob#2002. Sign in as Bob#2002 to upload it. Nothing was changed."), other community ("This ledger is for another community · … Pick <site name> in the addon, /reload and upload again."), no community yet ("The ledger isn't open yet"), damaged ("We couldn't read this ledger"), too large ("That file is too big", checked in the browser), no answer ("The upload didn't go through · Nothing was changed. Try again."). The screen never shows raw error text. "Wrong file" names the file when its name isn't `CommunitiesForever.lua`. "Newer addon version": "Update the site first" for the admin, "Ask the admin to update the site" for others; its button opens the addon's GitHub releases. "Nothing new" also covers a new file that changes nothing (time of the uploader's previous upload).
+- Upload history (WEB-19, Nico 2026-10-26): everyone's uploads, last 20, newest first, the uploader's display name under the time. Summary: the site's first accepted upload "First upload · N characters"; then up to three of "N levels gained · N skill gains · N new characters · N sightings · N item level gains" in that order, zeros left out; "Nothing new" otherwise. Rejected: a short reason ("Wrong file: another addon's data", "Damaged file", "Newer addon: format N", "Not your file", "Another community", "Before the admin's first upload"). The board's "Mira reached 60" highlight is dropped.
+- Clock times ("Today 21:14", "Yesterday 22:05", "Thu 23 Oct, 23:40") are the viewer's local time, formatted in the browser, 24-hour (WEB-19, Nico 2026-10-26).
+- While a file is read, the browser reads it with the same core parser for "N characters from M friends" (characters with a record and their owners); the server decides (WEB-19).
 
 ## 9. Suggested libraries (proposal — you decide)
 
@@ -215,7 +221,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 ## 10. Open items
 
 - Final emblem/logo for Doombringers.
-- Exact addon data-format versioning (the "format 2 / 3" copy is a placeholder).
+- ~~Exact addon data-format versioning.~~ The "data format" in the upload copy is the addon's `schemaVersion` (WEB-19).
 - ~~Stale thresholds to confirm.~~ Decided: 7 days for both the site banner and a friend's data (§11).
 - Recipe search UI once the addon shares recipes.
 - ~~Confirm the licence and attribution text of the source map SVGs.~~ Done: CC BY-SA 4.0, Syrio.
@@ -238,4 +244,7 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Foam (WEB-16): the dash offset moves in 220 steps per 40 s loop, not continuously | A dash march has no transform equivalent; steps repaint about 5× a second instead of every frame | Nico |
 | 2026-10-26 | Motion switch in the user menu (WEB-16, no board): a two-wave line icon, "Motion" and an On/Off meta text, gold when on | No board draws the item | Nico |
 | 2026-10-26 | Without motion every ambient layer rests on its first keyframe (fog and shafts still, embers gone) | The boards only show the moving state; their still state drops the animation | Nico |
+| 2026-10-26 | Upload history footnote "Everyone in the community can upload their own file. Friends see the result on the map and roster." (the board says "Only you can upload.") | Members upload too | Nico |
+| 2026-10-26 | Upload: the dropzone's breathing glow and floating ledger, the dragging glow and the reading spinner stay as on the boards on this data page, as its small accents (§1); off with reduced motion or the Motion switch | They show the page is ready, dragging and busy | Nico |
+| 2026-10-26 | Upload "Dragging over" (WEB-19) shows only "Let go to upload", without the board's second line ("CommunitiesForever.lua · 48 KB") | Browsers don't expose a dragged file's name or size until it is dropped | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
