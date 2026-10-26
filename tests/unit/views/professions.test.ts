@@ -38,6 +38,11 @@ describe("professions", () => {
       ["Lia Thornwhisper", 205, 225, false],
       ["Ves Doombringer", 187, 225, false],
     ]);
+    expect(byName("Mining").entries.map((e) => [e.character.name, e.old])).toEqual([
+      ["Grom Ashfeller", false],
+      ["Ruk Bloodhoof", true],
+      ["Kel Dawnhammer", false],
+    ]);
     expect(byName("Cooking")).toMatchObject({ kind: "secondary", status: "gap", best: 150 });
   });
 
