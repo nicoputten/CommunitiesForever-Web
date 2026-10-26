@@ -27,7 +27,6 @@ const SHELL_SCREENS = [
   { name: "map", url: "/", map: true },
   { name: "roster", url: "/roster", map: false },
   { name: "professions", url: "/professions", map: false },
-  { name: "upload", url: "/upload", map: false },
   { name: "components", url: "/dev/components", map: false },
 ];
 

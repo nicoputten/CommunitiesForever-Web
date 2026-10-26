@@ -1,12 +1,10 @@
 # Changelog
 
 ## Unreleased
-<<<<<<< HEAD
+- Upload page: drop `CommunitiesForever.lua` anywhere on the page or choose it (phones too). While it is read the page counts the characters and friends in it, then opens what the upload changed. A wrong file (another addon's), a damaged file, a file from a newer addon, the same data as before, someone else's file, a file of another community and a file over 25 MB each get a plain explanation and nothing changes. The history lists everyone's uploads with who sent them, what changed ("5 levels gained · 4 skill gains · 1 new character") or why it was rejected; times are shown in your own time zone.
 - Atmosphere: drifting fog and light shafts on the map page, the drifting map with fog and embers behind sign-in, a quiet glow on the other pages. A "Motion" switch in the account menu turns all motion off (or on); it follows your system setting until you flip it and is remembered on this device.
-=======
 - The account menu and the centre card are blurred over what's behind them again (the build had dropped the blur for Chrome), and screen readers hear the account button as "Account" plus the BattleTag shown.
 - The map page sits on the darker map background.
->>>>>>> origin/develop
 - The site runs as a Docker image on TrueNAS behind nginx at https://wow.vestras.nl; `/api/health` tells whether it is up and which version runs.
 - Sign in with Battle.net. Only the admin, members of the community (everyone named in an accepted upload) and guests on the admin's guest list get in; everyone else sees "You're not on the list". A blocked BattleTag is out at once.
 - Uploads are accepted only for your own file of the same community: someone else's file is rejected as "not your file", one of another community as "other community".

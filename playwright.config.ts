@@ -19,7 +19,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
-  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
+  // Clock times are the viewer's local time (WEB-19): one zone, so they read the same on every machine.
+  use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure", timezoneId: "Europe/Amsterdam" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
