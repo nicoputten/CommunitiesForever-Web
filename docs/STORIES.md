@@ -19,7 +19,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E4 Design foundations
 
-
 ## E5 Screens
 
 ### WEB-17 Sign-in screens

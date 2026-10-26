@@ -238,4 +238,8 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Class disc initials: first letter of the first and last word of the name ("VD"), display only, never a key | The boards show initials; the one exception to "never split names" | Nico |
 | 2026-10-26 | Footer credit in `--text-faint` (#7E8898), not the sign-in board's #6E7888 | #6E7888 is under 4.5 : 1 on the page; every text pairing must pass (design-system board) | Nico |
 | 2026-10-26 | Stale-site banner without the loading board's second line ("Nico uploads after a play session.") | Members upload too, so the line is no longer true | Nico |
+| 2026-10-26 | Surf (WEB-16): a static 9-wide stroke under a 15-wide one that fades in and out, instead of the board's stroke-width 9 → 15 swell | Ambient loops animate only transform and opacity; it looks nearly the same | Nico |
+| 2026-10-26 | Foam (WEB-16): the dash offset moves in 220 steps per 40 s loop, not continuously | A dash march has no transform equivalent; steps repaint about 5× a second instead of every frame | Nico |
+| 2026-10-26 | Motion switch in the user menu (WEB-16, no board): a two-wave line icon, "Motion" and an On/Off meta text, gold when on | No board draws the item | Nico |
+| 2026-10-26 | Without motion every ambient layer rests on its first keyframe (fog and shafts still, embers gone) | The boards only show the moving state; their still state drops the animation | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
