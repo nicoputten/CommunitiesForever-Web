@@ -74,7 +74,9 @@ export function LevelSpread({ spread }: { spread: Spread }) {
           return (
             <li
               key={c.guid}
-              style={{ "--class-text": info === undefined ? "var(--text-muted)" : `var(${info.textToken})` } as CSSProperties}
+              style={
+                { "--class-text": info === undefined ? "var(--text-muted)" : `var(${info.textToken})` } as CSSProperties
+              }
             >
               <span className={styles.lvl}>
                 {c.level}
@@ -100,7 +102,14 @@ export function LevelSpread({ spread }: { spread: Spread }) {
                 key={b.band.dungeon.id}
                 className={styles.band}
                 data-best={b.best || undefined}
-                style={{ "--from": pct(b.from), "--to": pct(b.to), "--row": b.row } as CSSProperties}
+                style={
+                  {
+                    "--from": pct(b.from),
+                    "--to": pct(b.to),
+                    "--row": b.row,
+                    "--order": b.best ? -1 : spread.bands.indexOf(b.band),
+                  } as CSSProperties
+                }
               >
                 {b.band.dungeon.name} {min}–{max}
                 {b.best ? ` · fits ${fits}` : <span className={styles.count}> · {b.band.fits.length} fit</span>}

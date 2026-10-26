@@ -101,8 +101,14 @@ export function parseRosterQuery(params: SearchParams): RosterQuery {
 export function rosterSearch(q: RosterQuery): string {
   const params = new URLSearchParams();
   if (q.search.trim() !== "") params.set("q", q.search.trim());
-  if (q.classes.length > 0) params.set("class", q.classes.map((c) => c.toLowerCase()).join(","));
-  if (q.roles.length > 0) params.set("role", q.roles.join(","));
+  if (q.classes.length > 0)
+    params.set(
+      "class",
+      CLASSES_ORDER.filter((c) => q.classes.includes(c))
+        .map((c) => c.toLowerCase())
+        .join(","),
+    );
+  if (q.roles.length > 0) params.set("role", ROLES.filter((r) => q.roles.includes(r)).join(","));
   if (q.level !== undefined) params.set("level", q.level);
   if (q.profession !== undefined) params.set("prof", professionSlug(q.profession));
   if (q.sort !== DEFAULT_SORT) params.set("sort", q.sort);
@@ -127,7 +133,13 @@ export function rosterFilter(q: RosterQuery): RosterFilter {
 
 /** Search or a filter is set (the sort alone does not narrow anything). */
 export function isFiltered(q: RosterQuery): boolean {
-  return q.search.trim() !== "" || q.classes.length > 0 || q.roles.length > 0 || q.level !== undefined || q.profession !== undefined;
+  return (
+    q.search.trim() !== "" ||
+    q.classes.length > 0 ||
+    q.roles.length > 0 ||
+    q.level !== undefined ||
+    q.profession !== undefined
+  );
 }
 
 /** The professions anyone in the data has, by name: the Profession filter's choices. */

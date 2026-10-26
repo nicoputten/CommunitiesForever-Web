@@ -9,7 +9,10 @@ type Detail = (c: CharacterView) => string;
 const levelClass: Detail = (c) => [c.level, c.className].filter((p) => p !== undefined).join(" ");
 const level: Detail = (c) => (c.level === undefined ? "" : String(c.level));
 const max: Detail = (c) =>
-  [[c.mainTreeName, c.className].filter((p) => p !== undefined).join(" "), c.ilvl === undefined ? undefined : `ilvl ${c.ilvl}`]
+  [
+    [c.mainTreeName, c.className].filter((p) => p !== undefined).join(" "),
+    c.ilvl === undefined ? undefined : `ilvl ${c.ilvl}`,
+  ]
     .filter((p) => p !== undefined && p !== "")
     .join(" · ");
 

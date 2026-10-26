@@ -133,9 +133,7 @@ export function RosterToolbar({ query, professions, shown }: RosterToolbarProps)
             { key: ANY, label: "Any class", checked: query.classes.length === 0 },
             ...classFiles.map((c) => ({ key: c, label: CLASSES[c].name, checked: query.classes.includes(c) })),
           ]}
-          onSelect={(key) =>
-            go({ ...current(), classes: key === ANY ? [] : toggle(query.classes, key as ClassFile) })
-          }
+          onSelect={(key) => go({ ...current(), classes: key === ANY ? [] : toggle(query.classes, key as ClassFile) })}
         />
         <FilterMenu
           label={chipLabel(

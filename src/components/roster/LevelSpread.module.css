@@ -245,7 +245,9 @@
     gap: var(--s-1-5);
   }
 
+  /* By level on phone, the best band first (the track's rows order them top to bottom). */
   .band {
+    order: var(--order);
     position: static;
     width: auto;
     height: auto;

@@ -25,7 +25,6 @@ import { ADMIN } from "./sample";
 /** Signed-in screens with the shell. `map`: the page sits on --bg-abyss. */
 const SHELL_SCREENS = [
   { name: "map", url: "/", map: true },
-  { name: "roster", url: "/roster", map: false },
   { name: "professions", url: "/professions", map: false },
   { name: "upload", url: "/upload", map: false },
   { name: "components", url: "/dev/components", map: false },
@@ -81,7 +80,7 @@ test.describe("signed in", () => {
   }
 
   test("placeholder card: Marcellus title on the modal surface", async ({ page }) => {
-    await openScreen(page, "/roster");
+    await openScreen(page, "/professions");
     const card = page.getByRole("main").getByText("Not built yet").locator("..");
     await expectStyles(card, SURFACE_MODAL);
     await expectStyles(page.getByText("Not built yet"), {

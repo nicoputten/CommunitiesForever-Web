@@ -39,8 +39,8 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
         <PageTitle>Roster</PageTitle>
         {viewer?.mayUpload ? (
           <EmptyState title="The roster is still empty" action={{ href: "/upload", label: "Upload the first file" }}>
-            Upload the addon&apos;s file after your next play session. Everyone&apos;s characters appear here, on the map
-            and in professions.
+            Upload the addon&apos;s file after your next play session. Everyone&apos;s characters appear here, on the
+            map and in professions.
           </EmptyState>
         ) : (
           <EmptyState title="The roster is still empty">

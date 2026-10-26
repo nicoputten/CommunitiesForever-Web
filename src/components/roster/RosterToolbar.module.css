@@ -94,7 +94,11 @@
   }
 
   .search {
-    height: var(--size-touch);
+    height: auto;
+  }
+
+  .input {
+    min-height: var(--size-touch);
   }
 
   .end {

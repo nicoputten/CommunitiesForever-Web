@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- The roster: every friend with their characters as cards (class, level, race, talents, role, faction, professions, when last played, where last seen, item level), how fresh each friend's data is, who is around which level with the typical dungeon ranges, and quick answers (healers, tanks, level 30–40, level 60). Search, filter by class, role, level and profession, and sort; the choice is in the address, so a link shares it and Back undoes it.
 - Atmosphere: drifting fog and light shafts on the map page, the drifting map with fog and embers behind sign-in, a quiet glow on the other pages. A "Motion" switch in the account menu turns all motion off (or on); it follows your system setting until you flip it and is remembered on this device.
 - The account menu and the centre card are blurred over what's behind them again (the build had dropped the blur for Chrome), and screen readers hear the account button as "Account" plus the BattleTag shown.
 - The map page sits on the darker map background.

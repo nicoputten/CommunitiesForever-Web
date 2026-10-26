@@ -33,7 +33,14 @@ describe("roster query (URL state)", () => {
   });
 
   it("ignores what it does not know and drops defaults", () => {
-    const q = parseRosterQuery({ class: "bard,mage", role: "x", level: "7", prof: "juggling", sort: "evil", q: ["a", "b"] });
+    const q = parseRosterQuery({
+      class: "bard,mage",
+      role: "x",
+      level: "7",
+      prof: "juggling",
+      sort: "evil",
+      q: ["a", "b"],
+    });
     expect(q).toEqual({ search: "a", classes: ["MAGE"], roles: [], sort: "lastPlayed" });
     expect(rosterSearch(parseRosterQuery({}))).toBe("");
     expect(isFiltered(parseRosterQuery({ sort: "level" }))).toBe(false);
@@ -60,5 +67,13 @@ describe("roster query (URL state)", () => {
     const options = professionOptions(roster(sample(), NOW).characters);
     expect(options.map((o) => o.name)).toContain("Tailoring");
     expect(options.map((o) => o.name)).toEqual([...options.map((o) => o.name)].sort());
+  });
+});
+
+describe("roster query order", () => {
+  it("writes classes and roles in the table's order, however they were picked", () => {
+    expect(
+      rosterSearch({ search: "", classes: ["WARLOCK", "PRIEST"], roles: ["dps", "tank"], sort: "lastPlayed" }),
+    ).toBe("?class=priest,warlock&role=tank,dps");
   });
 });

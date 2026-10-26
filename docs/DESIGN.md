@@ -121,6 +121,7 @@ Layout: page max-width 1280, gutter 24 (16 on phone), touch targets ≥ 44px, de
 - **Space and radius:** extra steps `--s-px`, `--s-0-5`, `--s-0-75`, `--s-1-5`, `--s-2-5`, `--s-3-5`, `--s-7`, `--s-10`; radii `--r-badge` 4, `--r-nav` 8, `--r-control` 9, `--r-card` 12.
 - **Glow, blur, sizes, motion:** disc/avatar glow, `--glow-disc-mix` (live disc glow at 45% of the class colour, WEB-30), `--blur-surface` 14 / `--blur-modal` 16, `--shadow-current` (nav underline), component sizes (`--size-*`: bars, avatar, disc, touch 44, page max 1280, gutters), focus ring, `--dur-shimmer`, `--dur-pulse`.
 - **Atmosphere (WEB-16):** ambient loop durations (`--dur-wave-a` … `--dur-drift`), fog, light-shaft and vignette tints, glint and Maelstrom colours, sign-in sea edge and land, fog blurs, ember size and glow, `--size-map-w/h` (world 1440 × 900), `--page-glow-bg` (data pages).
+- **Roster (WEB-21):** friend name `--fs-friend` 19, friend avatar, search field, character row columns (`--size-row-*`), level bar, track dots, label and band rows, `--line-quick`, `--line-hover`, `--stale-note`, `--opacity-old`, `--s-4-5` 18, `--s-5-5` 22, `--track-line`.
 
 A value a screen needs and no token has goes into part 2 with its source, never inline.
 
@@ -239,3 +240,7 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Motion switch in the user menu (WEB-16, no board): a two-wave line icon, "Motion" and an On/Off meta text, gold when on | No board draws the item | Nico |
 | 2026-10-26 | Without motion every ambient layer rests on its first keyframe (fog and shafts still, embers gone) | The boards only show the moving state; their still state drops the animation | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
+| 2026-10-26 | Roster level spread (WEB-21): every dungeon band with two fits, stacked in as many rows as needed (best band first, gold; the others in one neutral style instead of the board's arbitrary tints); full names on the track in as many label rows as needed. Phone (no board): dots only, names in level order under the track, bands as a list | The real data gives up to 14 overlapping bands; names are never split | Nico |
+| 2026-10-26 | Roster no-addon box (WEB-21): "Once Sanne installs CommunitiesForever, their characters show up after the next upload." (the board says "she") | We never infer pronouns | Nico |
+| 2026-10-26 | Roster (WEB-21, no board): filter menus, "N of M characters · Clear filters", "1 of 3 characters", "No characters match", the empty and error states, the old-data note without a relay, phone rows (professions and "when · where · ilvl" on full-width lines) | Not on the board | Nico |
+| 2026-10-26 | Roster rows of old friend data (WEB-21): only the disc and level bar fade to 80%, not the whole row | At 80% the row's dim text drops under 4.5 : 1; every text pairing must pass | to confirm by Nico in the PR |

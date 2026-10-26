@@ -22,7 +22,9 @@
   color: var(--text);
 }
 
-.row[data-old] {
+/* Old data: the disc and level bar fade as on the board; the text keeps its contrast (DESIGN.md §11). */
+.row[data-old] .lead > *,
+.row[data-old] .bar {
   opacity: var(--opacity-old);
 }
 
