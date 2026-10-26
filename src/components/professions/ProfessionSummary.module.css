@@ -1,0 +1,62 @@
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  border: var(--border) solid;
+}
+
+.box[data-status="covered"] {
+  background: var(--covered-tint);
+  border-color: var(--covered-line);
+}
+
+.box[data-status="thin"] {
+  background: var(--tint-hover);
+  border-color: var(--thin-line);
+}
+
+.box[data-status="gap"] {
+  background: var(--gap-tint);
+  border-color: var(--gap-line);
+}
+
+.count {
+  font-family: var(--font-name);
+  font-size: var(--fs-summary);
+  line-height: var(--lh-name);
+}
+
+.box[data-status="covered"] .count {
+  color: var(--fresh-text);
+}
+
+.box[data-status="thin"] .count {
+  color: var(--gold-bright);
+}
+
+.box[data-status="gap"] .count {
+  color: var(--stale-text);
+}
+
+.text {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+/* Phone (no board, DESIGN.md §11): the three boxes stacked. */
+@media (max-width: 639px) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

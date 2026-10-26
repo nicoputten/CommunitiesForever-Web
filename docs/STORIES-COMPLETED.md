@@ -166,6 +166,29 @@
   - Components `src/components/map/`: `WorldMap` (server SVG with `SeaLayers`, zone fills, grain, tint and borders, coast, capitals, labels), `MapStage` (zone hover, markers, card, selection), `CharacterMarker` and `ZoneCluster` (`Markers.tsx`), `CharacterCard`; `ClassDisc` size `card`; continent switch (`SegmentedNav`) in `TopBar`; map tokens in `tokens.css` part 2.
   - Page: `src/app/(site)/(map)/` with its `error.tsx`; the shell's main is full width on the map.
   - Tests: `tests/unit/views/map.test.ts`, Playwright `tests/e2e/map.spec.ts`, design checks `tests/design/map.spec.ts` (`expectAccessible` takes rules to skip).
+### WEB-24 Professions
+- Board: `professions`.
+- Summary: covered / thin / gaps with the professions named.
+- Cards per profession: best in the group, everyone's skill bars on the 300 scale with the cap shaded and ticks at 75/150/225, status badge; secondary professions marked.
+- Character × profession matrix (brighter cell = higher skill); "No professions yet".
+- Recipe search placeholder: "Recipe search arrives when the addon shares known recipes."
+- Decided with Nico (2026-10-26):
+  - A card for every profession of the table, also those nobody has ("Nobody has it yet", Gap); the gaps line names each best ("Alchemy 160", "… nobody").
+  - No per-profession notes (the board's Engineering line is dropped).
+  - Full names in the bars: the name column fits the longest name in the card (at most 140 px), cut off with "…"; on phone the name sits on its own line above the bar.
+  - Without a recorded cap: no cap shading, the value alone ("160").
+  - The best is gold (gold to pale gold at 300), the rest dim; ties all get ★. Old friend data (7+ days): only the bar fades to 80%.
+  - Matrix: gold mixed in by skill (`--skill`, up to 55% at 300); text `--text-strong` from 225 (the board's dark text fails contrast). Column headings are the board's abbreviations in `<abbr title>`.
+  - Order: primary A–Z, then secondary; matrix rows highest level first, "No professions yet" last.
+  - Links: names open the character, card titles the roster filtered on the profession (`/roster?prof=…`); each card has the profession slug as `id` (WEB-23 "Compare with the group").
+  - Phone: summary stacked, cards one column (two from 640 px, four from 1100 px), the matrix scrolls in its frame with a sticky Character column, the recipe field over its note.
+  - States: before the first upload the roster's empty state ("No professions yet"); skeletons while loading; "Professions didn't load" / "Try again" on an error.
+  - Recipe search placeholder: a disabled field, placeholder in `--text-faint`.
+- Done:
+  - core: `ProfessionEntry.old` in `professions.ts`.
+  - Page: `/professions` with `loading.tsx`, `error.tsx` and `empty.tsx`.
+  - Components: `ProfessionCard`, `SkillBar`, `StatusBadge`, `ProfessionSummaryBoxes`, `ProfessionMatrix`, `RecipeSearch` in `src/components/professions/`; professions tokens in `tokens.css` part 2.
+  - Tests: unit test for `old`; Playwright `tests/e2e/professions.spec.ts` and `professions.empty.ts`; design checks in `tests/design/professions.spec.ts`.
 
 ### WEB-22 Roster: table
 - Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.

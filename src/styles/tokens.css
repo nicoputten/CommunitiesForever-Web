@@ -464,4 +464,31 @@
   --size-hub-dot: 6px; /* map: centre of an open fan */
   --compass-star: 0.12;
   --compass-n: 0.7;
+  /* professions (WEB-24): the professions board */
+  --fs-summary: 26px; /* professions: "4 covered" (Marcellus) */
+  --fs-profession: 17px; /* professions: card title (Marcellus SC) */
+  --covered-tint: rgba(127, 217, 154, 0.07); /* professions: "covered" summary box */
+  --covered-line: rgba(127, 217, 154, 0.25);
+  --covered-badge: rgba(127, 217, 154, 0.14); /* professions: "Covered" status badge */
+  --thin-line: rgba(212, 175, 106, 0.3); /* professions: "thin" summary box (tint: --tint-hover) */
+  --gap-tint: rgba(224, 138, 74, 0.08); /* professions: "gaps" summary box */
+  --gap-line: rgba(224, 138, 74, 0.4);
+  --gap-badge: rgba(224, 138, 74, 0.18); /* professions: "Gap" status badge */
+  --gap-card-line: rgba(224, 138, 74, 0.45); /* professions: card of a gap */
+  --gap-card-bg: linear-gradient(180deg, rgba(224, 138, 74, 0.07), var(--surface) 60%); /* professions */
+  --line-recipe: rgba(212, 175, 106, 0.35); /* professions: dashed recipe search frame */
+  --input-bg: #0b1220; /* professions: recipe search field */
+  --line-input: rgba(174, 182, 195, 0.2); /* professions: recipe search field */
+  --size-recipe: 42px; /* professions: recipe search field height */
+  --size-recipe-min: 280px; /* professions: recipe search field min width */
+  --size-skill-name: 140px; /* professions: name column of a skill bar (board 96 px, full names: DESIGN.md §11) */
+  --size-skill-value: 62px; /* professions: "160 / 225" column */
+  --size-skill-bar: 7px; /* professions: skill bar height */
+  --track-skill: #161e2b; /* professions: skill bar track */
+  --cap-skill: rgba(212, 175, 106, 0.16); /* professions: room left until the current cap */
+  --tick-skill: rgba(7, 12, 21, 0.9); /* professions: ticks at 75, 150, 225 */
+  --line-matrix: rgba(212, 175, 106, 0.2); /* professions: matrix frame */
+  --line-cell: rgba(255, 255, 255, 0.04); /* professions: matrix rows */
+  --size-skill-cell: 34px; /* professions: matrix cell min width */
+  --skill-cell-max: 55%; /* professions: gold in a matrix cell at skill 300 (the board: 0.07 at 61 … 0.55 at 300) */
 }

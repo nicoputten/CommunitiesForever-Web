@@ -1,7 +1,7 @@
 import { PROFESSIONS, type ProfessionKind } from "../gamedata";
 import type { Dataset } from "../model";
 import { dict } from "../normalize";
-import { byLevel, compareText, recordCharacters, type CharacterView } from "./characters";
+import { byLevel, compareText, peopleViews, recordCharacters, type CharacterView } from "./characters";
 
 // The professions page (board `professions`): the best in the group per profession, its status, and the
 // character × profession matrix.
@@ -30,6 +30,8 @@ export interface ProfessionEntry {
   max?: number;
   /** ★ the best in the group (every character at the best rank). */
   best: boolean;
+  /** The owner's data is 7 days old or more (the board fades Ruk's bars). */
+  old: boolean;
 }
 
 export interface ProfessionSummary extends ProfessionColumn {
@@ -63,6 +65,8 @@ const kindOrder = (kind: ProfessionKind | undefined) => (kind === "primary" ? 0 
 
 export function professions(d: Dataset, now: number): ProfessionsView {
   const characters = recordCharacters(d, now);
+  const oldOwners = new Set(peopleViews(d, now).flatMap((p) => (p.old ? [p.key] : [])));
+  const isOld = (c: CharacterView) => c.owner !== undefined && oldOwners.has(c.owner);
 
   const columns = new Map<string, ProfessionColumn>();
   for (const info of Object.values(PROFESSIONS)) {
@@ -83,7 +87,7 @@ export function professions(d: Dataset, now: number): ProfessionsView {
     for (const character of characters) {
       const p = character.professions.find((x) => x.skillLine === column.skillLine);
       if (p === undefined) continue;
-      const entry: ProfessionEntry = { character, rank: p.rank, best: false };
+      const entry: ProfessionEntry = { character, rank: p.rank, best: false, old: isOld(character) };
       if (p.max !== undefined) entry.max = p.max;
       entries.push(entry);
     }

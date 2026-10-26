@@ -1,0 +1,115 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: var(--border) solid var(--line-quick);
+  scroll-margin-top: calc(var(--size-bar) + var(--s-4));
+}
+
+.card[data-status="gap"] {
+  background: var(--gap-card-bg);
+  border-color: var(--gap-card-line);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-profession);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-display);
+}
+
+.title a {
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.title a:hover {
+  color: var(--gold-bright);
+}
+
+.kind {
+  font-size: var(--fs-tiny);
+  color: var(--text-faint);
+}
+
+.nobody {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+/* One grid for the card, so the bars line up: the name column fits the longest name (at most --size-skill-name). */
+.entries {
+  display: grid;
+  grid-template-columns: fit-content(var(--size-skill-name)) minmax(0, 1fr) var(--size-skill-value);
+  gap: var(--s-2-5) var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  font-size: var(--fs-meta);
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--class-text, var(--text));
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--class-text, var(--text));
+  text-decoration: underline;
+}
+
+.best {
+  margin-left: var(--s-0-75);
+  color: var(--gold-bright);
+}
+
+.value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* Phone (no board, DESIGN.md §11): the name on its own line over the bar and value; 44 px targets. */
+@media (max-width: 767px) {
+  .entries {
+    grid-template-columns: minmax(0, 1fr) var(--size-skill-value);
+  }
+
+  .entry {
+    row-gap: 0;
+  }
+
+  .name {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+
+  .title a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+}

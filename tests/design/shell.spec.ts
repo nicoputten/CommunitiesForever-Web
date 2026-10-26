@@ -24,7 +24,6 @@ import { ADMIN } from "./sample";
 
 /** Signed-in screens with the shell. `map`: the page sits on --bg-abyss. */
 const SHELL_SCREENS = [
-  { name: "professions", url: "/professions", map: false },
   { name: "components", url: "/dev/components", map: false },
 ];
 
@@ -78,7 +77,10 @@ test.describe("signed in", () => {
   }
 
   test("placeholder card: Marcellus title on the modal surface", async ({ page }) => {
-    await openScreen(page, "/professions");
+    // The character page (WEB-23) is the last placeholder; the roster links to it.
+    await openScreen(page, "/roster");
+    const href = await page.getByRole("link", { name: /Ves Doombringer/ }).first().getAttribute("href");
+    await openScreen(page, href!);
     const card = page.getByRole("main").getByText("Not built yet").locator("..");
     await expectStyles(card, SURFACE_MODAL);
     await expectStyles(page.getByText("Not built yet"), {
