@@ -65,6 +65,28 @@ describe("roster", () => {
     expect(roster(sample(), NOW, { sort: "player" }).characters[0]?.ownerName).toBe("Bob");
   });
 
+  it("sorts by the table's columns, both ways, missing values last (WEB-22)", () => {
+    const sorted = (sort: RosterSort, dir?: "asc" | "desc") => roster(sample(), NOW, { sort, dir }).characters;
+    const levels = sorted("level", "asc").map((c) => c.level);
+    expect(levels).toEqual([...levels].sort((a, b) => (a ?? 0) - (b ?? 0)));
+    expect(names(sorted("name", "desc")).slice(0, 2)).toEqual(["Zul Kazrek", "Ves Doombringer"]);
+    // Sela has no item level: last in both directions.
+    expect(names(sorted("ilvl", "asc")).at(-1)).toBe("Sela Moonbrook");
+    expect(names(sorted("ilvl", "desc")).at(-1)).toBe("Sela Moonbrook");
+    const talents = sorted("talents").map((c) => c.mainTreeName);
+    expect(talents.filter((t) => t !== undefined)).toEqual(
+      [...talents.filter((t) => t !== undefined)].sort((a, b) => a!.localeCompare(b!)),
+    );
+    const zones = sorted("seen").map((c) => c.sighting?.zoneText);
+    expect(zones.indexOf(undefined)).toBe(zones.length - zones.filter((z) => z === undefined).length);
+    const known = zones.filter((z) => z !== undefined);
+    expect(known).toEqual([...known].sort((a, b) => a!.localeCompare(b!)));
+    // Race · class: class first, then race.
+    const classes = sorted("class").map((c) => `${c.className} ${c.raceName}`);
+    expect(classes[0]).toMatch(/^Druid /);
+    expect(sorted("class", "desc")[0]?.className).toBe("Warrior");
+  });
+
   it("filters by class, role, level range, profession, last played and person", () => {
     expect(list({ classFiles: ["WARLOCK"] })).toEqual(["Ves Doombringer", "Zul Kazrek"]);
     expect(list({ roles: ["tank"] })).toEqual(["Grom Ashfeller", "Kel Dawnhammer"]);

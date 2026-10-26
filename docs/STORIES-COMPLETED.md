@@ -143,6 +143,22 @@
 - Decided with Nico (2026-10-26): the Motion switch follows the system until flipped, and an explicit On animates even under the system's reduced motion; layers exactly as the boards (desktop map: fog and light shafts, no embers; phone map: one fog bank; sign-in: drifting map, fog and embers, phone too; data pages: the static top glow only); loop times §6 does not list come from the boards as tokens.
 - Done: `src/components/atmosphere/` (`Atmosphere` with variants map / signin / calm, `SeaLayers` as one SVG group for the map's 1440 × 900 viewBox, `DriftingMap` for sign-in, `motion.ts` with the head script that applies the stored setting before first paint, `AmbientMotion` for pausing while the tab is hidden); `wavePath` in `src/core/map/waves.ts`; Motion switch in `UserMenu`; tokens in `tokens.css` part 2; global reduced-motion rules in `globals.css` keyed on `<html data-motion>`; sea preview on `/dev/components`; Playwright `tests/e2e/atmosphere.spec.ts`. WEB-25 slots `SeaLayers` under its zone fills and keeps `<Atmosphere variant="map">`; WEB-17 builds the sign-in panel over the `signin` variant.
 
+### WEB-22 Roster: table
+- Board: `roster-table`. Sortable (`aria-sort`) by character, player, level, race and class, role, talents, item level, last played, last seen; "Group by friend"; same filters as the cards.
+- On a phone the table becomes the card list, and sort and filters move into a sheet.
+- Decided with Nico (2026-10-26):
+  - Reuses WEB-21's toolbar, filter menus, URL state and character rows; the toolbar navigates on the page it sits on, so Cards and Table keep the query.
+  - The column headers are links (sorting works without script, Back undoes it); a second click reverses. New URL keys: `dir` (only when not the sort's default: numbers and times high first, text A–Z) and `group=friend`. Race · class sorts by class, then race; role tank, healer, damage; talents by main tree; last seen in by zone, unknown last; professions as WEB-21's profession sort. The cards ignore the table-only sorts.
+  - Group by friend: a toggle chip; one row group per friend with name, BattleTag, count and data age badge, in the cards' friend order; the Player column is hidden.
+  - Rows: the viewer's own characters tinted gold; old friends' discs and bars at 80% with "· 9 d old"; "· via Bob" when relayed; full zone text, "Location unknown" in faint text; "—" when missing. The name links to the character.
+  - Table from 768 px; from 1200 px the headers stick to the window, narrower the frame scrolls sideways.
+  - Phone: the card list (flat in the table's order, friend panels when grouped) and a "Filters & sort" bottom sheet (native `<dialog>`, no drag, no `vaul`): filters, sort with direction and grouping, applied at once.
+- Done:
+  - core: `talents` and `seen` sorts, sort direction (`defaultSortDir`), missing values last both ways; `TABLE_SORTS`, `dir` and `group` in `rosterQuery.ts`; `talentsText`.
+  - Page: `/roster/table` with its `loading.tsx`; the shared empty state in `src/app/(site)/roster/empty.tsx`.
+  - Components: `RosterTable`, `RosterSheet`; `RosterToolbar` gets `table`; `ClassDisc` size `xs` (26 px); table tokens in `tokens.css` part 2.
+  - Tests: unit tests for the sorts and URL keys; Playwright `tests/e2e/roster-table.spec.ts`; design checks in `tests/design/roster-table.spec.ts`.
+
 ### WEB-21 Roster: cards
 - Board: `roster-cards`.
 - Header "6 friends · 10 characters · Sanne has no addon yet", Cards/Table switch, search, filters (class, role, level, profession), sort (last played).

@@ -9,8 +9,9 @@ export interface ClassDiscProps {
   /** The upload's classFile; an unknown or missing one gets a neutral disc. */
   classFile?: string;
   level?: number;
-  /** md 44 px (roster rows), sm 28 px (roll call chips), report 38 px without level (session report rows). */
-  size?: "md" | "sm" | "report";
+  /** md 44 px (roster rows), sm 28 px (roll call chips), xs 26 px (roster table), report 38 px without level (session
+   * report rows). */
+  size?: "md" | "sm" | "xs" | "report";
   /** Live data (< 6 h): the class glow of DESIGN.md §4. */
   live?: boolean;
 }

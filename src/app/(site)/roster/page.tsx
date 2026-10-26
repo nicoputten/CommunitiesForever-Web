@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { nowSeconds } from "@/app/clock";
 import { getDataset } from "@/app/dataset";
-import { getViewer } from "@/app/viewer";
 import {
+  DEFAULT_SORT,
+  defaultSortDir,
   isFiltered,
   joinNames,
   parseRosterQuery,
@@ -11,6 +12,7 @@ import {
   roster,
   rosterFilter,
   rosterSearch,
+  ROSTER_SORTS,
   type SearchParams,
 } from "@/core/views";
 import { FriendPanel } from "@/components/roster/FriendPanel";
@@ -20,6 +22,7 @@ import { RosterToolbar } from "@/components/roster/RosterToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { SegmentedNav } from "@/components/ui/SegmentedNav";
+import { RosterEmpty } from "./empty";
 import styles from "./roster.module.css";
 
 export const metadata: Metadata = { title: "Roster" };
@@ -28,30 +31,17 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 
 /** The roster as cards grouped by friend (WEB-21, board `roster-cards`). Search, filters and sort come from the URL. */
 export default async function RosterPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const query = parseRosterQuery(await searchParams);
+  const asked = parseRosterQuery(await searchParams);
+  // The table's column sorts (talents, last seen in, …) don't apply to the cards: they show their default sort.
+  const query = ROSTER_SORTS.some((s) => s.value === asked.sort)
+    ? asked
+    : { ...asked, sort: DEFAULT_SORT, dir: defaultSortDir(DEFAULT_SORT) };
   const data = getDataset();
   const now = nowSeconds();
 
-  if (data === undefined || recordCharacters(data, now).length === 0) {
-    const viewer = await getViewer();
-    return (
-      <div className={styles.page}>
-        <PageTitle>Roster</PageTitle>
-        {viewer?.mayUpload ? (
-          <EmptyState title="The roster is still empty" action={{ href: "/upload", label: "Upload the first file" }}>
-            Upload the addon&apos;s file after your next play session. Everyone&apos;s characters appear here, on the
-            map and in professions.
-          </EmptyState>
-        ) : (
-          <EmptyState title="The roster is still empty">
-            Nobody has uploaded data yet. Check back after the next session.
-          </EmptyState>
-        )}
-      </div>
-    );
-  }
+  if (data === undefined || recordCharacters(data, now).length === 0) return <RosterEmpty />;
 
-  const r = roster(data, now, { filter: rosterFilter(query), sort: query.sort });
+  const r = roster(data, now, { filter: rosterFilter(query), sort: query.sort, dir: query.dir });
   const filtered = isFiltered(query);
   const noAddon = r.noAddon.map((p) => p.displayName);
   const sub = [
@@ -61,7 +51,7 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
   ]
     .filter((p) => p !== undefined)
     .join(" · ");
-  const search = rosterSearch(query);
+  const search = rosterSearch(asked);
 
   return (
     <div className={styles.page}>

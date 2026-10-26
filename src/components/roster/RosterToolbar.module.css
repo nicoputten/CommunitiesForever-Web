@@ -105,6 +105,11 @@
     width: 100%;
   }
 
+  /* The table's filters live in its sheet on a phone (WEB-22). */
+  .filters[data-table] {
+    display: none;
+  }
+
   .shown {
     margin-right: auto;
   }

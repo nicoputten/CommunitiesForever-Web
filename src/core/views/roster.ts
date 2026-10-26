@@ -3,7 +3,6 @@ import type { Dataset } from "../model";
 import { DAY } from "./age";
 import {
   byLevel,
-  compareDesc,
   compareText,
   peopleViews,
   recordCharacters,
@@ -35,7 +34,21 @@ export interface RosterFilter {
  * `profession`: the skill in the filter's profession, or the best profession rank without one (WEB-21, Nico
  * 2026-10-26).
  */
-export type RosterSort = "lastPlayed" | "level" | "name" | "ilvl" | "class" | "role" | "player" | "profession";
+export type RosterSort =
+  | "lastPlayed"
+  | "level"
+  | "name"
+  | "ilvl"
+  | "class"
+  | "role"
+  | "player"
+  | "profession"
+  /** The main talent tree (roster-table, WEB-22). */
+  | "talents"
+  /** The zone the character was last seen in (roster-table, WEB-22). */
+  | "seen";
+
+export type SortDir = "asc" | "desc";
 
 export interface RosterFriend {
   person: PersonView;
@@ -112,7 +125,6 @@ function matches(c: CharacterView, filter: RosterFilter, now: number, battleTags
 }
 
 const ROLE_ORDER: Record<Role, number> = { tank: 0, heal: 1, dps: 2 };
-const roleRank = (c: CharacterView) => (c.role !== undefined ? ROLE_ORDER[c.role] : 3);
 
 /** The skill the profession sort uses: in `skillLine`, or the best rank of any profession. */
 function skill(c: CharacterView, skillLine: string | undefined): number | undefined {
@@ -120,26 +132,47 @@ function skill(c: CharacterView, skillLine: string | undefined): number | undefi
   return ranks.length === 0 ? undefined : Math.max(...ranks);
 }
 
-function sorter(sort: RosterSort, profession?: string): (a: CharacterView, b: CharacterView) => number {
+/** Each sort's value; missing values always sort last, in both directions. */
+function sortValue(c: CharacterView, sort: RosterSort, profession: string | undefined): number | string | undefined {
+  switch (sort) {
+    case "lastPlayed":
+      return c.lastPlayed;
+    case "level":
+      return c.level;
+    case "name":
+      return c.name;
+    case "ilvl":
+      return c.ilvl;
+    case "class":
+      // Race · class (roster-table): by class, then race.
+      return c.className === undefined ? undefined : `${c.className}\u0000${c.raceName ?? ""}`;
+    case "role":
+      return c.role === undefined ? undefined : ROLE_ORDER[c.role];
+    case "player":
+      return c.ownerName;
+    case "profession":
+      return skill(c, profession);
+    case "talents":
+      return c.mainTreeName;
+    case "seen":
+      return c.sighting?.zoneText;
+  }
+}
+
+/** Numbers and times high first; text, role and class A–Z (WEB-22, Nico 2026-10-26). */
+export function defaultSortDir(sort: RosterSort): SortDir {
+  return sort === "lastPlayed" || sort === "level" || sort === "ilvl" || sort === "profession" ? "desc" : "asc";
+}
+
+function sorter(sort: RosterSort, dir: SortDir, profession?: string): (a: CharacterView, b: CharacterView) => number {
   const key = (a: CharacterView, b: CharacterView): number => {
-    switch (sort) {
-      case "lastPlayed":
-        return compareDesc(a.lastPlayed, b.lastPlayed);
-      case "level":
-        return compareDesc(a.level, b.level);
-      case "name":
-        return compareText(a.name, b.name);
-      case "ilvl":
-        return compareDesc(a.ilvl, b.ilvl);
-      case "class":
-        return compareText(a.className, b.className);
-      case "role":
-        return roleRank(a) - roleRank(b);
-      case "player":
-        return compareText(a.ownerName, b.ownerName);
-      case "profession":
-        return compareDesc(skill(a, profession), skill(b, profession));
-    }
+    const x = sortValue(a, sort, profession);
+    const y = sortValue(b, sort, profession);
+    if (x === y) return 0;
+    if (x === undefined) return 1;
+    if (y === undefined) return -1;
+    const asc = typeof x === "number" && typeof y === "number" ? x - y : compareText(String(x), String(y));
+    return dir === "asc" ? asc : -asc;
   };
   return (a, b) => key(a, b) || byLevel(a, b);
 }
@@ -188,9 +221,14 @@ export function quickAnswers(characters: readonly CharacterView[]): QuickAnswers
   };
 }
 
-export function roster(d: Dataset, now: number, options: { filter?: RosterFilter; sort?: RosterSort } = {}): Roster {
+export function roster(
+  d: Dataset,
+  now: number,
+  options: { filter?: RosterFilter; sort?: RosterSort; dir?: SortDir } = {},
+): Roster {
   const filter = options.filter ?? {};
-  const compare = sorter(options.sort ?? "lastPlayed", filter.profession);
+  const sort = options.sort ?? "lastPlayed";
+  const compare = sorter(sort, options.dir ?? defaultSortDir(sort), filter.profession);
   const people = peopleViews(d, now);
   const battleTags = new Map(people.flatMap((p) => (p.battleTag === undefined ? [] : [[p.key, p.battleTag]])));
   const all = recordCharacters(d, now);
