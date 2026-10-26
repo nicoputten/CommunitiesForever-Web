@@ -5,6 +5,8 @@
   position: relative;
   height: calc(100dvh - var(--size-bar));
   overflow: clip;
+  /* Past the drawn sea it is still sea: the gradient's deep edge, never the page behind it. */
+  background: var(--sea-deep);
 }
 
 .fit {

@@ -160,6 +160,7 @@
   - Clusters at the zone's anchor; the ring split evenly by class colour, pulsing when someone in it is new. 2–5 fan out above the hub on hover, focus or tap; 6 or more open a list of every name. A lone character in a dungeon gets the badge on their marker.
   - Selection: click or Enter; gold ring and the card stays; Escape or a click on the map clears it; in the URL (`?character=`) for WEB-26 and WEB-27.
   - The world is fitted to the space under the top bar; markers keep 30 px in a 44 px target and may overlap on phone until WEB-26 and WEB-28 (the phone accessibility check skips axe's `target-size` for that).
+  - The sea is endless (Nico, after the first screenshots): the gradient pads out to deep sea and the waves repeat as a seamless tile (`WAVE_TILE`, `SeaLayers` `infinite`), so the world's edge never shows. Bounded, springy panning is for WEB-26.
   - Kept from the board: compass rose, "The Maelstrom" label, the vertical continent names. Battleground and "elsewhere" sightings have no marker (the roll call lists them).
 - Done:
   - core: `worldMap` (places per zone, newest first, occupied tint) in `src/core/views/map.ts`; continents, marker types and labels in `mapMarkers.ts` (no zones.json, for client components).
