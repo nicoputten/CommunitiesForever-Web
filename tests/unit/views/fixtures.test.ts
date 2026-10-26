@@ -47,7 +47,7 @@ describe("the real beta file", () => {
     const call = rollCall(d, now);
     expect([call.located, call.total]).toEqual([3, 3]);
     expect(
-      [...call.last24h, ...call.earlier].map((r) => [r.character.name ?? "?", r.person?.displayName, r.sighting.zone]),
+      [...call.live, ...call.earlier].map((r) => [r.character.name ?? "?", r.person?.displayName, r.sighting.zone]),
     ).toEqual([
       ["Ada Example", "Ada", "durotar"],
       ["?", "Cleo", "mulgore"],

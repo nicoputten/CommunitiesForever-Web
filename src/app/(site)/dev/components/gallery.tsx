@@ -69,7 +69,7 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
           <span className={styles.name}>Ves Doombringer</span>
           <span className={styles.body}>Level 39 Undead Warlock · Destruction · 1,234,567</span>
           <span className={styles.meta}>Stranglethorn Vale · Nico · 2 h ago</span>
-          <span className={styles.overline}>Last 24 hours</span>
+          <span className={styles.overline}>New</span>
         </div>
       </Section>
 
@@ -89,10 +89,13 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
         </Example>
       </Section>
 
-      <Section title="Data age badge" note="One scale (DESIGN.md §4): fresh green when live, amber at 7 days.">
-        <Example label="Live · today · days with via · week+ · no addon · no data">
+      <Section
+        title="Data age badge"
+        note="One scale (DESIGN.md §4): fresh green when new (under 32 h), amber at 7 days."
+      >
+        <Example label="New · recent · days with via · week+ · no addon · no data">
           <DataAgeBadge hasAddon dataAt={now - 60} dataAge="live" old={false} now={now} />
-          <DataAgeBadge hasAddon dataAt={now - 9 * H} dataAge="today" old={false} now={now} />
+          <DataAgeBadge hasAddon dataAt={now - 40 * H} dataAge="recent" old={false} now={now} />
           <DataAgeBadge
             hasAddon
             dataAt={now - 2 * D}

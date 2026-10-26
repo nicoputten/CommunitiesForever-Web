@@ -120,7 +120,7 @@ test.describe("signed in", () => {
     });
     await expectStyles(type.getByText(/^Level 39 Undead Warlock/), { ...DATA, ...TYPE.body });
     await expectStyles(type.getByText(/^Stranglethorn Vale/), { ...DATA, ...TYPE.meta });
-    await expectStyles(type.getByText("Last 24 hours", { exact: true }), {
+    await expectStyles(type.getByText("New", { exact: true }), {
       ...TYPE.overline,
       "letter-spacing": "var(--ls-overline)",
     });

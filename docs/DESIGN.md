@@ -129,9 +129,9 @@ A value a screen needs and no token has goes into part 2 with its source, never 
 
 | State | Age | Marker | Elsewhere |
 |---|---|---|---|
-| Live | < 6 h | class fill, glow, pulse | bright dot with glow |
-| Today | 6–24 h | class fill, no glow | solid dot |
-| Days | 1–6 d | dark fill, class ring, 70%, age tag | ring dot |
+| New (`live`) | < 32 h | class fill, glow, pulse | bright dot with glow, green badge |
+| Recent | 32 h–3 d | class fill, no glow | solid dot |
+| Days | 3–6 d | dark fill, class ring, 70%, age tag | ring dot |
 | Week+ | ≥ 7 d | dashed ring, 50%, amber age tag | amber "Data N days old" badge |
 | Unknown | no location | not on map | "Unknown whereabouts" tray |
 
@@ -248,3 +248,4 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-26 | Upload: the dropzone's breathing glow and floating ledger, the dragging glow and the reading spinner stay as on the boards on this data page, as its small accents (§1); off with reduced motion or the Motion switch | They show the page is ready, dragging and busy | Nico |
 | 2026-10-26 | Upload "Dragging over" (WEB-19) shows only "Let go to upload", without the board's second line ("CommunitiesForever.lua · 48 KB") | Browsers don't expose a dragged file's name or size until it is dropped | Nico |
 | 2026-10-25 | The roll call also lists sighted characters of friends without the addon (no name, class or level: the owner and the zone), counted in "N of M located" | The real beta file has them; a sighting is never dropped | Nico |
+| 2026-10-26 | Data age scale for daily uploads: new < 32 h, recent 32 h–3 d, days 3–6 d (boards: live < 6 h, today 6–24 h, days 1–6 d); the roll call's "Last 24 hours" group and chip become "New" | Nico uploads about once a day, so the last session should stay new | Nico |
