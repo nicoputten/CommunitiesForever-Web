@@ -118,6 +118,14 @@
 - Done: `src/styles/tokens.css`, `globals.css`, `fonts.ts` (next/font, `--font-*-face`); shell in `src/components/shell/` (`SiteShell`, `TopBar`, `UserMenu`, `TabBar`, `SiteFooter`) through `src/app/(site)/layout.tsx`, so pages outside the group (sign-in) have no shell; components in `src/components/ui/` (`ClassDisc`, `DataAgeBadge`, `FactionTag`, `FilterChip`, `Segmented`, `Banner`, `EmptyState`, `Skeleton`, `PageTitle`, icons); `/dev/components`; placeholder pages for Map, Roster, Professions and Upload; `timeAgo`, `initials` in `src/core/views`; Playwright `tests/e2e/shell.spec.ts` (phone project now 375 px wide).
 - Wired to WEB-06: `src/app/viewer.ts` (`getViewer` from the session and the access list, role per request; `isAdmin` guards `/dev/components`), `src/app/actions.ts` (sign out to /signin), `src/app/site.ts` (site name uses the merged community name, as uploads do not store their own `clubName` yet).
 
+### WEB-16 Atmosphere
+- `Atmosphere` component: drifting fog, light shafts, embers, animated sea (waves, surf, foam, Maelstrom, moonlight) with the loop times of `docs/DESIGN.md` §6.
+- Alive on the map and sign-in pages; data pages are calm (same palette, no ambient motion).
+- Reduced motion: everything off, static fog. A user toggle "Motion" in the user menu, stored in `localStorage` (default: follow the system).
+- Performance: CSS and SVG only, no WebGL; no layout shift; animations pause when the tab is hidden.
+- Decided with Nico (2026-10-26): the Motion switch follows the system until flipped, and an explicit On animates even under the system's reduced motion; layers exactly as the boards (desktop map: fog and light shafts, no embers; phone map: one fog bank; sign-in: drifting map, fog and embers, phone too; data pages: the static top glow only); loop times §6 does not list come from the boards as tokens.
+- Done: `src/components/atmosphere/` (`Atmosphere` with variants map / signin / calm, `SeaLayers` as one SVG group for the map's 1440 × 900 viewBox, `DriftingMap` for sign-in, `motion.ts` with the head script that applies the stored setting before first paint, `AmbientMotion` for pausing while the tab is hidden); `wavePath` in `src/core/map/waves.ts`; Motion switch in `UserMenu`; tokens in `tokens.css` part 2; global reduced-motion rules in `globals.css` keyed on `<html data-motion>`; sea preview on `/dev/components`; Playwright `tests/e2e/atmosphere.spec.ts`. WEB-25 slots `SeaLayers` under its zone fills and keeps `<Atmosphere variant="map">`; WEB-17 builds the sign-in panel over the `signin` variant.
+
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
 - Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):

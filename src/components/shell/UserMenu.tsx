@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
-import { SignOutIcon, UploadIcon } from "@/components/ui/icons";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { motionOn, setMotion, subscribeMotion } from "@/components/atmosphere/motion";
+import { MotionIcon, SignOutIcon, UploadIcon } from "@/components/ui/icons";
 import type { Viewer } from "./viewer";
 import styles from "./UserMenu.module.css";
 
@@ -15,8 +16,8 @@ export interface UserMenuProps {
 }
 
 /**
- * The signed-in user: avatar and BattleTag, opening a panel with sign out (and Upload on phone). A disclosure, not an
- * ARIA menu: a short list with one link and one button, reached with Tab; Escape and a click outside close it.
+ * The signed-in user: avatar and BattleTag, opening a panel with the Motion switch and sign out (and Upload on phone).
+ * A disclosure, not an ARIA menu: a short list reached with Tab; Escape and a click outside close it.
  */
 export function UserMenu({ viewer, signOut }: UserMenuProps) {
   const [open, setOpen] = useState(false);
@@ -24,6 +25,8 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  // Server render: on; the client corrects it on hydration from the stored setting or the system (motion.ts).
+  const motion = useSyncExternalStore(subscribeMotion, motionOn, () => true);
 
   // Close on navigation (adjusting state during render instead of in an effect).
   const [shownFor, setShownFor] = useState(pathname);
@@ -82,6 +85,21 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
               </Link>
             </li>
           )}
+          <li>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={motion}
+              className={styles.item}
+              onClick={() => setMotion(!motion)}
+            >
+              <MotionIcon className={styles.icon} />
+              Motion
+              <span aria-hidden="true" className={styles.state}>
+                {motion ? "On" : "Off"}
+              </span>
+            </button>
+          </li>
           <li>
             <form action={signOut}>
               <button type="submit" className={styles.item}>

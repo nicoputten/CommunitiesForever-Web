@@ -1,6 +1,8 @@
+import { Atmosphere } from "@/components/atmosphere/Atmosphere";
+import { DriftingMap } from "@/components/atmosphere/DriftingMap";
 import { signIn } from "@/server/auth";
 
-// Placeholder sign-in (WEB-06); the designed screen is WEB-17.
+// Placeholder sign-in (WEB-06) over the sign-in board's atmosphere (WEB-16); the designed screen is WEB-17.
 
 /** Only paths on this site, so the sign-in can't be turned into a redirect elsewhere. */
 function localPath(value: string | string[] | undefined): string {
@@ -13,6 +15,9 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<R
   const failed = params.error !== undefined;
   return (
     <main>
+      <Atmosphere variant="signin">
+        <DriftingMap />
+      </Atmosphere>
       <h1>CommunitiesForever</h1>
       <p>Sign in with your Battle.net account to see where everyone is.</p>
       {failed && <p role="alert">Signing in didn&apos;t work. Try again.</p>}

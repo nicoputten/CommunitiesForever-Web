@@ -82,3 +82,12 @@ export function SignOutIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Two waves: the user menu's Motion setting (WEB-16; no board draws this item, the stroke matches SignOutIcon). */
+export function MotionIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.5} {...props}>
+      <path d="M2 6q1.5-2 3 0t3 0 3 0 3 0M2 11q1.5-2 3 0t3 0 3 0 3 0" />
+    </Icon>
+  );
+}

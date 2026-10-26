@@ -67,14 +67,42 @@ textarea {
   border: 0;
 }
 
-/* DESIGN.md §6: with reduced motion, ambient loops stop and transitions shrink to a short fade. */
+/*
+ * DESIGN.md §6: with reduced motion, ambient loops stop and transitions shrink to a short fade. Reduced motion is the
+ * system's prefers-reduced-motion, unless the user menu's Motion setting says otherwise (<html data-motion>, set by
+ * src/components/atmosphere/motion.ts). Ambient layers ([data-ambient]) stop outright and pause while the tab is hidden.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not([data-motion="on"]) *,
+  html:not([data-motion="on"]) *::before,
+  html:not([data-motion="on"]) *::after {
     animation-duration: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: var(--dur-instant) !important;
     scroll-behavior: auto !important;
   }
+
+  html:not([data-motion="on"]) [data-ambient],
+  html:not([data-motion="on"]) [data-ambient] * {
+    animation: none !important;
+  }
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation-duration: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: var(--dur-instant) !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="off"] [data-ambient],
+html[data-motion="off"] [data-ambient] * {
+  animation: none !important;
+}
+
+html[data-tab="hidden"] [data-ambient],
+html[data-tab="hidden"] [data-ambient] * {
+  animation-play-state: paused !important;
 }

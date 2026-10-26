@@ -1,0 +1,256 @@
+/* Fog, light shafts and embers (DESIGN.md §6 loop times). Geometry as on the boards: the map board's layers sit on
+ * a centred 1440 × 900 stage, the phone-map fog in a 390 × 696 frame, the sign-in layers on the viewport; written as
+ * fractions of those so the source numbers stay readable. Only transform and opacity animate. */
+
+@keyframes driftA {
+  from {
+    transform: translate3d(-6%, 0, 0);
+  }
+  to {
+    transform: translate3d(6%, -3%, 0);
+  }
+}
+
+@keyframes driftB {
+  from {
+    transform: translate3d(5%, 2%, 0);
+  }
+  to {
+    transform: translate3d(-6%, -1%, 0);
+  }
+}
+
+/* sign-in and phone-map fog */
+@keyframes driftWide {
+  from {
+    transform: translate3d(-8%, 0, 0);
+  }
+  to {
+    transform: translate3d(8%, -3%, 0);
+  }
+}
+
+@keyframes shaft {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-300px) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.root,
+.calm {
+  pointer-events: none;
+  user-select: none;
+}
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg-abyss);
+}
+
+/* Data pages: the boards' glow at the top of the page; scrolls with it. */
+.calm {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 100dvh;
+  background: var(--page-glow-bg);
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--size-map-w);
+  height: var(--size-map-h);
+  margin-left: calc(var(--size-map-w) / -2);
+}
+
+.fog {
+  position: absolute;
+  border-radius: var(--r-pill);
+  will-change: transform;
+}
+
+.mapFog1,
+.mapFog2,
+.mapFog3 {
+  filter: blur(var(--blur-fog));
+}
+
+.mapFog1 {
+  left: calc(100% * 60 / 1440);
+  top: calc(100% * 380 / 900);
+  width: calc(100% * 520 / 1440);
+  height: calc(100% * 220 / 900);
+  background: radial-gradient(closest-side, var(--fog-1), var(--fog-end));
+  animation: driftA var(--dur-fog-a) ease-in-out infinite alternate;
+}
+
+.mapFog2 {
+  left: calc(100% * 600 / 1440);
+  top: calc(100% * 140 / 900);
+  width: calc(100% * 600 / 1440);
+  height: calc(100% * 240 / 900);
+  background: radial-gradient(closest-side, var(--fog-3), var(--fog-end));
+  animation: driftB var(--dur-fog-b) ease-in-out infinite alternate;
+}
+
+.mapFog3 {
+  left: calc(100% * 420 / 1440);
+  top: calc(100% * 640 / 900);
+  width: calc(100% * 640 / 1440);
+  height: calc(100% * 260 / 900);
+  background: radial-gradient(closest-side, var(--fog-5), var(--fog-end));
+  animation: driftA var(--dur-fog-a) ease-in-out infinite alternate;
+  /* the board's -18 s of 40 */
+  animation-delay: calc(var(--dur-fog-a) * -0.45);
+}
+
+.shaft {
+  position: absolute;
+  opacity: 0.35;
+  animation: shaft var(--dur-shaft) ease-in-out infinite;
+}
+
+.shaft1 {
+  left: calc(100% * 120 / 1440);
+  top: calc(100% * -120 / 900);
+  width: calc(100% * 220 / 1440);
+  height: 100%;
+  transform: rotate(18deg);
+  background: linear-gradient(180deg, var(--shaft-1), var(--shaft-end));
+}
+
+.shaft2 {
+  left: calc(100% * 720 / 1440);
+  top: calc(100% * -140 / 900);
+  width: calc(100% * 160 / 1440);
+  height: calc(100% * 800 / 900);
+  transform: rotate(14deg);
+  background: linear-gradient(180deg, var(--shaft-2), var(--shaft-end));
+  /* the board's -6 s of 14 */
+  animation-delay: calc(var(--dur-shaft) * -6 / 14);
+}
+
+/* Sign-in */
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, var(--vignette-1) 0%, var(--vignette-2) 55%, var(--vignette-3) 100%);
+}
+
+.signinFog1,
+.signinFog2 {
+  filter: blur(var(--blur-fog-signin));
+  width: calc(var(--size-map-w) * 700 / 1440);
+  animation: driftWide var(--dur-fog-signin) ease-in-out infinite alternate;
+}
+
+.signinFog1 {
+  left: 10%;
+  top: 55%;
+  height: calc(var(--size-map-h) * 260 / 900);
+  background: radial-gradient(closest-side, var(--fog-1), var(--fog-end));
+}
+
+.signinFog2 {
+  left: 40%;
+  top: 10%;
+  height: calc(var(--size-map-h) * 240 / 900);
+  background: radial-gradient(closest-side, var(--fog-4), var(--fog-end));
+  /* the board's -20 s of 46 */
+  animation-delay: calc(var(--dur-fog-signin) * -20 / 46);
+}
+
+.ember {
+  position: absolute;
+  width: var(--size-ember);
+  height: var(--size-ember);
+  border-radius: var(--r-pill);
+  background: var(--ember);
+  box-shadow: var(--glow-ember);
+  opacity: 0;
+  animation: rise var(--dur-ember) linear infinite;
+}
+
+.ember1 {
+  left: 30%;
+  top: 90%;
+}
+
+.ember2 {
+  left: 55%;
+  top: 95%;
+  animation-delay: calc(var(--dur-ember) * -5 / 16);
+}
+
+.ember3 {
+  left: 70%;
+  top: 92%;
+  animation-delay: calc(var(--dur-ember) * -10 / 16);
+}
+
+.ember4 {
+  left: 44%;
+  top: 98%;
+  animation-delay: calc(var(--dur-ember) * -13 / 16);
+}
+
+/* Without motion the embers go (sign-in board); fog and shafts stay, still. */
+:global(html[data-motion="off"]) .ember {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html:not([data-motion="on"])) .ember {
+    display: none;
+  }
+}
+
+/* Phone map: one fog bank in the 390 × 696 frame under the app bar, no light shafts (phone-map board). */
+@media (max-width: 767px) {
+  .stage {
+    top: var(--size-bar-phone);
+    left: 0;
+    width: 100%;
+    height: calc(100% - var(--size-bar-phone));
+    margin-left: 0;
+  }
+
+  .shaft,
+  .mapFog2,
+  .mapFog3 {
+    display: none;
+  }
+
+  .mapFog1 {
+    left: calc(100% * -60 / 390);
+    top: calc(100% * 260 / 696);
+    width: calc(100% * 380 / 390);
+    height: calc(100% * 180 / 696);
+    background: radial-gradient(closest-side, var(--fog-2), var(--fog-end));
+    filter: blur(var(--blur-fog-phone));
+    animation-name: driftWide;
+  }
+}

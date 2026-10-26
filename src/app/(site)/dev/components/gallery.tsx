@@ -48,7 +48,7 @@ function Example({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function ComponentGallery({ now }: { now: number }) {
+export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview: ReactNode }) {
   const [continent, setContinent] = useState<"azeroth" | "kalimdor" | "eastern">("azeroth");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [chips, setChips] = useState<Record<string, boolean>>({ All: true, Bob: false, Mira: false });
@@ -210,6 +210,13 @@ export function ComponentGallery({ now }: { now: number }) {
             </div>
           ))}
         </div>
+      </Section>
+
+      <Section
+        title="Atmosphere"
+        note="The map's sea (SeaLayers): glint, two wave groups, Maelstrom, surf, foam. Fog and shafts: the map page; fog, embers and the drifting map: sign-in. The Motion switch in the account menu stops all of it."
+      >
+        {seaPreview}
       </Section>
 
       <Section

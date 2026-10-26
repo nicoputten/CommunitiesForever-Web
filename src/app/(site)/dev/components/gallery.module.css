@@ -148,3 +148,41 @@
 .grow {
   flex: 1;
 }
+
+/* Atmosphere: the sea preview (map board colours) */
+.seaFrame {
+  overflow: hidden;
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line);
+  background: var(--bg-abyss);
+}
+
+.seaSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.landTop {
+  stop-color: var(--land-top);
+}
+
+.landBottom {
+  stop-color: var(--land-bottom);
+}
+
+.zone {
+  stroke: var(--zone-line);
+  stroke-width: 0.7;
+}
+
+.terrain {
+  fill: var(--terrain);
+}
+
+.coast {
+  fill: none;
+  stroke: var(--coast);
+  stroke-opacity: 0.55;
+  stroke-width: 1.1;
+}
