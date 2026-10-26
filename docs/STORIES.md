@@ -41,6 +41,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ### WEB-26 Map zoom, pan and motion
 - Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
+- Bounded, springy pan (Nico, 2026-10-26): the sea is endless (WEB-25), but the view stays near the world. Dragging past the edge gives resistance, and on release it springs back so some land stays in view (no spring with reduced motion).
 - Fly to a character (600 ms pan + zoom; jump with reduced motion).
 - New sightings after an upload: drop + one ripple (from the session report link).
 
