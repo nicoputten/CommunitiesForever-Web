@@ -1,0 +1,58 @@
+.track {
+  position: relative;
+  display: block;
+  height: var(--size-skill-bar);
+  border-radius: var(--r-badge);
+  background: var(--track-skill);
+  overflow: hidden;
+}
+
+.track[data-old] {
+  opacity: var(--opacity-old);
+}
+
+.cap,
+.fill,
+.tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.cap {
+  left: 0;
+  width: calc(var(--cap) * 100%);
+  background: var(--cap-skill);
+}
+
+.fill {
+  left: 0;
+  width: calc(var(--skill) * 100%);
+  border-radius: var(--r-badge);
+  background: var(--text-dim);
+}
+
+.track[data-best] .fill {
+  background: var(--gold);
+}
+
+.track[data-max] .fill {
+  background: var(--bar-gain);
+}
+
+.tick {
+  width: var(--border);
+  background: var(--tick-skill);
+}
+
+.tick:nth-child(3) {
+  left: 25%;
+}
+
+.tick:nth-child(4) {
+  left: 50%;
+}
+
+.tick:nth-child(5) {
+  left: 75%;
+}
