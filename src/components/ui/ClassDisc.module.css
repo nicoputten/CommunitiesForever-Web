@@ -34,6 +34,12 @@
   font-size: var(--fs-meta);
 }
 
+.disc[data-size="card"] {
+  width: var(--size-avatar-card);
+  height: var(--size-avatar-card);
+  font-size: var(--fs-body-sm);
+}
+
 .disc[data-class="shaman"] {
   color: var(--on-shaman);
 }

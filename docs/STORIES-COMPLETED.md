@@ -143,6 +143,30 @@
 - Decided with Nico (2026-10-26): the Motion switch follows the system until flipped, and an explicit On animates even under the system's reduced motion; layers exactly as the boards (desktop map: fog and light shafts, no embers; phone map: one fog bank; sign-in: drifting map, fog and embers, phone too; data pages: the static top glow only); loop times §6 does not list come from the boards as tokens.
 - Done: `src/components/atmosphere/` (`Atmosphere` with variants map / signin / calm, `SeaLayers` as one SVG group for the map's 1440 × 900 viewBox, `DriftingMap` for sign-in, `motion.ts` with the head script that applies the stored setting before first paint, `AmbientMotion` for pausing while the tab is hidden); `wavePath` in `src/core/map/waves.ts`; Motion switch in `UserMenu`; tokens in `tokens.css` part 2; global reduced-motion rules in `globals.css` keyed on `<html data-motion>`; sea preview on `/dev/components`; Playwright `tests/e2e/atmosphere.spec.ts`. WEB-25 slots `SeaLayers` under its zone fills and keeps `<Atmosphere variant="map">`; WEB-17 builds the sign-in panel over the `signin` variant.
 
+### WEB-25 World map
+- Boards: `map`, `map-states`. The map page is the home page.
+- Server-rendered SVG from `zones.json` with the layers of `docs/DESIGN.md` §5; HTML overlay for markers.
+- Zone states: idle, occupied (gold tint by recency), hover (bright edge, name in the corner), terrain (no hover).
+- Markers per freshness state (§4), hover/focus card (name, level, race, class, spec, zone, seen, player, item level, "Open character"), selected state.
+- Clusters: count and class ring; 2–5 fan out (spring, 30 ms stagger), 6 or more open a list; dungeon badge.
+- Continent switch (Azeroth, Kalimdor, Eastern Kingdoms) in the top bar.
+- Decided with Nico (2026-10-26):
+  - WEB-25 is the map at a fixed framing. Pan, zoom, the zoom-level rules and fly-to are WEB-26; the roll call WEB-27 (the map is full width until then); the phone sheets WEB-28; the empty-site panel and skeletons WEB-29 (before the first upload the map shows without markers).
+  - Continent switch: Kalimdor and Eastern Kingdoms frame that continent's zones (Zephras Isle counts as Kalimdor) without animation, with the rest of the world (and its markers) around it; the choice is in the URL (`?continent=`), so Back works. Hidden on phone until WEB-28.
+  - Occupied tint by the newest sighting in the zone: new 20%, recent 12%, days 7%, week+ 3%; zone label pale gold with a new sighting, light grey when occupied.
+  - Age tag ("2d") on recent, days and week+ (amber); none on new.
+  - A sighted friend without the addon: a neutral "?" marker; the card shows only zone, seen and player, no "Open character".
+  - No progress bar in the card (the addon records no XP).
+  - Clusters at the zone's anchor; the ring split evenly by class colour, pulsing when someone in it is new. 2–5 fan out above the hub on hover, focus or tap; 6 or more open a list of every name. A lone character in a dungeon gets the badge on their marker.
+  - Selection: click or Enter; gold ring and the card stays; Escape or a click on the map clears it; in the URL (`?character=`) for WEB-26 and WEB-27.
+  - The world is fitted to the space under the top bar; markers keep 30 px in a 44 px target and may overlap on phone until WEB-26 and WEB-28 (the phone accessibility check skips axe's `target-size` for that).
+  - The sea is endless (Nico, after the first screenshots): the gradient pads out to deep sea and the waves repeat as a seamless tile (`WAVE_TILE`, `SeaLayers` `infinite`), so the world's edge never shows. Bounded, springy panning is for WEB-26.
+  - Kept from the board: compass rose, "The Maelstrom" label, the vertical continent names. Battleground and "elsewhere" sightings have no marker (the roll call lists them).
+- Done:
+  - core: `worldMap` (places per zone, newest first, occupied tint) in `src/core/views/map.ts`; continents, marker types and labels in `mapMarkers.ts` (no zones.json, for client components).
+  - Components `src/components/map/`: `WorldMap` (server SVG with `SeaLayers`, zone fills, grain, tint and borders, coast, capitals, labels), `MapStage` (zone hover, markers, card, selection), `CharacterMarker` and `ZoneCluster` (`Markers.tsx`), `CharacterCard`; `ClassDisc` size `card`; continent switch (`SegmentedNav`) in `TopBar`; map tokens in `tokens.css` part 2.
+  - Page: `src/app/(site)/(map)/` with its `error.tsx`; the shell's main is full width on the map.
+  - Tests: `tests/unit/views/map.test.ts`, Playwright `tests/e2e/map.spec.ts`, design checks `tests/design/map.spec.ts` (`expectAccessible` takes rules to skip).
 ### WEB-24 Professions
 - Board: `professions`.
 - Summary: covered / thin / gaps with the professions named.

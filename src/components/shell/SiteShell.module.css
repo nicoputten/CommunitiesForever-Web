@@ -63,3 +63,9 @@
     padding-bottom: var(--s-8);
   }
 }
+
+/* The map page is full width under the top bar (map board). */
+.main:has([data-page="map"]) {
+  max-width: none;
+  padding: 0;
+}

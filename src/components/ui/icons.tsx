@@ -173,3 +173,12 @@ export function InfoIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Dungeon arch (map board: the dungeon badge on a marker or cluster). */
+export function DungeonIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 12 12" strokeWidth={1.4} {...props}>
+      <path d="M2 11V5a4 4 0 0 1 8 0v6M2 11h8M4.5 11V7.5M7.5 11V7.5" />
+    </Icon>
+  );
+}

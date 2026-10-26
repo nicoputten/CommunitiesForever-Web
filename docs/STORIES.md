@@ -38,16 +38,10 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Header: name, level, race, class, faction, ruleset (WEB-13), played by, last played, data age and source ("own addon" / "via X").
 - Level block with "21 levels to 60" and dungeon fit; at a glance (item level, role, main tree, faction, ruleset); talents bars; professions with "Compare with the group"; quest log (titles only, "as the addon recorded them 2 h ago"); last-seen mini map ("Lia is here too", "On the map"); the owner's other characters.
 
-### WEB-25 World map
-- Boards: `map`, `map-states`. The map page is the home page.
-- Server-rendered SVG from `zones.json` with the layers of `docs/DESIGN.md` §5; HTML overlay for markers.
-- Zone states: idle, occupied (gold tint by recency), hover (bright edge, name in the corner), terrain (no hover).
-- Markers per freshness state (§4), hover/focus card (name, level, race, class, spec, zone, seen, player, item level, "Open character"), selected state.
-- Clusters: count and class ring; 2–5 fan out (spring, 30 ms stagger), 6 or more open a list; dungeon badge.
-- Continent switch (Azeroth, Kalimdor, Eastern Kingdoms) in the top bar.
 
 ### WEB-26 Map zoom, pan and motion
 - Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
+- Bounded, springy pan (Nico, 2026-10-26): the sea is endless (WEB-25), but the view stays near the world. Dragging past the edge gives resistance, and on release it springs back so some land stays in view (no spring with reduced motion).
 - Fly to a character (600 ms pan + zoom; jump with reduced motion).
 - New sightings after an upload: drop + one ripple (from the session report link).
 

@@ -13,6 +13,7 @@ test("shows the home page to the admin", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Map");
+  await expect(page.getByRole("region", { name: "World map" })).toBeVisible();
   await expect(page.getByRole("button", { name: `Account ${E2E.admin}` })).toBeVisible();
 });
 

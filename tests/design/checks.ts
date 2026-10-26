@@ -109,10 +109,14 @@ export async function expectTouchTargets(page: Page): Promise<void> {
   expect(small).toEqual([]);
 }
 
-/** axe-core finds no serious or critical WCAG 2.2 AA violation. */
-export async function expectAccessible(page: Page): Promise<void> {
+/**
+ * axe-core finds no serious or critical WCAG 2.2 AA violation. `disable` turns off named rules for one check; each use
+ * says why and needs Nico's OK (the phone map, WEB-25: markers may overlap until zoom, WEB-26 and WEB-28).
+ */
+export async function expectAccessible(page: Page, disable: readonly string[] = []): Promise<void> {
   const { violations } = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .disableRules([...disable])
     .analyze();
   const bad = violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")

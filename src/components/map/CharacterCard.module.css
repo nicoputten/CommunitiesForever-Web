@@ -1,0 +1,95 @@
+/* The map's hover card (map board). */
+
+.card {
+  box-sizing: border-box;
+  width: var(--size-card-map);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface-strong);
+  backdrop-filter: blur(var(--blur-surface));
+  border: var(--border) solid var(--line-strong);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-ui);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-name);
+  font-size: var(--fs-name-card);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-name);
+  color: var(--text);
+}
+
+.name[data-known] {
+  color: var(--mk-text);
+}
+
+.sub {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-1-5) var(--s-3);
+  margin: 0;
+  font-size: var(--fs-meta);
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fresh {
+  display: inline-block;
+  width: var(--size-dot-seen);
+  height: var(--size-dot-seen);
+  margin-left: var(--s-1);
+  border-radius: var(--r-pill);
+  background: var(--fresh);
+  vertical-align: middle;
+}
+
+.open {
+  align-self: flex-start;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+
+@media (max-width: 767px) {
+  .card {
+    width: auto;
+  }
+
+  .open {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+}

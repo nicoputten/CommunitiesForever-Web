@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { CONTINENTS, parseContinent } from "@/core/views/mapMarkers";
+import { SegmentedNav } from "@/components/ui/SegmentedNav";
 import { EmblemIcon, UploadIcon } from "@/components/ui/icons";
 import { NAV, isCurrent } from "./nav";
 import { UserMenu } from "./UserMenu";
@@ -22,6 +24,7 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
   const pathname = usePathname();
   const onMap = pathname === "/";
   const uploadCurrent = isCurrent("/upload", pathname);
+  const continent = parseContinent(useSearchParams().get("continent"));
   return (
     <header className={styles.bar} data-variant={onMap ? "map" : "data"}>
       <Link href="/" className={styles.brand}>
@@ -40,6 +43,18 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
           </Link>
         ))}
       </nav>
+      {onMap && (
+        <div className={styles.continents}>
+          <SegmentedNav
+            label="Continent"
+            options={CONTINENTS.map((c) => ({
+              href: c.value === "azeroth" ? "/" : `/?continent=${c.value}`,
+              label: c.label,
+              current: c.value === continent,
+            }))}
+          />
+        </div>
+      )}
       <span className={styles.spacer} />
       <span className={styles.age} data-testid="data-age">
         <span className={styles.ageDesktop}>{dataAgo === undefined ? "No data yet" : `Data uploaded ${dataAgo}`}</span>
