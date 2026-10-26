@@ -1,0 +1,189 @@
+/* The character board's hero. The board draws a Warlock; every class gets the same look from its colour tokens
+ * (DESIGN.md §11). */
+
+.hero {
+  --class: var(--avatar);
+  --class-text: var(--text-strong);
+  --class-light: color-mix(in srgb, var(--class) var(--hero-light-mix), var(--mix-light));
+  --class-dark: color-mix(in srgb, var(--class) var(--hero-dark-mix), var(--mix-dark));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.disc {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-hero-disc);
+  height: var(--size-hero-disc);
+  border-radius: var(--r-pill);
+  background: radial-gradient(circle at 40% 35%, var(--class-light), var(--class-dark));
+  box-shadow:
+    var(--ring-hero),
+    var(--glow-hero) color-mix(in srgb, var(--class) var(--glow-hero-mix), transparent);
+  color: var(--on-gold);
+  font-family: var(--font-ui);
+  font-size: var(--fs-hero-disc);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.hero[data-class="shaman"] .disc {
+  color: var(--on-shaman);
+}
+
+.level {
+  position: absolute;
+  right: calc(-1 * var(--s-1));
+  bottom: var(--s-0-5);
+  min-width: var(--size-hero-level-w);
+  height: var(--size-hero-level-h);
+  padding: 0 var(--s-1-5);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--on-gold);
+  border: var(--border-strong) solid var(--gold);
+  color: var(--gold-bright);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.text {
+  flex: 1;
+  min-width: min(100%, var(--size-hero-text));
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-name);
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  color: var(--class-text);
+  text-shadow: var(--glow-hero-text) color-mix(in srgb, var(--class) var(--glow-hero-text-mix), transparent);
+  overflow-wrap: anywhere;
+}
+
+.line {
+  margin: 0;
+  font-size: var(--fs-lead);
+  color: var(--text-chip);
+}
+
+.class {
+  color: var(--class-text);
+}
+
+.faction[data-faction="horde"] {
+  color: var(--horde-text);
+}
+
+.faction[data-faction="alliance"] {
+  color: var(--alliance-text);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pill {
+  padding: var(--s-1-25) var(--s-2-5);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-neutral);
+  color: var(--text-chip);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.pill b {
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
+}
+
+.pill[data-tone="fresh"] {
+  border-color: var(--fresh-line);
+  color: var(--fresh-text);
+}
+
+.pill[data-tone="stale"] {
+  border-color: var(--stale-line);
+  color: var(--stale-text);
+}
+
+.progress {
+  width: var(--size-hero-level);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.levels {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.bar {
+  position: relative;
+  display: block;
+  height: var(--size-hero-bar);
+  border-radius: var(--r-hero-bar);
+  background: var(--track-report);
+  overflow: hidden;
+}
+
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--level) * 100%);
+  background: linear-gradient(90deg, var(--class-dark), var(--class-light));
+}
+
+.bar[data-max]::after {
+  background: var(--bar-gain);
+}
+
+.fit {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--gold-pale);
+}
+
+@media (max-width: 767px) {
+  .hero {
+    gap: var(--s-4);
+  }
+
+  .disc {
+    width: var(--size-hero-disc-phone);
+    height: var(--size-hero-disc-phone);
+    font-size: var(--fs-title);
+  }
+
+  .name {
+    font-size: var(--fs-display);
+  }
+
+  .progress {
+    width: 100%;
+  }
+}

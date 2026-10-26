@@ -491,4 +491,41 @@
   --line-cell: rgba(255, 255, 255, 0.04); /* professions: matrix rows */
   --size-skill-cell: 34px; /* professions: matrix cell min width */
   --skill-cell-max: 55%; /* professions: gold in a matrix cell at skill 300 (the board: 0.07 at 61 … 0.55 at 300) */
+  /* character (WEB-23): the character board; class colours come from the class tokens (DESIGN.md §11) */
+  --size-hero-disc: 104px; /* character: class disc in the hero */
+  --size-hero-disc-phone: 72px; /* character on phone (no board, decided with Nico) */
+  --fs-hero-disc: 32px; /* character: initials on the hero disc */
+  --size-hero-level-w: 36px; /* character: level badge on the hero disc */
+  --size-hero-level-h: 26px;
+  --fs-hero: 46px; /* character: name (Marcellus); --fs-display on phone */
+  --fs-lead: 15px; /* character: "Level 39 Undead Warlock · Horde · PvP"; "At a glance" values */
+  --ring-hero: 0 0 0 3px var(--on-gold), 0 0 0 5px var(--gold); /* character: hero disc rings */
+  --glow-hero: 0 0 40px; /* character: hero disc glow, class colour at --glow-hero-mix */
+  --glow-hero-mix: 55%;
+  --glow-hero-text: 0 0 30px; /* character: name glow, class colour at --glow-hero-text-mix */
+  --glow-hero-text-mix: 40%;
+  --mix-light: #ffffff; /* character: what the class colour is mixed with for the light stop */
+  --mix-dark: #000000; /* character: and for the dark stop */
+  --hero-light-mix: 60%; /* character: light stop of the disc and bars, class colour mixed with white (#B9BAF7) */
+  --hero-dark-mix: 80%; /* character: dark stop, class colour mixed with black (#6B6CD0) */
+  --size-hero-level: 360px; /* character: level block width */
+  --size-hero-bar: 10px; /* character: level bar height */
+  --r-hero-bar: 5px;
+  --size-hero-text: 320px; /* character: name column min width */
+  --s-1-25: 5px; /* character: pill padding */
+  --size-character-aside: 380px; /* character: third column (last seen, other characters) */
+  --size-character-bar: 8px; /* character: talent and skill bars */
+  --size-character-label: 110px; /* character: bar name column */
+  --size-character-value: 70px; /* character: bar value column */
+  --size-quest-mark: 6px; /* character: gold diamond before a quest */
+  --r-minimap: 10px; /* character: mini map frame */
+  --ratio-minimap: 34 / 30; /* character: mini map frame (340 × 300) */
+  --size-minimap-marker: 22px; /* character: the others' markers on the mini map */
+  --minimap-edge: 1; /* character: dark seam between zone fills (world units) */
+  --minimap-line: 0.35; /* character: zone border */
+  --minimap-line-here: 0.8; /* character: the zone the character was seen in */
+  --minimap-coast: 0.6;
+  --minimap-wave: 0.4; /* character: wave curls */
+  --minimap-wave-opacity: 0.15; /* character: the waves at rest (first keyframe of the board loop) */
+  --minimap-halo: 1.6; /* character: label halo */
 }

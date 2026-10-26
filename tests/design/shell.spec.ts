@@ -3,7 +3,6 @@ import { signInAs } from "../e2e/session";
 import {
   DATA,
   SURFACE,
-  SURFACE_MODAL,
   TYPE,
   characterName,
   expectAccessible,
@@ -19,7 +18,7 @@ import {
 import { ADMIN } from "./sample";
 
 // WEB-30: design checks of the app shell, the screens that are placeholders until their story, and /dev/components
-// (WEB-15). A screen story replaces its placeholder's entry with its own spec (README.md). Sign-in and "not on the
+// (WEB-15). Every screen story has its own spec (README.md). Sign-in and "not on the
 // list" are unstyled WEB-06 placeholders; WEB-17 designs them and adds their checks.
 
 /** Signed-in screens with the shell. `map`: the page sits on --bg-abyss. */
@@ -75,20 +74,6 @@ test.describe("signed in", () => {
       });
     });
   }
-
-  test("placeholder card: Marcellus title on the modal surface", async ({ page }) => {
-    // The character page (WEB-23) is the last placeholder; the roster links to it.
-    await openScreen(page, "/roster");
-    const href = await page.getByRole("link", { name: /Ves Doombringer/ }).first().getAttribute("href");
-    await openScreen(page, href!);
-    const card = page.getByRole("main").getByText("Not built yet").locator("..");
-    await expectStyles(card, SURFACE_MODAL);
-    await expectStyles(page.getByText("Not built yet"), {
-      ...TYPE.name,
-      "font-size": "var(--fs-heading)",
-      color: "var(--text-strong)",
-    });
-  });
 
   test("user menu: blurred surface, touch targets, accessible", async ({ page }) => {
     await openScreen(page, "/roster");

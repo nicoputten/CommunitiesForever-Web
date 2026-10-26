@@ -61,6 +61,8 @@ interface Sample {
   seen?: [string, number];
   /** Made this many seconds before NOW: missing from earlier sample files (a new character). */
   made?: number;
+  /** Quest log: the character board's titles under invented quest IDs, in board order (WEB-23). */
+  quests?: Record<number, string>;
 }
 
 const NICO: Sample[] = [
@@ -81,6 +83,14 @@ const NICO: Sample[] = [
     ],
     lastPlayed: 2 * H,
     seen: ["Stranglethorn Vale", 2 * H],
+    quests: {
+      9101: "Tiger Mastery",
+      9102: "Panther Mastery",
+      9103: "Raptor Mastery",
+      9104: "Bloodscalp Ears",
+      9105: "The Defense of Grom'gol",
+      9106: "Hostile Takeover",
+    },
   },
   {
     guid: "Player-1-0000A002",
@@ -295,6 +305,9 @@ function char(c: Sample, now: number): Lua {
     realm: REALM,
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),
+    ...(c.quests !== undefined && {
+      quests: Object.fromEntries(Object.entries(c.quests).map(([id, title]) => [id, { title }])),
+    }),
     updatedAt: now - c.lastPlayed,
   };
 }

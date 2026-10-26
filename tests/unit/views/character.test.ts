@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseLua } from "@/core/lua";
 import { normalize } from "@/core/normalize";
-import { characterPage } from "@/core/views";
+import { characterPage, hereToo, type CharacterView } from "@/core/views";
 import { NOW, sample } from "./sample";
 
 const names = (list: { name?: string }[]) => list.map((c) => c.name);
@@ -72,5 +72,23 @@ describe("character page", () => {
     expect(characterPage(d, "S", NOW)).toBeUndefined();
     expect(characterPage(d, "nope", NOW)).toBeUndefined();
     expect(characterPage(d, "constructor", NOW)).toBeUndefined();
+  });
+});
+
+describe("here too", () => {
+  const c = (name?: string, ownerName?: string) =>
+    ({ guid: name ?? "x", hasRecord: true, name, ownerName }) as CharacterView;
+
+  it("names everyone in full, up to three, then counts the rest", () => {
+    expect(hereToo([])).toBeUndefined();
+    expect(hereToo([c("Lia Thornwhisper")])).toBe("Lia Thornwhisper is here too");
+    expect(hereToo([c("A B"), c("C D")])).toBe("A B and C D are here too");
+    expect(hereToo([c("A B"), c("C D"), c("E F")])).toBe("A B, C D and E F are here too");
+    expect(hereToo([c("A B"), c("C D"), c("E F"), c("G H")])).toBe("A B, C D and 2 others are here too");
+  });
+
+  it("calls a friend without the addon by whose character it is", () => {
+    expect(hereToo([c(undefined, "Sanne")])).toBe("Sanne's character is here too");
+    expect(hereToo([c()])).toBe("Someone is here too");
   });
 });

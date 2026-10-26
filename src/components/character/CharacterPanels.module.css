@@ -1,0 +1,69 @@
+/* At a glance and the owner's other characters (character board). */
+
+.glance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3) var(--s-4);
+  margin: 0;
+}
+
+.glance dt {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.glance dd {
+  margin: var(--s-0-5) 0 0;
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
+.faction[data-faction="horde"] {
+  color: var(--horde-text);
+}
+
+.faction[data-faction="alliance"] {
+  color: var(--alliance-text);
+}
+
+.others {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.other {
+  --class-text: var(--text);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  min-height: var(--size-touch);
+  border-radius: var(--r-nav);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.other:hover {
+  background: var(--tint-hover);
+}
+
+.otherText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.otherName {
+  font-size: var(--fs-body);
+  color: var(--class-text);
+}
+
+.otherMeta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
