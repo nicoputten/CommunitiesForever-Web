@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import map from "@/core/map/zones.json";
-import { continentViewBox, markerLabel, parseContinent, placeLabel, worldMap } from "@/core/views";
+import {
+  CONTINENT_SPLIT,
+  ZOOM_MAX,
+  continentAt,
+  continentViewBox,
+  markerLabel,
+  parseContinent,
+  placeLabel,
+  worldMap,
+  zoomLevel,
+  zoomStep,
+} from "@/core/views";
 import type { Dataset } from "@/core/model";
 import { parseLua } from "@/core/lua";
 import { normalize } from "@/core/normalize";
@@ -103,8 +114,16 @@ describe("continents", () => {
     expect(parseContinent(undefined)).toBe("azeroth");
   });
 
-  it("frames the whole world, or one continent with every zone of it inside", () => {
-    expect(continentViewBox("azeroth")).toEqual({ x: 0, y: 0, width: 1440, height: 900 });
+  it("frames both continents, centred, or one continent with every zone of it inside", () => {
+    const world = continentViewBox("azeroth");
+    const kal = continentViewBox("kalimdor");
+    const ek = continentViewBox("eastern-kingdoms");
+    expect(world).toEqual({
+      x: kal.x,
+      y: Math.min(kal.y, ek.y),
+      width: ek.x + ek.width - kal.x,
+      height: Math.max(kal.y + kal.height, ek.y + ek.height) - Math.min(kal.y, ek.y),
+    });
     for (const [continent, cont] of [
       ["kalimdor", "K"],
       ["eastern-kingdoms", "E"],
@@ -120,5 +139,32 @@ describe("continents", () => {
     const k = continentViewBox("kalimdor");
     const e = continentViewBox("eastern-kingdoms");
     expect(k.x + k.width).toBeLessThan(e.x + e.width);
+  });
+});
+
+describe("map zoom", () => {
+  it("shows more detail from 2× and from 4×", () => {
+    expect([1, 1.5, 1.99, 2, 3.9, 4].map(zoomLevel)).toEqual([
+      "world",
+      "world",
+      "continent",
+      "continent",
+      "continent",
+      "zone",
+    ]);
+  });
+
+  it("steps through 1×, 2× and 4×, and stays at the ends", () => {
+    expect([1, 1.4, 2, 3, 4].map((s) => zoomStep(s, 1))).toEqual([2, 2, 4, 4, ZOOM_MAX]);
+    expect([1, 1.4, 2, 3, 4].map((s) => zoomStep(s, -1))).toEqual([1, 1, 1, 2, 2]);
+  });
+
+  it("names the continent under the centre of the screen once zoomed in", () => {
+    expect(continentAt(720, 1, CONTINENT_SPLIT)).toBe("azeroth");
+    expect(continentAt(300, 1.05, CONTINENT_SPLIT)).toBe("kalimdor");
+    expect(continentAt(800, 2, CONTINENT_SPLIT)).toBe("eastern-kingdoms");
+    // Between the land: Kalimdor's zones end at x 547.7, the Eastern Kingdoms' start at 592 (zones.json).
+    expect(CONTINENT_SPLIT).toBeGreaterThan(547.7);
+    expect(CONTINENT_SPLIT).toBeLessThan(592);
   });
 });

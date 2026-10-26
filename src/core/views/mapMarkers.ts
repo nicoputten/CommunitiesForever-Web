@@ -71,3 +71,40 @@ export function placeLabel(p: MapPlace): string {
   const where = p.dungeons.length === 1 ? p.dungeons[0] : "a dungeon";
   return `${base}, including ${inDungeon} in ${where}`;
 }
+
+// Zoom (WEB-26, DESIGN.md §5): the scale is relative to the whole world fitted on screen. The map shows more detail
+// from 2× (continent: towns, fans open) and from 4× (zone: dungeons, name tags); + and − step through the levels.
+
+export type ZoomLevel = "world" | "continent" | "zone";
+
+export const ZOOM_STEPS = [1, 2, 4] as const;
+export const ZOOM_MAX = 4;
+
+/** Scales this close to a step count as the step (a fly or pinch can end a hair short). */
+const ZOOM_EPSILON = 0.02;
+
+export function zoomLevel(scale: number): ZoomLevel {
+  if (scale >= 4 - ZOOM_EPSILON) return "zone";
+  if (scale >= 2 - ZOOM_EPSILON) return "continent";
+  return "world";
+}
+
+/** The next zoom step in (1) or out (−1) from a scale; stays at the end of the range. */
+export function zoomStep(scale: number, direction: 1 | -1): number {
+  if (direction === 1) return ZOOM_STEPS.find((s) => s > scale + ZOOM_EPSILON) ?? ZOOM_MAX;
+  return [...ZOOM_STEPS].reverse().find((s) => s < scale - ZOOM_EPSILON) ?? 1;
+}
+
+/** Whether a scale is the whole world (1×): nothing to pan, the switch says Azeroth. */
+export function wholeWorld(scale: number): boolean {
+  return scale < 1 + ZOOM_EPSILON;
+}
+
+/**
+ * What the continent switch shows for a view: Azeroth while the whole world is on screen, else the continent under
+ * the centre of the screen. `x` and `split` (map.ts CONTINENT_SPLIT) in world units.
+ */
+export function continentAt(x: number, scale: number, split: number): Continent {
+  if (wholeWorld(scale)) return "azeroth";
+  return x < split ? "kalimdor" : "eastern-kingdoms";
+}

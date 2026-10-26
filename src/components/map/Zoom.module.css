@@ -1,0 +1,111 @@
+/* Pan, zoom and pinch (WEB-26, DESIGN.md §5–§6, boards map and map-states): the zoom buttons, the continent frames
+ * the switch flies to, dungeon entrances at zone zoom and the new-sighting drop. */
+
+.wrapper,
+.content {
+  overflow: visible;
+}
+
+/* The pannable area is the whole map frame; it clips, the frame paints the sea past the world. */
+.wrapper {
+  overflow: clip;
+  touch-action: none;
+}
+
+.wrapper:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+/* What the continent switch frames (map.ts continentViewBox): invisible, measured by the zoom. */
+.frame {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  pointer-events: none;
+}
+
+/* Dungeon entrances with their names at zone zoom (4×, map-states board), the badge of a dungeon sighting. */
+.dungeon {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 0;
+  height: 0;
+  display: none;
+  transform: scale(calc(1 / var(--zoom, 1)));
+  pointer-events: none;
+}
+
+[data-level="zone"] .dungeon {
+  display: block;
+}
+
+.dungeonMark {
+  position: absolute;
+  left: calc(var(--size-badge) / -2);
+  top: calc(var(--size-badge) / -2);
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  color: var(--capital-label);
+  font-family: var(--font-name);
+  font-size: var(--fs-tiny);
+  font-style: italic;
+  white-space: nowrap;
+  text-shadow: var(--shadow-hover-name);
+}
+
+.dungeonIcon {
+  box-sizing: border-box;
+  flex: none;
+  width: var(--size-badge);
+  height: var(--size-badge);
+  padding: calc((var(--size-badge) - var(--size-badge-icon)) / 2);
+  border-radius: var(--r-badge);
+  background: var(--badge-bg);
+  border: var(--border) solid var(--gold);
+  color: var(--gold-bright);
+}
+
+/* + and − (map board), bottom right of the map; 44 px (DESIGN.md §11). Pinch on phone. */
+.controls {
+  position: absolute;
+  right: var(--s-6);
+  bottom: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.button {
+  width: var(--size-touch);
+  height: var(--size-touch);
+  padding: 0;
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-control);
+  background: var(--control-map);
+  color: var(--gold-bright);
+  font-family: var(--font-ui);
+  font-size: var(--fs-zoom);
+  line-height: var(--lh-tight);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+.button:disabled {
+  opacity: var(--opacity-week);
+  cursor: default;
+}
+
+@media (max-width: 767px) {
+  .controls {
+    display: none;
+  }
+}

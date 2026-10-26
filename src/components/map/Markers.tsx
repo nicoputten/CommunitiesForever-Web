@@ -62,6 +62,9 @@ export function CharacterMarker({ marker: m, selected, badge = false, onSelect, 
         </span>
       )}
       {badge && m.dungeonName !== undefined && <DungeonBadge />}
+      <span className={styles.nameTag} aria-hidden="true">
+        {m.name ?? m.ownerName}
+      </span>
     </span>
   );
 }
@@ -91,6 +94,8 @@ export const FAN_MAX = 5;
 interface ZoneClusterProps extends MarkerEvents {
   place: MapPlace;
   open: boolean;
+  /** Open because of the zoom (2× and up, WEB-26): the hub is only the fan's centre then, not a control. */
+  pinned?: boolean;
   onOpen: (open: boolean) => void;
   selected?: string;
 }
@@ -99,7 +104,7 @@ interface ZoneClusterProps extends MarkerEvents {
  * Several characters in one zone (map-states board): the count in a ring split by class colour, a dungeon badge when
  * someone is in a dungeon. 2–5 fan out (spring, 30 ms stagger) on hover, focus or tap; 6 or more open a list.
  */
-export function ZoneCluster({ place, open, onOpen, selected, onSelect, onHover }: ZoneClusterProps) {
+export function ZoneCluster({ place, open, pinned = false, onOpen, selected, onSelect, onHover }: ZoneClusterProps) {
   const fan = place.markers.length <= FAN_MAX;
   const share = 100 / place.markers.length;
   const ring = place.markers
@@ -130,6 +135,7 @@ export function ZoneCluster({ place, open, onOpen, selected, onSelect, onHover }
         aria-label={placeLabel(place)}
         aria-expanded={open}
         aria-controls={fan ? undefined : listId}
+        disabled={pinned || undefined}
         style={{ "--ring": `conic-gradient(${ring})` } as CSSProperties}
         onClick={(e) => {
           e.stopPropagation();
@@ -162,6 +168,7 @@ export function ZoneCluster({ place, open, onOpen, selected, onSelect, onHover }
             <span
               key={m.guid}
               className={styles.fanItem}
+              data-tag={offsets[i]!.dx < 0 ? "left" : offsets[i]!.dx > 0 ? "right" : undefined}
               style={{ "--dx": `${offsets[i]!.dx}px`, "--dy": `${offsets[i]!.dy}px`, "--i": i } as CSSProperties}
             >
               <CharacterMarker marker={m} selected={m.guid === selected} onSelect={onSelect} onHover={onHover} />

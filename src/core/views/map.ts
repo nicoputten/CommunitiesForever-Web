@@ -44,16 +44,36 @@ function bounds(cont: "K" | "E"): ViewBox {
   };
 }
 
+function union(a: ViewBox, b: ViewBox): ViewBox {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return {
+    x,
+    y,
+    width: Math.max(a.x + a.width, b.x + b.width) - x,
+    height: Math.max(a.y + a.height, b.y + b.height) - y,
+  };
+}
+
+const KALIMDOR = bounds("K");
+const EASTERN_KINGDOMS = bounds("E");
+
+// Azeroth frames both continents, not the whole 1440 × 900 source sheet, whose land sits left of its middle: so the
+// map opens (and the switch returns) with the land centred and the sea around it (Nico, WEB-26).
 const VIEW_BOXES: Record<Continent, ViewBox> = {
-  azeroth: { x: 0, y: 0, width: map.width, height: map.height },
-  kalimdor: bounds("K"),
-  "eastern-kingdoms": bounds("E"),
+  azeroth: union(KALIMDOR, EASTERN_KINGDOMS),
+  kalimdor: KALIMDOR,
+  "eastern-kingdoms": EASTERN_KINGDOMS,
 };
 
 /** The part of the 1440 × 900 world a continent switch shows (Zephras Isle, `cont` K, counts as Kalimdor). */
 export function continentViewBox(continent: Continent): ViewBox {
   return VIEW_BOXES[continent];
 }
+
+/** Between the continents (world x): halfway from Kalimdor's east edge to the Eastern Kingdoms' west edge (WEB-26). */
+export const CONTINENT_SPLIT =
+  (VIEW_BOXES.kalimdor.x + VIEW_BOXES.kalimdor.width + VIEW_BOXES["eastern-kingdoms"].x) / 2;
 
 export interface WorldMapView {
   places: MapPlace[];
