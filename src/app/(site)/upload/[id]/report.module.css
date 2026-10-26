@@ -1,13 +1,9 @@
-/* Stand-in for the session report until WEB-20. */
+/* A rejected upload, or one that changed nothing: the title and the upload screen's state card (WEB-20). */
 
 .page {
   display: flex;
   flex-direction: column;
   gap: var(--s-6);
-}
-
-.counts {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  max-width: var(--size-upload-main);
+  margin-inline: auto;
 }

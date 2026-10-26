@@ -12,7 +12,7 @@ Drifting from the design system (`docs/DESIGN.md`, CLAUDE.md rules 11 and 12) fa
 | Screenshots | `expectScreenshot` | `toHaveScreenshot` (full page) at 1440 px (`desktop`) and 375 px (`phone`), reduced motion, fixed "now". |
 
 ## Fixed data
-`playwright.design.config.ts` starts its own server (port 3200) on a fresh database with `FIXED_NOW` (`NOW` in `sample.ts`) and admin `Nico#2201`. The `seed` project (`seed.setup.ts`) uploads `sample.ts` through the real upload route: the invented friends of `docs/DESIGN-PROMPT.md` in the community "Doombringers". `openScreen` sets the browser clock to the same "now", emulates reduced motion and waits for the web fonts. `sample.test.ts` keeps the sample a file the site accepts.
+`playwright.design.config.ts` starts its own server (port 3200) on a fresh database with `FIXED_NOW` (`NOW` in `sample.ts`) and admin `Nico#2201`. The `seed` project (`seed.setup.ts`) uploads `sample.ts` through the real upload route, the day before first and then the design sample (so upload 2 has a session report, WEB-20): the invented friends of `docs/DESIGN-PROMPT.md` in the community "Doombringers". `openScreen` sets the browser clock to the same "now", emulates reduced motion and waits for the web fonts. `sample.test.ts` keeps the sample a file the site accepts.
 
 ## Adding a screen (WEB-17..29)
 Add `tests/design/<screen>.spec.ts` (and remove the screen's placeholder entry from `SHELL_SCREENS` in `shell.spec.ts`):

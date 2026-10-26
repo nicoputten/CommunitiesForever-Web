@@ -356,4 +356,46 @@
   --hint-line: rgba(174, 182, 195, 0.15); /* upload: /reload hint */
   --done-tint: rgba(127, 217, 154, 0.12); /* upload: history "Done" */
   --rejected-tint: rgba(224, 138, 74, 0.15); /* upload: history "Rejected" */
+
+  /* session report (WEB-20): the upload-report board */
+  --dur-step: 50ms; /* upload-report: the stagger unit (every delay on the board is a multiple of 0.05 s) */
+  --dur-rise: 0.55s; /* DESIGN.md §6: staggered rise */
+  --dur-pop: 0.5s; /* upload-report: emblem and counters pop in */
+  --dur-grow: 1.1s; /* DESIGN.md §6: bars grow */
+  --dur-shine: 3.5s; /* upload-report: LEVEL UP / CAP REACHED shine */
+  --dur-rays: 50s; /* upload-report: hero rays turn */
+  --dur-halo: 4s; /* upload-report: hero halo glow */
+  --dur-report-ember: 6s; /* upload-report: hero embers */
+  --fs-counter: 40px; /* upload-report: counter numbers (Marcellus) */
+  --fs-gain: 22px; /* upload-report: "37 → 39" (Marcellus) */
+  --ls-badge: 0.1em; /* upload-report: LEVEL UP badge */
+  --s-6-5: 26px; /* upload-report: hero top padding */
+  --size-report: 1180px; /* upload-report: content width */
+  --size-report-emblem: 64px; /* upload-report: hero emblem */
+  --size-report-disc: 38px; /* upload-report: row discs */
+  --size-report-lead: 40px; /* upload-report: row disc column */
+  --size-report-track: 6px; /* upload-report: level and skill bars */
+  --r-report-track: 3px;
+  --size-report-dot: 7px; /* upload-report: "who sent data" dot */
+  --size-rays: 520px; /* upload-report: hero rays */
+  --size-halo-w: 240px; /* upload-report: hero halo */
+  --size-halo-h: 140px;
+  --size-report-glow-w: 900px; /* upload-report: gold page glow at the top */
+  --size-report-glow-h: 480px;
+  --size-ember-rise: -200px; /* upload-report: how far an ember rises */
+  --size-ember-drift: 20px;
+  --report-glow: rgba(212, 175, 106, 0.14); /* upload-report: gold glow over the page top */
+  --rays: rgba(240, 208, 142, 0.1); /* upload-report: hero rays */
+  --halo: rgba(240, 208, 142, 0.35); /* upload-report: hero halo */
+  --blur-halo: 10px;
+  --text-glow-report: 0 0 30px rgba(240, 208, 142, 0.35); /* upload-report: "Session report" */
+  --line-report: rgba(212, 175, 106, 0.22); /* upload-report: panels */
+  --line-report-chip: rgba(174, 182, 195, 0.22); /* upload-report: "who sent data" chips */
+  --track-report: #161e2b; /* upload-report: bar track */
+  --track-report-old: #3a4558; /* upload-report: the part of the bar from before */
+  --bar-gain: linear-gradient(90deg, var(--gold), var(--gold-pale)); /* upload-report: level bars, a reached cap */
+  --shine: #fff7dd; /* upload-report: the bright band of the LEVEL UP shine */
+  --on-shine: #1a1206; /* upload-report: LEVEL UP text */
+  --glow-dot: 0 0 6px; /* upload-report: glow of a new data dot (DESIGN.md §4), colour added by the component */
+  --glow-face-mix: 50%; /* upload-report: new face disc glow, class colour at 50% */
 }

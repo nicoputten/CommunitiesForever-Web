@@ -28,6 +28,12 @@
   font-size: var(--fs-tiny);
 }
 
+.disc[data-size="report"] {
+  width: var(--size-report-disc);
+  height: var(--size-report-disc);
+  font-size: var(--fs-meta);
+}
+
 .disc[data-class="shaman"] {
   color: var(--on-shaman);
 }

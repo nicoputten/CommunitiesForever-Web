@@ -43,3 +43,15 @@ export function clockTime(at: number, now: number, timeZone?: string): string {
   const thisYear = fields(now, { year: "numeric" }, timeZone).year;
   return `${f.weekday} ${f.day} ${f.month}${f.year === thisYear ? "" : ` ${f.year}`}, ${time}`;
 }
+
+/**
+ * The same time as a phrase after "uploaded" (session report, WEB-20): "today at 21:14", "yesterday at 22:05",
+ * "on Thu 23 Oct at 23:40".
+ */
+export function clockTimeAt(at: number, now: number, timeZone?: string): string {
+  const text = clockTime(at, now, timeZone);
+  const split = text.lastIndexOf(" ");
+  const day = text.slice(0, split).replace(/,$/, "");
+  const time = text.slice(split + 1);
+  return `${day === "today" || day === "yesterday" ? day : `on ${day}`} at ${time}`;
+}

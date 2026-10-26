@@ -93,7 +93,7 @@ Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope 
   - `src/proxy.ts`: open are only `/signin`, `/not-on-list` (where a refused sign-in lands), Auth.js's `/api/auth/*` (the Battle.net callback among them) and `/api/health` (WEB-07: ok and the version, nothing about the data). Without a session pages redirect to `/signin`, API routes answer 401; someone not on the list (or blocked) goes to `/not-on-list`, or 403.
   - Route handlers that need more call `guard(req, "upload" | "admin")` (`src/server/session.ts`): 401 / 403 again on the server. `upload()` itself refuses someone who may not upload (`UploadForbiddenError`) and stores nothing.
   - The Auth.js `signIn` callback refuses anyone not on the list.
-- Pages for uploaders only (404 for others, WEB-19): `/upload` and `/upload/<id>` (an upload's report; a plain stand-in until WEB-20).
+- Pages for uploaders only (404 for others, WEB-19): `/upload`. An upload's session report `/upload/<id>` is open to every signed-in viewer (WEB-20: it shows nothing the map and roster don't); "Upload another" shows only to uploaders.
 - Routes (WEB-06): `POST /api/uploads` (multipart field `file`; upload role; answers the upload's result, which the upload page maps to its states with `uploadOutcome`, `src/core/views/upload.ts`), `GET/PUT/DELETE /api/admin/guests` and `/api/admin/blocks` (admin; for the admin page, WEB-18).
 - Tests never call Battle.net: they mint the session cookie with the test `AUTH_SECRET` (`tests/server/routes.test.ts`, `tests/e2e/session.ts`).
 - Later (WEB-12): an API token for an automatic uploader, upload scope only.

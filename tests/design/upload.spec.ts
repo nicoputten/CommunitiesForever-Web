@@ -129,8 +129,10 @@ test("upload: design values", async ({ page }) => {
     "letter-spacing": "var(--ls-section)",
     color: "var(--gold-bright)",
   });
+  // The seed uploads two days (WEB-20): the newest line is the design sample's, the last one the site's first.
+  await expect(page.getByTestId("history-line").last()).toContainText(/First upload · \d+ characters/);
   const line = page.getByTestId("history-line").first();
-  await expect(line).toContainText(/^Today \d\d:\d\dNicoFirst upload · \d+ charactersDone$/);
+  await expect(line).toContainText(/^Today \d\d:\d\dNico\d+ levels gained · \d+ skill gains · \d+ sightingsDone$/);
   await expectStyles(line, { ...DATA, "min-height": "var(--size-touch)" });
   await expectStyles(line.getByText("Done", { exact: true }), {
     color: "var(--fresh-text)",
