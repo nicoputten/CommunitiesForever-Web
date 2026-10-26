@@ -96,7 +96,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ### WEB-27 Roll call panel
 - Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
-- Filters: everyone or one friend, last 24 h, faction, level range; legend (live, days, week+).
+- Filters: everyone or one friend, New (under 32 h), faction, level range; legend (new, days, week+).
 - Rows grouped by age with zone, owner, "via", age; picking one flies the map to the character.
 - Unknown whereabouts tray and the no-addon line.
 

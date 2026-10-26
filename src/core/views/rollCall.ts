@@ -1,6 +1,6 @@
 import type { Faction } from "../gamedata";
 import type { Dataset } from "../model";
-import { DAY, type DataAge } from "./age";
+import { LIVE_UNTIL, type DataAge } from "./age";
 import {
   compareDesc,
   compareText,
@@ -17,8 +17,8 @@ import {
 export interface RollCallFilter {
   /** Only this person's characters (person key). */
   person?: string;
-  /** Only characters seen in the last 24 hours. */
-  last24h?: boolean;
+  /** Only characters seen while new (the "New" chip: under 32 hours, docs/DESIGN.md §4). */
+  liveOnly?: boolean;
   faction?: Faction;
   minLevel?: number;
   maxLevel?: number;
@@ -37,8 +37,8 @@ export interface RollCall {
   /** Characters with a sighting, and all characters shown ("9 of 10 located"), after the filter. */
   located: number;
   total: number;
-  /** Seen in the last 24 hours, newest first. */
-  last24h: RollCallRow[];
+  /** Seen while new (under 32 hours), newest first. */
+  live: RollCallRow[];
   /** Seen before that, newest first. */
   earlier: RollCallRow[];
   /** Characters never sighted ("Unknown whereabouts"), by level. */
@@ -54,7 +54,7 @@ function matches(c: CharacterView, filter: RollCallFilter, now: number): boolean
   if (filter.faction !== undefined && c.faction !== filter.faction) return false;
   if (filter.minLevel !== undefined && (c.level === undefined || c.level < filter.minLevel)) return false;
   if (filter.maxLevel !== undefined && (c.level === undefined || c.level > filter.maxLevel)) return false;
-  if (filter.last24h === true && (c.sighting === undefined || now - c.sighting.seenAt >= DAY)) return false;
+  if (filter.liveOnly === true && (c.sighting === undefined || now - c.sighting.seenAt >= LIVE_UNTIL)) return false;
   if (filter.ages !== undefined && !filter.ages.includes(c.sighting?.age ?? "unknown")) return false;
   return true;
 }
@@ -92,8 +92,8 @@ export function rollCall(d: Dataset, now: number, filter: RollCallFilter = {}): 
   return {
     located: rows.length,
     total: characters.length,
-    last24h: rows.filter((r) => now - r.sighting.seenAt < DAY),
-    earlier: rows.filter((r) => now - r.sighting.seenAt >= DAY),
+    live: rows.filter((r) => now - r.sighting.seenAt < LIVE_UNTIL),
+    earlier: rows.filter((r) => now - r.sighting.seenAt >= LIVE_UNTIL),
     unknown,
     noAddon: people
       .filter((p) => !p.hasAddon && !p.isUploader)

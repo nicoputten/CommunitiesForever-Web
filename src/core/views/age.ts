@@ -1,10 +1,15 @@
-// The data age scale, one everywhere (docs/DESIGN.md §4): live < 6 h, today 6–24 h, days 1–6 d, week+ ≥ 7 d,
-// unknown when there is no time (no location). Times are Unix seconds; "now" is always an argument.
+// The data age scale, one everywhere (docs/DESIGN.md §4): live ("new") < 32 h, recent 32 h–3 d, days 3–6 d,
+// week+ ≥ 7 d, unknown when there is no time (no location). Times are Unix seconds; "now" is always an argument.
 
 export const HOUR = 3600;
 export const DAY = 24 * HOUR;
 
-export type DataAge = "live" | "today" | "days" | "week" | "unknown";
+export type DataAge = "live" | "recent" | "days" | "week" | "unknown";
+
+/** New until this age: Nico uploads about once a day, so the last session stays new (decided: docs/DESIGN.md §11). */
+export const LIVE_UNTIL = 32 * HOUR;
+/** Recent until this age, then days. */
+export const RECENT_UNTIL = 3 * DAY;
 
 /** A friend's data turns amber, and the site banner shows, at this age (decided: docs/DESIGN.md §11). */
 export const OLD_AFTER = 7 * DAY;
@@ -17,8 +22,8 @@ export function ageSeconds(at: number, now: number): number {
 export function dataAge(at: number | undefined, now: number): DataAge {
   if (at === undefined) return "unknown";
   const age = ageSeconds(at, now);
-  if (age < 6 * HOUR) return "live";
-  if (age < DAY) return "today";
+  if (age < LIVE_UNTIL) return "live";
+  if (age < RECENT_UNTIL) return "recent";
   if (age < OLD_AFTER) return "days";
   return "week";
 }

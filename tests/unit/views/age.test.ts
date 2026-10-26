@@ -7,10 +7,10 @@ const NOW = 1_000_000;
 describe("data age scale", () => {
   it.each([
     [0, "live"],
-    [6 * H - 1, "live"],
-    [6 * H, "today"],
-    [D - 1, "today"],
-    [D, "days"],
+    [32 * H - 1, "live"],
+    [32 * H, "recent"],
+    [3 * D - 1, "recent"],
+    [3 * D, "days"],
     [7 * D - 1, "days"],
     [7 * D, "week"],
     [60 * D, "week"],
