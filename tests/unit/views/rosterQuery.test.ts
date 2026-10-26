@@ -27,6 +27,8 @@ describe("roster query (URL state)", () => {
       level: "30-39",
       profession: "197",
       sort: "level",
+      dir: "desc",
+      group: false,
     });
     // Classes in the table's order, so equal views have equal URLs.
     expect(rosterSearch(q)).toBe("?q=ves&class=mage,warlock&role=heal&level=30-39&prof=tailoring&sort=level");
@@ -41,10 +43,21 @@ describe("roster query (URL state)", () => {
       sort: "evil",
       q: ["a", "b"],
     });
-    expect(q).toEqual({ search: "a", classes: ["MAGE"], roles: [], sort: "lastPlayed" });
+    expect(q).toEqual({ search: "a", classes: ["MAGE"], roles: [], sort: "lastPlayed", dir: "desc", group: false });
     expect(rosterSearch(parseRosterQuery({}))).toBe("");
     expect(isFiltered(parseRosterQuery({ sort: "level" }))).toBe(false);
     expect(isFiltered(parseRosterQuery({ q: "x" }))).toBe(true);
+  });
+
+  it("reads the table's sorts, direction and grouping (WEB-22)", () => {
+    const q = parseRosterQuery({ sort: "seen", dir: "desc", group: "friend" });
+    expect(q).toMatchObject({ sort: "seen", dir: "desc", group: true });
+    expect(rosterSearch(q)).toBe("?sort=seen&dir=desc&group=friend");
+    // The direction is written only when it is not the sort's default.
+    expect(rosterSearch(parseRosterQuery({ sort: "level", dir: "desc" }))).toBe("?sort=level");
+    expect(rosterSearch(parseRosterQuery({ sort: "level", dir: "asc" }))).toBe("?sort=level&dir=asc");
+    expect(parseRosterQuery({ sort: "talents" }).dir).toBe("asc");
+    expect(parseRosterQuery({ dir: "up", group: "yes" })).toMatchObject({ dir: "desc", group: false });
   });
 
   it("names professions by slug, unknown skill lines by ID", () => {
@@ -73,7 +86,14 @@ describe("roster query (URL state)", () => {
 describe("roster query order", () => {
   it("writes classes and roles in the table's order, however they were picked", () => {
     expect(
-      rosterSearch({ search: "", classes: ["WARLOCK", "PRIEST"], roles: ["dps", "tank"], sort: "lastPlayed" }),
+      rosterSearch({
+        search: "",
+        classes: ["WARLOCK", "PRIEST"],
+        roles: ["dps", "tank"],
+        sort: "lastPlayed",
+        dir: "desc",
+        group: false,
+      }),
     ).toBe("?class=priest,warlock&role=tank,dps");
   });
 });

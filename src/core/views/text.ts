@@ -31,3 +31,16 @@ export function joinNames(names: readonly string[]): string {
   if (names.length <= 1) return names[0] ?? "";
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
+
+/**
+ * The talents cell of the roster table (roster-table board): main tree and points per tree, "Frost 10/0/41".
+ * Undefined when the addon recorded no talents.
+ */
+export function talentsText(
+  mainTreeName: string | undefined,
+  talents: readonly { points?: number }[],
+): string | undefined {
+  if (talents.length === 0) return mainTreeName;
+  const points = talents.map((t) => t.points ?? 0).join("/");
+  return mainTreeName === undefined ? points : `${mainTreeName} ${points}`;
+}

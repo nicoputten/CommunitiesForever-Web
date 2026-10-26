@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { D, H } from "./sample";
-import { capitalize, initials, timeAgo } from "@/core/views";
+import { capitalize, initials, talentsText, timeAgo } from "@/core/views";
 
 const NOW = 10_000_000;
 
@@ -46,5 +46,13 @@ describe("capitalize", () => {
   it("upper-cases the first letter only", () => {
     expect(capitalize("yesterday")).toBe("Yesterday");
     expect(capitalize("")).toBe("");
+  });
+});
+
+describe("talentsText", () => {
+  it("shows the main tree and the points per tree (roster-table board)", () => {
+    expect(talentsText("Frost", [{ points: 10 }, { points: 0 }, { points: 41 }])).toBe("Frost 10/0/41");
+    expect(talentsText(undefined, [{ points: 5 }, {}, { points: 1 }])).toBe("5/0/1");
+    expect(talentsText(undefined, [])).toBeUndefined();
   });
 });

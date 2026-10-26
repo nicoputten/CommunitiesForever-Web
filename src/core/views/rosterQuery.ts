@@ -1,11 +1,12 @@
 import { CLASSES, PROFESSIONS, type ClassFile } from "../gamedata";
 import type { CharacterView, Role } from "./characters";
 import { compareText } from "./characters";
-import type { RosterFilter, RosterSort } from "./roster";
+import { defaultSortDir, type RosterFilter, type RosterSort, type SortDir } from "./roster";
 
 // The roster's search, filters and sort as they live in the URL (WEB-21), so a view can be shared and Back undoes a
-// filter: /roster?q=ves&class=warlock,mage&role=heal&level=30-39&prof=tailoring&sort=level. Anything unknown in the
-// URL is ignored, never an error.
+// filter: /roster?q=ves&class=warlock,mage&role=heal&level=30-39&prof=tailoring&sort=level. The table (WEB-22) adds
+// its column sorts, the direction (`dir`, only when not the sort's default) and `group=friend`. Anything unknown in
+// the URL is ignored, never an error.
 
 export interface LevelRange {
   key: string;
@@ -36,7 +37,22 @@ export const ROSTER_SORTS: readonly { value: RosterSort; label: string }[] = [
   { value: "profession", label: "Profession" },
 ];
 
-const DEFAULT_SORT: RosterSort = "lastPlayed";
+/** The table's columns that sort (roster-table board), in column order. */
+export const TABLE_SORTS: readonly { value: RosterSort; label: string }[] = [
+  { value: "name", label: "Character" },
+  { value: "player", label: "Player" },
+  { value: "level", label: "Level" },
+  { value: "class", label: "Race · class" },
+  { value: "role", label: "Role" },
+  { value: "talents", label: "Talents" },
+  { value: "ilvl", label: "ilvl" },
+  { value: "profession", label: "Professions" },
+  { value: "lastPlayed", label: "Last played" },
+  { value: "seen", label: "Last seen in" },
+];
+
+export const DEFAULT_SORT: RosterSort = "lastPlayed";
+const SORTS = new Set<string>([...ROSTER_SORTS, ...TABLE_SORTS].map((s) => s.value));
 const CLASSES_ORDER = Object.keys(CLASSES) as ClassFile[];
 
 export interface RosterQuery {
@@ -48,6 +64,9 @@ export interface RosterQuery {
   /** Skill line ID. */
   profession?: string;
   sort: RosterSort;
+  dir: SortDir;
+  /** The table grouped by friend (`group=friend`, WEB-22). */
+  group: boolean;
 }
 
 export type SearchParams = Record<string, string | string[] | undefined>;
@@ -84,12 +103,16 @@ export function parseRosterQuery(params: SearchParams): RosterQuery {
   const roles = list(params.role).filter((r): r is Role => (ROLES as readonly string[]).includes(r));
   const level = first(params.level);
   const prof = first(params.prof);
-  const sort = first(params.sort);
+  const sortParam = first(params.sort);
+  const sort = sortParam !== undefined && SORTS.has(sortParam) ? (sortParam as RosterSort) : DEFAULT_SORT;
+  const dir = first(params.dir);
   const query: RosterQuery = {
     search: (first(params.q) ?? "").slice(0, 64),
     classes: CLASSES_ORDER.filter((c) => classes.includes(c)),
     roles: ROLES.filter((r) => roles.includes(r)),
-    sort: ROSTER_SORTS.some((s) => s.value === sort) ? (sort as RosterSort) : DEFAULT_SORT,
+    sort,
+    dir: dir === "asc" || dir === "desc" ? dir : defaultSortDir(sort),
+    group: first(params.group) === "friend",
   };
   if (LEVEL_RANGES.some((r) => r.key === level)) query.level = level;
   const skillLine = prof === undefined ? undefined : skillLineOf(prof.toLowerCase());
@@ -112,6 +135,8 @@ export function rosterSearch(q: RosterQuery): string {
   if (q.level !== undefined) params.set("level", q.level);
   if (q.profession !== undefined) params.set("prof", professionSlug(q.profession));
   if (q.sort !== DEFAULT_SORT) params.set("sort", q.sort);
+  if (q.dir !== defaultSortDir(q.sort)) params.set("dir", q.dir);
+  if (q.group) params.set("group", "friend");
   const s = params.toString().replaceAll("%2C", ",");
   return s === "" ? "" : `?${s}`;
 }
