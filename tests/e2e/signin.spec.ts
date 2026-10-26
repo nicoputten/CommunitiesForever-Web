@@ -92,12 +92,20 @@ test.describe("not on the list", () => {
     expect((await context.cookies()).some((c) => c.name === "cf-refused")).toBe(false);
   });
 
-  test("another account asks Battle.net for its login form", async ({ page, context, baseURL }) => {
-    const authorize = catchBattleNet(page);
+  test("another account signs out of the site and of Battle.net, then back to sign-in", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    let logout: URL | undefined;
+    await page.route("https://eu.battle.net/login/logout**", async (route) => {
+      logout = new URL(route.request().url());
+      await route.fulfill({ status: 200, body: "Battle.net" });
+    });
     await signInAs(context, baseURL!, "Stranger#9999");
     await page.goto("/not-on-list");
     await page.getByRole("button", { name: "Use another Battle.net account" }).click();
-    await expect.poll(() => authorize()?.searchParams.get("prompt")).toBe("login");
+    await expect.poll(() => logout?.searchParams.get("ref")).toBe(`${baseURL}/signin`);
     expect((await context.cookies()).some((c) => c.name.endsWith("authjs.session-token"))).toBe(false);
   });
 });

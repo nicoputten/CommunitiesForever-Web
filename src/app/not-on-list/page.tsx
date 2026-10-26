@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getSiteInfo } from "@/app/site";
 import { SignInScene, StateButton, StatePanel, StateQuiet, StateText, Tag } from "@/components/signin/SignIn";
-import { auth, signIn, signOut } from "@/server/auth";
+import { auth, battleNetLogoutUrl, signOut } from "@/server/auth";
 import { adminName, forgetRefused, refusedBattleTag } from "@/server/refused";
 
 // "Not on the list" (WEB-17, sign-in-states board): a refused sign-in lands here (src/server/auth.ts), and so does a
@@ -24,8 +25,9 @@ export default async function NotOnList() {
     "use server";
     await forgetRefused();
     await signOut({ redirect: false });
-    // Battle.net remembers who signed in last; prompt=login asks it for the login form again.
-    await signIn("battlenet", { redirectTo: "/signin/welcome" }, { prompt: "login" });
+    // Battle.net remembers who signed in last: sign out there too, then back to sign-in for another account.
+    const site = process.env.AUTH_URL;
+    redirect(site ? battleNetLogoutUrl(new URL("/signin", site).href) : "/signin");
   };
   const leave = async () => {
     "use server";

@@ -15,6 +15,15 @@ import { rememberRefused } from "./refused";
 /** Battle.net's EU OpenID issuer (https://eu.battle.net/oauth/.well-known/openid-configuration). */
 export const BATTLENET_ISSUER = "https://eu.battle.net/oauth";
 
+/**
+ * Battle.net's own logout (WEB-17). It ends the Battle.net login and sends the browser on to `ref`, so the next sign-in
+ * asks for an account again. Battle.net ignores OIDC `prompt=login`, and its OIDC end_session_endpoint
+ * (/oauth/logout) answers 400; both tried by Nico on 2026-10-27.
+ */
+export function battleNetLogoutUrl(back: string): string {
+  return `https://eu.battle.net/login/logout?ref=${encodeURIComponent(back)}`;
+}
+
 /** Days a session lasts without a visit. */
 const SESSION_DAYS = 30;
 
