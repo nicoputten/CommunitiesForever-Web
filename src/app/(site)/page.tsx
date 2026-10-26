@@ -6,7 +6,7 @@ export default function MapPage() {
   return (
     <>
       <Atmosphere variant="map" />
-      <Placeholder title="Map" story="WEB-25" />
+      <Placeholder title="Map" story="WEB-25" map />
     </>
   );
 }

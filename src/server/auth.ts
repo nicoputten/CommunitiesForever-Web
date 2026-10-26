@@ -31,6 +31,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       issuer: BATTLENET_ISSUER,
       // Only the BattleTag is needed; Battle.net knows no "profile" or "email" scope.
       authorization: { params: { scope: "openid" } },
+      // Battle.net refuses an authorize request without `state` ("The state parameter must be provided"), and it puts
+      // a `nonce` in the ID token even when none was sent, which Auth.js then rejects. Auth.js sends only PKCE for
+      // OIDC providers by default.
+      checks: ["pkce", "state", "nonce"],
     }),
   ],
   session: { strategy: "jwt", maxAge: SESSION_DAYS * 24 * 60 * 60 },

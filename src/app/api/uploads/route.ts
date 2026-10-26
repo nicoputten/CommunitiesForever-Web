@@ -1,3 +1,4 @@
+import { nowSeconds } from "@/app/clock";
 import { guard } from "@/server/session";
 import { MAX_UPLOAD_BYTES, upload, UploadForbiddenError, UploadTooLargeError } from "@/server/uploads";
 
@@ -24,7 +25,7 @@ export async function POST(req: Request): Promise<Response> {
   if (file.size > MAX_UPLOAD_BYTES) return tooLarge();
 
   try {
-    return Response.json(upload(caller.db, new Uint8Array(await file.arrayBuffer()), caller.battleTag));
+    return Response.json(upload(caller.db, new Uint8Array(await file.arrayBuffer()), caller.battleTag, nowSeconds()));
   } catch (e) {
     if (e instanceof UploadTooLargeError) return tooLarge();
     if (e instanceof UploadForbiddenError) return Response.json({ error: "You may not upload." }, { status: 403 });

@@ -19,21 +19,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E4 Design foundations
 
-### WEB-30 Design checks
-- Goal: drifting from the design system fails the build, not a review.
-- **Token lint** (Vitest, no new dependency): scans `src/**/*.module.css` and `src/**/*.tsx` and fails on raw colours (hex, `rgb()`, `hsl()`), font sizes, font families, radii, shadows and durations outside `src/styles/tokens.css`; a value that is really needed goes into the tokens. Allowed: `0`, `100%`, `1px` borders using a token colour.
-- **Computed-style checks** (Playwright): per screen, its key elements use the design values, read with `getComputedStyle`. For example:
-  - page title: Marcellus SC at the `display` size
-  - character names: Marcellus, in their class `-text` colour
-  - data in Inter with tabular numbers
-  - page backgrounds: `--bg-abyss` on map pages, `--bg-night` on data pages
-  - surfaces use the token blur
-- **Touch targets:** every interactive element is at least 44 × 44 px at phone size.
-- **Accessibility:** `@axe-core/playwright` scan of every screen at both sizes, no serious or critical violations (dev dependency approved by Nico).
-- **Screenshot baselines:** `toHaveScreenshot` per screen at 1440 and 375 px with fixed sample data (the design prompt's invented friends) and motion off. Baselines live in the repo; updating one is a deliberate `npm run test:design -- --update-snapshots` that Nico approves in the PR.
-- **Reduced motion:** with `prefers-reduced-motion`, no element has a running animation.
-- `npm run test:design` runs all of the above, and CI runs it on every PR.
-- Built right after WEB-15, so every screen story adds its checks from the start.
 
 ## E5 Screens
 

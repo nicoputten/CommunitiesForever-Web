@@ -6,7 +6,6 @@
   border-radius: var(--r-modal);
   background: var(--surface-modal);
   backdrop-filter: blur(var(--blur-modal));
-  -webkit-backdrop-filter: blur(var(--blur-modal));
   border: var(--border) solid var(--line-modal);
   box-shadow: var(--shadow-modal);
   text-align: center;

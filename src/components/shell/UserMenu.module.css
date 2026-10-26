@@ -42,7 +42,6 @@
   border-radius: var(--r-panel);
   background: var(--surface-strong);
   backdrop-filter: blur(var(--blur-surface));
-  -webkit-backdrop-filter: blur(var(--blur-surface));
   border: var(--border) solid var(--line-strong);
   box-shadow: var(--shadow-card);
 }
@@ -119,8 +118,14 @@
 }
 
 @media (max-width: 767px) {
+  /* Only the avatar shows; the BattleTag stays in the accessible name (as .visually-hidden in globals.css). */
   .tag {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .trigger {

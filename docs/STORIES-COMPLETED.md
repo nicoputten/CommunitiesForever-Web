@@ -118,6 +118,7 @@
 - Done: `src/styles/tokens.css`, `globals.css`, `fonts.ts` (next/font, `--font-*-face`); shell in `src/components/shell/` (`SiteShell`, `TopBar`, `UserMenu`, `TabBar`, `SiteFooter`) through `src/app/(site)/layout.tsx`, so pages outside the group (sign-in) have no shell; components in `src/components/ui/` (`ClassDisc`, `DataAgeBadge`, `FactionTag`, `FilterChip`, `Segmented`, `Banner`, `EmptyState`, `Skeleton`, `PageTitle`, icons); `/dev/components`; placeholder pages for Map, Roster, Professions and Upload; `timeAgo`, `initials` in `src/core/views`; Playwright `tests/e2e/shell.spec.ts` (phone project now 375 px wide).
 - Wired to WEB-06: `src/app/viewer.ts` (`getViewer` from the session and the access list, role per request; `isAdmin` guards `/dev/components`), `src/app/actions.ts` (sign out to /signin), `src/app/site.ts` (site name uses the merged community name, as uploads do not store their own `clubName` yet).
 
+<<<<<<< HEAD
 ### WEB-16 Atmosphere
 - `Atmosphere` component: drifting fog, light shafts, embers, animated sea (waves, surf, foam, Maelstrom, moonlight) with the loop times of `docs/DESIGN.md` §6.
 - Alive on the map and sign-in pages; data pages are calm (same palette, no ambient motion).
@@ -125,6 +126,24 @@
 - Performance: CSS and SVG only, no WebGL; no layout shift; animations pause when the tab is hidden.
 - Decided with Nico (2026-10-26): the Motion switch follows the system until flipped, and an explicit On animates even under the system's reduced motion; layers exactly as the boards (desktop map: fog and light shafts, no embers; phone map: one fog bank; sign-in: drifting map, fog and embers, phone too; data pages: the static top glow only); loop times §6 does not list come from the boards as tokens.
 - Done: `src/components/atmosphere/` (`Atmosphere` with variants map / signin / calm, `SeaLayers` as one SVG group for the map's 1440 × 900 viewBox, `DriftingMap` for sign-in, `motion.ts` with the head script that applies the stored setting before first paint, `AmbientMotion` for pausing while the tab is hidden); `wavePath` in `src/core/map/waves.ts`; Motion switch in `UserMenu`; tokens in `tokens.css` part 2; global reduced-motion rules in `globals.css` keyed on `<html data-motion>`; sea preview on `/dev/components`; Playwright `tests/e2e/atmosphere.spec.ts`. WEB-25 slots `SeaLayers` under its zone fills and keeps `<Atmosphere variant="map">`; WEB-17 builds the sign-in panel over the `signin` variant.
+=======
+### WEB-30 Design checks
+- Goal: drifting from the design system fails the build, not a review.
+- **Token lint** (Vitest, no new dependency): scans `src/**/*.module.css` and `src/**/*.tsx` and fails on raw colours (hex, `rgb()`, `hsl()`), font sizes, font families, radii, shadows and durations outside `src/styles/tokens.css`; a value that is really needed goes into the tokens. Allowed: `0`, `100%`, `1px` borders using a token colour.
+- **Computed-style checks** (Playwright): per screen, its key elements use the design values, read with `getComputedStyle`. For example:
+  - page title: Marcellus SC at the `display` size
+  - character names: Marcellus, in their class `-text` colour
+  - data in Inter with tabular numbers
+  - page backgrounds: `--bg-abyss` on map pages, `--bg-night` on data pages
+  - surfaces use the token blur
+- **Touch targets:** every interactive element is at least 44 × 44 px at phone size.
+- **Accessibility:** `@axe-core/playwright` scan of every screen at both sizes, no serious or critical violations (dev dependency approved by Nico).
+- **Screenshot baselines:** `toHaveScreenshot` per screen at 1440 and 375 px with fixed sample data (the design prompt's invented friends) and motion off. Baselines live in the repo; updating one is a deliberate `npm run test:design -- --update-snapshots` that Nico approves in the PR.
+- **Reduced motion:** with `prefers-reduced-motion`, no element has a running animation.
+- `npm run test:design` runs all of the above, and CI runs it on every PR.
+- Built right after WEB-15, so every screen story adds its checks from the start.
+- Done: `tests/design/` (README with how a screen adds its checks): token lint (`token-lint.ts`, `tokens.test.ts`), helpers in `checks.ts` (`expectStyles` with `TYPE`, `DATA`, `characterName`, `SURFACE`; `expectBackground`, `expectTouchTargets`, `expectAccessible`, `expectNoMotion`, `expectScreenshot`), sample data (`sample.ts`) uploaded by `seed.setup.ts`, checks of the shell, placeholder screens and `/dev/components` in `shell.spec.ts`; `playwright.design.config.ts` (fresh database, `FIXED_NOW`); CI job `design` in the Playwright image, which writes changed screenshots into the `design-baselines` artifact. Fixed on the way: the build dropped the unprefixed `backdrop-filter` (no blur in Chrome), the account button's name did not contain its visible text, the map page now sits on `--bg-abyss`, the live disc glow's 45% became `--glow-disc-mix`. Sign-in and "not on the list" are unstyled placeholders until WEB-17, which adds their checks.
+>>>>>>> origin/develop
 
 ### WEB-02 Design prompt for Claude Design
 - Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.

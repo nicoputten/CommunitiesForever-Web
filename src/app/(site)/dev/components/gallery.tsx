@@ -193,7 +193,7 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
       </Section>
 
       <Section title="Skeleton" note="Keeps the layout still while loading; the region sets aria-busy.">
-        <div className={styles.skeletonPanel} aria-busy="true" aria-label="Loading example">
+        <div className={styles.skeletonPanel} role="group" aria-busy="true" aria-label="Loading example">
           <div className={styles.skeletonHead}>
             <Skeleton shape="circle" width="var(--s-8)" height="var(--s-8)" />
             <Skeleton width="var(--size-menu)" />

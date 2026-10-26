@@ -31,7 +31,7 @@
 }
 
 .disc[data-live] {
-  box-shadow: var(--glow-disc) color-mix(in srgb, var(--disc) 45%, transparent);
+  box-shadow: var(--glow-disc) color-mix(in srgb, var(--disc) var(--glow-disc-mix), transparent);
 }
 
 .level {

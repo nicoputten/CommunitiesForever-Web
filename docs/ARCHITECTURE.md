@@ -101,7 +101,7 @@ Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope 
 - Site name: the community name (`settings.clubName`) of the newest admin upload, never hardcoded.
 - Ruleset instead of realm: Forever has one mega-realm per ruleset per region. The group plays PvP, so the site shows PvP or PvE: the rulesets table (WEB-13) lists the PvP realm name(s), every other realm is PvE.
 - Motion: ambient on the map and sign-in, calm on data pages; `prefers-reduced-motion` and a "Motion" toggle (`localStorage`) turn it off.
-- The design system is binding (CLAUDE.md rules 11 and 12): deviations only with Nico's OK, listed in `docs/DESIGN.md` "Deviations". The design checks (WEB-30) enforce it: token lint, computed styles, touch targets, accessibility, screenshot baselines.
+- The design system is binding (CLAUDE.md rules 11 and 12): deviations only with Nico's OK, listed in `docs/DESIGN.md` "Deviations". The design checks (WEB-30) enforce it: token lint, computed styles, touch targets, accessibility, reduced motion, screenshot baselines. Each screen story adds its own; how: `tests/design/README.md`. They run on a fresh database seeded with the design prompt's invented friends and a fixed "now" (`FIXED_NOW`, tests only); screenshot baselines are made on Linux in the Playwright image (CI job `design`).
 
 ## Hosting
 Step by step: `deploy/README.md` (WEB-07).

@@ -26,6 +26,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Map pages sit on the abyss, data pages on the night (DESIGN.md §3). A map page marks itself with data-page="map". */
+body:has([data-page="map"]) {
+  background: var(--bg-abyss);
+}
+
 h1,
 h2,
 h3,

@@ -27,6 +27,48 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  # Design checks (WEB-30, tests/design/README.md) in the Playwright image, so screenshots render the same on every
+  # run. The image tag matches @playwright/test in package-lock.json: bump both together.
+  design:
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # --ignore-scripts: the image has no compiler for better-sqlite3's node-gyp rebuild, and the package loads its
+      # bundled prebuilt binding anyway (docs/ARCHITECTURE.md Stack).
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      # Screenshots that differ are written as new baselines instead of failing here; the next step fails on them
+      # and uploads them, so a changed look comes back as files to review and commit (after Nico approved it).
+      - run: npm run test:design -- --update-snapshots=changed
+      - name: Screenshot baselines unchanged
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          changed=$(git status --porcelain tests/design/__screenshots__)
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            echo "::error::Screenshots differ from the baselines. Review the design-baselines artifact; commit it only after Nico approved the new look (tests/design/README.md)."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: design-baselines
+          path: tests/design/__screenshots__/
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: design-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   # The release image (WEB-07), built but not pushed, so a broken Dockerfile shows up before a tag.
   image:
     runs-on: ubuntu-latest
