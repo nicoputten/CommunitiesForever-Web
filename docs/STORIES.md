@@ -38,13 +38,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Header: name, level, race, class, faction, ruleset (WEB-13), played by, last played, data age and source ("own addon" / "via X").
 - Level block with "21 levels to 60" and dungeon fit; at a glance (item level, role, main tree, faction, ruleset); talents bars; professions with "Compare with the group"; quest log (titles only, "as the addon recorded them 2 h ago"); last-seen mini map ("Lia is here too", "On the map"); the owner's other characters.
 
-### WEB-24 Professions
-- Board: `professions`.
-- Summary: covered / thin / gaps with the professions named.
-- Cards per profession: best in the group, everyone's skill bars on the 300 scale with the cap shaded and ticks at 75/150/225, status badge; secondary professions marked.
-- Character × profession matrix (brighter cell = higher skill); "No professions yet".
-- Recipe search placeholder: "Recipe search arrives when the addon shares known recipes."
-
 ### WEB-25 World map
 - Boards: `map`, `map-states`. The map page is the home page.
 - Server-rendered SVG from `zones.json` with the layers of `docs/DESIGN.md` §5; HTML overlay for markers.
