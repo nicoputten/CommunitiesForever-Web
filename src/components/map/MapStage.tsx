@@ -363,6 +363,18 @@ export function MapStage({
       void goTo(x, y, whole ? 1 : scale, motionMs("--dur-fan"), "easeOutCubic");
       return;
     }
+    // Rest on whole pixels: a fly or pinch ends on a fraction, which renders the card and labels a little differently
+    // each time (and softer). The snap is a transform too, which settles once more and then holds.
+    const l = layout();
+    if (l !== undefined) {
+      const px = Math.round(l.positionX);
+      const py = Math.round(l.positionY);
+      if (Math.abs(px - l.positionX) > 0.01 || Math.abs(py - l.positionY) > 0.01) {
+        byHand.current = moved;
+        l.z.setTransform(px, py, l.scale, 0);
+        return;
+      }
+    }
     // The switch follows a pan or zoom by hand; a fly (the switch, a link) already set it.
     const now = continentAt(c.world.x, scale, split);
     if (moved && now !== shownContinent.current) {
