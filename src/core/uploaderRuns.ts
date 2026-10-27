@@ -1,14 +1,7 @@
 import { battleTagKey, sameBattleTag } from "./access";
+import { levelFit } from "./levelFit";
 import { offsetSeconds } from "./runTime";
-import {
-  PAST_AFTER_SECONDS,
-  phase,
-  runDungeon,
-  type Answer,
-  type RunRecord,
-  type RunSource,
-  type SlotRole,
-} from "./runs";
+import { PAST_AFTER_SECONDS, phase, runDungeon, type RunRecord, type RunSource, type SlotRole } from "./runs";
 
 // The upcoming runs for the uploader (WEB-44, docs/UPLOADER-API.md "Runs"): the shape of the addon's planned runs
 // file (`CF_RUNS`, CommunitiesForever docs/ARCHITECTURE.md "Planned runs file"), which the uploader (UP-12) writes
@@ -36,10 +29,15 @@ export interface GamePerson {
 }
 
 export interface GameAnswer extends GamePerson {
-  answer: Answer;
+  /** A reserve is "maybe" with `reserve` (older addons read in | maybe | cant). */
+  answer: "in" | "maybe" | "cant";
   role: GameRole;
   source: GameSource;
   at: number;
+  /** WEB-47: said I'm in while the role was full. */
+  reserve?: boolean;
+  /** WEB-47: how the character's level fits ("fits", "+3 over", "4 below"). */
+  fit?: string;
 }
 
 export interface GameRun {
@@ -73,6 +71,8 @@ export interface UploaderRunsInput {
   runs: readonly RunRecord[];
   /** A character's name by GUID. */
   characterName: (guid: string) => string | undefined;
+  /** A character's level by GUID, for its fit (WEB-47). */
+  characterLevel?: (guid: string) => number | undefined;
   /** A friend's own time zone (theirs, else the admin's). */
   timeZoneOf: (battleTag: string) => string;
   reminderMinutes: number;
@@ -141,13 +141,21 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
             (a, b) => a.answeredAt - b.answeredAt || battleTagKey(a.battleTag).localeCompare(battleTagKey(b.battleTag)),
           )
           .slice(0, UPLOADER_MAX_ANSWERS)
-          .map((a) => ({
-            ...person(a.battleTag, a.guid),
-            answer: a.answer,
-            role: ROLE[a.role],
-            source: SOURCE[a.source],
-            at: a.answeredAt,
-          })),
+          .map((a) => {
+            const game: GameAnswer = {
+              ...person(a.battleTag, a.guid),
+              answer: a.answer === "reserve" ? "maybe" : a.answer,
+              role: ROLE[a.role],
+              source: SOURCE[a.source],
+              at: a.answeredAt,
+            };
+            if (a.answer === "reserve") game.reserve = true;
+            if (a.guid !== undefined && dungeon !== undefined && input.characterLevel !== undefined) {
+              const { min, max } = dungeon.typicalLevels;
+              game.fit = levelFit(input.characterLevel(a.guid), min, max).label;
+            }
+            return game;
+          }),
       };
       if (r.note !== undefined) run.note = r.note;
       return run;

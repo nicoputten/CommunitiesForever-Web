@@ -32,24 +32,6 @@ Order (2026-10-27; WEB-32, WEB-38, WEB-40 and WEB-46 are done): WEB-44, Runs v2 
 ### Runs v2 (WEB-47 to WEB-50)
 Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Runs v2" (Nico, 2026-10-27): any character can join, the role is picked apart from the character, the organiser can move people, and styled dropdowns replace every native one. Boards: `runs-v2-findings` (the 15 issues, each with what was seen and the fix), `runs-v2-picker`, `runs-v2-run-detail`, `runs-v2-plan`. They are newer than `runs`, `run-detail` and `run-create` where they overlap. Done for all four when none of the 15 findings can be reproduced, at 1440 and 375 px. Decided with Nico: four stories, right after WEB-44 and before WEB-43; the dropdown is built in house (ARIA listbox and combobox, no new dependency); account names on the boards were replaced with made-up ones (characters are fine).
 
-### WEB-47 Runs v2: level fit, roles and reserve
-- **One rule for level fit** in `src/core`: `levelFit(level, min, max)` gives `{ kind, label }`, used everywhere a fit shows (runs list, run detail, Plan and Edit, the Discord run post data, "could join", the roster bands; today the same character is "too low" on one page and "16 levels short" on another):
-
-  | kind | rule | label | can pick | suggested ("could fill") |
-  |---|---|---|---|---|
-  | fits | min ≤ level ≤ max | `fits` | yes | yes |
-  | over | 1–9 above max | `+N over` | yes | yes |
-  | carry | 10+ above max | `carry · +N` | yes, with a one-line XP note | no |
-  | low | 1–5 below min | `N below` | yes, with a "tough" note | no |
-  | tooLow | 6+ below min | `N below` | listed, can only answer Maybe | no |
-
-  "Runs I can join" means a character that fits or is over.
-- **Roles per class** in `src/core`: `rolesFor(class)`: Warrior tank and damage; Paladin and Druid tank, healer and damage; Priest and Shaman healer and damage; Mage, Warlock, Hunter and Rogue damage. The default is the role the addon reports (talents or set by the player); a choice here is per run and never changes the addon.
-- **Data** (forward-only migration): a sign-up stores the character and the role apart (no longer derived from the character); existing sign-ups get the character's current role. A new answer state **reserve**: I'm in for a full role becomes reserve, and when a slot of that role frees up the oldest reserve moves up (next to WEB-40's moving up from Maybe). The organiser's own entry has a role and can change character and role.
-- **API:** answering takes `{ characterId, role, answer }`; a new organiser and admin endpoint moves a sign-up to another role, to reserve, or removes it, and the moved person gets a quiet Discord notice (a bot event, no channel ping). Server checks: the role is in `rolesFor`, a tooLow character can only answer Maybe, only the organiser or the admin moves or removes.
-- **Compatible additions** (rule 5 and the API contracts): `docs/BOT-API.md` (answer with role, the move action, the quiet notice event, role and fit per sign-up in run events), WEB-44's runs feed (role, fit and reserve per answer, so the uploader writes them into `Runs.lua`) all as optional fields within v1. Older bots and uploaders keep working; the bot's BOT-04 and the addon pick them up.
-- Tests: `levelFit` at every boundary, `rolesFor` for every class, reserve promotion (oldest first, per role), the move endpoint's rights (organiser, admin, anyone else), the migration on existing sign-ups.
-
 ### WEB-49 Character and role picker, run detail v2
 - Boards: `runs-v2-picker`, `runs-v2-run-detail`. Needs WEB-47 and WEB-48.
 - **The picker** (replaces the character select on the run page and Lead as in Plan and Edit) in three steps: every character of the user with its level fit tag, nothing hidden; the role as a segmented control, roles the class can't play disabled with a reason ("not for priests"), each with its state ("open", "3 open", "full → reserve"); the answer (I'm in, Maybe, Can't) with a summary line ("You join as Kaz Coldbrew · Healer") and Save answer. A popover from the Answer button on desktop, a bottom sheet under 640 px. After saving the card collapses to "You're in as … · Role · Change"; reserve reads "Damage is full · you'd be reserve as …". Characters are a listbox, roles and answers radiogroups; full keyboard use, focus trapped in the sheet, Esc closes, 44 px targets.

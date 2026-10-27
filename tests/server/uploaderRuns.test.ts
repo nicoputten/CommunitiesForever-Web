@@ -109,7 +109,7 @@ describe("runs for the uploader", () => {
     ]);
     expect(body.runs[1]!.url).toBe(`https://wow.example/runs/${armory}`);
     expect(body.runs[0]!.id).toBe(`r-${started}`);
-    sameShape(body, example("runs"), ["note", "guid", "name"]);
+    sameShape(body, example("runs"), ["note", "guid", "name", "fit", "reserve"]);
     // Asked again without a change: the same list, the same updatedAt.
     expect(await (await get(token)).json()).toEqual(body);
   });

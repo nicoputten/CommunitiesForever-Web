@@ -190,7 +190,7 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
     "counts": { "in": 3, "maybe": 1, "cant": 0 },
     "answers": [
       { "name": "Femke", "character": "Lia Thornwhisper", "discordId": "100000000000000003", "answer": "in", "role": "healer", "source": "discord" },
-      { "name": "Bob", "character": "Tok Ironhide", "answer": "maybe", "role": "healer", "source": "website", "waitlisted": true }
+      { "name": "Bob", "character": "Tok Ironhide", "guid": "Player-1-0000B002", "fit": { "kind": "fits", "label": "fits" }, "answer": "maybe", "role": "healer", "source": "website", "reserve": true, "waitlisted": true }
     ]
   }
 }
@@ -208,7 +208,8 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 | `runCancelled` | `by` (a name), `mention` | Deleted by its organiser or the admin. The bot marks the post cancelled |
 | `runReminder` | `mention`, `minutes` | `minutes` before start (the admin's reminder time) |
 | `runStarting` | `mention` | At start time |
-| `runMovedUp` | `who` (`name`, `discordId`) | A Maybe moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
+| `runMovedUp` | `who` (`name`, `discordId`) | A reserve (or a Maybe) moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
+| `runMoved` | `who` (`name`, `discordId`), `to` (`tank`, `healer`, `damage`, `reserve` or `removed`), `by` (a name) | WEB-47: the organiser or the admin moved their sign-up: a quiet notice to them, not a channel post |
 | `runEnded` | `outcome`: `done` or `didntHappen` | Planned: marked from an upload (WEB-43) |
 | `askNow` | `ask` (dungeon, level range, roles, from whom) | Planned: an "Ask now" from the game with "Also post on Discord" (WEB-44, addon CF-27) |
 | `ping` | `from`, `text` | Planned: a Discord ping made in the game (WEB-44) |
@@ -228,7 +229,10 @@ For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit,
 | `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt` or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
 | `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt` or `date` and `time`, `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
 | `POST /api/bot/v1/runs/<id>/cancel` | `discordUserId` | `{ run }`. The organiser, or the admin any run |
-| `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `guid` (required for `in`) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
-| `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role }] }`: the user's characters in the run's range (Pick my character) |
+| `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `characterId` (or `guid`; required for `in`), `role` (optional, WEB-47: `tank`, `healer` or `damage`, one the class can play; default the character's role) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
+| `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role, roles, fit }] }`: the user's characters that may say I'm in (Pick my character); `roles` the roles their class can play, `fit` how their level fits (WEB-47) |
+| `POST /api/bot/v1/runs/<id>/move` | `discordUserId`, `characterId`, `to` (`tank`, `healer`, `damage`, `reserve` or `remove`) | `{ run }`. WEB-47: the organiser, or the admin any run, moves a sign-up to another role's open slot, to reserve, or off the run (the friend may answer again). The moved friend gets `runMoved` |
+
+WEB-47 (optional fields within v1): each answer in a run carries `guid`, `fit` (`kind`: `fits`, `over`, `carry`, `low` or `tooLow`; `label`: "fits", "+3 over", "carry · +12", "4 below"), and for a reserve `reserve: true`. A reserve is sent as `"answer": "maybe"` and keeps `waitlisted: true`, for bots from before WEB-47. "Runs I can join" and suggestions use `fits` and `over`; `tooLow` (6 or more below) can only answer Maybe. Errors for `answers` and `move`: `400 role_not_for_class`, `404 unknown_sign_up`, `409 role_full`, `409 same`.
 
 Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`.

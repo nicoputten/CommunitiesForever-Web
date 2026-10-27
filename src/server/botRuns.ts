@@ -1,6 +1,7 @@
 import { mayAdmin, roleOf } from "@/core/access";
-import { RUNNABLE_DUNGEONS } from "@/core/gamedata";
-import { inRange, isUpcoming, runDungeon } from "@/core/runs";
+import { RUNNABLE_DUNGEONS, rolesFor } from "@/core/gamedata";
+import { isUpcoming, runDungeon, type MoveTo, type SlotRole } from "@/core/runs";
+import { levelFit } from "@/core/levelFit";
 import { zonedToUtc } from "@/core/runTime";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
@@ -35,6 +36,25 @@ export function botFriend(db: Db, discordUserId: unknown): BotFriend | Response 
   };
 }
 
+const ROLES = ["tank", "healer", "damage"] as const;
+
+/** A role as sent (WEB-47): tank, healer or damage; undefined when missing; null when not a role. */
+export function roleParam(value: unknown): SlotRole | undefined | null {
+  if (value === undefined || value === null) return undefined;
+  return ROLES.find((r) => r === value) ?? null;
+}
+
+/** The character of an answer: `characterId` (WEB-47) or `guid` (WEB-40). */
+export function characterParam(body: Record<string, unknown>): string | undefined {
+  const id = body.characterId ?? body.guid;
+  return typeof id === "string" ? id : undefined;
+}
+
+/** A move target (WEB-47): a role, `reserve` or `remove`. */
+export function moveParam(value: unknown): MoveTo | undefined {
+  return value === "reserve" || value === "remove" ? value : (ROLES.find((r) => r === value) ?? undefined);
+}
+
 /** The run's id from the path; undefined for anything but digits. */
 export function runIdParam(id: string): number | undefined {
   return /^\d{1,15}$/.test(id) ? Number(id) : undefined;
@@ -61,15 +81,20 @@ export function upcomingRuns(db: Db, now: number) {
 /** "Pick my character": the friend's characters in the run's range, highest first. */
 export function pickableCharacters(db: Db, run: StoredRun, battleTag: string) {
   const range = runDungeon(run.dungeonId)?.typicalLevels;
-  return charactersOf(loadState(db)?.data, battleTag)
-    .filter((c) => range !== undefined && inRange(c.level, range))
-    .map((c) => ({
-      guid: c.guid,
-      name: c.name ?? c.guid,
-      level: c.level ?? null,
-      classFile: c.classFile ?? null,
-      role: c.role ?? null,
-    }));
+  return (
+    charactersOf(loadState(db)?.data, battleTag)
+      // Every character that may say I'm in (WEB-47 levelFit), with how it fits.
+      .filter((c) => range !== undefined && levelFit(c.level, range.min, range.max).canPick)
+      .map((c) => ({
+        guid: c.guid,
+        name: c.name ?? c.guid,
+        level: c.level ?? null,
+        classFile: c.classFile ?? null,
+        role: c.role ?? null,
+        roles: rolesFor(c.classFile),
+        fit: range === undefined ? null : levelFit(c.level, range.min, range.max).label,
+      }))
+  );
 }
 
 export function dungeonList() {
@@ -92,6 +117,10 @@ const REFUSALS: Record<string, [number, string]> = {
   no_character: [400, "I'm in needs a character."],
   out_of_range: [400, "That character is not in the level range."],
   closed: [409, "The run has started or was cancelled."],
+  role_not_for_class: [400, "That character's class can't play that role."],
+  role_full: [409, "That role has no open slot."],
+  unknown_sign_up: [404, "No sign-up with that character."],
+  same: [409, "The sign-up already is there."],
   not_organiser: [403, "Only the organiser can edit a run."],
   not_allowed: [403, "Only the organiser or the admin can delete a run."],
   already_cancelled: [409, "The run was already cancelled."],
