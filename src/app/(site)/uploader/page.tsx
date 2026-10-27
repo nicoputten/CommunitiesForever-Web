@@ -22,7 +22,9 @@ import {
   parseOlder,
   uploaderRows,
 } from "@/core/views/uploader";
+import { aboutSize } from "@/core/releases";
 import { getDb } from "@/server/db";
+import { readCurrent } from "@/server/releases";
 import { activeTokens, findPairing, limits, type PendingPairing } from "@/server/uploader";
 import { listOwnUploads } from "@/server/uploads";
 import { createTokenAction, decideAction, revokeAction } from "./actions";
@@ -63,6 +65,7 @@ export default async function UploaderPage({
     pairing = findPairing(db, code, now);
   }
   const site = getSiteInfo().name;
+  const release = await readCurrent();
   const rows = uploaderRows(activeTokens(db, viewer.battleTag), now);
   const older = parseOlder(params.older);
   const own = listOwnUploads(db, viewer.battleTag, older);
@@ -98,13 +101,22 @@ export default async function UploaderPage({
           <h2 id="uploader-get" className={styles.boxTitle}>
             Get the app
           </h2>
-          {/* The installer comes with WEB-35; until then the button shows, disabled (decided with Nico). */}
-          <button type="button" className={styles.primary} disabled aria-describedby="uploader-version">
-            <DownloadIcon className={styles.buttonIcon} />
-            Download for Windows
-          </button>
+          {/* Before the first release (WEB-35) the button shows, disabled (decided with Nico). */}
+          {release === undefined ? (
+            <button type="button" className={styles.primary} disabled aria-describedby="uploader-version">
+              <DownloadIcon className={styles.buttonIcon} />
+              Download for Windows
+            </button>
+          ) : (
+            <a href="/uploader/download" className={styles.primary} aria-describedby="uploader-version" download>
+              <DownloadIcon className={styles.buttonIcon} />
+              Download for Windows
+            </a>
+          )}
           <p id="uploader-version" className={styles.small}>
-            Not released yet · Windows 10 and 11
+            {release === undefined
+              ? "Not released yet · Windows 10 and 11"
+              : `${release.version} · Windows 10 and 11 · ${aboutSize(release.size)}`}
           </p>
           <ol className={styles.steps}>
             <li className={styles.step}>

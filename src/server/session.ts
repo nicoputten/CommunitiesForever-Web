@@ -75,7 +75,7 @@ export interface TokenCaller extends Caller {
  * `may_not_upload` for someone who may not upload (the same check as guard(req, "upload"), per request). Session
  * cookies are not accepted here, and tokens nowhere else.
  */
-export function tokenGuard(req: Request): TokenCaller | Response {
+export function tokenGuard(req: Request, needUpload = true): TokenCaller | Response {
   const header = req.headers.get("authorization");
   if (header === null || !/^Bearer\s/i.test(header)) {
     return apiError(401, "invalid_request", "A Bearer token is required.", {
@@ -92,7 +92,8 @@ export function tokenGuard(req: Request): TokenCaller | Response {
   }
   const list = loadAccessList(db, adminBattleTag());
   const role = roleOf(device.battleTag, list);
-  if (role === undefined || !mayUpload(device.battleTag, list)) {
+  // The update feed (WEB-35) needs only an active token: updating does no harm.
+  if (role === undefined || (needUpload && !mayUpload(device.battleTag, list))) {
     return apiError(403, "may_not_upload", "This user may not upload.");
   }
   return { db, battleTag: device.battleTag, role, device };

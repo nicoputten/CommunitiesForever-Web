@@ -61,6 +61,7 @@ Fill in the `<...>` values in a copy of [`compose.yaml`](compose.yaml); keep tha
 | `AUTH_URL` | `https://wow.vestras.nl` |
 | `AUTH_BATTLENET_ID`, `AUTH_BATTLENET_SECRET` | the Battle.net app at https://develop.battle.net. Its redirect URLs must include `https://wow.vestras.nl/api/auth/callback/battlenet` |
 | `ADMIN_BATTLETAG` | your BattleTag, `Name#1234` (case doesn't matter) |
+| `UPLOADER_DEPLOY_SECRET` | `openssl rand -base64 33`; the same value as the GitHub secret `UPLOADER_DEPLOY_SECRET` in the uploader repo (WEB-35). Leave it out and publishing uploader releases is off |
 | `DATA_DIR` | `/data` (the image's default; keep it) |
 
 Also set the `image:` tag to the release you deploy, and the dataset path from step 3.

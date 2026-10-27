@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- "Download for Windows" on the uploader page works once the uploader app is released: it shows the version and size and downloads the installer. Installed apps update themselves from the site.
 - The uploader page (top bar › Uploader): what the Windows uploader does and how to set it up in three steps, the connection request when the app asks to connect (check the code, then Allow or Deny), your uploaders with when they connected and last uploaded and a Revoke button, and a token you can create by hand (shown once, with Copy). The manual upload stays one click away under "Upload manually". Uploads the app sends say "via" and the device's name in the upload history. The download follows once the app is released.
 
 ## v0.1.0 (2026-10-27)

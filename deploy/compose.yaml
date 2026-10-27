@@ -26,3 +26,5 @@ services:
       AUTH_BATTLENET_SECRET: "<client secret>"
       # The admin's BattleTag, e.g. Nico#1234.
       ADMIN_BATTLETAG: "<Name#1234>"
+      # `openssl rand -base64 33`; also the GitHub secret UPLOADER_DEPLOY_SECRET in the uploader repo (WEB-35).
+      UPLOADER_DEPLOY_SECRET: "<random secret>"
