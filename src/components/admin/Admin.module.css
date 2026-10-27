@@ -1,0 +1,265 @@
+/* Admin page panels and rows (WEB-18, no board; decided with Nico): the upload board's history panel and line,
+   the roster search field, the user menu's quiet buttons and the empty-state card's gold button. */
+
+.panel {
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-panel);
+  background: var(--surface);
+  backdrop-filter: blur(var(--blur-surface));
+  border: var(--border) solid var(--line);
+}
+
+.title {
+  margin-bottom: var(--s-1-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.sub {
+  margin-bottom: var(--s-2);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--s-3-5);
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: var(--s-3) var(--s-1);
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+}
+
+.row:not(:last-child) {
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+/* Guests and blocked rows (narrow column, no meta column): name over meta, actions at the end. */
+.row:not(:has(.meta)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.row[data-blocked] .who {
+  opacity: var(--opacity-old);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  min-width: 0;
+}
+
+/* "Added by …" (a link to the report, a full touch target) and "Last seen …" on one wrapping line. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--s-2);
+  min-width: 0;
+}
+
+.name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-name);
+  font-size: var(--fs-name-sm);
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+.tag,
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: var(--s-0-5);
+}
+
+.link:hover {
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--s-1-5);
+}
+
+.badge {
+  padding: var(--s-0-5) var(--s-2);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-neutral);
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta-sm);
+  color: var(--text-chip);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-control);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.button:hover {
+  background: var(--tint-hover);
+  color: var(--text-strong);
+}
+
+.danger,
+.danger:hover {
+  color: var(--stale-text);
+}
+
+.empty {
+  padding: var(--s-3) var(--s-1);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+/* Add guest: label, then field, chip and button on one line (wrapping on a phone). */
+.add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  padding-bottom: var(--s-3);
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.label {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.addRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.field {
+  flex: 1 1 var(--size-search-min);
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-neutral);
+}
+
+.field:focus-within {
+  border-color: var(--line-chip-on);
+}
+
+.field:has(.input:focus-visible) {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.field:has(.input[aria-invalid]) {
+  border-color: var(--stale-text);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-touch);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.primary:hover {
+  background: var(--gold-bright);
+}
+
+.primary:disabled {
+  cursor: progress;
+}
+
+.error,
+.added {
+  min-height: calc(var(--fs-meta) * var(--lh-body));
+  font-size: var(--fs-meta);
+}
+
+.error {
+  color: var(--stale-text);
+}
+
+.added {
+  color: var(--fresh-text);
+}
+
+@media (max-width: 767px) {
+  /* Phone: name and actions on the first line, the meta lines under them. */
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--s-1) var(--s-3);
+  }
+
+  .meta {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .primary {
+    flex: 1;
+    justify-content: center;
+  }
+}

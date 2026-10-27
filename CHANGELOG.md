@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Admin page (account menu › Admin, admin only): every member with the upload that added them and when they were last seen, block and unblock; the guest list, to add someone by BattleTag (refusing what isn't a BattleTag, a member or the admin), tick "May upload" or remove them; and who is blocked, by whom and when.
 - Sign-in gets its look: the community's name and "Where is everyone in Azeroth tonight?" over the drifting map, the Battle.net button and "We only read your BattleTag, nothing else". After Battle.net a short "Checking the guest list… Back from Battle.net as …" and then the map (or the page you opened). Someone not on the list sees "The gate stays closed" with their BattleTag, who to ask, and buttons to use another Battle.net account or sign out; when Battle.net doesn't answer, "Couldn't reach Battle.net" with "Try again".
 - The footer credit is gone from every page; the credits come back in another place later.
 - The character page: everything about one character. Name, level, race, class, faction and ruleset, who plays it, when it was last played and how fresh the data is; levels to 60 and the dungeon that fits the group; item level, role and main tree; talent bars; professions with a link to compare them with the group; the quest log; a small map of where it was last seen, with who else is there and a link to the map; and the player's other characters. Opens from the roster and the professions page.
