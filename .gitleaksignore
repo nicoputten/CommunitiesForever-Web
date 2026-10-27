@@ -1,0 +1,4 @@
+# Gitleaks findings that are not secrets (CLAUDE.md rule 7). Each line is a fingerprint from the scan, with why.
+# WEB-39: a made-up 18-digit DISCORD_CLIENT_ID in the test configs of the first commit (now "e2e-discord-client-id").
+8b0a0138881971ea7a97e155aa649be4ad993f0a:playwright.config.ts:discord-client-id:73
+8b0a0138881971ea7a97e155aa649be4ad993f0a:playwright.design.config.ts:discord-client-id:53
