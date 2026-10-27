@@ -3,7 +3,6 @@ import { RUNNABLE_DUNGEONS, classInfo, type LevelRange } from "../gamedata";
 import {
   counts,
   group,
-  inRange,
   isUpcoming,
   openSlots,
   phase,
@@ -19,6 +18,7 @@ import {
 } from "../runs";
 import { localTime, nextDays, runWhen, untilStart, weekEnd, type DayOption } from "../runTime";
 import { byLevel, compareText, type CharacterView, type PersonView } from "./characters";
+import { levelFit, type FitKind } from "../levelFit";
 import { joinNames } from "./text";
 
 // The Runs pages (WEB-40, boards `runs`, `run-detail`, `run-create`, `runs-phone`): the list by This week, Later and
@@ -47,7 +47,7 @@ export function parseRunsFilter(value: unknown): RunsFilter {
 }
 
 export const ROLE_LABEL: Record<SlotRole, string> = { tank: "Tank", healer: "Healer", damage: "Damage" };
-export const ANSWER_LABEL: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
+export const ANSWER_LABEL: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't", reserve: "Reserve" };
 const SOURCE_LABEL: Record<RunSource, string> = { website: "Website", discord: "Discord", game: "In game" };
 const PLANNED_ON: Record<RunSource, string> = { website: "on the website", discord: "in Discord", game: "in the game" };
 
@@ -63,7 +63,10 @@ export interface RunCharacterView {
   colorToken?: string;
   role: SlotRole;
   /** Whether its level is in the run's range. */
+  /** May answer I'm in with it (levelFit: not 6+ below the range, WEB-47). */
   fits: boolean;
+  /** How its level fits the range (WEB-47 levelFit). */
+  fit: FitKind;
   /** "2 levels short", "3 levels over"; undefined in range. */
   off?: string;
 }
@@ -73,7 +76,7 @@ export interface AnswerChoice {
   runId: number;
   characters: RunCharacterView[];
   /** The viewer's answer so far. */
-  current?: { answer: Answer; guid?: string; waitlisted: boolean };
+  current?: { answer: Answer; guid?: string };
   /** Open: answers go. Closed: started or cancelled. */
   open: boolean;
 }
@@ -176,11 +179,10 @@ function rangeOf(run: RunRecord): LevelRange {
   return runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
 }
 
+/** The fit label when the level doesn't simply fit ("+3 over", "4 below"); undefined when it fits (WEB-47). */
 function offText(level: number | undefined, r: LevelRange): string | undefined {
-  if (level === undefined) return "level unknown";
-  if (level < r.min) return `${r.min - level} level${r.min - level === 1 ? "" : "s"} short`;
-  if (level > r.max) return `${level - r.max} level${level - r.max === 1 ? "" : "s"} over`;
-  return undefined;
+  const fit = levelFit(level, r.min, r.max);
+  return fit.kind === "fits" ? undefined : fit.label;
 }
 
 function characterView(c: CharacterView, r: LevelRange): RunCharacterView {
@@ -189,7 +191,8 @@ function characterView(c: CharacterView, r: LevelRange): RunCharacterView {
     guid: c.guid,
     name: c.name ?? c.guid,
     role: slotRole(c.role),
-    fits: inRange(c.level, r),
+    fits: levelFit(c.level, r.min, r.max).canPick,
+    fit: levelFit(c.level, r.min, r.max).kind,
   };
   if (c.level !== undefined) v.level = c.level;
   if (c.classFile !== undefined) v.classFile = c.classFile;
@@ -235,7 +238,7 @@ function answerChoice(ctx: Ctx, run: RunRecord): AnswerChoice {
     open: run.cancelledAt === undefined && ctx.input.now < run.startsAt,
   };
   if (mine !== undefined) {
-    choice.current = { answer: mine.answer, waitlisted: mine.waitlisted === true };
+    choice.current = { answer: mine.answer };
     if (mine.guid !== undefined) choice.current.guid = mine.guid;
   }
   return choice;
@@ -256,7 +259,10 @@ function openWithNobody(ctx: Ctx, run: RunRecord): SlotRole[] {
       !ctx.input.characters.some((c) => {
         const tag = ownerTag(ctx, c);
         return (
-          tag !== undefined && !answered.has(tag.toLowerCase()) && slotRole(c.role) === role && inRange(c.level, r)
+          tag !== undefined &&
+          !answered.has(tag.toLowerCase()) &&
+          slotRole(c.role) === role &&
+          levelFit(c.level, r.min, r.max).suggested
         );
       }),
   );
@@ -266,8 +272,10 @@ function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): R
   const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
   if (mine !== undefined && !yours) {
     const withChar = mine.guid === undefined ? "" : ` with ${charName(ctx, mine)}`;
-    const line = mine.waitlisted ? ", first in line" : "";
-    return { text: `You answered ${ANSWER_LABEL[mine.answer]}${withChar}${line}`, tone: "muted" };
+    if (mine.answer === "reserve") {
+      return { text: `You're reserve${withChar}: ${mine.role} is full, you move up when a slot frees`, tone: "muted" };
+    }
+    return { text: `You answered ${ANSWER_LABEL[mine.answer]}${withChar}`, tone: "muted" };
   }
   if (yours) {
     const nobody = openWithNobody(ctx, run);
@@ -277,7 +285,7 @@ function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): R
     }
     return undefined;
   }
-  const fitting = choice.characters.filter((c) => c.fits);
+  const fitting = choice.characters.filter((c) => c.fit === "fits" || c.fit === "over");
   if (fitting.length === 0) return undefined;
   const open = openSlots(run.answers);
   const forOpen = fitting.find((c) => open[c.role] > 0 && c.role !== "damage");
@@ -330,7 +338,8 @@ function organiserTime(ctx: Ctx, run: RunRecord): string | undefined {
 
 /** Whether one of the viewer's characters is in the run's range. */
 function viewerFits(ctx: Ctx, run: RunRecord): boolean {
-  return viewerCharacters(ctx, rangeOf(run)).some((c) => c.fits);
+  // "Runs I can join": a character that fits or is over (WEB-47).
+  return viewerCharacters(ctx, rangeOf(run)).some((c) => c.fit === "fits" || c.fit === "over");
 }
 
 function involved(ctx: Ctx, run: RunRecord): boolean {
@@ -451,7 +460,7 @@ export interface AnswerRowView {
   friend: string;
   role: string;
   answer: string;
-  answerTone: "in" | "maybe" | "cant" | "organiser";
+  answerTone: "in" | "maybe" | "cant" | "reserve" | "organiser";
   /** "Discord · 17:40" in the viewer's zone. */
   where: string;
 }
@@ -492,9 +501,6 @@ export interface RunDetail {
   cancelled?: string;
 }
 
-/** Characters this many levels below a run's range still show under "Could join". */
-export const COULD_JOIN_SHORT = 5;
-
 export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
   const ctx = context(input);
   const run = input.runs.find((r) => r.id === id);
@@ -513,9 +519,14 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       const tag = ownerTag(ctx, ch);
       return tag !== undefined && !answered.has(tag.toLowerCase()) && ch.level !== undefined;
     })
-    .filter((ch) => ch.level! >= r.min - COULD_JOIN_SHORT && ch.level! <= r.max)
+    // "Could fill" (WEB-47): characters that fit or are over, for an open role.
+    .filter((ch) => levelFit(ch.level, r.min, r.max).suggested)
     .filter((ch) => open[slotRole(ch.role)] > 0)
-    .sort((a, b) => Number(inRange(b.level, r)) - Number(inRange(a.level, r)) || byLevel(a, b));
+    .sort(
+      (a, b) =>
+        Number(levelFit(b.level, r.min, r.max).kind === "fits") -
+          Number(levelFit(a.level, r.min, r.max).kind === "fits") || byLevel(a, b),
+    );
 
   const slots: SlotView[] = [];
   for (const role of SLOT_ROLES) {
@@ -523,7 +534,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     for (let i = 0; i < size; i++) {
       const a = g[role][i];
       if (a === undefined) {
-        const could = candidates.find((ch) => slotRole(ch.role) === role && inRange(ch.level, r));
+        const could = candidates.find((ch) => slotRole(ch.role) === role);
         slots.push({ role, open: could === undefined ? "Nobody in range yet" : `${could.name ?? could.guid} could` });
         continue;
       }
@@ -550,7 +561,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
         character: a.guid === undefined ? "—" : charName(ctx, a),
         friend: friendName(ctx, a.battleTag),
         role: a.answer === "cant" ? "—" : ROLE_LABEL[a.role],
-        answer: organiser ? "Organiser" : a.waitlisted ? "Maybe · first in line" : ANSWER_LABEL[a.answer],
+        answer: organiser ? "Organiser" : ANSWER_LABEL[a.answer],
         answerTone: organiser ? "organiser" : a.answer,
         where: `${SOURCE_LABEL[a.source]} · ${localTime(a.answeredAt, viewer.timeZone)}`,
       };
@@ -591,7 +602,8 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       };
       if (ch.level !== undefined) v.level = ch.level;
       if (info !== undefined) v.colorToken = info.textToken;
-      const off = offText(ch.level, r);
+      const fit = levelFit(ch.level, r.min, r.max);
+      const off = fit.kind === "fits" ? undefined : fit.label;
       if (off !== undefined) v.off = off;
       return v;
     }),
@@ -609,7 +621,10 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     const dir = best.level !== undefined && best.level < r.min ? "below" : "above";
     detail.outOfRange = `${best.name}${best.level === undefined ? "" : ` (${best.level})`} is ${dir} the ${where} (${rangeText(r)}), so I'm in is off. Maybe or Can't still go.`;
     const other = RUNNABLE_DUNGEONS.find(
-      (d) => d.instanceId === dungeon?.instanceId && d.id !== run.dungeonId && inRange(best.level, d.typicalLevels),
+      (d) =>
+        d.instanceId === dungeon?.instanceId &&
+        d.id !== run.dungeonId &&
+        levelFit(best.level, d.typicalLevels.min, d.typicalLevels.max).kind === "fits",
     );
     if (other !== undefined) {
       detail.planOther = {
@@ -654,7 +669,9 @@ export interface PlanPage {
 export function planPage(input: RunsInput, dungeonId: string | undefined): PlanPage {
   const ctx = context(input);
   const dungeons = RUNNABLE_DUNGEONS.map((d) => {
-    const fit = input.characters.filter((c) => inRange(c.level, d.typicalLevels));
+    const fit = input.characters.filter(
+      (c) => levelFit(c.level, d.typicalLevels.min, d.typicalLevels.max).kind === "fits",
+    );
     const owners = new Set(fit.map((c) => c.owner));
     const missing = SLOT_ROLES.filter((role) => role !== "damage" && !fit.some((c) => slotRole(c.role) === role));
     const fits = [
@@ -668,7 +685,8 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
   const leads: Record<string, LeadOption[]> = {};
   for (const d of dungeons) {
     leads[d.id] = viewerCharacters(ctx, d.range).map((c) => {
-      const why = c.fits ? c.role : c.level !== undefined && c.level < d.range.min ? "too low" : "too high";
+      // One wording everywhere (WEB-47 levelFit): "damage", "+3 over", "carry · +12", "4 below".
+      const why = c.fit === "fits" ? c.role : (c.off ?? "");
       return { guid: c.guid, label: `${c.name}${c.level === undefined ? "" : ` ${c.level}`} · ${why}`, fits: c.fits };
     });
   }

@@ -6,8 +6,8 @@ import type { Answer } from "@/core/runs";
 import type { AnswerChoice } from "@/core/views/runs";
 import styles from "./Runs.module.css";
 
-const LABELS: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
-const ORDER: Answer[] = ["in", "maybe", "cant"];
+const LABELS: Record<"in" | "maybe" | "cant", string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
+const ORDER = ["in", "maybe", "cant"] as const;
 
 interface Pending {
   answer: Answer;

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { NextRequest } from "next/server";
@@ -6,12 +6,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as dungeonsRoute } from "@/app/api/bot/v1/dungeons/route";
 import { POST as answerRoute } from "@/app/api/bot/v1/runs/[id]/answers/route";
 import { POST as cancelRoute } from "@/app/api/bot/v1/runs/[id]/cancel/route";
+import { POST as moveRoute } from "@/app/api/bot/v1/runs/[id]/move/route";
 import { GET as charactersRoute } from "@/app/api/bot/v1/runs/[id]/characters/route";
 import { GET as runRoute, PATCH as editRoute } from "@/app/api/bot/v1/runs/[id]/route";
 import { GET as runsRoute, POST as planRoute } from "@/app/api/bot/v1/runs/route";
 import { block } from "@/server/access";
 import { createBotToken, pendingEvents } from "@/server/bot";
 import { getDb } from "@/server/db";
+import { runAnswers } from "@/server/db/schema";
 import { linkDiscord, setTimeZone, updateBotSettings } from "@/server/discord";
 import { answerRunFor, cancelRun, editRun, getRun, planRunFor, writeDueRunEvents } from "@/server/runs";
 import { upload } from "@/server/uploads";
@@ -144,7 +146,10 @@ describe("runs through the bot", () => {
         )
       ).body;
     expect((await pick(IDS.nico)).characters.map((c: { name: string }) => c.name)).toEqual(["Ves Doombringer"]);
-    expect((await pick(IDS.jorrit)).characters).toEqual([]);
+    // Ruk (27) is 5 below the Armory: he may still join (WEB-47 levelFit), with how he fits.
+    expect((await pick(IDS.jorrit)).characters).toMatchObject([
+      { name: "Ruk Bloodhoof", fit: "5 below", roles: ["damage"] },
+    ]);
   });
 
   it("answers fill slots from roles; out of range only Maybe; not someone else's character", async () => {
@@ -158,9 +163,11 @@ describe("runs through the bot", () => {
     expect((await answer(IDS.femke, "in", LIA)).body.stored).toEqual({
       answer: "in",
       role: "healer",
+      reserve: false,
       waitlisted: false,
     });
-    expect((await answer(IDS.jorrit, "in", RUK)).body.error).toBe("out_of_range");
+    // Zul Kazrek (15) is 17 below the Armory: Maybe only (WEB-47 levelFit). Femke's answer stays.
+    expect((await answer(IDS.femke, "in", "Player-1-0000E002")).body.error).toBe("out_of_range");
     expect((await answer(IDS.jorrit, "maybe", RUK)).body.stored.answer).toBe("maybe");
     expect((await answer(IDS.nico, "in", BOB)).body.error).toBe("not_your_character");
     expect((await answer(IDS.nico, "in")).body.error).toBe("no_character");
@@ -219,6 +226,104 @@ describe("runs through the bot", () => {
   });
 });
 
+describe("the organiser's moves (WEB-47)", () => {
+  it("only the organiser or the admin moves; the moved friend gets a quiet notice", async () => {
+    const db = getDb();
+    const id = (
+      planRunFor(
+        db,
+        { dungeonId: "sm-library", startsAt: NOW + 4 * HOUR, organiser: "Bob#2002", source: "website", leadGuid: TOK },
+        NOW,
+      ) as { id: number }
+    ).id;
+    answerRunFor(
+      db,
+      id,
+      { battleTag: "Femke#3307", answer: "in", source: "website", guid: LIA, role: "damage" },
+      NOW + 1,
+    );
+    const move = async (who: string, body: object) =>
+      json(await moveRoute(req(`/api/bot/v1/runs/${id}/move`, "POST", { discordUserId: who, ...body }), params(id)));
+
+    // Femke (not the organiser) can't move her own sign-up; Bob (organiser) and Nico (admin) can.
+    expect((await move(IDS.femke, { characterId: LIA, to: "healer" })).body.error).toBe("not_allowed");
+    expect((await move(IDS.bob, { characterId: LIA, to: "tank" })).body.error).toBe("role_not_for_class");
+    expect((await move(IDS.bob, { characterId: LIA, to: "heal" })).status).toBe(400);
+    const before = pendingEvents(db, 0, NOW).at(-1)?.id ?? 0;
+    // Tok holds the healer slot: Femke can't go there, so the admin first moves Tok to reserve.
+    expect((await move(IDS.bob, { characterId: LIA, to: "healer" })).body.error).toBe("role_full");
+    expect((await move(IDS.nico, { characterId: TOK, to: "reserve" })).status).toBe(200);
+    const moved = await move(IDS.bob, { characterId: LIA, to: "healer" });
+    expect(moved.status).toBe(200);
+    const lia = moved.body.run.answers.find((a: { character: string }) => a.character === "Lia Thornwhisper");
+    expect(lia).toMatchObject({ answer: "in", role: "healer", guid: LIA, fit: { kind: "fits", label: "fits" } });
+    const tok = moved.body.run.answers.find((a: { character: string }) => a.character === "Tok Ironhide");
+    expect(tok).toMatchObject({ answer: "maybe", reserve: true, role: "healer" });
+    const notices = pendingEvents(db, before, NOW).filter((e) => e.type === "runMoved");
+    expect(notices.map((e) => (e.data as { to: string; who: { name: string } }).to)).toEqual(["reserve", "healer"]);
+    expect((notices[0]!.data as { who: { name: string; discordId: string } }).who).toEqual({
+      name: "Bob",
+      discordId: IDS.bob,
+    });
+
+    // Remove: the answer goes; Femke may answer again.
+    expect((await move(IDS.bob, { characterId: LIA, to: "remove" })).status).toBe(200);
+    expect(getRun(db, id)!.answers.some((a) => a.guid === LIA)).toBe(false);
+    expect(
+      answerRunFor(db, id, { battleTag: "Femke#3307", answer: "maybe", source: "website", guid: LIA }, NOW + 2),
+    ).toMatchObject({
+      stored: { answer: "maybe" },
+    });
+  });
+
+  it("turns WEB-40's 'Maybe, first in line' into reserve (migration 0011)", () => {
+    const db = getDb();
+    const id = (
+      planRunFor(db, { dungeonId: "rfk", startsAt: NOW + 6 * HOUR, organiser: ADMIN, source: "website" }, NOW) as {
+        id: number;
+      }
+    ).id;
+    db.insert(runAnswers)
+      .values([
+        {
+          runId: id,
+          key: "bob#2002",
+          battleTag: "Bob#2002",
+          guid: TOK,
+          answer: "maybe",
+          role: "healer",
+          source: "website",
+          answeredAt: NOW,
+          waitlisted: true,
+          movedUp: false,
+        },
+        {
+          runId: id,
+          key: "femke#3307",
+          battleTag: "Femke#3307",
+          guid: LIA,
+          answer: "maybe",
+          role: "healer",
+          source: "website",
+          answeredAt: NOW,
+          waitlisted: false,
+          movedUp: false,
+        },
+      ])
+      .run();
+    db.$client.exec(readFileSync(new URL("../../drizzle/0011_reserve.sql", import.meta.url), "utf8"));
+    const rows = db
+      .select()
+      .from(runAnswers)
+      .all()
+      .filter((r) => r.runId === id);
+    expect(rows.map((r) => [r.battleTag, r.answer, r.waitlisted])).toEqual([
+      ["Bob#2002", "reserve", false],
+      ["Femke#3307", "maybe", false],
+    ]);
+  });
+});
+
 describe("moving up and reminders", () => {
   it("a full role keeps the next I'm in as Maybe, who moves up when someone drops", () => {
     const db = getDb();
@@ -238,7 +343,7 @@ describe("moving up and reminders", () => {
     const before = lastEventId();
     // Bob switches to Tok, a healer: the healer slot is full, so he is kept as Maybe, first in line.
     const swap = answerRunFor(db, id, { battleTag: "Bob#2002", answer: "in", source: "website", guid: TOK }, NOW + 3);
-    expect(swap).toMatchObject({ stored: { answer: "maybe", waitlisted: true, role: "healer" } });
+    expect(swap).toMatchObject({ stored: { answer: "reserve", role: "healer" } });
     // Femke drops: Bob (Tok) moves up into the healer slot.
     const drop = answerRunFor(db, id, { battleTag: "Femke#3307", answer: "cant", source: "website" }, NOW + 4);
     expect(drop).toMatchObject({ movedUp: { battleTag: "Bob#2002", guid: TOK, answer: "in", movedUp: true } });

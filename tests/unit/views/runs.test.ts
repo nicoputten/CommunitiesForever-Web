@@ -139,9 +139,11 @@ describe("a run's page", () => {
   });
 
   it("says why I'm in is off, and offers the wing that fits", () => {
-    const d = runDetail(input(JORRIT), 1)!;
+    // Ruk (27) is 8 below the Cathedral: Maybe only (WEB-47). 5 below the Armory he may still join.
+    expect(runDetail(input(JORRIT), 1)!.outOfRange).toBeUndefined();
+    const d = runDetail(input(JORRIT), 4)!;
     expect(d.outOfRange).toBe(
-      "Ruk Bloodhoof (27) is below the Armory (32–42), so I'm in is off. Maybe or Can't still go.",
+      "Ruk Bloodhoof (27) is below the Cathedral (35–45), so I'm in is off. Maybe or Can't still go.",
     );
     expect(d.planOther).toEqual({
       label: "Plan the Graveyard for Ruk Bloodhoof",
@@ -161,8 +163,8 @@ describe("Plan a run", () => {
     expect(p.dungeons.some((d) => d.id === "sm")).toBe(false);
     expect(p.leads["sm-armory"]!.map((l) => l.label)).toEqual([
       "Ves Doombringer 39 · damage",
-      "Grom Ashfeller 24 · too low",
-      "Sela Moonbrook 12 · too low",
+      "Grom Ashfeller 24 · 8 below",
+      "Sela Moonbrook 12 · 20 below",
     ]);
     expect(p.otherZones).toEqual([{ name: "Bob", timeZone: "Europe/London" }]);
     expect(planPage(input(NICO), "nope").dungeonId).toBe("sm-armory");

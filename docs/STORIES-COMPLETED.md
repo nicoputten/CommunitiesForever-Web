@@ -456,3 +456,23 @@ Assigned 2026-10-27 (Nico): the Discord page's channel and role dropdowns, disab
 - Decided with Nico (2026-10-27): the answer is the addon's `CF_RUNS` field for field; `dungeon` is the addon's id (`smarm`, `lbrs`, `lfg1984`) where it has one, else the site's, with an optional `dungeonName`; a cancelled run stays, as `cancelled`, until its start. "Only the token's community": the site serves one community, so every run is the token's.
 - Done: `src/core/uploaderRuns.ts`, `addonId` in `src/core/gamedata/dungeons.ts`, `GET /api/uploader/v1/runs`, `docs/UPLOADER-API.md` "Runs" (an example checked against the route). `updatedAt` is when the list last changed, so asking again without a change gives the same answer and the uploader writes nothing.
 
+### WEB-47 Runs v2: level fit, roles and reserve
+- **One rule for level fit** in `src/core`: `levelFit(level, min, max)` gives `{ kind, label }`, used everywhere a fit shows (runs list, run detail, Plan and Edit, the Discord run post data, "could join", the roster bands; today the same character is "too low" on one page and "16 levels short" on another):
+
+  | kind | rule | label | can pick | suggested ("could fill") |
+  |---|---|---|---|---|
+  | fits | min ≤ level ≤ max | `fits` | yes | yes |
+  | over | 1–9 above max | `+N over` | yes | yes |
+  | carry | 10+ above max | `carry · +N` | yes, with a one-line XP note | no |
+  | low | 1–5 below min | `N below` | yes, with a "tough" note | no |
+  | tooLow | 6+ below min | `N below` | listed, can only answer Maybe | no |
+
+  "Runs I can join" means a character that fits or is over.
+- **Roles per class** in `src/core`: `rolesFor(class)`: Warrior tank and damage; Paladin and Druid tank, healer and damage; Priest and Shaman healer and damage; Mage, Warlock, Hunter and Rogue damage. The default is the role the addon reports (talents or set by the player); a choice here is per run and never changes the addon.
+- **Data** (forward-only migration): a sign-up stores the character and the role apart (no longer derived from the character); existing sign-ups get the character's current role. A new answer state **reserve**: I'm in for a full role becomes reserve, and when a slot of that role frees up the oldest reserve moves up (next to WEB-40's moving up from Maybe). The organiser's own entry has a role and can change character and role.
+- **API:** answering takes `{ characterId, role, answer }`; a new organiser and admin endpoint moves a sign-up to another role, to reserve, or removes it, and the moved person gets a quiet Discord notice (a bot event, no channel ping). Server checks: the role is in `rolesFor`, a tooLow character can only answer Maybe, only the organiser or the admin moves or removes.
+- **Compatible additions** (rule 5 and the API contracts): `docs/BOT-API.md` (answer with role, the move action, the quiet notice event, role and fit per sign-up in run events), WEB-44's runs feed (role, fit and reserve per answer, so the uploader writes them into `Runs.lua`) all as optional fields within v1. Older bots and uploaders keep working; the bot's BOT-04 and the addon pick them up.
+- Tests: `levelFit` at every boundary, `rolesFor` for every class, reserve promotion (oldest first, per role), the move endpoint's rights (organiser, admin, anyone else), the migration on existing sign-ups.
+- Decided with Nico (2026-10-27): WEB-40's "Maybe, first in line" sign-ups become reserve (migration `0011_reserve`); a freed slot of a full role goes to the oldest reserve of that role, else the first Maybe that may join; a removed friend may answer again.
+- Done: `levelFit` (`src/core/levelFit.ts`) and `rolesFor` (`src/core/gamedata/classes.ts`); the role chosen per sign-up and reserve in `src/core/runs.ts` (`giveAnswer`, `moveSignUp`); the move endpoint for the site (`POST /api/runs/<id>/move`) and the bot (`POST /api/bot/v1/runs/<id>/move`) with the quiet `runMoved` notice; answering with `{ characterId, role, answer }`; `guid`, `fit` and `reserve` per answer in `docs/BOT-API.md` and the uploader's runs feed (`docs/UPLOADER-API.md`), a reserve sent as Maybe for older bots and addons. The pages use the fit labels; the picker and the move menu come with WEB-49.
+
