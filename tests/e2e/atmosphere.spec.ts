@@ -47,6 +47,8 @@ test.describe("signed in", () => {
     expect((await ambient(page)).running).toBeGreaterThan(0);
 
     await page.goto("/roster");
+    // The roster itself, not its loading skeletons (WEB-29), which shimmer while the page streams in.
+    await expect(page.getByRole("heading", { name: "Roster", level: 1 })).toBeVisible();
     await expect(page.locator('[data-atmosphere="calm"]')).toHaveCount(1);
     await expect(page.locator('[data-atmosphere="map"]')).toHaveCount(0);
     expect(await running(page)).toBe(0);

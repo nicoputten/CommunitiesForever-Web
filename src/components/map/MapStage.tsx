@@ -595,9 +595,14 @@ export function MapStage({
     };
     const by = pan[e.key];
     if (by !== undefined) {
-      if (wholeWorld(z.instance.state.scale)) return;
+      // From where the map is going, not where it is: an arrow key during a zoom (the + key, 250 ms) pans the zoom's
+      // goal instead of being lost while the scale is still near 1× (or cutting the zoom short).
+      const l = layout();
+      const goal = view.current ?? (l === undefined ? undefined : { ...centre()!.world, scale: l.scale });
+      if (l === undefined || goal === undefined || wholeWorld(goal.scale)) return;
       byHand.current = true;
-      void z.panBy(by[0], by[1], motionMs("--dur-fast"), "easeOut");
+      const perPx = box.width / (l.width * goal.scale);
+      void goTo(goal.x - by[0] * perPx, goal.y - by[1] * perPx, goal.scale, motionMs("--dur-fast"), "easeOut");
     } else if (e.key === "+" || e.key === "=") stepZoom(1);
     else if (e.key === "-" || e.key === "_") stepZoom(-1);
     else if (e.key === "0") zoomTo(1);

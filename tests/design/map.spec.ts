@@ -180,6 +180,8 @@ test("map: zone zoom (4×): name tags, dungeons, zone in the top bar", async ({ 
   await expectAccessible(page);
   await expectNoMotion(page);
   await page.mouse.move(0, 0);
+  // Flaky before (PR #34, develop): the fly could still be under way when the zone was marked.
+  await mapSettled(page);
   await expectScreenshot(page, "map-zone");
 });
 

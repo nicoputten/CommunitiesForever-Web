@@ -79,21 +79,6 @@ const transform = (page: Page) =>
     .getByRole("group", { name: /^Map\./ })
     .locator(":scope > div")
     .evaluate((el) => (el as HTMLElement).style.transform);
-/** The zoom's transform holds still for longer than the map's settle (MapStage SETTLE_MS, 120 ms). */
-async function settled(page: Page) {
-  let last = "";
-  await expect
-    .poll(
-      async () => {
-        const now = await transform(page);
-        const still = now !== "" && now === last;
-        last = now;
-        return still;
-      },
-      { intervals: [300] },
-    )
-    .toBe(true);
-}
 /** 1× and centred: in the part of the map left of the roll call (WEB-27), which shows from 1024 px. */
 const centred = (page: Page) =>
   page.evaluate(() => {
@@ -137,6 +122,8 @@ test("flies to a character from a link, at zone zoom with the zone in the top ba
   await page.goto("/");
   await page.getByRole("button", { name: /^2 characters in Stranglethorn Vale/ }).click();
   await marker(page, "Ves Doombringer").click();
+  // The selection is in the URL once the same-document navigation is reported (page.url() lags behind the click).
+  await expect(page).toHaveURL(/character=/);
   const url = page.url();
   await page.goto(url);
   await expect(stage(page)).toHaveAttribute("data-level", "zone");
@@ -156,11 +143,8 @@ test("the continent switch flies, follows a pan, and Azeroth centres the whole w
   await expect(page).toHaveURL(/\/$/);
   await expect.poll(() => transform(page)).toBe(await centred(page));
 
-  // Zoomed in over Kalimdor, the switch follows. The pans wait for the zoom to come to rest: arrow keys during its
-  // 250 ms animation lost the race on a busy CI machine.
+  // Zoomed in over Kalimdor, the switch follows (the arrow keys come during the zoom: they pan its goal, WEB-28).
   await page.getByRole("group", { name: /^Map\./ }).press("+");
-  await expect(stage(page)).toHaveAttribute("data-level", "continent");
-  await settled(page);
   for (let i = 0; i < 4; i++) await page.getByRole("group", { name: /^Map\./ }).press("ArrowLeft");
   await expect(page).toHaveURL(/\?continent=kalimdor$/);
   await expect(switcher.getByRole("link", { name: "Kalimdor" })).toHaveAttribute("aria-current", "page");
