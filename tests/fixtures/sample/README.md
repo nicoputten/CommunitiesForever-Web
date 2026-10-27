@@ -12,7 +12,7 @@ SavedVariables files in the game's format (`CommunitiesForeverDB = { ["global"] 
   - Day 3 brings more of the same and is the design checks' sample exactly.
   - Ages on the site count from those dates.
 - **Same community** in every file: `settings.clubId` `40000001`, `clubName` "Doombringers".
-- **Your own sign-in:** replace `YourName#1234` with your BattleTag (one line, `["battleTag"] = "YourName#1234"` under `["self"]`, e.g. `Vestras#2858`).
+- **Your own sign-in:** replace `YourName#1234` with your BattleTag (one line, `["battleTag"] = "YourName#1234"` under `["self"]`).
   - Your BattleTag must be `ADMIN_BATTLETAG` in `.env.local`, because before the admin's first upload only the admin can upload.
   - Name the file `CommunitiesForever.lua` when you pick it, as the game does.
 - **Generated, never edited by hand:** `tests/design/sample.test.ts` checks that every file equals what `sampleSavedVariables()` makes. After a change to the sample, write them again with:
