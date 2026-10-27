@@ -16,9 +16,10 @@ import { personKeyOf, weekOf } from "@/server/lookup";
 import { apiError, botGuard } from "@/server/session";
 import { loadState } from "@/server/uploads";
 
-// GET lookup/<what>?discordUserId=…: the data of the bot's look-up commands (WEB-39b, docs/BOT-API.md "Look-ups"),
-// only for a Discord user linked to someone on the list (else 403 `not_linked`, and the bot shows "Link your Discord
-// first"). The bot formats it; texts are names only, never BattleTags.
+// GET lookup/<what>: the data of the bot's look-up commands (WEB-39b, docs/BOT-API.md "Look-ups"). Answered for anyone
+// in the bot's server: only friends are in it (Nico, 2026-10-28, as for /recap). Only `me` needs the asker's Discord
+// account linked to someone on the list (`discordUserId`, else 403 `not_linked`), to know whose characters to show.
+// The bot formats it; texts are names only, never BattleTags.
 
 export const dynamic = "force-dynamic";
 
@@ -30,16 +31,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
   const db = botGuard(req, now);
   if (db instanceof Response) return db;
   const q = new URL(req.url).searchParams;
-  const friend = botFriend(db, q.get("discordUserId") ?? undefined);
-  if (friend instanceof Response) return friend;
   const { what } = await params;
+  // A linked asker is named in every answer (the bot's "Shared by …"); only `me` requires one.
+  const linked = q.has("discordUserId") ? botFriend(db, q.get("discordUserId")) : undefined;
+  if (what === "me" && (linked === undefined || linked instanceof Response)) {
+    return linked ?? apiError(400, "invalid_request", "Send the Discord user id as discordUserId.");
+  }
+  const friend = linked instanceof Response ? undefined : linked;
   const d = loadState(db)?.data;
   if (d === undefined) return apiError(404, "no_data", "The site has no data yet.");
-  // Every answer names the asker by display name, for the bot's "Shared by …" (never the BattleTag).
-  const askerKey = personKeyOf(d, friend.battleTag);
+  // A linked asker is named by display name, for the bot's "Shared by …" (never the BattleTag).
+  const askerKey = friend !== undefined ? personKeyOf(d, friend.battleTag) : undefined;
   const asker =
-    (askerKey !== undefined ? d.people[askerKey]?.displayName : undefined) ?? battleTagName(friend.battleTag);
-  const json = (body: Record<string, unknown>) => Response.json({ asker, ...body }, { headers });
+    friend === undefined
+      ? undefined
+      : ((askerKey !== undefined ? d.people[askerKey]?.displayName : undefined) ?? battleTagName(friend.battleTag));
+  const json = (body: Record<string, unknown>) =>
+    Response.json(asker !== undefined ? { asker, ...body } : body, { headers });
   const text = (name: string) => (q.get(name) ?? "").trim().slice(0, 100);
 
   switch (what) {
@@ -93,7 +101,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
       const key = askerKey;
       const week = key !== undefined ? weekOf(db, key, now) : undefined;
       return json({
-        friend: asker,
+        friend: asker ?? "You",
         characters: key !== undefined ? alts(d, key, now) : [],
         ...(week !== undefined ? { week } : {}),
       });

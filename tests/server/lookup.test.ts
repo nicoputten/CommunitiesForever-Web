@@ -63,18 +63,18 @@ async function get(what: string, query: Record<string, string>, auth = token) {
 }
 
 describe("look-ups", () => {
-  it("need the bot token and a linked friend on the list", async () => {
-    expect((await get("names", { discordUserId: NICO_DISCORD }, "")).status).toBe(401);
-    expect(await get("names", { discordUserId: STRANGER })).toMatchObject({
-      status: 403,
-      body: { error: "not_linked" },
-    });
-    expect((await get("names", {})).status).toBe(400);
+  it("need the bot token; only /me needs a linked friend on the list", async () => {
+    expect((await get("names", {}, "")).status).toBe(401);
+    // Anyone in the server (only friends are in it, Nico 2026-10-28).
+    expect((await get("names", { discordUserId: STRANGER })).status).toBe(200);
+    expect((await get("names", {})).body).not.toHaveProperty("asker");
+    expect(await get("me", { discordUserId: STRANGER })).toMatchObject({ status: 403, body: { error: "not_linked" } });
+    expect((await get("me", {})).status).toBe(400);
     // A blocked friend's link no longer counts.
     putGuest(getDb(), "Gus#3003", false, ADMIN, 1);
     linkDiscord(getDb(), "Gus#3003", { id: "100000000000000014", name: "gus" }, 1);
     block(getDb(), "Gus#3003", ADMIN, 2);
-    expect((await get("names", { discordUserId: "100000000000000014" })).status).toBe(403);
+    expect((await get("me", { discordUserId: "100000000000000014" })).status).toBe(403);
   });
 
   it("autocomplete friends by display name and characters with their GUID", async () => {

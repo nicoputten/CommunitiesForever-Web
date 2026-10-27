@@ -130,9 +130,9 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 Optional within v1: an older site answers 404 and the bot posts text only.
 
 ## Look-ups (built, WEB-39b)
-`GET /api/bot/v1/lookup/<what>?discordUserId=<id>&…` → `200` the data of the bot's look-up commands (board `bot-commands-runs`); the bot formats it. Only for a Discord user linked (WEB-39) to someone on the list who may sign in: `400 invalid_request` without `discordUserId`, `403 not_linked` for anyone else (the bot then shows "Link your Discord first"); `404 no_data` before the first upload, `404 not_found` for an unknown friend, character or look-up.
+`GET /api/bot/v1/lookup/<what>?discordUserId=<id>&…` → `200` the data of the bot's look-up commands (board `bot-commands-runs`); the bot formats it. Answered for anyone in the bot's server: only friends are in it (Nico, 2026-10-28, as for `/recap`). Only `me` needs the asker linked (WEB-39) to someone on the list who may sign in: `400 invalid_request` without `discordUserId`, `403 not_linked` otherwise (the bot then shows "Link your Discord first"). `404 no_data` before the first upload, `404 not_found` for an unknown friend, character or look-up.
 
-Every answer has `asker`: the asker's display name (for the bot's "Shared by …"). A character is `{ guid, name, owner?, classFile?, className?, race?, level?, role? ("tank" | "heal" | "dps"), spec?, ilvl?, talents? (points per tree), professions: [{ name, rank, max? }], seen?: { zone, at } }`: full names, the owner's display name, never a BattleTag. `seen.zone` is the map's zone name (a dungeon's name inside one).
+With a linked `discordUserId`, every answer has `asker`: the asker's display name (for the bot's "Shared by …"); without one it is left out. A character is `{ guid, name, owner?, classFile?, className?, race?, level?, role? ("tank" | "heal" | "dps"), spec?, ilvl?, talents? (points per tree), professions: [{ name, rank, max? }], seen?: { zone, at } }`: full names, the owner's display name, never a BattleTag. `seen.zone` is the map's zone name (a dungeon's name inside one).
 
 | `<what>` | Parameters | Answer |
 |---|---|---|
