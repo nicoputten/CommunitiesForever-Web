@@ -299,10 +299,12 @@ export const runAnswers = sqliteTable(
     key: text("key").notNull(),
     battleTag: text("battle_tag").notNull(),
     guid: text("guid"),
-    answer: text("answer", { enum: ["in", "maybe", "cant"] }).notNull(),
+    /** `reserve` (WEB-47): I'm in on a full role. */
+    answer: text("answer", { enum: ["in", "maybe", "cant", "reserve"] }).notNull(),
     role: text("role", { enum: ["tank", "healer", "damage"] }).notNull(),
     source: text("source", { enum: ["website", "discord", "game"] }).notNull(),
     answeredAt: integer("answered_at").notNull(),
+    /** WEB-40's "Maybe, first in line"; since WEB-47 a reserve answer instead (0011 turned them into reserve). */
     waitlisted: integer("waitlisted", { mode: "boolean" }).notNull(),
     movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
   },

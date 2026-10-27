@@ -30,3 +30,29 @@ export const CLASSES: Readonly<Record<ClassFile, ClassInfo>> = {
 export function classInfo(classFile: string | undefined): ClassInfo | undefined {
   return classFile !== undefined && Object.hasOwn(CLASSES, classFile) ? CLASSES[classFile as ClassFile] : undefined;
 }
+
+/** A group slot (WEB-40): one tank, one healer, three damage. */
+export type GroupRole = "tank" | "healer" | "damage";
+
+/**
+ * The roles a class can fill in a group (WEB-47, decided with Nico 2026-10-27; Vanilla's class design: only warriors,
+ * paladins and druids tank, only paladins, druids, priests and shamans heal, every class can deal damage). Order:
+ * tank, healer, damage.
+ */
+export const CLASS_ROLES: Readonly<Record<ClassFile, readonly GroupRole[]>> = {
+  WARRIOR: ["tank", "damage"],
+  PALADIN: ["tank", "healer", "damage"],
+  DRUID: ["tank", "healer", "damage"],
+  PRIEST: ["healer", "damage"],
+  SHAMAN: ["healer", "damage"],
+  MAGE: ["damage"],
+  WARLOCK: ["damage"],
+  HUNTER: ["damage"],
+  ROGUE: ["damage"],
+};
+
+/** The roles a character of this class can fill; every role for an unknown class (the site can't tell). */
+export function rolesFor(classFile: string | undefined): readonly GroupRole[] {
+  const info = classInfo(classFile);
+  return info === undefined ? ["tank", "healer", "damage"] : CLASS_ROLES[info.classFile];
+}

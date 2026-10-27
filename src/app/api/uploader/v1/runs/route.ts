@@ -23,6 +23,7 @@ export function GET(req: Request): Response {
   const body = uploaderRuns({
     runs: listRuns(db),
     characterName: (guid) => data?.characters[guid]?.name,
+    characterLevel: (guid) => data?.characters[guid]?.level,
     timeZoneOf: (battleTag) => effectiveTimeZone(db, battleTag),
     reminderMinutes: getBotSettings(db).reminderMinutes,
     siteUrl: siteUrl(req),
