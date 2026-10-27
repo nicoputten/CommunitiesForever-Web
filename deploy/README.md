@@ -11,7 +11,7 @@ browser ──https──▶ router :443 ──▶ nginx (TrueNAS app, TLS) ─�
 - The app listens on port 3000, on the LAN only. nginx (already running as an app on TrueNAS) terminates TLS and proxies to it.
 - Everything the site keeps is one SQLite file in `/data`. Migrations run when the container starts.
 
-Steps 1 to 8 are the first install; 9 and 10 are for later.
+Steps 1 to 8 are the first install; 9 and 10 are for later; 11 adds the Discord bot.
 
 ## 1. DNS at Hostnet
 1. Hostnet control panel → domain `vestras.nl` → DNS.
@@ -98,3 +98,22 @@ Everything is in the dataset: `communitiesforever.sqlite` (plus `-wal` and `-shm
 3. ZFS snapshots are atomic, so SQLite recovers a snapshot taken while the app runs like after a power cut.
 4. Restore: stop the app, roll the dataset back to the snapshot (or copy the files out of `/mnt/<pool>/apps/cf/.zfs/snapshot/<name>/`), start the app.
 5. Off the box: replicate the dataset with a Replication Task or Cloud Sync, like your other important datasets.
+
+## 11. The Discord bot
+The bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)) is the `bot` service in the same app. It needs no port, no volume and no dataset: it asks the site (`/api/bot/v1/`, `docs/BOT-API.md`) and Discord, and keeps nothing.
+1. The Discord application, the bot and the invite: the bot repo's `docs/DISCORD-SETUP.md` (steps 1 to 3).
+2. The site's bot token: make it as in `docs/BOT-API.md` "Token" (shown once).
+3. The image: after the bot's first release, make the GHCR package `communitiesforever-discord` public, as in step 4.
+4. The values in your copy of `compose.yaml` (`bot` service):
+
+| Variable | Value |
+|---|---|
+| `DISCORD_TOKEN` | the bot token from the Discord developer portal |
+| `DISCORD_APP_ID` | the application id |
+| `SITE_URL` | `https://wow.vestras.nl`, the public URL: the links in posts are built from it |
+| `BOT_API_TOKEN` | the site's bot token from 2 |
+
+5. Apps → communitiesforever → Edit → paste the compose with the `bot` service → Save.
+6. Check: the bot's log shows `version vX.Y.Z`, `discord: ready in 1 server` and `site: https://wow.vestras.nl answers as …`; the bot is online in the server; TrueNAS shows the `bot` container healthy (it writes a heartbeat while connected to Discord). On the site's Discord page pick the posts channel.
+7. Updating: the bot has its own tags (`vX.Y.Z` in the bot repo's Release workflow). Change only the `bot` service's `image:` tag; the site keeps running. `docker stop` stops the bot gracefully within 10 s.
+
