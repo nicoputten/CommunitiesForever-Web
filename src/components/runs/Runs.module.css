@@ -416,14 +416,8 @@
   color: var(--fresh-text);
 }
 
-.select {
-  min-height: var(--size-touch);
-  padding: 0 var(--s-3-5);
-  border-radius: var(--r-btn);
-  background: var(--input-bg);
-  border: var(--border) solid var(--line-neutral);
-  font-size: var(--fs-body);
-  color: var(--text);
+.answerWith {
+  min-width: var(--size-menu);
 }
 
 .retry {
@@ -699,16 +693,6 @@
   margin: 0;
   opacity: 0;
   cursor: pointer;
-}
-
-.input {
-  min-height: var(--size-touch);
-  padding: 0 var(--s-3-5);
-  border-radius: var(--r-btn);
-  background: var(--input-bg);
-  border: var(--border) solid var(--line-neutral);
-  font-size: var(--fs-body);
-  color: var(--text);
 }
 
 .textarea {

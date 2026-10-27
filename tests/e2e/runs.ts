@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { pick } from "./dropdown";
 
 // Helpers for the runs tests (WEB-40): plan through the real form, set a friend's time zone on the Discord page,
 // answer through the site's answer route.
@@ -17,9 +18,7 @@ export interface PlanInput {
 export async function planRun(page: Page, input: PlanInput): Promise<number> {
   await page.goto(`/runs/new?dungeon=${input.dungeon}`);
   if (input.lead !== undefined) {
-    const lead = page.getByLabel("Lead as");
-    const value = await lead.locator("option", { hasText: input.lead }).first().getAttribute("value");
-    await lead.selectOption(value ?? "");
+    await pick(page, page.getByLabel("Lead as"), new RegExp(`^${input.lead}`));
   }
   await page.getByRole("group", { name: "Day" }).getByRole("radio").nth(input.day).check();
   await page.getByLabel("Time").fill(input.time);
@@ -32,8 +31,8 @@ export async function planRun(page: Page, input: PlanInput): Promise<number> {
 /** Picks the signed-in friend's time zone on the Discord page. */
 export async function setTimeZone(page: Page, timeZone: string): Promise<void> {
   await page.goto("/discord");
-  const select = page.getByLabel("Time zone", { exact: true });
-  await select.selectOption(timeZone);
+  const [, ...place] = timeZone.split("/");
+  await pick(page, page.getByLabel("Time zone", { exact: true }), place.join(" / ").replace(/_/g, " "));
   await page.getByRole("button", { name: "Save" }).first().click();
   await expect(page).toHaveURL(/notice=time-zone/);
 }

@@ -12,6 +12,7 @@ import {
   TYPE,
 } from "./checks";
 import { ADMIN } from "./sample";
+import { pick } from "../e2e/dropdown";
 
 // WEB-39: design checks of the Discord page (board `discord-settings-runs`) as the admin, before linking (Discord is
 // never called here). The time zone is picked first, so the page is the same every run.
@@ -19,7 +20,7 @@ import { ADMIN } from "./sample";
 test.beforeEach(async ({ context, baseURL, page }) => {
   await signInAs(context, baseURL!, ADMIN);
   await page.goto("/discord");
-  await page.getByLabel("Time zone", { exact: true }).selectOption("Europe/Amsterdam");
+  await pick(page, page.getByLabel("Time zone", { exact: true }), "Amsterdam");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("status")).toHaveText("Your time zone is saved.");
 });

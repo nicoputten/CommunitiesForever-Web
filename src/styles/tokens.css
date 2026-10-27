@@ -720,4 +720,14 @@
 
   /* weekly recap preview (WEB-41c): the bot-recap board's example embed */
   --size-recap: 760px; /* bot-recap: the embed column (640 on the board, wider for the site's type) */
+
+  /* dropdown, date popover and time input (WEB-48): the runs-v2-plan board's dropdown spec */
+  --surface-menu: #0e1626; /* runs-v2-plan: dropdown menu */
+  --line-menu: rgba(212, 175, 106, 0.45); /* runs-v2-plan: the menu's gold line */
+  --shadow-menu: 0 18px 40px rgba(0, 0, 0, 0.6);
+  --ring-field-open: 0 0 0 3px rgba(212, 175, 106, 0.18); /* runs-v2-plan: open or focused trigger */
+  --tint-option: rgba(212, 175, 106, 0.14); /* runs-v2-plan: keyboard highlight */
+  --text-disabled: #6e7888; /* runs-v2-plan: disabled trigger and options (inactive, so no contrast minimum) */
+  --r-menu: 12px;
+  --size-menu-list: 320px; /* runs-v2-plan: the list scrolls beyond this */
 }

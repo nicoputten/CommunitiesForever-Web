@@ -2,6 +2,7 @@
 
 import { useOptimistic, useTransition, type ReactNode } from "react";
 import type { PickOption } from "@/core/guild";
+import { Dropdown } from "@/components/ui/Dropdown";
 import styles from "./Discord.module.css";
 
 type Action = (form: FormData) => Promise<void>;
@@ -104,31 +105,24 @@ export function SettingPick({
       <label htmlFor={id} className={styles.label}>
         {label}
       </label>
-      <select
+      <Dropdown
         id={id}
-        className={styles.select}
+        size="compact"
+        className={styles.pick}
         value={empty ? "" : shown}
         disabled={empty}
-        onChange={(e) => {
+        placeholder={none}
+        options={options}
+        onChange={(next) => {
           const form = new FormData();
           form.set("field", field);
-          form.set("value", e.target.value);
+          form.set("value", next);
           start(async () => {
-            setShown(e.target.value);
+            setShown(next);
             await action(form);
           });
         }}
-      >
-        {empty ? (
-          <option value="">{none}</option>
-        ) : (
-          options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))
-        )}
-      </select>
+      />
       {hint !== undefined && <p className={`${styles.small} ${styles.hint}`}>{hint}</p>}
     </div>
   );

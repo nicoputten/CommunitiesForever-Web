@@ -194,6 +194,8 @@ Ambient details (WEB-16, Nico 2026-10-26):
 | `Dropzone`, `UploadHistory`, `SessionReport` | admin upload flow |
 | `Banner`, `EmptyState`, `FirstUploadState`, `Skeleton`, `LoadingLine` | global states (WEB-29: the first-upload card, the thin gold line while a page loads) |
 | `Atmosphere` | fog, light shafts, embers, sea; reads reduced-motion + a user toggle |
+| `Dropdown` | WEB-48, board `runs-v2-plan`: the only select on the site (no native `<select>`). ARIA combobox + listbox; groups, meta, hint, disabled options with a reason; search from 8 options; a bottom sheet (modal `<dialog>`) under 640 px; arrows, Home/End, PageUp/Down, Enter, Esc, Tab, type-to-jump. Its value is a hidden input, so forms read it as a select. `compact` is 36 px on desktop (Discord page) |
+| `DateField`, `TimeField` | WEB-48: no native date or time input. The day as text with a 44 × 44 calendar button and a month grid (APG date picker dialog, weeks from Monday, `min`); a 24-hour text field that reads 2030, 20.30 or 8:30, ↑↓ 15 minutes |
 
 ## 8. Decisions and rules
 
