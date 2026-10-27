@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Runs (top bar › Runs, a fourth tab on a phone): plan a dungeon run for a day and time, leading as one of your characters; friends answer I'm in, Maybe or Can't here or in Discord. Five slots (tank, healer, three damage) fill from each character's role; when a role is full, I'm in waits as Maybe, first in line, and moves up when someone drops out. Times show in your own time zone ("19:30 your time · 20:30 for Nico"). The list shows this week, later and past runs, filtered on the runs you can join; the count next to Runs is how many you can join and haven't answered. The organiser edits day, time and note or deletes the run; the admin can delete any. Scarlet Monastery's wings are runs of their own. On a phone the answer buttons stay at the bottom, and an answer that didn't go through is kept and sent again.
+- Discord page: the channel and mention dropdowns list the Discord server's channels and roles once the bot has reported them. A picked channel or role that was deleted on Discord shows as removed until you pick another.
 
 ## v0.2.0 (2026-10-27)
 - The site has its own icon: the shield in the browser tab, on a phone's home screen ("Add to home screen" opens it like an app, named after the community) and on iOS.

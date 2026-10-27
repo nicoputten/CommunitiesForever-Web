@@ -10,6 +10,8 @@ import { SettingFixed, SettingPick, SettingSwitch } from "@/components/discord/C
 import { ChatIcon } from "@/components/ui/icons";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { battleTagName } from "@/core/access";
+import { guildOptions } from "@/core/guild";
+import { timeAgo } from "@/core/views/age";
 import {
   botStatus,
   type BotStatusView,
@@ -28,6 +30,7 @@ import {
 import { adminBattleTag } from "@/server/access";
 import { botTokenStatus } from "@/server/bot";
 import { getDb } from "@/server/db";
+import { loadGuild } from "@/server/guild";
 import {
   discordApp,
   discordNames,
@@ -52,7 +55,7 @@ import styles from "@/components/discord/Discord.module.css";
 
 export const metadata: Metadata = { title: "Discord" };
 
-/** Before the bot reports its server's channels and roles (WEB-38), the dropdowns for them are disabled. */
+/** Before the bot first reports its server's channels and roles (WEB-46), the dropdowns for them are disabled. */
 const NO_CHANNELS = "Start the bot to pick channels";
 const NO_ROLES = "Start the bot to pick a role";
 
@@ -183,7 +186,7 @@ export default async function DiscordPage({
         </form>
       </section>
 
-      {admin && <AdminSections adminTag={adminTag} bot={bot} />}
+      {admin && <AdminSections adminTag={adminTag} bot={bot} now={now} />}
 
       <p className={styles.note}>
         The bot only reads what the site already has. It never posts BattleTags or Discord IDs; posts use display names
@@ -194,9 +197,15 @@ export default async function DiscordPage({
 }
 
 /** What the bot posts, the linked friends and runs: the admin only (the actions check again). */
-function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: BotStatusView }) {
+function AdminSections({ adminTag, bot, now }: { adminTag: string | undefined; bot: BotStatusView; now: number }) {
   const db = getDb();
   const s = getBotSettings(db);
+  // The bot's channels and roles (WEB-46), and when it last reported them.
+  const guild = loadGuild(db);
+  const reported = guild.reportedAt !== undefined;
+  const channels = (picked: string | null) => guildOptions("channel", guild.channels, picked, reported);
+  const roles = (picked: string | null) => guildOptions("role", guild.roles, picked, reported);
+  const fromBot = guild.reportedAt === undefined ? undefined : `From the bot, ${timeAgo(guild.reportedAt, now)}`;
   const friends = linkedFriends(friendBattleTags(db, adminTag), discordNames(db));
   const recapZone = effectiveTimeZone(db, adminTag, adminTag);
   return (
@@ -244,7 +253,8 @@ function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: B
               field="postsChannel"
               label="Channel for posts"
               value={s.postsChannel ?? ""}
-              options={[]}
+              options={channels(s.postsChannel)}
+              hint={fromBot}
               none={NO_CHANNELS}
               action={botSettingAction}
             />
@@ -252,7 +262,7 @@ function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: B
               field="recapChannel"
               label="Recap channel"
               value={s.recapChannel ?? ""}
-              options={[]}
+              options={channels(s.recapChannel)}
               none={NO_CHANNELS}
               action={botSettingAction}
             />
@@ -270,7 +280,7 @@ function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: B
               field="mentionRole"
               label="Mention on new runs"
               value={s.mentionRole ?? ""}
-              options={[]}
+              options={roles(s.mentionRole)}
               none={NO_ROLES}
               action={botSettingAction}
             />
@@ -370,7 +380,7 @@ function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: B
               field="runsChannel"
               label="Runs channel"
               value={s.runsChannel ?? ""}
-              options={[]}
+              options={channels(s.runsChannel)}
               none={NO_CHANNELS}
               action={botSettingAction}
             />

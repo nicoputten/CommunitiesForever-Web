@@ -306,3 +306,30 @@ export const runAnswers = sqliteTable(
   },
   (t) => [uniqueIndex("run_answers_run_key_unique").on(t.runId, t.key)],
 );
+
+// The bot's Discord server (WEB-46, docs/BOT-API.md "Guild"): the channels and roles it last reported, for the Discord
+// page's dropdowns. Not derived. Items gone from the latest report are kept as `present = false` while a setting
+// still names them, so the page can say "(removed: # old-name)".
+
+export const guildItems = sqliteTable(
+  "guild_items",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    kind: text("kind", { enum: ["channel", "role"] }).notNull(),
+    /** The Discord id (a snowflake, as text). */
+    discordId: text("discord_id").notNull(),
+    /** As the bot reported it: untrusted text, rendered as text only. */
+    name: text("name").notNull(),
+    /** Order in the latest report (Discord's own order). */
+    position: integer("position").notNull(),
+    present: integer("present", { mode: "boolean" }).notNull(),
+  },
+  (t) => [uniqueIndex("guild_items_kind_discord_id_unique").on(t.kind, t.discordId)],
+);
+
+/** One row (id 1): when the bot last reported its server. No row: it never has. */
+export const guildReports = sqliteTable("guild_reports", {
+  id: integer("id").primaryKey(),
+  /** Unix seconds. */
+  reportedAt: integer("reported_at").notNull(),
+});

@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-27): WEB-40, WEB-44, WEB-43, WEB-46 (guild channels and roles), WEB-39b (look-ups for the bot), WEB-41, WEB-42, WEB-45. The order across the repos is under E7.
+Build order (2026-10-27): WEB-40, WEB-44, WEB-43, WEB-39b (look-ups for the bot), WEB-41, WEB-42, WEB-45. The order across the repos is under E7.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -27,7 +27,7 @@ The bot lives in its own public repo, [CommunitiesForever-Discord](https://githu
 
 **Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, the admin can delete any run (one admin, `ADMIN_BATTLETAG`; the board's "Admins: Nico, Mira" is not built). Reminders mention only those who answered I'm in or Maybe.
 
-Order (2026-10-27; WEB-32 and WEB-38 are done): WEB-40, WEB-44, WEB-43, WEB-46, WEB-39b, WEB-41, WEB-42, WEB-45. WEB-44 comes before WEB-43 because it is small and lets the uploader bring runs into the game (UP-12); WEB-41 before WEB-42 and WEB-45 so the site stores the week's history from launch. In the other repos: bot BOT-02 and BOT-03 now (WEB-38 is in), BOT-07 next so milestones post from launch, BOT-06 after WEB-39, BOT-04 after WEB-40 and WEB-43, BOT-05 after WEB-41; uploader UP-12 after WEB-44; the addon's CF-45..48 are done and wait for a release.
+Order (2026-10-27; WEB-32 and WEB-38 are done): WEB-40, WEB-44, WEB-43, WEB-39b, WEB-41, WEB-42, WEB-45. WEB-44 comes before WEB-43 because it is small and lets the uploader bring runs into the game (UP-12); WEB-41 before WEB-42 and WEB-45 so the site stores the week's history from launch. In the other repos: bot BOT-02 and BOT-03 now (WEB-38 is in), BOT-07 next so milestones post from launch, BOT-06 after WEB-39, BOT-04 after WEB-40 and WEB-43, BOT-05 after WEB-41; uploader UP-12 after WEB-44; the addon's CF-45..48 are done and wait for a release.
 
 ### WEB-44 Runs for the uploader
 - `GET /api/uploader/v1/runs`: the upcoming runs (next 14 days) of the uploader's community, with slots, answers, the organiser's time zone offset and `updatedAt`; documented in `docs/UPLOADER-API.md` (an optional addition; the uploader's v1 stays valid).
@@ -38,14 +38,6 @@ Order (2026-10-27; WEB-32 and WEB-38 are done): WEB-40, WEB-44, WEB-43, WEB-46, 
 - An ask now from the game expires 10 minutes after it was made in game, and is only posted while it hasn't.
 - Done: when an upload's run log (addon CF-23: dungeon, time, community members in the group) shows the dungeon within the run's window, the run becomes "Ran it · N of M signed-up came" and counts for the recap (WEB-41). No such upload within 4 hours of the start: "didn't happen".
 - The session report and the uploader's summary show "N run answers".
-
-### WEB-46 Channels and roles from the bot
-Assigned 2026-10-27 (Nico): the Discord page's channel and role dropdowns, disabled since WEB-39, get their options from the bot.
-- `POST /api/bot/v1/guild` with `{ channels: [{ id, name }], roles: [{ id, name }] }` (text channels the bot may post in, mentionable roles): the bot sends it when it connects and when its server's channels or roles change. Stored in its own table (forward-only migration), replaced whole on every report; ids are Discord snowflakes as text, names are untrusted text (CLAUDE.md rule 2).
-- The contract in `docs/BOT-API.md` (an optional new endpoint within v1; an older site answers 404 and the bot carries on).
-- The page lists them as "# name" and "@name"; a picked channel or role that's gone shows as "(removed)" until the admin picks another.
-- Bot repo: BOT-02 reports them.
-- Tests: the token check, replacing the list, untrusted names, a removed pick.
 
 ### WEB-39b Look-ups for the bot
 Split from WEB-39 (Nico, 2026-10-27); after WEB-38, whose bot token check it uses.
