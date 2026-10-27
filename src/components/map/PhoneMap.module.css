@@ -24,8 +24,11 @@
   border-radius: 0 var(--r-btn) var(--r-btn) 0;
 }
 
+/* In the top row, where the board has "Updated just now": clear of the continent switch and of the markers along
+   Kalimdor's east coast. */
 .hint[data-side="right"] {
-  right: var(--s-2);
+  top: var(--s-2-5);
+  right: 0;
   flex-direction: row-reverse;
   border-radius: var(--r-btn) 0 0 var(--r-btn);
 }
