@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { clockDay } from "@/core/views/clock";
+import { clockDay, clockParts, dayGroup } from "@/core/views/clock";
 import { historyLine } from "@/core/views/upload";
-import { ACTIVE_SECONDS, NOTICES, noticeOk, parseNotice, uploaderRows } from "@/core/views/uploader";
+import {
+  ACTIVE_SECONDS,
+  matchesOwnFilter,
+  NOTICES,
+  noticeOk,
+  ownFilterParam,
+  ownRow,
+  parseNotice,
+  parseOlder,
+  parseOwnFilter,
+  uploaderRows,
+} from "@/core/views/uploader";
 
 // WEB-34: the uploader page's view model, its dates and "via" in the upload history.
 
@@ -48,5 +59,73 @@ describe("history via", () => {
     const base = { id: 1, uploadedAt: NOW, uploadedBy: "Nico#2201", status: "rejected" as const, first: false };
     expect(historyLine({ ...base, device: "DESKTOP-NICO" }, new Map()).via).toBe("via DESKTOP-NICO");
     expect(historyLine(base, new Map()).via).toBeUndefined();
+  });
+});
+
+describe("your upload history", () => {
+  const counts = {
+    levelsGained: 5,
+    skillGains: 4,
+    itemLevelGains: 0,
+    newCharacters: 1,
+    sightings: 7,
+    peopleWithNewData: 1,
+  };
+  const summary = {
+    newPeople: [],
+    newCharacters: [{ guid: "c", name: "Zul Kazrek", hasRecord: true }],
+    removedCharacters: [],
+    levelUps: [{ guid: "a", name: "Ves Doombringer", from: 37, to: 42 }],
+    professionGains: [],
+    itemLevelGains: [],
+    sightings: [],
+    senders: [],
+    counts,
+  };
+  const base = { id: 7, uploadedAt: NOW, uploadedBy: "Nico#2201", first: false };
+
+  it("turns uploads into rows with pills and a status", () => {
+    expect(ownRow({ ...base, status: "ok", summary, device: "DESKTOP-NICO" })).toEqual({
+      id: 7,
+      uploadedAt: NOW,
+      device: "DESKTOP-NICO",
+      status: "done",
+      pills: ["5 levels gained", "4 skill gains", "1 new character"],
+    });
+    expect(ownRow({ ...base, status: "ok" })).toMatchObject({ status: "nothing-new", pills: ["Nothing new"] });
+    expect(ownRow({ ...base, status: "rejected", unreadable: "not-ledger" })).toMatchObject({
+      status: "rejected",
+      pills: ["Wrong file: another addon's data"],
+    });
+    expect(ownRow({ ...base, status: "ok", summary, first: true }).pills).toEqual(["First upload", "1 character"]);
+  });
+
+  it("filters by device, manual and problems", () => {
+    const app = ownRow({ ...base, status: "ok", summary, device: "DESKTOP-NICO" });
+    const manual = ownRow({ ...base, status: "rejected", unreadable: "damaged" });
+    expect(parseOwnFilter("device:DESKTOP-NICO")).toEqual({ kind: "device", name: "DESKTOP-NICO" });
+    expect(parseOwnFilter("device:")).toEqual({ kind: "all" });
+    expect(parseOwnFilter(null)).toEqual({ kind: "all" });
+    expect(ownFilterParam({ kind: "all" })).toBeUndefined();
+    expect(matchesOwnFilter(app, parseOwnFilter("device:DESKTOP-NICO"))).toBe(true);
+    expect(matchesOwnFilter(manual, parseOwnFilter("manual"))).toBe(true);
+    expect(matchesOwnFilter(app, parseOwnFilter("manual"))).toBe(false);
+    expect(matchesOwnFilter(manual, parseOwnFilter("problems"))).toBe(true);
+    expect(matchesOwnFilter(app, parseOwnFilter("problems"))).toBe(false);
+  });
+
+  it("pages by 20, at most 500", () => {
+    expect(parseOlder(undefined)).toBe(20);
+    expect(parseOlder("40")).toBe(40);
+    expect(parseOlder("x")).toBe(20);
+    expect(parseOlder("100000")).toBe(500);
+  });
+
+  it("groups by day and splits time and date", () => {
+    expect(dayGroup(NOW - 60, NOW, "UTC")).toBe("today");
+    expect(dayGroup(NOW - 4 * DAY, NOW, "UTC")).toBe("week");
+    expect(dayGroup(NOW - 7 * DAY, NOW, "UTC")).toBe("earlier");
+    expect(clockParts(NOW, NOW, "UTC")).toEqual({ time: "21:14", date: "Tue 27 Oct" });
+    expect(clockParts(NOW - 365 * DAY, NOW, "UTC").date).toBe("Mon 27 Oct 2025");
   });
 });

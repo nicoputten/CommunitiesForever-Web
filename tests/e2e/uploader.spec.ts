@@ -34,11 +34,26 @@ test("the top bar's Uploader opens the page, which links to the manual upload", 
   await expect(page).toHaveURL(/\/upload$/);
 });
 
-test("the upload history on the uploader page opens a report", async ({ page }) => {
+test("your upload history filters by source and opens a report", async ({ context, baseURL, page }) => {
+  // The admin has the seed's manual uploads.
+  await context.clearCookies();
+  await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/uploader");
-  const history = page.getByRole("complementary", { name: "History" });
-  await expect(history).toBeVisible();
-  await history.getByTestId("history-line").first().click();
+  const history = page.getByRole("region", { name: "Upload history" });
+  const rows = history.getByTestId("own-upload");
+  await expect(rows.first()).toContainText("Manual upload");
+  await expect(history.getByRole("heading", { level: 3 }).first()).toHaveText(/Today|This week|Earlier/);
+
+  await history.getByRole("button", { name: "Problems" }).click();
+  await expect(page).toHaveURL(/show=problems/);
+  await history.getByRole("button", { name: "Manual" }).click();
+  await expect(page).toHaveURL(/show=manual/);
+  await page.goBack();
+  await expect(page).toHaveURL(/show=problems/);
+  await history.getByRole("button", { name: "All" }).click();
+  await expect(page).toHaveURL(/\/uploader$/);
+
+  await rows.first().click();
   await expect(page).toHaveURL(/\/upload\/\d+$/);
 });
 

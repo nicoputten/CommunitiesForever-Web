@@ -199,9 +199,15 @@ export interface HistoryLine {
  * this order, zeros left out; "Nothing new" when nothing changed (Nico, WEB-19).
  */
 export function summaryLine(summary: UploadSummary | undefined, first: boolean): string {
-  if (summary === undefined) return "Nothing new";
+  const parts = summaryParts(summary, first);
+  return parts.length === 0 ? "Nothing new" : parts.join(" · ");
+}
+
+/** The summary line's parts ("5 levels gained", "4 skill gains"); empty when nothing changed. */
+export function summaryParts(summary: UploadSummary | undefined, first: boolean): string[] {
+  if (summary === undefined) return [];
   const c = summary.counts;
-  if (first) return `First upload · ${plural(c.newCharacters, "character")}`;
+  if (first) return ["First upload", plural(c.newCharacters, "character")];
   const parts = [
     c.levelsGained > 0 ? plural(c.levelsGained, "level gained", "levels gained") : undefined,
     c.skillGains > 0 ? plural(c.skillGains, "skill gain") : undefined,
@@ -209,7 +215,7 @@ export function summaryLine(summary: UploadSummary | undefined, first: boolean):
     c.sightings > 0 ? plural(c.sightings, "sighting") : undefined,
     c.itemLevelGains > 0 ? plural(c.itemLevelGains, "item level gain") : undefined,
   ].filter((p) => p !== undefined);
-  return parts.length === 0 ? "Nothing new" : parts.slice(0, 3).join(" · ");
+  return parts.slice(0, 3);
 }
 
 /** The short reason of a rejected upload in the history. */

@@ -74,9 +74,18 @@ test("uploader: design values", async ({ page }) => {
     "min-height": "var(--size-touch)",
   });
   await expectStyles(page.getByText("Create a token by hand"), { color: "var(--gold)" });
-  await expectStyles(page.getByRole("complementary", { name: "History" }), {
-    "border-radius": "var(--r-panel)",
-    "background-color": "var(--surface)",
+  const history = page.getByRole("region", { name: "Upload history" });
+  await expectStyles(history, { "background-color": "var(--surface-box)", "border-radius": "var(--r-panel)" });
+  await expectStyles(history.getByRole("heading", { level: 3 }).first(), {
+    "font-size": "var(--fs-meta-sm)",
+    color: "var(--text-faint)",
+  });
+  const row = history.getByTestId("own-upload").first();
+  await expectStyles(row, { "border-radius": "var(--r-btn)", "min-height": "var(--size-touch)" });
+  await expectStyles(row.getByText("Done"), { color: "var(--fresh-text)", "background-color": "var(--done-tint)" });
+  await expectStyles(history.getByRole("button", { name: "All" }), {
+    "border-color": "var(--gold)",
+    "background-color": "var(--tint-pressed)",
   });
 });
 

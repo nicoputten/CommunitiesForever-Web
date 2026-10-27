@@ -49,7 +49,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Top bar: "Upload" becomes "Uploader". The manual upload page stays and is reached by a small "Upload manually" link on the uploader page (decided with Nico).
 - Every UI story criteria, design checks.
 - Decided with Nico (2026-10-27, all 13 proposals; 3 became WEB-33b, the OAuth 2.0 device flow): Allow / Deny as server actions that redirect to `?notice=` (allowed, denied, bad-code, too-many, too-many-tries); no field to type a code; 10 wrong codes per 10 minutes per user (links opened count too); "● active" = used in the last 7 days; one device icon; Revoke asks inline; a token by hand needs a name and lives only in the form's state; "via" in both history lists; the download button disabled until WEB-35. Deviations in `docs/DESIGN.md` §11.
-- The upload history is on the uploader page too, under "Get the app" (Nico, 2026-10-27, after the first look).
+- "Upload history" (Nico, 2026-10-27, board `uploader-page` revised with it; all 5 proposals): the viewer's own uploads, app and manual, by Today / This week / Earlier; filters All, each device, Manual, Problems (`?show=`); pills from the summary line; Done, Nothing new, Rejected; 20 at a time with "Show older uploads" (`?older=`); every row opens its report.
 
 ### WEB-35 Installer hosting and update feed
 - The repos are private, so the site hosts the uploader: `/uploader/download` (signed-in users) and the Velopack update feed for the app (Bearer token), from a folder on the data volume (`/data/uploader`).

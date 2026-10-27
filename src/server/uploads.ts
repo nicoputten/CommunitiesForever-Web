@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
   battleTagsOf,
@@ -247,6 +247,37 @@ export function listUploads(db: Db, limit = 20): StoredUpload[] {
     .limit(limit)
     .all()
     .map((row) => stored(row, firstOk));
+}
+
+/** One person's newest uploads, from the app and manual (the uploader page's history, WEB-34). */
+export interface OwnUploads {
+  uploads: StoredUpload[];
+  /** There are older ones than `limit`. */
+  more: boolean;
+  /** Device names that sent any of their uploads, revoked devices too: the history's filter chips. */
+  devices: string[];
+}
+
+export function listOwnUploads(db: Db, battleTag: string, limit = 20): OwnUploads {
+  const firstOk = firstOkId(db);
+  const own = sql`lower(${uploads.uploadedBy}) = ${battleTagKey(battleTag)}`;
+  const rows = db
+    .select(STORED)
+    .from(uploads)
+    .leftJoin(uploaderTokens, eq(uploads.deviceId, uploaderTokens.id))
+    .where(own)
+    .orderBy(desc(uploads.id))
+    .limit(limit + 1)
+    .all();
+  const devices = db
+    .selectDistinct({ name: uploaderTokens.deviceName })
+    .from(uploads)
+    .innerJoin(uploaderTokens, eq(uploads.deviceId, uploaderTokens.id))
+    .where(own)
+    .orderBy(asc(uploaderTokens.deviceName))
+    .all()
+    .map((r) => r.name);
+  return { uploads: rows.slice(0, limit).map((row) => stored(row, firstOk)), more: rows.length > limit, devices };
 }
 
 /** One upload for its report page; undefined when there is none. */
