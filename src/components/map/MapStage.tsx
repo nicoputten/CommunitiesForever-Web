@@ -20,9 +20,13 @@ import {
 } from "react-zoom-pan-pinch";
 import { classInfo } from "@/core/gamedata/classes";
 import {
+  CONTINENTS,
   ZOOM_MAX,
   continentAt,
+  continentScale,
+  edgeHint,
   parseContinent,
+  placeOf,
   wholeWorld,
   zoomLevel,
   zoomStep,
@@ -32,13 +36,17 @@ import {
   type ZoomLevel,
 } from "@/core/views/mapMarkers";
 import { motionOn } from "@/components/atmosphere/motion";
+import { FilterMenu } from "@/components/roster/FilterMenu";
 import { DungeonIcon } from "@/components/ui/icons";
+import { BottomSheet, sheetHeights, type Snap } from "./BottomSheet";
 import { CharacterCard } from "./CharacterCard";
-import { FLY_EVENT } from "./flyTo";
+import { CharacterSheet } from "./CharacterSheet";
+import { FLY_EVENT, SHEET_EVENT, type SheetRequest } from "./flyTo";
 import { CharacterMarker, FAN_MAX, ZoneCluster, fanOffsets } from "./Markers";
 import styles from "./Markers.module.css";
 import frameStyles from "./WorldMap.module.css";
 import zoom from "./Zoom.module.css";
+import phoneStyles from "./PhoneMap.module.css";
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -56,6 +64,8 @@ export interface MapStageProps {
   dungeons?: { name: string; x: number; y: number }[];
   /** GUIDs of the sightings that drop in (`?drop=`, from a session report). */
   drop?: string[];
+  /** Below 1024 px: the roll call for the phone's bottom sheet (WEB-28); the tapped character replaces it. */
+  sheet?: ReactNode;
   /** The server-rendered map SVG. */
   children: ReactNode;
 }
@@ -69,8 +79,8 @@ const EDGE_GIVE = 0.35;
 /** Pixels an arrow key pans. */
 const PAN_STEP = 80;
 
-/** Writes URL parameters without a server round trip, keeping the others. */
-function writeParams(params: Record<string, string | undefined>) {
+/** Writes URL parameters without a server round trip, keeping the others; `push` adds a history entry (Back undoes). */
+function writeParams(params: Record<string, string | undefined>, push = false) {
   const url = new URL(window.location.href);
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined) url.searchParams.delete(key);
@@ -79,15 +89,20 @@ function writeParams(params: Record<string, string | undefined>) {
   // Unchanged: leave the history entry (and Next.js's state in it, for Back) alone.
   if (url.href === window.location.href) return;
   // null state: Next.js then syncs useSearchParams (the top bar's continent switch) with the new URL.
-  window.history.replaceState(null, "", url);
+  if (push) window.history.pushState(null, "", url);
+  else window.history.replaceState(null, "", url);
 }
 
 const PHONE = "(max-width: 767px)";
-const onPhoneChange = (notify: () => void) => {
-  const query = window.matchMedia(PHONE);
-  query.addEventListener("change", notify);
-  return () => query.removeEventListener("change", notify);
+/** Below this the roll call is the bottom sheet and a tapped character opens in it (WEB-28, Nico 2026-10-27). */
+const SHEET = "(max-width: 1023px)";
+const onMediaChange = (query: string) => (notify: () => void) => {
+  const list = window.matchMedia(query);
+  list.addEventListener("change", notify);
+  return () => list.removeEventListener("change", notify);
 };
+const onPhoneChange = onMediaChange(PHONE);
+const onSheetChange = onMediaChange(SHEET);
 
 /** A duration token in ms (DESIGN.md §6), 0 without motion: fly and drop jump. */
 function motionMs(token: string): number {
@@ -121,6 +136,7 @@ export function MapStage({
   split,
   dungeons = [],
   drop,
+  sheet,
   children,
 }: MapStageProps) {
   const root = useRef<HTMLDivElement>(null);
@@ -138,7 +154,8 @@ export function MapStage({
   const dragged = useRef(false);
   const shownContinent = useRef<Continent | undefined>(undefined);
   const zoomable = frames !== undefined && split !== undefined;
-  const continent = parseContinent(useSearchParams().get("continent"));
+  const params = useSearchParams();
+  const continent = parseContinent(params.get("continent"));
   const [dropping] = useState(() => new Set(drop));
   // On phone the card is fixed above the tab bar, so it lives outside the zoomed (transformed) stage.
   const phone = useSyncExternalStore(
@@ -146,8 +163,32 @@ export function MapStage({
     () => window.matchMedia(PHONE).matches,
     () => false,
   );
+  // Below 1024 px with a roll call: the bottom sheet, its snap point, and the view before a character opened in it.
+  const sheetWidth = useSyncExternalStore(
+    onSheetChange,
+    () => window.matchMedia(SHEET).matches,
+    () => false,
+  );
+  const sheetMode = sheet !== undefined && sheetWidth;
+  const [snap, setSnapState] = useState<Snap>(initial === undefined ? "peek" : "half");
+  /** The snap point the sheet is going to, for centring the map in the part above it right away. */
+  const snapNow = useRef<Snap>(snap);
+  const sheetOn = useRef(false);
+  useLayoutEffect(() => {
+    sheetOn.current = sheetMode;
+  }, [sheetMode]);
+  const setSnap = useCallback((to: Snap) => {
+    snapNow.current = to;
+    setSnapState(to);
+  }, []);
+  /** The selection as the handlers last set it (state lags a render behind). */
+  const selectedNow = useRef(initial);
+
+  /** pick (below): declared later, used by the Escape key. */
+  const pickRef = useRef<(guid: string | undefined) => void>(() => undefined);
 
   const select = useCallback((guid: string | undefined) => {
+    selectedNow.current = guid;
     setSelected(guid);
     writeParams({ character: guid });
   }, []);
@@ -171,11 +212,11 @@ export function MapStage({
       if (e.key !== "Escape") return;
       setOpenZone(undefined);
       setHovered(undefined);
-      select(undefined);
+      pickRef.current(undefined);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [select]);
+  }, []);
 
   // Zone hover: the SVG is static server markup, so the hovered zone's border is marked on the element itself.
   const markZone = (target: EventTarget | null) => {
@@ -228,6 +269,10 @@ export function MapStage({
       top += el.offsetTop;
     }
     const f = frame.getBoundingClientRect();
+    // The phone's bottom sheet (WEB-28) covers the map's lower part: the centre is in the part above it.
+    const bottom = sheetOn.current
+      ? Math.min(f.bottom, window.innerHeight - sheetHeights()[snapNow.current])
+      : f.bottom;
     // A panel over the map's right side (the roll call, WEB-27: `data-map-panel`) narrows the part the centre is in.
     let right = f.right;
     for (const panel of document.querySelectorAll("[data-map-panel]")) {
@@ -243,7 +288,9 @@ export function MapStage({
       positionY,
       /** The centre of the visible map, from the frame's top left. */
       cx: (right - f.left) / 2,
-      cy: f.height / 2,
+      cy: (bottom - f.top) / 2,
+      /** The visible map's height. */
+      ch: bottom - f.top,
       // Where the content sits in the frame before its transform, and the stage in the content (unscaled).
       originX: content.offsetLeft,
       originY: content.offsetTop,
@@ -294,6 +341,9 @@ export function MapStage({
   /** After a pan or zoom: keep the world on screen, name the continent and (at 4×) the zone in the centre. */
   const settled = useCallback(() => {
     const z = zoomer.current;
+    // A fly or spring under way is not a view to settle on, even when its frames lag behind (a busy page): its last
+    // frame is a transform too, which settles again.
+    if (z?.instance.animation != null) return;
     const c = centre();
     const scale = layout()?.scale;
     if (z === null || c === undefined || scale === undefined || split === undefined) return;
@@ -365,7 +415,11 @@ export function MapStage({
     if (!zoomable || frame == null) return;
     const observer = new ResizeObserver(() => {
       const v = view.current;
-      if (v !== undefined) void goTo(v.x, v.y, v.scale, 0);
+      if (v === undefined) return;
+      // A jump (0 ms) does not stop a fly under way, whose next frames would win and leave the map half-way (the
+      // phone's sheet appears during the first fly to a linked character, WEB-28): a short animation replaces it.
+      const flying = zoomer.current?.instance.animation != null;
+      void goTo(v.x, v.y, v.scale, flying ? motionMs("--dur-fast") : 0);
     });
     observer.observe(frame);
     if (root.current !== null) observer.observe(root.current);
@@ -380,11 +434,8 @@ export function MapStage({
       shownContinent.current = to;
       writeParams({ continent: to === "azeroth" ? undefined : to });
       const f = frames[to];
-      const fit = Math.min(
-        (2 * l.cx) / ((f.width / box.width) * l.width),
-        l.frame.height / ((f.height / box.height) * l.height),
-      );
-      const scale = to === "azeroth" ? 1 : Math.min(Math.max(fit, 1), ZOOM_MAX);
+      const fit = Math.min((2 * l.cx) / ((f.width / box.width) * l.width), l.ch / ((f.height / box.height) * l.height));
+      const scale = continentScale(to, fit);
       void goTo(f.x + f.width / 2, f.y + f.height / 2, scale, animate ? motionMs("--dur-fly") : 0);
     },
     [layout, frames, box, goTo],
@@ -415,17 +466,96 @@ export function MapStage({
     frameContinent(continent, true);
   }, [zoomable, continent, frameContinent]);
 
+  /** The view before a character opened in the sheet, to fly back to when it closes; whether that added a history entry. */
+  const before = useRef<{ x: number; y: number; scale: number } | undefined>(undefined);
+  const pushed = useRef(false);
+
+  /** The sheet (WEB-28): a tapped character opens at half, the map flies there in the part above it. */
+  const openInSheet = useCallback(
+    (guid: string, history: "push" | "replace" | "none") => {
+      const first = selectedNow.current === undefined;
+      if (first) before.current = view.current;
+      if (history !== "none") {
+        writeParams({ character: guid }, history === "push" && first);
+        if (history === "push" && first) pushed.current = true;
+      }
+      selectedNow.current = guid;
+      setSelected(guid);
+      setOpenZone(undefined);
+      setSnap("half");
+      flyTo(guid);
+    },
+    [flyTo, setSnap],
+  );
+
+  /** Closes the character: back to the roll call's peek (or `to`) and the view before it opened. */
+  const closeSheet = useCallback(
+    (history: boolean, to: Snap = "peek") => {
+      selectedNow.current = undefined;
+      setSelected(undefined);
+      setSnap(to);
+      const back = before.current;
+      before.current = undefined;
+      if (back !== undefined && to === "peek") void goTo(back.x, back.y, back.scale, motionMs("--dur-fly"));
+      if (!history) return;
+      if (pushed.current) {
+        pushed.current = false;
+        window.history.back();
+      } else writeParams({ character: undefined });
+    },
+    [goTo, setSnap],
+  );
+
+  /** A marker or roll call row picked: the sheet below 1024 px, else the selection and card (WEB-25/26). */
+  const pick = useCallback(
+    (guid: string | undefined) => {
+      if (!sheetOn.current) return select(guid);
+      if (guid === undefined) {
+        if (selectedNow.current !== undefined) closeSheet(true);
+      } else if (guid !== selectedNow.current) openInSheet(guid, "push");
+    },
+    [select, openInSheet, closeSheet],
+  );
+
+  // Back and Forward with the sheet: the URL's character is the open one.
+  useEffect(() => {
+    const onPop = () => {
+      const guid = new URL(window.location.href).searchParams.get("character") ?? undefined;
+      if (!sheetOn.current || guid === selectedNow.current) return;
+      if (guid === undefined) {
+        pushed.current = false;
+        closeSheet(false);
+      } else if (places.some((p) => p.markers.some((m) => m.guid === guid))) openInSheet(guid, "none");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [places, openInSheet, closeSheet]);
+
   // The roll call and the phone sheet ask for a fly (flyTo.ts).
   useEffect(() => {
     const onFly = (e: Event) => {
       const guid = (e as CustomEvent<string>).detail;
       if (typeof guid !== "string") return;
+      if (sheetOn.current) return pick(guid);
       select(guid);
       flyTo(guid);
     };
     window.addEventListener(FLY_EVENT, onFly);
     return () => window.removeEventListener(FLY_EVENT, onFly);
-  }, [select, flyTo]);
+  }, [select, flyTo, pick]);
+
+  // The phone app bar's Filters button (the full roll call) and its back arrow (close the character).
+  useEffect(() => {
+    const onSheet = (e: Event) => {
+      const request = (e as CustomEvent<SheetRequest>).detail;
+      if (request === "full") {
+        if (selectedNow.current !== undefined) closeSheet(true, "full");
+        else setSnap("full");
+      } else if (selectedNow.current !== undefined) closeSheet(true);
+    };
+    window.addEventListener(SHEET_EVENT, onSheet);
+    return () => window.removeEventListener(SHEET_EVENT, onSheet);
+  }, [closeSheet, setSnap]);
 
   // The drop plays once: a reload shows the map as usual.
   useEffect(() => {
@@ -472,9 +602,14 @@ export function MapStage({
     };
     const by = pan[e.key];
     if (by !== undefined) {
-      if (wholeWorld(z.instance.state.scale)) return;
+      // From where the map is going, not where it is: an arrow key during a zoom (the + key, 250 ms) pans the zoom's
+      // goal instead of being lost while the scale is still near 1× (or cutting the zoom short).
+      const l = layout();
+      const goal = view.current ?? (l === undefined ? undefined : { ...centre()!.world, scale: l.scale });
+      if (l === undefined || goal === undefined || wholeWorld(goal.scale)) return;
       byHand.current = true;
-      void z.panBy(by[0], by[1], motionMs("--dur-fast"), "easeOut");
+      const perPx = box.width / (l.width * goal.scale);
+      void goTo(goal.x - by[0] * perPx, goal.y - by[1] * perPx, goal.scale, motionMs("--dur-fast"), "easeOut");
     } else if (e.key === "+" || e.key === "=") stepZoom(1);
     else if (e.key === "-" || e.key === "_") stepZoom(-1);
     else if (e.key === "0") zoomTo(1);
@@ -482,8 +617,13 @@ export function MapStage({
     e.preventDefault();
   };
 
-  // The card shows for the marker pointed at or focused, else for the selected one.
-  const cardGuid = hovered ?? selected;
+  useLayoutEffect(() => {
+    pickRef.current = pick;
+  }, [pick]);
+
+  // The card shows for the marker pointed at or focused, else for the selected one. With the sheet the selected one
+  // is in the sheet: a tablet still shows the card on hover, a phone never.
+  const cardGuid = sheetMode ? (phone ? undefined : hovered) : (hovered ?? selected);
   let card: { marker: MapMarker; place: MapPlace; dx: number; dy: number } | undefined;
   for (const place of places) {
     const i = place.markers.findIndex((m) => m.guid === cardGuid);
@@ -493,6 +633,11 @@ export function MapStage({
     card = { marker: place.markers[i]!, place, dx: offset?.dx ?? 0, dy: offset?.dy ?? 0 };
   }
   useLayoutEffect(placeCard, [placeCard, cardGuid]);
+
+  // The sheet's character, the edge hint ("4 in Kalimdor") and the phone app bar's slot for the zone (WEB-28).
+  const open = sheetMode && selected !== undefined ? placeOf(places, selected) : undefined;
+  const hint = sheetMode && split !== undefined ? edgeHint(places, continent, split) : undefined;
+  const titleSlot = open === undefined ? null : document.querySelector("[data-map-phone-title]");
 
   // Only after a zoom settled at 4× (client side), so the top bar's slot is there to find.
   const zoneSlot = focusZone === undefined ? null : document.querySelector("[data-map-zone]");
@@ -532,7 +677,7 @@ export function MapStage({
             if (dragged.current) return;
             if (e.target instanceof Element && e.target.closest("[data-map-item]") !== null) return;
             setOpenZone(undefined);
-            select(undefined);
+            pick(undefined);
           }}
         >
           {children}
@@ -569,7 +714,7 @@ export function MapStage({
                       marker={place.markers[0]!}
                       selected={place.markers[0]!.guid === selected}
                       badge
-                      onSelect={select}
+                      onSelect={pick}
                       onHover={hover}
                     />
                   ) : (
@@ -579,14 +724,14 @@ export function MapStage({
                       pinned={fan && level !== "world"}
                       onOpen={(open) => setOpenZone((z) => (open ? place.zone : z === place.zone ? undefined : z))}
                       selected={selected}
-                      onSelect={select}
+                      onSelect={pick}
                       onHover={hover}
                     />
                   )}
                 </div>
               );
             })}
-            {!phone && cardAnchor}
+            {cardAnchor}
           </div>
         </div>
       </div>
@@ -635,7 +780,6 @@ export function MapStage({
       ) : (
         stage
       )}
-      {phone && cardAnchor}
       <p className={styles.zoneName} aria-hidden="true">
         {zoneName}
       </p>
@@ -662,6 +806,64 @@ export function MapStage({
         </div>
       )}
       {zoneSlot !== null && createPortal(focusZone!.name, zoneSlot)}
+      {sheetMode && (
+        <>
+          {hint !== undefined && selected === undefined && (
+            <button
+              type="button"
+              className={phoneStyles.hint}
+              data-side={hint.side}
+              onClick={() => frameContinent(hint.continent, true)}
+            >
+              <svg aria-hidden="true" viewBox="0 0 10 10" className={phoneStyles.chevron}>
+                <path d={hint.side === "left" ? "M7 1L3 5l4 4" : "M3 1l4 4-4 4"} />
+              </svg>
+              {hint.label}
+            </button>
+          )}
+          {selected === undefined && (
+            <div className={phoneStyles.continent}>
+              <FilterMenu
+                name="Continent"
+                kind="radio"
+                label={CONTINENTS.find((c) => c.value === continent)!.label}
+                active={false}
+                items={CONTINENTS.map((c) => ({ key: c.value, label: c.label, checked: c.value === continent }))}
+                onSelect={(key) => frameContinent(parseContinent(key), true)}
+              />
+            </div>
+          )}
+          <BottomSheet
+            snap={snap}
+            onSnap={(to) => {
+              if (selectedNow.current !== undefined && to === "peek") closeSheet(true);
+              else setSnap(to);
+            }}
+            handle={open === undefined ? { open: "Open roll call", collapse: "Collapse roll call" } : undefined}
+          >
+            {open === undefined ? (
+              sheet
+            ) : (
+              <CharacterSheet
+                key={open.marker.guid}
+                marker={open.marker}
+                next={open.next}
+                onNext={(guid) => openInSheet(guid, "replace")}
+                onClose={() => closeSheet(true)}
+              />
+            )}
+          </BottomSheet>
+          {open !== undefined &&
+            titleSlot !== null &&
+            createPortal(
+              <>
+                <span className={phoneStyles.title}>{open.place.zoneName}</span>
+                <span className={phoneStyles.here}>{open.place.markers.length} here</span>
+              </>,
+              titleSlot,
+            )}
+        </>
+      )}
     </>
   );
 }

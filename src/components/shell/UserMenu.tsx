@@ -55,7 +55,7 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
   }, [open]);
 
   return (
-    <div ref={root} className={styles.root}>
+    <div ref={root} className={styles.root} data-user-menu="">
       <button
         ref={button}
         type="button"

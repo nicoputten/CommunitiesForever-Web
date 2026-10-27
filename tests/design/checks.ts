@@ -102,8 +102,9 @@ export async function expectTouchTargets(page: Page): Promise<void> {
     [...document.querySelectorAll<HTMLElement>("a[href], button, input, select, textarea, summary, [tabindex]")]
       .filter((el) => el.tabIndex >= 0 && el.checkVisibility())
       .map((el) => ({ el, r: el.getBoundingClientRect() }))
-      // The skip link sits above the page until it has focus.
-      .filter(({ r }) => r.bottom > 0 && (r.width < 44 || r.height < 44))
+      // The skip link sits above the page until it has focus. A hundredth of a pixel is rounding: the map's markers
+      // keep their size under any zoom by scaling back (1 / zoom × zoom).
+      .filter(({ r }) => r.bottom > 0 && (r.width < 43.99 || r.height < 43.99))
       .map(({ el, r }) => `${el.tagName} "${el.textContent?.trim()}" ${Math.round(r.width)}×${Math.round(r.height)}`),
   );
   expect(small).toEqual([]);

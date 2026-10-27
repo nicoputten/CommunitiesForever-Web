@@ -258,3 +258,210 @@ a.row:hover {
   font-size: var(--fs-meta);
   color: var(--text-dim);
 }
+
+/* As a panel the parts lay out in the panel's own column. */
+.body,
+.filters {
+  display: contents;
+}
+
+.initials {
+  display: none;
+}
+
+/*
+ * The phone's bottom sheet (WEB-28, phone-map and phone-roll-call boards). The sheet (BottomSheet) sets
+ * data-snap: the peek shows the chips, half and full the filters and the list.
+ */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  height: 100%;
+  min-height: 0;
+}
+
+.sheet .head {
+  padding: 0 var(--gutter-phone);
+}
+
+.sheet .title {
+  font-size: var(--fs-sheet-title);
+  letter-spacing: var(--ls-display);
+}
+
+[data-snap="full"] .sheet .title {
+  font-size: var(--fs-title-lg);
+}
+
+[data-snap="peek"] .sheet [data-sheet-part="list"],
+[data-snap]:not([data-snap="peek"]) .sheet [data-sheet-part="peek"] {
+  display: none;
+}
+
+.peek {
+  display: flex;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0 var(--gutter-phone);
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.peekChip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  box-sizing: border-box;
+  min-height: var(--size-touch);
+  padding: var(--s-1-5) var(--s-2-5) var(--s-1-5) var(--s-1-5);
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--chip-peek-line);
+  background: var(--chip-peek-bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.peekChip[aria-current] {
+  border-color: var(--line-strong);
+}
+
+.peekText {
+  display: flex;
+  flex-direction: column;
+}
+
+.peekName {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  color: var(--class-text, var(--text-strong));
+}
+
+.peekZone {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.sheet .body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The filters stay on top while the rows scroll under them (phone-roll-call board). */
+.sheet .filters {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: 0 var(--gutter-phone) var(--s-2-5);
+  border-bottom: var(--border) solid var(--line-sheet-head);
+  background: var(--surface-sheet-full);
+}
+
+.sheet .chips {
+  flex-wrap: nowrap;
+  margin: 0 calc(-1 * var(--gutter-phone));
+  padding: 0 var(--gutter-phone);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sheet .chips > * {
+  flex: none;
+}
+
+.sheet .divider {
+  display: none;
+}
+
+.sheet .list {
+  flex: none;
+  overflow: visible;
+  gap: 0;
+  padding: 0 var(--s-3);
+}
+
+.sheet .overline {
+  padding: var(--s-3) var(--s-1) var(--s-1);
+}
+
+.sheet .rows {
+  gap: 0;
+}
+
+.sheet .row,
+.sheet .unknown {
+  gap: var(--s-3);
+  min-height: var(--size-row-sheet);
+  padding: var(--s-1);
+  border-radius: 0;
+  border-bottom: var(--border) solid var(--line-row-sheet);
+}
+
+.sheet .name {
+  font-size: var(--fs-body);
+}
+
+.sheet .sub,
+.sheet .age {
+  font-size: var(--fs-meta);
+}
+
+/* A disc with initials instead of the dot, the same age scale (DESIGN.md §4). */
+.sheet .dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-avatar-phone);
+  height: var(--size-avatar-phone);
+  color: var(--on-gold);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.sheet [data-class="shaman"] .dot[data-age="live"],
+.sheet [data-class="shaman"] .dot[data-age="recent"] {
+  color: var(--on-shaman);
+}
+
+.sheet .dot[data-age="live"] {
+  box-shadow: var(--glow-disc) color-mix(in srgb, var(--class, var(--text)) var(--glow-disc-mix), transparent);
+}
+
+.sheet .dot[data-age="days"],
+.sheet .dot[data-age="week"],
+.sheet .dot[data-age="unknown"] {
+  border-width: var(--border-strong);
+  color: var(--class-text, var(--text));
+}
+
+.sheet .initials {
+  display: inline;
+}
+
+.sheet .tray {
+  padding: 0 var(--s-3) var(--s-3);
+  border-top: 0;
+}
+
+.sheet .tray .overline {
+  padding-top: var(--s-3);
+}
+
+.sheet .noAddon {
+  padding: var(--s-1-5) var(--s-1);
+}
+
+.peekDisc {
+  display: contents;
+}

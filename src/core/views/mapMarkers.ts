@@ -1,3 +1,4 @@
+import type { Faction } from "../gamedata/races";
 import type { DataAge } from "./age";
 
 // The map's light half (WEB-25): types, the continent switch and marker labels, without zones.json, so client
@@ -40,6 +41,17 @@ export interface MapMarker {
   age: DataAge;
   /** "2d" next to the marker: every sighting that is not new (Nico, 2026-10-26). */
   ageTag?: string;
+  /** The phone's character sheet (WEB-28): "1 h" for the next-character button. */
+  seenShort: string;
+  faction?: Faction;
+  /** "N to go" to the level cap; 0 at the cap. */
+  levelsToMax?: number;
+  /** "Damage", "Healer", "Tank". */
+  role?: string;
+  /** Points per tree in game order ("10 / 0 / 20"); undefined when the addon recorded no trees. */
+  talents?: string;
+  /** Primary professions first (CharacterView order). */
+  professions?: { name: string; rank: number; max?: number; primary: boolean }[];
 }
 
 export interface MapPlace {
@@ -118,6 +130,51 @@ export function fanOffsets(n: number): { dx: number; dy: number }[] {
     const a = ((from + ((to - from) * i) / (n - 1)) * Math.PI) / 180;
     return { dx: Math.round(Math.cos(a) * radius), dy: Math.round(Math.sin(a) * radius) };
   });
+}
+
+/**
+ * A continent never frames below this scale, so it never counts as the whole world (which re-centres on Azeroth):
+ * the phone spring-back (WEB-28, Nico 2026-10-27).
+ */
+export const CONTINENT_MIN_SCALE = 1.25;
+
+/** The scale a continent switch flies to: the continent fitted (`fit`), at least CONTINENT_MIN_SCALE, at most 4×. */
+export function continentScale(continent: Continent, fit: number): number {
+  if (continent === "azeroth") return 1;
+  return Math.min(Math.max(fit, CONTINENT_MIN_SCALE), ZOOM_MAX);
+}
+
+/**
+ * The phone's edge hint (WEB-28, "4 in Kalimdor"): characters on the map on the other continent than the one shown,
+ * and which edge it lies past (Kalimdor west, the Eastern Kingdoms east). Undefined on Azeroth and when nobody is there.
+ */
+export function edgeHint(
+  places: readonly MapPlace[],
+  shown: Continent,
+  split: number,
+): { continent: Continent; label: string; count: number; side: "left" | "right" } | undefined {
+  if (shown === "azeroth") return undefined;
+  const other: Continent = shown === "kalimdor" ? "eastern-kingdoms" : "kalimdor";
+  const count = places
+    .filter((p) => (other === "kalimdor" ? p.x < split : p.x >= split))
+    .reduce((n, p) => n + p.markers.length, 0);
+  if (count === 0) return undefined;
+  const label = CONTINENTS.find((c) => c.value === other)!.label;
+  return { continent: other, label: `${count} in ${label}`, count, side: other === "kalimdor" ? "left" : "right" };
+}
+
+/** The place a character is in, and the next one there (newest first, wrapping), for the phone sheet's button. */
+export function placeOf(
+  places: readonly MapPlace[],
+  guid: string,
+): { place: MapPlace; marker: MapMarker; next?: MapMarker } | undefined {
+  for (const place of places) {
+    const i = place.markers.findIndex((m) => m.guid === guid);
+    if (i < 0) continue;
+    const next = place.markers.length > 1 ? place.markers[(i + 1) % place.markers.length] : undefined;
+    return next === undefined ? { place, marker: place.markers[i]! } : { place, marker: place.markers[i]!, next };
+  }
+  return undefined;
 }
 
 /** Clusters of up to this many fan out; more open a list (DESIGN.md §5). */

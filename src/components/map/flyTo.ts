@@ -7,3 +7,12 @@ export const FLY_EVENT = "cf-map-fly";
 export function flyToCharacter(guid: string) {
   window.dispatchEvent(new CustomEvent<string>(FLY_EVENT, { detail: guid }));
 }
+
+export const SHEET_EVENT = "cf-map-sheet";
+
+/** The phone app bar asks the map's bottom sheet (WEB-28): "full" opens the roll call, "close" the tapped character. */
+export type SheetRequest = "full" | "close";
+
+export function requestSheet(request: SheetRequest) {
+  window.dispatchEvent(new CustomEvent<SheetRequest>(SHEET_EVENT, { detail: request }));
+}

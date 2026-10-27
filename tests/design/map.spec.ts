@@ -119,6 +119,7 @@ test("map: screenshot", async ({ page }) => {
 });
 
 test("map: screenshot with a selected character in an open fan", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: a phone opens the character in its sheet (phone-map.spec.ts, WEB-28)");
   await openScreen(page, "/");
   await page.getByRole("button", { name: /^2 characters in Stranglethorn Vale/ }).click();
   await marker(page, "Ves Doombringer").click();
@@ -149,11 +150,10 @@ test("map: zoom buttons", async ({ page }) => {
 
 test("map: screenshot at continent zoom (2×)", async ({ page }) => {
   await openScreen(page, "/?continent=eastern-kingdoms");
-  // Zoom from the settled first view. It frames the continent, then settles (120 ms): on a phone the continent fits
-  // at 1×, so the view springs back to the whole world. Zooming before or after that gave two different screenshots.
+  // Zoom from the settled first view. The desktop frames the continent at about 1.4× and zooms in to 2×; the
+  // full-screen phone map (WEB-28) frames it past 2× already, and it stays framed (no spring-back to the world).
   await mapSettled(page);
   if (!isPhone(page)) await page.getByRole("button", { name: "Zoom in" }).click();
-  else await page.getByRole("group", { name: /^Map\./ }).press("+");
   await expect(page.locator('[data-level="continent"]')).toBeVisible();
   await mapSettled(page);
   await expectStyles(page.getByText("Booty Bay", { exact: true }), { "font-family": "var(--font-name)" });
@@ -180,6 +180,8 @@ test("map: zone zoom (4×): name tags, dungeons, zone in the top bar", async ({ 
   await expectAccessible(page);
   await expectNoMotion(page);
   await page.mouse.move(0, 0);
+  // Flaky before (PR #34, develop): the fly could still be under way when the zone was marked.
+  await mapSettled(page);
   await expectScreenshot(page, "map-zone");
 });
 

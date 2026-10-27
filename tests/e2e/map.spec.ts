@@ -27,6 +27,7 @@ test("shows every located character at its zone", async ({ page }) => {
 });
 
 test("opens a cluster, selects a character and keeps it in the URL", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: a phone opens the character in its sheet (phone-map.spec.ts, WEB-28)");
   await page.goto("/");
   const stv = page.getByRole("button", { name: /^2 characters in Stranglethorn Vale/ });
   await stv.click();
@@ -121,6 +122,8 @@ test("flies to a character from a link, at zone zoom with the zone in the top ba
   await page.goto("/");
   await page.getByRole("button", { name: /^2 characters in Stranglethorn Vale/ }).click();
   await marker(page, "Ves Doombringer").click();
+  // The selection is in the URL once the same-document navigation is reported (page.url() lags behind the click).
+  await expect(page).toHaveURL(/character=/);
   const url = page.url();
   await page.goto(url);
   await expect(stage(page)).toHaveAttribute("data-level", "zone");
@@ -140,7 +143,7 @@ test("the continent switch flies, follows a pan, and Azeroth centres the whole w
   await expect(page).toHaveURL(/\/$/);
   await expect.poll(() => transform(page)).toBe(await centred(page));
 
-  // Zoomed in over Kalimdor, the switch follows.
+  // Zoomed in over Kalimdor, the switch follows (the arrow keys come during the zoom: they pan its goal, WEB-28).
   await page.getByRole("group", { name: /^Map\./ }).press("+");
   for (let i = 0; i < 4; i++) await page.getByRole("group", { name: /^Map\./ }).press("ArrowLeft");
   await expect(page).toHaveURL(/\?continent=kalimdor$/);

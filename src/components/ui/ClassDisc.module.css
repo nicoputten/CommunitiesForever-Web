@@ -75,3 +75,7 @@
   height: var(--size-avatar);
   font-size: var(--fs-tiny);
 }
+
+.disc[data-size="sheet"] {
+  font-size: var(--fs-name-sm);
+}

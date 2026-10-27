@@ -149,7 +149,7 @@ A value a screen needs and no token has goes into part 2 with its source, never 
 - Zone states: idle (gold line 36%) · occupied (gold tint 3–20% by recency) · hover (bright gold stroke 1.6, name in corner) · terrain (dark, no hover).
 - Zoom: **World 1×** markers + clusters per zone, capitals only · **Continent 2×** towns, clusters ≤ 5 fan out · **Zone 4×** dungeons, name tags on all markers.
 - Clusters: 2–5 fan out (spring, 30 ms stagger), ≥ 6 open a list. Dungeon sightings show at the dungeon's zone with a badge.
-- Phone: full-screen map, bottom sheet (peek → half → full), edge hint "4 in Kalimdor", tap marker → zoom + half sheet.
+- Phone: full-screen map, bottom sheet (peek → half → full), edge hint "4 in Kalimdor", tap marker → zoom + half sheet. Built in WEB-28 (`BottomSheet`, `CharacterSheet`, `RollCallPanel variant="sheet"`); the sheet shows below 1024 px.
 
 ## 6. Motion
 
@@ -214,7 +214,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 
 - **Map:** inline SVG rendered on the server from `zones.json` (no tiles, no WebGL). Pan/zoom/pinch: `react-zoom-pan-pinch`, or a small pointer-events hook.
 - **Popovers:** `@floating-ui/react` for marker cards and filter menus.
-- **Bottom sheet:** `vaul`.
+- **Bottom sheet:** `vaul` (proposed; WEB-28 built its own, see `docs/ARCHITECTURE.md`).
 - **Styling:** CSS custom properties above + CSS Modules (no runtime CSS-in-JS).
 - **Motion:** CSS keyframes/transitions for everything above; add `motion` only if the sheet drag or cluster fan need physics.
 - **Fonts:** `next/font/google` for Marcellus, Marcellus SC, Inter (self-hosted, no layout shift).
@@ -290,3 +290,11 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-27 | Roll call without a board (WEB-27): the faction and level chips open the roster's filter menus (level in the roster's ranges); the filters also filter the map's markers and live in the URL; a row off the map (battleground, "elsewhere") and an unknown-whereabouts row open the character; "No characters match" with "Clear filters" when nothing matches; the panel shows from 1024 px (below, the phone sheet of WEB-28) | The board shows only the closed chips and one filled list | Nico |
 | 2026-10-27 | Empty map on a phone (WEB-29, no board): the centre card and the guest list follow under the map; from 768 to 1023 px they scroll over it, card first | The phone map is only as tall as its width allows, and the roll call sheet (WEB-28) isn't there yet | Nico |
 | 2026-10-27 | Loading line (WEB-29): shown while a navigation from the top bar or tab bar is pending, not by a route loading state; none without motion | A route loading state turns a page's 404 into a 200 and delays the map's first paint; the board's reduced-motion line has no size either | Nico |
+| 2026-10-27 | Phone map (WEB-28): the bottom sheet and the tapped character in it below 1024 px, not only on phones; from 768 to 1023 px with the desktop top bar | The roll call panel is hidden below 1024 px; no width without a roll call | Nico |
+| 2026-10-27 | Phone map peek (WEB-28): chips with the full name and the full zone text ("Lia Thornwhisper · 1 h", "Stranglethorn Vale", "The Deadmines, Westfall"), newest first, scrolling sideways; the board has first names and short zones | Names are never split; zones are never abbreviated | Nico |
+| 2026-10-27 | Phone character sheet (WEB-28): the next-character button shows the full name, cut with "…" when it doesn't fit, and cycles through the zone newest first; "· via X" after Seen when relayed; "—" for a missing value | Full names; the board shows one fitting case | Nico |
+| 2026-10-27 | Phone app bar on the map (WEB-28): the approved phone app bar (data age before the avatar) with the board's Filters button, which opens the full roll call; no "Updated just now" under the continent switch. The site name may be cut with "…" at 375 px | One data age line, as decided for the phone app bar | Nico |
+| 2026-10-27 | Phone full sheet (WEB-28): the WEB-27 roll call (New / Earlier, its filters and menus) laid out as the board, without the age legend; the filters filter the markers too; a row off the map opens the character page | Same roll call as the desktop panel | Nico |
+| 2026-10-27 | Edge hint (WEB-28): "N in Kalimdor" on the left edge (as the board) or "N in Eastern Kingdoms" on the right edge in the top row (clear of the continent switch and the markers on Kalimdor's east coast), counting the filtered characters on the other continent; hidden on Azeroth, at 0 and while a character is open; a tap flies there | The board shows only the Kalimdor case | Nico |
+| 2026-10-27 | Bottom sheet without motion (WEB-28): it still follows the finger while dragged; a snap jumps and fades in over 120 ms | A drag is the user's own movement; §6 has the 120 ms fade | Nico |
+| 2026-10-27 | A continent switch frames the continent at 1.25× at least (WEB-28); the phone map fills the screen between the app bar and the tab bar, the sea running on above and below the world | A continent at 1× counted as the whole world and sprang back (the WEB-27 bug); the phone map is full-screen on the boards | Nico |
