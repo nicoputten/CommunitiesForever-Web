@@ -6,6 +6,7 @@ import {
   MAX_TOKENS,
   normalizeUserCode,
   PAIRING_SECONDS,
+  POLL_SECONDS,
   RateLimiter,
   TOKEN_BYTES,
   userCode,
@@ -25,8 +26,8 @@ export const MAX_PENDING = 50;
 export const limits = {
   /** Pairing starts per IP. */
   start: new RateLimiter(10, 10 * 60),
-  /** Polls per pairing. */
-  poll: new RateLimiter(1, 1),
+  /** Token polls per device code: one per interval, with a second's slack ("slow_down" above it). */
+  poll: new RateLimiter(1, POLL_SECONDS - 1),
   /** Uploads per token. */
   upload: new RateLimiter(60, 60 * 60),
 };
@@ -143,7 +144,7 @@ export type PairingPoll =
   | { status: "expired" };
 
 /**
- * The app's poll. An approved pairing is collected once: the token is made now, so it is never stored in plain text.
+ * The app's poll of the token endpoint (`device_code` = the pairing id). An approved pairing is collected once: the token is made now, so it is never stored in plain text.
  * After that, and for an unknown id, the answer is "expired". Someone who lost upload rights since allowing gets
  * "denied".
  */
@@ -257,6 +258,17 @@ export function touchToken(db: Db, id: number, now: number, appVersion?: string,
     })
     .where(eq(uploaderTokens.id, id))
     .run();
+}
+
+/** Revokes a token by its secret (RFC 7009 revocation, the app's "Disconnect"); true when it was active. */
+export function revokeBySecret(db: Db, token: string, now: number): boolean {
+  return (
+    db
+      .update(uploaderTokens)
+      .set({ revokedAt: now })
+      .where(and(eq(uploaderTokens.tokenHash, hashToken(token)), isNull(uploaderTokens.revokedAt)))
+      .run().changes > 0
+  );
 }
 
 /** Revokes one of a person's tokens; true when it was active. */

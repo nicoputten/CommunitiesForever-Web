@@ -1,11 +1,11 @@
 import { nowSeconds } from "@/app/clock";
 import { cleanLabel } from "@/core/uploader";
 import { tokenGuard } from "@/server/session";
-import { revokeToken, touchToken } from "@/server/uploader";
+import { touchToken } from "@/server/uploader";
 import { siteName } from "@/server/uploaderHttp";
 
-// The app's own token (WEB-33, docs/UPLOADER-API.md "Identity and disconnect"): GET is "Test connection", DELETE is
-// "Disconnect".
+// GET: who the app's token belongs to (WEB-33, docs/UPLOADER-API.md "Identity"), the app's "Test connection".
+// "Disconnect" is the standard revocation endpoint (../revoke).
 
 export function GET(req: Request): Response {
   const caller = tokenGuard(req);
@@ -21,11 +21,4 @@ export function GET(req: Request): Response {
     createdAt: d.createdAt,
     lastUploadAt: d.lastUploadAt ?? null,
   });
-}
-
-export function DELETE(req: Request): Response {
-  const caller = tokenGuard(req);
-  if (caller instanceof Response) return caller;
-  revokeToken(caller.db, caller.battleTag, caller.device.id, nowSeconds());
-  return new Response(null, { status: 204 });
 }

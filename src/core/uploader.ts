@@ -4,7 +4,7 @@ import type { Unreadable } from "./normalize";
 import { uploadReport } from "./views/report";
 import { type LedgerCounts, rejectionLine, summaryLine } from "./views/upload";
 
-// The uploader API (WEB-33, docs/UPLOADER-API.md): pairing codes, the token format, the rate limiter and what an
+// The uploader API (WEB-33, docs/UPLOADER-API.md; OAuth 2.0 device flow since WEB-33b): pairing codes, the token format, the rate limiter and what an
 // upload answers the Windows app. Pure: random bytes and "now" come in as arguments.
 
 // --- pairing codes ------------------------------------------------------------------------------------------------
@@ -14,8 +14,12 @@ export const CODE_ALPHABET = "ACDEFGHJKMNPQRTWXY34679";
 export const CODE_LENGTH = 8;
 /** Codes and pairings expire after 10 minutes. */
 export const PAIRING_SECONDS = 10 * 60;
-/** How often the app polls a pairing. */
-export const POLL_SECONDS = 2;
+/** How often the app polls the token endpoint (RFC 8628 `interval`; its default). Faster gets `slow_down`. */
+export const POLL_SECONDS = 5;
+
+/** The uploader app is a public OAuth client (no secret): RFC 8628 device flow, RFC 6750 Bearer tokens. */
+export const CLIENT_ID = "communitiesforever-uploader";
+export const DEVICE_CODE_GRANT = "urn:ietf:params:oauth:grant-type:device_code";
 
 /**
  * A user code "KXRT-7QMN" from random bytes. Bytes ≥ 253 are skipped so every symbol is equally likely (253 is the
