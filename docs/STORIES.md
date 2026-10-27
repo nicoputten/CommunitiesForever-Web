@@ -60,6 +60,10 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ### WEB-32 Known bugs
 - **On hold** until Nico has tested everything (decided 2026-10-27).
 One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
+- **Roster level spread: which dot is whom isn't clear** (`/roster`, "Who is around which level", WEB-21). The names stack in rows above the track, so with several characters close together it isn't clear which name belongs to which dot; two characters at the same level show one dot under two names (seen: two yellow names, one dot). Fix: the track shows only the dots; a name shows on hover and keyboard focus (tooltip). Characters at the same level get one dot with a count, and its tooltip lists them. Changes the approved WEB-21 layout: record in `docs/DESIGN.md` §11 (Nico, 2026-10-27).
+- **Dungeon bands never show character names** (same place). A band reads "Scarlet Monastery 26–45 · fits Khrono Wolfhowl, Ginji Shadowstep, …"; it must only name the dungeon and its level range. Who fits may show on hover, like the dots (Nico, 2026-10-27).
+- **Scarlet Monastery is four dungeons** (`src/core/gamedata/dungeons.ts`, roster bands, character page fit). It is one entry with 26–45; Graveyard, Library, Armory and Cathedral each have their own level range. Split it into four wings with sourced ranges (`docs/WOW-FOREVER.md`, CLAUDE.md rule 10; check whether Forever changed them). The addon's zone text is "Scarlet Monastery" for every wing, so the map and zone aliases keep one place (Nico, 2026-10-27).
+- **Flaky e2e test** `tests/e2e/atmosphere.spec.ts` "the map page is alive, data pages are calm": in CI it sometimes finds animations still running on `/roster` (24 on PR #40's first run, twice in a row), passes on a rerun and locally. Find what runs there (likely skeleton shimmer or a transition right after navigation) and wait for it properly.
 
 ### Backlog (unordered, not yet stories)
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
