@@ -565,4 +565,11 @@
   --size-ping: 10px; /* sign-in: pings on the drifting map */
   --glow-ping: 0 0 12px var(--gold-bright); /* sign-in */
   --dur-ping: 2.8s; /* sign-in: ping ring */
+  /* roll call (WEB-27): the map board's panel */
+  --size-roll-call: 312px; /* map: roll call panel width */
+  --size-dot-row: 8px; /* map: age dot on a roll call row and in the legend */
+  --border-dot: 1.5px; /* map: ring of a "days", "week+" or unknown dot */
+  --line-panel: rgba(212, 175, 106, 0.28); /* map: roll call border */
+  --tint-row-selected: rgba(212, 175, 106, 0.1); /* map: picked roll call row */
+  --opacity-earlier: 0.85; /* map: the "Earlier" rows */
 }

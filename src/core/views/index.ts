@@ -8,6 +8,7 @@ export * from "./clock";
 export * from "./professions";
 export * from "./report";
 export * from "./rollCall";
+export * from "./rollCallQuery";
 export * from "./roster";
 export * from "./rosterQuery";
 export * from "./spreadLayout";

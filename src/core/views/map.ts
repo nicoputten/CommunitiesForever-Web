@@ -144,10 +144,17 @@ export interface WorldMapView {
 
 const zoneById = new Map(map.zones.map((z) => [z.id, z]));
 
-export function worldMap(d: Dataset, now: number): WorldMapView {
+/** A sighting's zone has a place on the map (a zone, not terrain, a battleground or "elsewhere"). */
+export function isMapZone(zoneId: string): boolean {
+  return zoneById.get(zoneId)?.kind === "zone";
+}
+
+/** `only`: just these characters (the roll call's filters, WEB-27); all when undefined. */
+export function worldMap(d: Dataset, now: number, only?: ReadonlySet<string>): WorldMapView {
   const people = new Map(peopleViews(d, now).map((p) => [p.key, p]));
   const byZone = new Map<string, MapPlace>();
   for (const c of shownCharacters(d, now)) {
+    if (only !== undefined && !only.has(c.guid)) continue;
     const s = c.sighting;
     const zone = s === undefined ? undefined : zoneById.get(s.zone);
     if (s === undefined || zone === undefined || zone.kind !== "zone") continue;

@@ -89,3 +89,14 @@ describe("roll call", () => {
     expect(stubs.unknown).toEqual([]);
   });
 });
+
+describe("roll call rows (WEB-27)", () => {
+  const call = rollCall(sample(), NOW);
+
+  it("gives each row a short age and whether it has a place on the map", () => {
+    const [lia, , bob] = call.live;
+    expect([lia?.ago, lia?.onMap]).toEqual(["1 h", true]);
+    expect([bob?.ago, bob?.onMap]).toEqual(["5 h", true]);
+    expect(call.earlier.at(-1)?.ago).toBe("9 d");
+  });
+});

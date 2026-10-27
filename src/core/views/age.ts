@@ -54,3 +54,12 @@ export function timeAgo(at: number, now: number): string {
   if (days < 60) return `${Math.floor(days / 7)} weeks ago`;
   return `${Math.floor(days / 30)} months ago`;
 }
+
+/** How long ago, short, for the roll call's rows (map board: "1 h", "2 d"): now, N min, N h, N d. */
+export function rowAge(at: number, now: number): string {
+  const age = ageSeconds(at, now);
+  if (age < 60) return "now";
+  if (age < HOUR) return `${Math.floor(age / 60)} min`;
+  if (age < DAY) return `${Math.floor(age / HOUR)} h`;
+  return `${Math.floor(age / DAY)} d`;
+}

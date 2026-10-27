@@ -72,6 +72,13 @@
   gap: var(--s-1-5);
 }
 
+/* Left of the roll call (WEB-27, map board), which shows from 1024 px. */
+@media (min-width: 1024px) {
+  .controls {
+    right: calc(var(--s-6) + var(--size-roll-call) + var(--s-4));
+  }
+}
+
 .button {
   width: var(--size-touch);
   height: var(--size-touch);
