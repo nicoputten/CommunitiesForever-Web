@@ -21,7 +21,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E5 Screens
 
-
 ### WEB-28 Phone map
 - Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
 - Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
