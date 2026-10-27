@@ -28,11 +28,12 @@ The certificate comes from Let's Encrypt through your nginx app, like your other
 3. SSL: "Request a new SSL certificate", tick Force SSL, HTTP/2 support and HSTS enabled; agree to the Let's Encrypt terms; Save. NPM renews it by itself.
 4. Advanced → Custom Nginx Configuration:
    ```nginx
-   client_max_body_size 30m;
+   client_max_body_size 300m;
    proxy_request_buffering off;
-   proxy_send_timeout 120s;
-   proxy_read_timeout 120s;
+   proxy_send_timeout 300s;
+   proxy_read_timeout 300s;
    ```
+   300 MB and 5 minutes because the uploader's release workflow publishes its installer through the site (WEB-35); the app still refuses data uploads over 25 MiB itself.
    NPM already sets `Host`, `X-Forwarded-For`, `X-Forwarded-Proto` and `X-Real-IP`, which Auth.js needs.
 
 **If it is plain nginx with config files:** copy [`nginx/wow.vestras.nl.conf`](nginx/wow.vestras.nl.conf) into its config folder (often `conf.d/`), replace `<truenas-ip>` and point `ssl_certificate` / `ssl_certificate_key` at where your other sites' certificates live. Get the certificate the way you do for those (with certbot: `certbot certonly --webroot -w /var/www/letsencrypt -d wow.vestras.nl`, with the HTTP block loaded first). Then `nginx -t` and reload.
