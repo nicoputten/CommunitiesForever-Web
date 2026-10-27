@@ -8,7 +8,9 @@ import { DELETE as unblockRoute, GET as blocksRoute, PUT as blockRoute } from "@
 import { GET as guestsRoute, PUT as putGuestRoute } from "@/app/api/admin/guests/route";
 import { GET as healthRoute } from "@/app/api/health/route";
 import { POST as uploadRoute } from "@/app/api/uploads/route";
-import { isPublic, proxy } from "@/proxy";
+import { MAX_UPLOAD_BYTES } from "@/core/views/upload";
+import { config, isPublic, proxy } from "@/proxy";
+import nextConfig from "../../next.config";
 import { putGuest } from "@/server/access";
 import { getDb } from "@/server/db";
 import { sessionBattleTag } from "@/server/session";
@@ -93,6 +95,20 @@ describe("proxy", () => {
     }
     expect(isPublic("/signin/x")).toBe(false);
     expect(isPublic("/api/authx")).toBe(false);
+  });
+
+  it("keeps the token APIs out of the proxy, so their bodies aren't cut at the proxy's limit", () => {
+    const runs = (p: string) => config.matcher.some((m) => new RegExp(`^${m}$`).test(p));
+    expect(runs("/api/uploader/v1/releases")).toBe(false);
+    expect(runs("/api/uploader/v1/uploads")).toBe(false);
+    expect(runs("/api/bot/v1/events")).toBe(false);
+    for (const p of ["/", "/roster", "/api/uploads", "/api/uploader", "/api/discord/callback"])
+      expect(runs(p)).toBe(true);
+  });
+
+  it("lets a manual upload of the largest size through the proxy", () => {
+    const limit = /^(\d+)mb$/.exec(String(nextConfig.experimental?.proxyClientMaxBodySize));
+    expect(Number(limit?.[1]) * 1024 * 1024).toBeGreaterThan(MAX_UPLOAD_BYTES + 64 * 1024);
   });
 
   it("sends pages without a session to sign-in", async () => {
