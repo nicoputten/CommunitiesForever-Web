@@ -34,9 +34,16 @@ describe("character page", () => {
     expect(mira.talents.trees[2]).toEqual({ name: "Frost", points: 41, fill: 1, main: true });
   });
 
-  it("suggests the dungeon with the most of the group, any data age (Ruk's data is 9 days old)", () => {
-    expect(ves.dungeonFit?.dungeon.name).toBe("Scarlet Monastery");
-    expect(names(ves.dungeonFit!.with)).toEqual(["Bob Example", "Lia Thornwhisper", "Tok Ironhide", "Ruk Bloodhoof"]);
+  it("suggests the dungeon with the most of the group, any data age", () => {
+    expect(ves.dungeonFit?.dungeon.name).toBe("Scarlet Monastery: Armory");
+    expect(names(ves.dungeonFit!.with)).toEqual(["Bob Example", "Lia Thornwhisper", "Tok Ironhide"]);
+  });
+
+  it("fits a Scarlet Monastery wing, never the whole monastery (WEB-32)", () => {
+    // Ruk (27) was in the whole monastery's 26–45, not in the Armory's 32–42.
+    const lia = characterPage(sample(), "Player-1-LIA", NOW)!;
+    expect(lia.dungeonFit?.dungeon).toMatchObject({ id: "sm-armory", typicalLevels: { min: 32, max: 42 } });
+    expect(names(lia.dungeonFit!.with)).toEqual(["Bob Example", "Ves Doombringer", "Tok Ironhide"]);
   });
 
   it("finds who else was seen in the same zone, and the owner's other characters", () => {

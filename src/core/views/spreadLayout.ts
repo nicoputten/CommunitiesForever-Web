@@ -1,53 +1,60 @@
 import { MAX_LEVEL } from "../gamedata";
+import type { CharacterView } from "./characters";
 import type { DungeonBand, LevelSpread } from "./roster";
 
 // Where things sit on the level spread's 1–60 track (roster-cards board), computed on the server so the track needs
-// no script and does not shift: dungeon bands in as many rows as they need (the best band first), and character
-// names in label rows, per track width (decided with Nico for WEB-21, 2026-10-26).
+// no script and does not shift: dungeon bands in as many rows as they need (the best band first, decided with Nico for
+// WEB-21, 2026-10-26), and the dots, where characters close together merge (WEB-32).
 
 /** 0 at level 1, 1 at level 60. */
 export function levelPosition(level: number): number {
   return Math.min(1, Math.max(0, (level - 1) / (MAX_LEVEL - 1)));
 }
 
-/** Rough width of a name label: Inter at 11 px averages under 6.4 px a character; plus the gap between labels. */
-export const LABEL_CHAR_PX = 6.4;
-export const LABEL_GAP_PX = 10;
+/** Characters at most this many levels apart share one dot with a count (board `roster-cards-runs`, WEB-32). */
+export const MERGE_LEVELS = 2;
+/**
+ * On a phone (no board): 5 levels are 24 px on the 375 px layout's track, the least space between two touch targets
+ * (WCAG 2.5.8, axe `target-size`). Decided with Nico, 2026-10-27.
+ */
+export const MERGE_LEVELS_PHONE = 4;
 
-export type LabelAlign = "center" | "start" | "end";
-
-export interface LabelPlace {
-  row: number;
-  /** Labels near the ends of the track align to the end instead of overflowing it. */
-  align: LabelAlign;
+export interface SpreadDot {
+  /** Lowest level first; one, or several that merge. */
+  characters: CharacterView[];
+  /** The middle of the lowest and highest level: where the dot sits. */
+  level: number;
+  /** Track position (0–1). */
+  position: number;
+  /** One of the viewer's own characters is in it (the gold ring). */
+  own: boolean;
 }
 
 /**
- * Label rows for names at track positions (0–1), for a track `width` px wide: each label goes into the first row
- * where it does not overlap a label already there. Labels are placed in the order given (lowest level first).
+ * The dots on the track (WEB-32): characters merge into one dot while each is at most `merge` levels above the one
+ * before (37, 39 and 41 make one dot "around level 39"). `own` is the viewer's person key.
  */
-export function labelRows(labels: readonly { position: number; text: string }[], width: number): LabelPlace[] {
-  const rows: [number, number][][] = [];
-  return labels.map(({ position, text }) => {
-    const w = Array.from(text).length * LABEL_CHAR_PX;
-    const x = position * width;
-    let align: LabelAlign = "center";
-    let left = x - w / 2;
-    if (left < 0) {
-      align = "start";
-      left = x;
-    } else if (x + w / 2 > width) {
-      align = "end";
-      left = x - w;
-    }
-    const span: [number, number] = [left - LABEL_GAP_PX / 2, left + w + LABEL_GAP_PX / 2];
-    let row = rows.findIndex((r) => r.every(([a, b]) => span[1] <= a || span[0] >= b));
-    if (row === -1) {
-      row = rows.length;
-      rows.push([]);
-    }
-    rows[row]!.push(span);
-    return { row, align };
+export function spreadDots(
+  characters: readonly CharacterView[],
+  own?: string,
+  merge: number = MERGE_LEVELS,
+): SpreadDot[] {
+  const levelled = characters.filter((c) => c.level !== undefined);
+  const groups: CharacterView[][] = [];
+  for (const c of levelled) {
+    const last = groups.at(-1);
+    const prev = last?.at(-1);
+    if (last !== undefined && prev !== undefined && c.level! - prev.level! <= merge) last.push(c);
+    else groups.push([c]);
+  }
+  return groups.map((group) => {
+    const level = (group[0]!.level! + group.at(-1)!.level!) / 2;
+    return {
+      characters: group,
+      level,
+      position: levelPosition(level),
+      own: own !== undefined && group.some((c) => c.owner === own),
+    };
   });
 }
 

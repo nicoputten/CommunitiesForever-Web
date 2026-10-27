@@ -1,4 +1,4 @@
-import { DUNGEONS, MAX_LEVEL, MAX_TREE_POINTS, talentPointsAt, type DungeonInfo } from "../gamedata";
+import { MAX_LEVEL, MAX_TREE_POINTS, RUNNABLE_DUNGEONS, talentPointsAt, type RunnableDungeon } from "../gamedata";
 import type { Dataset } from "../model";
 import { own } from "../people";
 import {
@@ -23,7 +23,8 @@ export interface TalentBar {
 }
 
 export interface DungeonFit {
-  dungeon: Pick<DungeonInfo, "id" | "name" | "typicalLevels">;
+  /** A dungeon or a wing that is one (Scarlet Monastery's, WEB-32). */
+  dungeon: RunnableDungeon;
   /** Other friends' characters in the range (not the owner's own alts, any data age), by level. */
   with: CharacterView[];
 }
@@ -81,12 +82,12 @@ function dungeonFit(c: CharacterView, group: readonly CharacterView[]): DungeonF
   if (level === undefined) return undefined;
   const others = group.filter((o) => o.guid !== c.guid && (c.owner === undefined || o.owner !== c.owner));
   let best: DungeonFit | undefined;
-  for (const d of DUNGEONS) {
+  for (const d of RUNNABLE_DUNGEONS) {
     const { min, max } = d.typicalLevels;
-    if (d.kind !== "dungeon" || level < min || level > max) continue;
+    if (level < min || level > max) continue;
     const fit = others.filter((o) => o.level !== undefined && o.level >= min && o.level <= max).sort(byLevel);
     if (fit.length === 0) continue;
-    const candidate: DungeonFit = { dungeon: { id: d.id, name: d.name, typicalLevels: d.typicalLevels }, with: fit };
+    const candidate: DungeonFit = { dungeon: d, with: fit };
     if (best === undefined || fit.length > best.with.length) best = candidate;
     else if (fit.length === best.with.length && max - min < width(best)) best = candidate;
   }

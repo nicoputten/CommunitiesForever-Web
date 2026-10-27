@@ -249,9 +249,19 @@
   --size-row-seen: 112px; /* roster-cards: character row, last played column */
   --size-level-bar: 3px; /* roster-cards: level bar under the name */
   --r-level-bar: 2px;
-  --size-dot: 12px; /* roster-cards: level spread dot */
-  --size-label-row: 16px; /* roster-cards: name label rows above the track (4 and 20 px tops) */
-  --size-track-line: 20px; /* roster-cards: the line with the dots */
+  --size-dot: 14px; /* roster-cards-runs: level spread dot (hit area --size-touch, WEB-32) */
+  --size-dot-group: 26px; /* roster-cards-runs: dot of characters within 2 levels, with a count */
+  --size-dot-count: 18px; /* roster-cards-runs: the count inside it */
+  --size-spread-track: 52px; /* roster-cards-runs: the track with the dots */
+  --spread-line-top: 28px; /* roster-cards-runs: the 2 px line; the dots centre on it */
+  --size-tooltip: 220px; /* roster-cards-runs: dot tooltip */
+  --ring-dot: 0 0 0 2px var(--bg-night); /* roster-cards-runs: dot edge */
+  --ring-dot-own: 0 0 0 2px var(--bg-night), 0 0 0 3.5px var(--gold); /* roster-cards-runs: the viewer's characters */
+  --dot-count-bg: #0b1220; /* roster-cards-runs: behind the count */
+  --fw-bold: 700; /* roster-cards-runs: the count */
+  --surface-tooltip: #0e1626; /* roster-cards-runs: dot tooltip */
+  --line-tooltip: rgba(212, 175, 106, 0.5); /* roster-cards-runs: dot tooltip */
+  --shadow-tooltip: 0 12px 30px rgba(0, 0, 0, 0.6); /* roster-cards-runs: dot tooltip */
   --size-tick: 12px; /* roster-cards: level ticks */
   --size-band: 20px; /* roster-cards: dungeon band */
   --size-band-row: 26px; /* roster-cards: band rows 0 and 26 px */

@@ -111,26 +111,29 @@ describe("roster", () => {
       const { min, max } = band.dungeon.typicalLevels;
       expect(band.fits.length).toBeGreaterThanOrEqual(2);
       expect(band.fits.every((c) => c.level! >= min && c.level! <= max)).toBe(true);
-      expect(DUNGEONS.find((d) => d.id === band.dungeon.id)?.kind).toBe("dungeon");
+      expect(DUNGEONS.find((d) => d.id === band.dungeon.instanceId)?.kind).toBe("dungeon");
     }
     const mins = spread.bands.map((b) => b.dungeon.typicalLevels.min);
     expect(mins).toEqual([...mins].sort((a, b) => a - b));
     expect(spread.bands.some((b) => b.dungeon.name === "Zul'Farrak")).toBe(false);
   });
 
-  it("names the band with the most fits (board: Scarlet Monastery fits Ves, Lia, Tok, Bob, Ruk)", () => {
-    expect(r.spread.best?.dungeon).toEqual({
-      id: "sm",
-      name: "Scarlet Monastery",
-      typicalLevels: { min: 26, max: 45 },
+  it("names the band with the most fits (board: SM Armory 32–42 · 4 fit)", () => {
+    expect(r.spread.best?.dungeon).toMatchObject({
+      id: "sm-armory",
+      name: "Scarlet Monastery: Armory",
+      shortName: "SM Armory",
+      typicalLevels: { min: 32, max: 42 },
     });
-    expect(names(r.spread.best!.fits)).toEqual([
-      "Bob Example",
-      "Ves Doombringer",
-      "Lia Thornwhisper",
-      "Tok Ironhide",
-      "Ruk Bloodhoof",
-    ]);
+    expect(names(r.spread.best!.fits)).toEqual(["Bob Example", "Ves Doombringer", "Lia Thornwhisper", "Tok Ironhide"]);
+  });
+
+  it("bands the Scarlet Monastery wings apart, never the whole monastery (WEB-32)", () => {
+    const ids = r.spread.bands.map((b) => b.dungeon.id);
+    expect(ids).not.toContain("sm");
+    expect(ids).toEqual(expect.arrayContaining(["sm-graveyard", "sm-library", "sm-armory", "sm-cathedral"]));
+    const count = (id: string) => r.spread.bands.find((b) => b.dungeon.id === id)?.fits.length;
+    expect(["sm-graveyard", "sm-library", "sm-armory", "sm-cathedral"].map(count)).toEqual([2, 3, 4, 3]);
   });
 
   it("answers the quick questions", () => {

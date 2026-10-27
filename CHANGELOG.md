@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Roster, "Who is around which level": the track shows only dots; hover, focus or tap a dot for the name, level and player. Characters within two levels of each other share one dot with a number, and your own characters have a gold ring. Dungeon bands only say how many fit ("SM Armory 32–42 · 4 fit"), no names. Scarlet Monastery's Graveyard, Library, Armory and Cathedral are separate dungeons with their own level ranges, on the roster and in the character page's "Fits …".
 - "Download for Windows" on the uploader page works once the uploader app is released: it shows the version and size and downloads the installer. Installed apps update themselves from the site.
 - The uploader page (top bar › Uploader): what the Windows uploader does and how to set it up in three steps, the connection request when the app asks to connect (check the code, then Allow or Deny), your uploaders with when they connected and last uploaded and a Revoke button, and a token you can create by hand (shown once, with Copy). The manual upload stays one click away under "Upload manually". Uploads the app sends say "via" and the device's name in the upload history. The download follows once the app is released.
 

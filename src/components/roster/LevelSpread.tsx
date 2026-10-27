@@ -1,30 +1,60 @@
 import type { CSSProperties } from "react";
 import { classInfo } from "@/core/gamedata";
+import type { CharacterView } from "@/core/views/characters";
 import type { LevelSpread as Spread } from "@/core/views/roster";
-import { bandRows, labelRows, levelPosition } from "@/core/views/spreadLayout";
+import { bandRows, levelPosition, MERGE_LEVELS, MERGE_LEVELS_PHONE, spreadDots } from "@/core/views/spreadLayout";
 import styles from "./LevelSpread.module.css";
-
-// Track widths the label rows are computed for (decided with Nico for WEB-21): the content width of the level spread
-// at the narrowest viewport of each layout (page 1280 + gutters 48, section padding 40, track margin 20). Phone
-// shows the dots only and lists the names under the track.
-const TRACKS = [
-  { key: "wide", width: 1220 }, // ≥ 1328 px
-  { key: "mid", width: 916 }, // 1024–1327 px
-  { key: "narrow", width: 660 }, // 768–1023 px
-] as const;
+import { SpreadTrack, type TrackDot } from "./SpreadTrack";
 
 const TICKS = [1, 10, 20, 30, 40, 50, 60];
 
 const pct = (n: number) => `${(n * 100).toFixed(2)}%`;
 
-/** "Who is around which level" (roster-cards board): every character on a 1–60 track, with the dungeon bands. */
-export function LevelSpread({ spread }: { spread: Spread }) {
-  const chars = spread.characters.filter((c) => c.level !== undefined);
-  const labels = chars.map((c) => ({ position: levelPosition(c.level!), text: c.name ?? "" }));
-  const places = TRACKS.map((t) => labelRows(labels, t.width));
-  const rows = Object.fromEntries(
-    TRACKS.map((t, i) => [`--rows-${t.key}`, Math.max(1, ...places[i]!.map((p) => p.row + 1))]),
-  );
+const classVar = (c: CharacterView, text: boolean) => {
+  const info = classInfo(c.classFile);
+  return info === undefined ? "var(--text-muted)" : `var(${text ? info.textToken : info.colorToken})`;
+};
+
+/** A merged dot's fill: equal slices of each character's class colour, lowest level first. */
+function slices(characters: readonly CharacterView[]): string {
+  const share = 100 / characters.length;
+  const stops = characters.map((c, i) => `${classVar(c, false)} 0 ${(share * (i + 1)).toFixed(2)}%`);
+  return `conic-gradient(${stops.join(", ")})`;
+}
+
+/**
+ * "Who is around which level" (board `roster-cards-runs`, without its run parts): every character as a dot on a 1–60
+ * track, names in a tooltip; characters within two levels (four on a phone) merge into a dot with a count (WEB-32).
+ * Then the dungeon
+ * bands, which count who fits and never name them. `own`: the viewer's person key (the gold ring).
+ */
+export function LevelSpread({ spread, own }: { spread: Spread; own?: string | undefined }) {
+  const dots = (merge: number): TrackDot[] =>
+    spreadDots(spread.characters, own, merge).map((d) => {
+      const one = d.characters.length === 1 ? d.characters[0] : undefined;
+      const dot: TrackDot = {
+        key: d.characters[0]!.guid,
+        position: pct(d.position),
+        label:
+          one === undefined
+            ? `${d.characters.length} characters around level ${Math.round(d.level)}`
+            : `${one.name ?? "Unknown"} ${one.level}`,
+        own: d.own,
+        fill: one === undefined ? slices(d.characters) : classVar(one, false),
+        lines: d.characters.map((c) => {
+          const line: TrackDot["lines"][number] = {
+            name: c.name ?? "Unknown",
+            level: c.level!,
+            color: classVar(c, true),
+          };
+          const owner = own !== undefined && c.owner === own ? "you" : c.ownerName;
+          if (owner !== undefined) line.owner = owner;
+          return line;
+        }),
+      };
+      if (one === undefined) dot.count = d.characters.length;
+      return dot;
+    });
   const bands = bandRows(spread);
   const bandRowCount = Math.max(0, ...bands.map((b) => b.row + 1));
 
@@ -34,30 +64,14 @@ export function LevelSpread({ spread }: { spread: Spread }) {
         <h2 id="level-spread" className={styles.title}>
           Who is around which level
         </h2>
-        <span className={styles.hint}>Dungeon bands are typical level ranges</span>
+        <span className={styles.hint}>
+          Hover or tap a dot for names · gold ring: your characters · bands show typical levels
+        </span>
       </div>
 
-      <div aria-hidden="true" className={styles.track} style={rows as CSSProperties}>
-        {chars.map((c, i) => {
-          const info = classInfo(c.classFile);
-          const style = {
-            "--pos": pct(labels[i]!.position),
-            "--class": info === undefined ? "var(--text-muted)" : `var(${info.colorToken})`,
-            "--class-text": info === undefined ? "var(--text-muted)" : `var(${info.textToken})`,
-            ...Object.fromEntries(TRACKS.map((t, j) => [`--row-${t.key}`, places[j]![i]!.row])),
-          } as CSSProperties;
-          const align = Object.fromEntries(TRACKS.map((t, j) => [`data-${t.key}`, places[j]![i]!.align]));
-          return (
-            <span key={c.guid} className={styles.mark} style={style}>
-              <span className={styles.label} {...align}>
-                {c.name}
-              </span>
-              <span className={styles.dot} />
-            </span>
-          );
-        })}
-        <span className={styles.line} />
-      </div>
+      {/* One track per layout: a phone merges more (MERGE_LEVELS_PHONE); CSS shows one. */}
+      <SpreadTrack dots={dots(MERGE_LEVELS)} layout="wide" />
+      <SpreadTrack dots={dots(MERGE_LEVELS_PHONE)} layout="phone" />
 
       <div aria-hidden="true" className={styles.ticks}>
         {TICKS.map((t) => (
@@ -67,27 +81,6 @@ export function LevelSpread({ spread }: { spread: Spread }) {
         ))}
       </div>
 
-      {/* The names in level order: under the track on phone, for screen readers everywhere. */}
-      <ul className={styles.names}>
-        {chars.map((c) => {
-          const info = classInfo(c.classFile);
-          return (
-            <li
-              key={c.guid}
-              style={
-                { "--class-text": info === undefined ? "var(--text-muted)" : `var(${info.textToken})` } as CSSProperties
-              }
-            >
-              <span className={styles.lvl}>
-                {c.level}
-                <span className="visually-hidden">:</span>
-              </span>{" "}
-              <span className={styles.nameText}>{c.name}</span>
-            </li>
-          );
-        })}
-      </ul>
-
       {bands.length > 0 && (
         <ul
           className={styles.bands}
@@ -96,11 +89,11 @@ export function LevelSpread({ spread }: { spread: Spread }) {
         >
           {bands.map((b) => {
             const { min, max } = b.band.dungeon.typicalLevels;
-            const fits = b.band.fits.map((c) => c.name).join(", ");
             return (
               <li
                 key={b.band.dungeon.id}
                 className={styles.band}
+                title={b.band.dungeon.shortName === b.band.dungeon.name ? undefined : b.band.dungeon.name}
                 data-best={b.best || undefined}
                 style={
                   {
@@ -111,8 +104,7 @@ export function LevelSpread({ spread }: { spread: Spread }) {
                   } as CSSProperties
                 }
               >
-                {b.band.dungeon.name} {min}–{max}
-                {b.best ? ` · fits ${fits}` : <span className={styles.count}> · {b.band.fits.length} fit</span>}
+                {b.band.dungeon.shortName} {min}–{max} · {b.band.fits.length} fit
               </li>
             );
           })}

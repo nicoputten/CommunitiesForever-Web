@@ -6,7 +6,9 @@ import map from "../map/zones.json";
 //   ids are those of src/core/map/zones.json; Blackrock Mountain is in Burning Steppes, where the source map
 //   (Eastern_Kingdoms.svg) puts its dot.
 // - Vanilla dungeon levels: the addon's planner table (CommunitiesForever src/core/Dungeons.lua, Dungeons.STATIC), the
-//   ranges the group sees in game; an instance's range spans its wings.
+//   ranges the group sees in game; an instance's range spans its wings. Scarlet Monastery's four wings are four entries
+//   there (smgy, smlib, smarm, smcath; Group Finder activities 805, 829, 827, 828), each with its own range; Forever
+//   announced no change to them (WEB-32).
 // - Forever's nine new dungeons (names, zones): Blizzard, "Explore the New Dungeons of World of Warcraft: Forever"
 //   (https://news.blizzard.com/en-us/article/24301455). Levels: the beta Group Finder where it lists the dungeon
 //   (CommunitiesForever docs/API-FINDINGS.md V46, what the addon shows), else Blizzard's article (decided by Nico).
@@ -26,6 +28,8 @@ export interface LevelRange {
 }
 
 export interface Wing {
+  /** Unique among the instance's wings, lower case ("armory"). */
+  id: string;
   name: string;
   typicalLevels: LevelRange;
 }
@@ -39,6 +43,13 @@ export interface DungeonInfo {
   /** Typical level range (label it "typical"). */
   typicalLevels: LevelRange;
   wings?: readonly Wing[];
+  /**
+   * Each wing is a dungeon of its own, run on its own with its own level range (Scarlet Monastery, WEB-32). Blackrock
+   * Spire's wings share one range and stay one dungeon for who fits.
+   */
+  wingsAreDungeons?: true;
+  /** Short name for narrow places, e.g. the roster's bands ("SM Armory"). */
+  shortName?: string;
   /** Zone texts the addon may record for it (the name included). */
   zoneTexts: readonly string[];
 }
@@ -115,13 +126,15 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     name: "Scarlet Monastery",
     kind: "dungeon",
     zone: "tirisfal",
+    shortName: "SM",
     typicalLevels: typical(26, 45),
     wings: [
-      { name: "Graveyard", typicalLevels: typical(26, 36) },
-      { name: "Library", typicalLevels: typical(29, 39) },
-      { name: "Armory", typicalLevels: typical(32, 42) },
-      { name: "Cathedral", typicalLevels: typical(35, 45) },
+      { id: "graveyard", name: "Graveyard", typicalLevels: typical(26, 36) },
+      { id: "library", name: "Library", typicalLevels: typical(29, 39) },
+      { id: "armory", name: "Armory", typicalLevels: typical(32, 42) },
+      { id: "cathedral", name: "Cathedral", typicalLevels: typical(35, 45) },
     ],
+    wingsAreDungeons: true,
     zoneTexts: ["Scarlet Monastery"],
   },
   {
@@ -179,8 +192,8 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zone: "burning",
     typicalLevels: typical(55, 60),
     wings: [
-      { name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
-      { name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "lower", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "upper", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
     ],
     zoneTexts: ["Blackrock Spire", "Lower Blackrock Spire", "Upper Blackrock Spire"],
   },
@@ -305,6 +318,43 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zoneTexts: ["Hyjal Summit"],
   },
 ];
+
+/**
+ * A dungeon a group runs as one, for who fits a level (roster bands, the character page, WEB-32): every dungeon, but
+ * an instance whose wings are dungeons of their own as its wings ("Scarlet Monastery: Armory"). Raids are left out.
+ */
+export interface RunnableDungeon {
+  /** The instance's id, or `<instance>-<wing>` for a wing ("sm-armory"). */
+  id: string;
+  name: string;
+  /** The name for narrow places ("SM Armory", "The Deadmines"). */
+  shortName: string;
+  /** The instance (DUNGEONS) it is in. */
+  instanceId: string;
+  /** Typical level range (label it "typical"). */
+  typicalLevels: LevelRange;
+}
+
+export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d) => d.kind === "dungeon").flatMap(
+  (d): RunnableDungeon[] =>
+    d.wingsAreDungeons === true && d.wings !== undefined
+      ? d.wings.map((w) => ({
+          id: `${d.id}-${w.id}`,
+          name: `${d.name}: ${w.name}`,
+          shortName: `${d.shortName ?? d.name} ${w.name}`,
+          instanceId: d.id,
+          typicalLevels: w.typicalLevels,
+        }))
+      : [
+          {
+            id: d.id,
+            name: d.name,
+            shortName: d.shortName ?? d.name,
+            instanceId: d.id,
+            typicalLevels: d.typicalLevels,
+          },
+        ],
+);
 
 export interface MapPoint {
   x: number;

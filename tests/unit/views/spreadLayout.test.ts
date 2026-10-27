@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { bandRows, joinNames, labelRows, levelPosition, roster } from "@/core/views";
+import {
+  bandRows,
+  joinNames,
+  levelPosition,
+  MERGE_LEVELS_PHONE,
+  roster,
+  spreadDots,
+  type CharacterView,
+} from "@/core/views";
 import { NOW, sample } from "./sample";
 
 describe("level spread layout", () => {
@@ -7,22 +15,41 @@ describe("level spread layout", () => {
     expect([levelPosition(1), levelPosition(60), levelPosition(0), levelPosition(70)]).toEqual([0, 1, 0, 1]);
   });
 
-  it("puts names that would overlap into further rows, and keeps the ends on the track", () => {
-    const places = labelRows(
-      [
-        { position: 0, text: "Sela Moonbrook" },
-        { position: 0.5, text: "Ves Doombringer" },
-        { position: 0.52, text: "Lia Thornwhisper" },
-        { position: 1, text: "Mira Sunstrider" },
-      ],
-      1000,
-    );
-    expect(places).toEqual([
-      { row: 0, align: "start" },
-      { row: 0, align: "center" },
-      { row: 1, align: "center" },
-      { row: 0, align: "end" },
+  it("merges characters within two levels into one dot, the viewer's with a gold ring (WEB-32)", () => {
+    const { spread } = roster(sample(), NOW);
+    const dots = spreadDots(spread.characters, "Nico#2201");
+    expect(dots.map((d) => d.characters.map((c) => c.level))).toEqual([
+      [12],
+      [15],
+      [18],
+      [24],
+      [27],
+      [33],
+      [37, 39, 41],
+      [60],
     ]);
+    const group = dots[6]!;
+    expect(group).toMatchObject({ level: 39, position: levelPosition(39), own: true });
+    expect(group.characters.map((c) => c.name)).toEqual(["Lia Thornwhisper", "Ves Doombringer", "Bob Example"]);
+    // Nico's: Sela 12, Grom 24 and Ves (in the group).
+    expect(dots.filter((d) => d.own).map((d) => d.level)).toEqual([12, 24, 39]);
+    expect(spreadDots(spread.characters).some((d) => d.own)).toBe(false);
+  });
+
+  it("chains merges and keeps three levels apart separate", () => {
+    const at = (...levels: number[]) => levels.map((level, i) => ({ guid: `g${i}`, level }) as CharacterView);
+    const levels = (list: CharacterView[]) => spreadDots(list).map((d) => d.characters.map((c) => c.level));
+    expect(levels(at(10, 12, 14, 17, 20, 20))).toEqual([[10, 12, 14], [17], [20, 20]]);
+    expect(spreadDots(at(10, 12, 14))[0]!.level).toBe(12);
+    expect(spreadDots(at(20, 21))[0]!.level).toBe(20.5);
+    expect(levels(at())).toEqual([]);
+  });
+
+  it("merges within four levels on a phone, so dots stay 24 px apart", () => {
+    const { spread } = roster(sample(), NOW);
+    const dots = spreadDots(spread.characters, "Nico#2201", MERGE_LEVELS_PHONE);
+    expect(dots.map((d) => d.characters.map((c) => c.level))).toEqual([[12, 15, 18], [24, 27], [33, 37, 39, 41], [60]]);
+    expect(dots.map((d) => d.level)).toEqual([15, 25.5, 37, 60]);
   });
 
   it("stacks bands without overlap, the best band first", () => {
