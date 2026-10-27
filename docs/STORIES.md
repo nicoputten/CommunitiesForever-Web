@@ -56,8 +56,21 @@ Decided with Nico, 2026-10-27. The catalogue (48 cards), rotation rules and exam
 - **Re-runs are identical:** the recap is computed once and stored (cards, phrasings, facts); the admin preview shows the coming one, `/recap` the last one.
 - **Card images** rendered by the site (`GET cards/<id>.png`: level 60, recap header, map crops), with the map's CC BY-SA attribution where the map shows.
 - Tests: every card function on sample weeks (eligible, not eligible, score), the rotation (cooldown, one card per friend, quiet week, seed), the phrasing cycle (no repeat before all are used), the week window around daylight saving.
-- Split into four PRs (proposed to Nico, 2026-10-27; shared notes `web-41-questions.md`): a) history and the week window, b) the card functions and rotation, c) the recap job, the bot event and the preview, d) card images.
+- Decided with Nico (2026-10-27, all 7 proposals):
+  - four PRs, merged in order: a) history and the week window, b) the card functions and rotation, c) the recap job, the bot event and the preview, d) card images;
+  - the recap is started by a check every minute inside the site process, which computes it once and catches up after downtime;
+  - the sighting history is stored (zones per day for Tourist, Zone of the week, Map coverage, First footsteps, Homebody, Ghost town);
+  - images with Next's built-in `next/og`: map crops from `zones.json`, the zone header with its map crop, the award header with the winner's class disc;
+  - the admin's preview is a page `/discord/recap` (its screenshots need Nico's look);
+  - the award is "<site name> of the week", the site name from the data;
+  - week 1 is the first recap after launch; Then vs now, Season stats and Hall of fame count from there.
+- Nico's card image references (2026-10-27): level 60, new character at 60, profession 300, the recap headers (award, zone), zone of the week and /whereis; all seven go into WEB-41d's renderer (BOT-03 and BOT-06 use them later).
 - WEB-41a done (PR #68): `readFeeds` (`src/core/feed.ts`, compat snapshots for every release), the history tables `feed_days`, `feed_sharing`, `sightings` (migration `0009_history`, written with every accepted upload and by `rebuild()`), the recap moment in UTC (`src/core/recap/week.ts`: the latest weekday and time in a time zone, daylight saving, the week `[start, end)`).
+- WEB-41b done (PR #PRNUM): `src/core/recap/` (pure). `cards.ts`: the 43 cards; `recap.ts`: the rotation, the quiet week, the headline (10 kinds) and challenge (12) choice; `texts.ts`: 3 phrasings per card, headline and challenge, closing lines, no pronouns (a test checks); `phrasing.ts`: the cycle per key, seeded by the week number. Choices made while building:
+  - Slots: social are Duo of the week, Shared quest jackpot, Ghost town and Group suggestion; fun are First footsteps, Homebody, Most loyal alt, Longest streak, Fresh face and Who am I?.
+  - Awards have no cooldown (the board's 10-week plan repeats The Grinder within 4 weeks); the rotating cards and the challenge do.
+  - A character new this week counts no levels gained (its levels came before the site knew it); Fresh face is about it.
+  - Thresholds where the board names none: The Grinder 2 levels, Tourist 3 zones, Altoholic 2 characters, Crafter 10 skill points, Quest machine 5 quests, Dungeon diver 2 runs, The Comeback 14 days away, Most improved and Gear jump 5 item levels, Zone of the week 2 friends, Busiest evening 3 friends, Top dungeon 2 runs, Quest log hoarder 15 quests, Gap alert below 175, Crafting race within 10 points, Ghost town 14 days, Most loyal alt 4 days, Longest streak 3 days, Group suggestion 3 friends, Shared quest jackpot 5 quests.
 
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
