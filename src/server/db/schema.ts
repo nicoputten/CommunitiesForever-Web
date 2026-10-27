@@ -262,3 +262,47 @@ export const botSettings = sqliteTable("bot_settings", {
   updatedAt: integer("updated_at").notNull(),
   updatedBy: text("updated_by").notNull(),
 });
+
+// Planned runs (WEB-40). Not derived: they live on the site, not in the uploads.
+
+/** A planned dungeon run. Times are Unix seconds (UTC). Deleting cancels it (kept for Discord and history). */
+export const runs = sqliteTable("runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** A RUNNABLE_DUNGEONS id ("sm-armory"). */
+  dungeonId: text("dungeon_id").notNull(),
+  startsAt: integer("starts_at").notNull(),
+  note: text("note"),
+  /** The organiser's BattleTag. */
+  organiser: text("organiser").notNull(),
+  source: text("source", { enum: ["website", "discord", "game"] }).notNull(),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+  cancelledAt: integer("cancelled_at"),
+  /** BattleTag of who deleted it (the organiser or the admin). */
+  cancelledBy: text("cancelled_by"),
+  /** When the bot's reminder and "starting now" events were written, so each is written once. */
+  remindedAt: integer("reminded_at"),
+  startingAt: integer("starting_at"),
+});
+
+/** One answer per friend per run; replaced when they answer again. */
+export const runAnswers = sqliteTable(
+  "run_answers",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    runId: integer("run_id")
+      .notNull()
+      .references(() => runs.id),
+    /** battleTagKey() of the friend. */
+    key: text("key").notNull(),
+    battleTag: text("battle_tag").notNull(),
+    guid: text("guid"),
+    answer: text("answer", { enum: ["in", "maybe", "cant"] }).notNull(),
+    role: text("role", { enum: ["tank", "healer", "damage"] }).notNull(),
+    source: text("source", { enum: ["website", "discord", "game"] }).notNull(),
+    answeredAt: integer("answered_at").notNull(),
+    waitlisted: integer("waitlisted", { mode: "boolean" }).notNull(),
+    movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
+  },
+  (t) => [uniqueIndex("run_answers_run_key_unique").on(t.runId, t.key)],
+);

@@ -9,6 +9,7 @@
   color: var(--text-chip);
   font-size: var(--fs-body-sm);
   line-height: var(--lh-tight);
+  text-decoration: none;
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-out),
@@ -19,7 +20,8 @@
   border-color: var(--line-chip-on);
 }
 
-.chip[aria-pressed="true"] {
+.chip[aria-pressed="true"],
+.chip[aria-current="page"] {
   border-color: var(--gold);
   background: var(--tint-pressed);
   color: var(--text-strong);

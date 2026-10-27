@@ -666,4 +666,55 @@
   --size-friend-disc: 30px;
   --size-discord-main: 1.15fr; /* discord-settings-runs: "What the bot posts" : "Linked friends" */
   --line-link: rgba(212, 175, 106, 0.45); /* discord-settings-runs: the link card and the Runs box */
+
+  /* Runs (WEB-40): the runs, run-detail, run-create and runs-phone boards */
+  --size-runs-aside: 320px; /* runs: the side column */
+  --size-run-when: 96px; /* runs: a run card's time column */
+  --size-past-day: 120px; /* runs: a past run's day column */
+  --size-slot-w: 22px; /* runs: one of the five slot bars */
+  --size-slot-h: 8px;
+  --r-slot: 2px;
+  --size-answer-sm: 36px; /* runs: answer buttons on a card (desktop; 44 on phone) */
+  --size-plan-main: 1180px; /* run-create: the page's width */
+  --size-note-min: 64px; /* run-create: the note field */
+  --fs-run-time: 22px; /* runs: a card's start time (Marcellus); run-detail: the title on phone */
+  --fs-run-title: 38px; /* run-detail: the dungeon (Marcellus SC) */
+  --slot-empty: #2a3446; /* runs: an open slot */
+  --slot-filled: #d4af6a; /* runs: an I'm in */
+  --slot-maybe: rgba(212, 175, 106, 0.35); /* runs: a Maybe waiting for it */
+  --pill-open-tint: rgba(212, 175, 106, 0.18);
+  --pill-soon-tint: rgba(240, 167, 116, 0.18);
+  --pill-soon-text: #f6c29c;
+  --pill-full-tint: rgba(127, 217, 154, 0.16);
+  --pill-done-tint: rgba(174, 182, 195, 0.12);
+  --pill-done-text: #c4c9d0;
+  --pill-cx-tint: rgba(218, 55, 60, 0.18);
+  --pill-cx-text: #f59a9c;
+  --pill-yours-tint: rgba(135, 136, 238, 0.18);
+  --pill-yours-text: #c3c4f7;
+  --run-yours-glow: radial-gradient(
+    circle at 0% 50%,
+    rgba(212, 175, 106, 0.12),
+    rgba(12, 18, 30, 0.85) 45%
+  ); /* runs: your own run */
+  --line-run: rgba(174, 182, 195, 0.14); /* runs: a run card */
+  --line-past: rgba(174, 182, 195, 0.12); /* runs: the past list */
+  --surface-past: rgba(12, 18, 30, 0.6);
+  --surface-slot: #0e1626; /* run-detail: a slot */
+  --line-slot: rgba(174, 182, 195, 0.16);
+  --answer-in-tint: rgba(127, 217, 154, 0.16); /* runs: I'm in, chosen */
+  --answer-in-line: rgba(127, 217, 154, 0.5);
+  --danger-text: #f59a9c; /* run-detail: Delete run */
+  --danger-line: rgba(218, 55, 60, 0.45);
+  --warn-bg: rgba(240, 167, 116, 0.08); /* run-create: time passed */
+  --warn-line: rgba(240, 167, 116, 0.45);
+  --warn-text: #f6d6bd;
+  --dot-discord: #8c95f5; /* runs: "Where runs show up", Discord */
+  --discord-bg: #313338; /* run-create: the Discord preview */
+  --discord-text: #dbdee1;
+  --discord-strong: #f2f3f5;
+  --discord-button: #4e5058;
+  --discord-button-in: #248046;
+  --discord-on-button-in: #ffffff; /* run-create: "I'm in" text; the board's #f2f3f5 is under 4.5 : 1 there */
+  --r-discord: 4px;
 }

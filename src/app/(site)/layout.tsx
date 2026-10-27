@@ -9,6 +9,8 @@ import { SiteShell } from "@/components/shell/SiteShell";
 import { TimeZoneSync } from "@/components/shell/TimeZoneSync";
 import { getDb } from "@/server/db";
 import { timeZoneFor } from "@/server/discord";
+import { joinableUnanswered } from "@/core/views/runs";
+import { runsInput } from "@/server/runsInput";
 import { browserTimeZoneAction } from "./discord/actions";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,6 +31,9 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
       now={nowSeconds()}
       viewer={viewer}
       signOut={signOut}
+      {...(viewer === undefined
+        ? {}
+        : { runsBadge: joinableUnanswered(runsInput(getDb(), viewer.battleTag, nowSeconds())) })}
     >
       {/* WEB-39: the browser's time zone, once, until one is stored. */}
       {viewer !== undefined && timeZoneFor(getDb(), viewer.battleTag) === undefined && (

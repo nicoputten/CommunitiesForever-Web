@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events. Run events and run actions are **planned** (WEB-40 and later): their shapes below are a draft and may still change until they ship; the site does not send them yet.
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40). `runEnded`, `askNow` and `ping` are **planned** (WEB-43, WEB-44): their shapes are a draft and the site does not send them yet.
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -121,8 +121,8 @@ Decided with Nico (2026-10-27): the site's first accepted upload makes no milest
 ### `test` (built, WEB-39)
 The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
-### Run events (planned, WEB-40 and later; not sent yet)
-A draft, so the bot can be designed around them. Each `data` has `run`:
+### Run events (built, WEB-40)
+Written when the admin's Runs switch is on (WEB-39); the reminders have their own switch. Each `data` has `run`, the run as it is at that moment; a test post from the Discord page has `"test": true` and `run.id` 0 (nothing was planned).
 
 ```json
 {
@@ -130,26 +130,53 @@ A draft, so the bot can be designed around them. Each `data` has `run`:
     "id": 7,
     "dungeon": { "id": "sm-armory", "name": "Scarlet Monastery: Armory", "typicalLevels": { "min": 32, "max": 42 } },
     "startsAt": 1793131200,
-    "note": "Quick clear",
-    "organiser": { "name": "Nico", "character": "Ves Doombringer" },
+    "note": "Bring water, we clear the courtyard first.",
+    "organiser": { "name": "Nico", "character": "Ves Doombringer", "discordId": "100000000000000001" },
     "source": "website",
     "state": "open",
-    "slots": { "tank": 1, "healer": 1, "damage": 3 },
-    "answers": [{ "name": "Bob", "character": "Bob Example", "answer": "in", "role": "damage" }]
+    "open": { "tank": 1, "healer": 0, "damage": 1 },
+    "counts": { "in": 3, "maybe": 1, "cant": 0 },
+    "answers": [
+      { "name": "Femke", "character": "Lia Thornwhisper", "discordId": "100000000000000003", "answer": "in", "role": "healer", "source": "discord" },
+      { "name": "Bob", "character": "Tok Ironhide", "answer": "maybe", "role": "healer", "source": "website", "waitlisted": true }
+    ]
   }
 }
 ```
 
+- `startsAt` is UTC: the bot shows it with Discord's timestamp markup (`<t:1793131200:f>`), which every reader sees in their own time.
+- `state`: `open`, `full`, `started` (from start time), `past` (2 hours after start), `cancelled`.
+- `open`: free slots per role (one tank, one healer, three damage). `answers`, oldest first: `answer` is `in`, `maybe` or `cant`; `role` the slot the character fills (from talents or set by the player; unknown is `damage`); `waitlisted`: answered I'm in while the role was full, first in line; `movedUp`: moved up from Maybe. `note`, `character`, `discordId` (only for linked friends) and the flags are optional.
+- Names only, never BattleTags.
+
 | `type` | Extra in `data` | When |
 |---|---|---|
-| `runCreated` | | Planned on the site, in Discord or in the game |
-| `runChanged` | `changed`: `["startsAt", "note", "answers"]` | Time, note or answers changed |
-| `runCancelled` | | Cancelled by its organiser or the admin |
-| `runReminder` | `mention`: the answers to mention (I'm in, Maybe) | The reminder time before start (WEB-39 setting) |
-| `runStarting` | | At start time |
-| `runEnded` | `outcome`: `done` or `didntHappen` | Marked done (also from an upload, WEB-43) or not |
-| `askNow` | `ask` (dungeon, level range, roles, from whom) | An "Ask now" from the game with "Also post on Discord" (addon CF-27) |
-| `ping` | `from`, `text` | A Discord ping made in the game |
+| `runCreated` | | Planned on the site or in Discord |
+| `runChanged` | `changed`: some of `startsAt`, `note`, `answers` | The organiser changed day, time or note, or someone answered |
+| `runCancelled` | `by` (a name), `mention` | Deleted by its organiser or the admin. The bot marks the post cancelled |
+| `runReminder` | `mention`, `minutes` | `minutes` before start (the admin's reminder time) |
+| `runStarting` | `mention` | At start time |
+| `runMovedUp` | `who` (`name`, `discordId`) | A Maybe moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
+| `runEnded` | `outcome`: `done` or `didntHappen` | Planned: marked from an upload (WEB-43) |
+| `askNow` | `ask` (dungeon, level range, roles, from whom) | Planned: an "Ask now" from the game with "Also post on Discord" (WEB-44, addon CF-27) |
+| `ping` | `from`, `text` | Planned: a Discord ping made in the game (WEB-44) |
 
-### Run actions (planned, WEB-40 and later; not built yet)
-For `/plan`, `/ask`, the answer buttons ("Pick my character" lists the asker's characters in range) and `/run` (edit, cancel: own runs, the admin any). Each is done for a Discord user id, accepted only when it is linked to a member or guest (WEB-39). Endpoints follow with WEB-40.
+`mention`: Discord user ids of linked friends who answered I'm in or Maybe (decided with Nico: reminders mention only them).
+
+Reminders and "starting now" are written when the bot polls (decided with Nico, 2026-10-27: no scheduler): each look of a waiting `events` call writes the ones that fell due, each once, so they arrive within about 5 s. A run whose start passed more than the reminder time ago gets neither. A new start time brings both back.
+
+### Run actions (built, WEB-40)
+For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit, cancel). Every action carries the `discordUserId` of the Discord user who did it; the site acts only when that account is linked (WEB-39) to someone who may sign in, and checks every right itself: `403 not_linked` otherwise.
+
+| Request | Body / query | Answer |
+|---|---|---|
+| `GET /api/bot/v1/dungeons` | | `{ dungeons: [{ id, name, shortName, typicalLevels }] }`: Scarlet Monastery as its four wings |
+| `GET /api/bot/v1/runs` | | `{ runs: [run] }`: upcoming (not cancelled, not past), by start |
+| `GET /api/bot/v1/runs/<id>` | | `{ run }` |
+| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt` or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
+| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt` or `date` and `time`, `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
+| `POST /api/bot/v1/runs/<id>/cancel` | `discordUserId` | `{ run }`. The organiser, or the admin any run |
+| `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `guid` (required for `in`) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
+| `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role }] }`: the user's characters in the run's range (Pick my character) |
+
+Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`.

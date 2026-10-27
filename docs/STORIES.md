@@ -41,16 +41,6 @@ The bot lives in its own public repo, [CommunitiesForever-Discord](https://githu
 
 Order (2026-10-27; WEB-32 and WEB-38 are done): WEB-40, WEB-44, WEB-43, WEB-46, WEB-39b, WEB-41, WEB-42, WEB-45. WEB-44 comes before WEB-43 because it is small and lets the uploader bring runs into the game (UP-12); WEB-41 before WEB-42 and WEB-45 so the site stores the week's history from launch. In the other repos: bot BOT-02 and BOT-03 now (WEB-38 is in), BOT-07 next so milestones post from launch, BOT-06 after WEB-39, BOT-04 after WEB-40 and WEB-43, BOT-05 after WEB-41; uploader UP-12 after WEB-44; the addon's CF-45..48 are done and wait for a release.
 
-### WEB-40 Runs
-- Boards: `runs`, `run-detail`, `run-create`, `runs-phone`. "Runs" in the top bar with the number of upcoming runs you can join.
-- Model (own database, forward-only migration): run (dungeon or wing, start in UTC, note, organiser and their character, source website / Discord / game, state open, full, started, done, didn't happen, cancelled), five role slots (tank, healer, three damage) filled from the role the addon knows per character (from talents or set by the player), answers (I'm in / Maybe / Can't, character, where it came from and when).
-- Runs page: this week, later, past; filters "Runs I can join" (one of your characters fits), Mine, All; your answers; "Where runs show up". Run detail: slots, answers with their source, who could join, the organiser's edit and delete, the admin's delete; times as "19:30 your time · 20:30 for Nico". Plan a run: dungeon (filled in when coming from a dungeon page or a roster band), lead as, day, time in your time zone ("everyone sees it in their own time"), note, the Discord preview, the time-passed and no-character-fits states.
-- Full run: when someone drops out, the first Maybe whose character fits the free role moves up automatically and gets a quiet notice (Nico, 2026-10-27).
-- Phone: answer buttons 44 px at the bottom; empty, loading and error states; an answer that didn't go through is kept on the phone and retried.
-- Bot API (from WEB-38): the run events and run actions drafted in `docs/BOT-API.md` (create, answer, edit, cancel for a linked Discord user; created, changed, cancelled, reminder, starting, ended), with tests for run rights through the bot.
-- Tests: rights (own, admin), slots from roles, moving up from Maybe, time zones around daylight saving.
-- The Discord page's "Send a test run post" (disabled since WEB-39) posts a sample run in the runs channel (Nico, 2026-10-27).
-
 ### WEB-44 Runs for the uploader
 - `GET /api/uploader/v1/runs`: the upcoming runs (next 14 days) of the uploader's community, with slots, answers, the organiser's time zone offset and `updatedAt`; documented in `docs/UPLOADER-API.md` (an optional addition; the uploader's v1 stays valid).
 - Tests: only the token's community, only upcoming runs, the shape the uploader writes into `Runs.lua` (UP-12).

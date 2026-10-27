@@ -7,6 +7,7 @@ import { SegmentedNav } from "@/components/ui/SegmentedNav";
 import { requestSheet } from "@/components/map/flyTo";
 import { BackIcon, EmblemIcon, FiltersIcon, UploadIcon } from "@/components/ui/icons";
 import { NAV, isCurrent } from "./nav";
+import { RunsBadge } from "./RunsBadge";
 import { LinkPending } from "./Pending";
 import { UserMenu } from "./UserMenu";
 import type { Viewer } from "./viewer";
@@ -19,10 +20,12 @@ export interface TopBarProps {
   dataAgo?: string;
   viewer?: Viewer;
   signOut: () => Promise<void>;
+  /** Upcoming runs the viewer can join and hasn't answered (WEB-40); no badge at 0. */
+  runsBadge?: number;
 }
 
 /** Desktop top bar and phone app bar (map, roster-cards, upload and phone-map boards). */
-export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
+export function TopBar({ siteName, dataAgo, viewer, signOut, runsBadge = 0 }: TopBarProps) {
   const pathname = usePathname();
   const onMap = pathname === "/";
   // "Uploader" (WEB-34): the uploader page, and the manual upload page and reports it links to.
@@ -56,6 +59,7 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
             aria-current={isCurrent(item.href, pathname) ? "page" : undefined}
           >
             {item.label}
+            {item.href === "/runs" && runsBadge > 0 && <RunsBadge count={runsBadge} />}
             <LinkPending />
           </Link>
         ))}
