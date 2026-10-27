@@ -131,6 +131,12 @@ test("map: zoom buttons", async ({ page }) => {
 
 test("map: screenshot at continent zoom (2×)", async ({ page }) => {
   await openScreen(page, "/?continent=eastern-kingdoms");
+  // The first view frames the continent (a jump without motion); zooming before it lands zooms around the world's
+  // centre instead.
+  const zoomContent = page.getByRole("group", { name: /^Map\./ }).locator(":scope > div");
+  await expect
+    .poll(() => zoomContent.evaluate((el) => (el as HTMLElement).style.transform))
+    .not.toMatch(/^(|translate\(0px, 0px\) scale\(1\))$/);
   if (!isPhone(page)) await page.getByRole("button", { name: "Zoom in" }).click();
   else await page.getByRole("group", { name: /^Map\./ }).press("+");
   await expect(page.locator('[data-level="continent"]')).toBeVisible();
