@@ -57,6 +57,18 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Tests for access (no download without sign-in, no feed without a valid token, no publish without the secret).
 - Manual: set the deploy secret in the TrueNAS app config and as a GitHub secret in the uploader repo.
 
+### WEB-37 Keep dependencies fresh
+- Goal: no deprecated packages and no stale versions, without hand work (Nico, 2026-10-27).
+- **Dependabot** (GitHub's own, no new dependency): `.github/dependabot.yml` for npm and GitHub Actions, weekly, minor and patch updates grouped into one PR, majors one PR each. CI already decides whether an update is safe; screenshot changes still need Nico's OK.
+- **Today's state** (`npm ci`, `npm outdated`, 2026-10-27):
+  - `@esbuild-kit/core-utils` and `@esbuild-kit/esm-loader` are deprecated ("merged into tsx"). Both come from `drizzle-kit` 0.31.11, the latest. Check for a drizzle-kit release without them, or another way to run `drizzle-kit generate`; otherwise document it as upstream.
+  - ESLint 9.39 is "no longer supported", but ESLint 10 is blocked: `eslint-plugin-react` (in `eslint-config-next`) allows ESLint up to 9. Check whether `eslint-config-next` or the plugin moved on; until then the pin stays, documented in ARCHITECTURE (Version pins).
+  - TypeScript 7 is out, but `typescript-eslint` allows up to 6.0. Same: lift the pin when it allows 7.
+  - `@types/node` stays on 24 on purpose (it follows the Node LTS of `.nvmrc`). Dependabot ignores its majors.
+  - `next-auth` is on `5.0.0-beta.32`. npm's "latest" (4.x) is the old line; follow the v5 betas until v5 is stable.
+- **A CI step** that lists deprecation warnings from `npm ci` in the job summary, so new ones get noticed. It doesn't fail the build, because the upstream ones above can't be fixed here.
+- Done when: Dependabot is on, the docs say why each remaining pin or deprecation exists and when it can go, and anything that can be updated now is updated with green CI.
+
 ### WEB-32 Known bugs
 - **On hold** until Nico has tested everything (decided 2026-10-27).
 One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
