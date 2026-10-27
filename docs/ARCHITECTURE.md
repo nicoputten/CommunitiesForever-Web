@@ -27,7 +27,12 @@
 
 Every dependency beyond this list needs Nico's OK (CLAUDE.md rule 9).
 
-Version pins (WEB-01): TypeScript `~6.0` and ESLint `^9`, because `typescript-eslint` (via `eslint-config-next`) supports TypeScript below 6.1 and `eslint-plugin-react` supports ESLint 9 at most. Lift them when those catch up.
+Version pins and known deprecations (WEB-01, reviewed in WEB-37 on 2026-10-27). Dependabot (`.github/dependabot.yml`) opens a weekly PR with the minor and patch updates of npm and GitHub Actions, and one per major; CI's job summary lists npm's deprecation warnings. What stays behind, and when it can go:
+- TypeScript `~6.0`: `typescript-eslint` (via `eslint-config-next`) supports TypeScript below 6.1 (8.72 still says `<6.1.0`). Dependabot ignores its minors and majors; lift when `typescript-eslint` allows 7.
+- ESLint `^9` (npm says 9.x is "no longer supported"): `eslint-plugin-react` 7.37 (in `eslint-config-next` 16.4) allows ESLint 9 at most. Dependabot ignores its majors; lift when the plugin allows 10.
+- `@esbuild-kit/core-utils` and `@esbuild-kit/esm-loader` (deprecated, "merged into tsx"; `npm audit` reports their old esbuild, moderate): from `drizzle-kit` 0.31.11, the latest stable. Dev only, used by `npm run db:generate` on a developer's machine, never in the image. drizzle-kit 1.0 (release candidates now) drops them but needs drizzle-orm 1.0; move to both once 1.0 is stable.
+- `@types/node` `^24`: follows the Node LTS of `.nvmrc`; Dependabot ignores its majors. Raise with `.nvmrc` and the Docker base image.
+- `@playwright/test` and `better-sqlite3`: Dependabot leaves them alone. Playwright is bumped by hand together with the design job's image tag (`.github/workflows/ci.yml`); better-sqlite3 by hand with `npm install-scripts approve better-sqlite3` (the approval names the exact version).
 npm's install-script allow-list (`allowScripts` in `package.json`): `unrs-resolver` denied (its postinstall only fetches a fallback binary); `better-sqlite3` approved (WEB-05: builds or fetches its native binding; npm pins the approved version, so an upgrade needs `npm install-scripts approve better-sqlite3` again). `esbuild` (via `drizzle-kit`) is left unapproved: its postinstall only checks the platform binary, which `drizzle-kit generate` does not need.
 Type packages: `@types/better-sqlite3` (dev, WEB-05; the package ships no types).
 `next-auth` is pinned exactly at `5.0.0-beta.32` (WEB-06): v5 is the App Router version of Auth.js (`AUTH_*` variables, `auth()`, proxy support) and has stayed on the `beta` tag; the stable 4.x line is the Pages Router API. An upgrade is a deliberate bump with the e2e sign-in test. It adds no install scripts.
