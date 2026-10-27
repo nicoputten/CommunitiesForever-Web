@@ -134,6 +134,7 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
   "v": 1,
   "updatedAt": 1793120000,
   "reminderMinutes": 30,
+  "received": ["k3f9c0a7e21b-1793120000-1"],
   "runs": [
     {
       "id": "r-102",
@@ -156,6 +157,7 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
 - `updatedAt`: when the list last changed (a run planned, answered, edited or cancelled; one coming into the 14 days, starting or leaving). Asking again without a change gives the same value, so the app writes the file only when something changed.
 - `dungeon`: the addon's dungeon id (`smarm`, `lbrs`, `lfg1984` for a Forever dungeon the Group Finder lists); for a dungeon the addon has no id for, the site's id. `dungeonName` (optional for the addon) names it either way.
 - `state`: `open`, `full`, `started` or `cancelled`. `source` and an answer's `source`: `site`, `discord` or `game`. `role`: `tank`, `heal` or `dps` (the slot the site gave it). `answers`: one per friend, oldest first, at most 40. `note` is optional; `guid` and `name` are missing for a friend who answered without a character (Maybe or Can't). `organiser.utcOffset`: seconds east of UTC in the organiser's own time zone at the start ("20:30 for Nico").
+- `received` (WEB-43, addon CF-47): ids of the token owner's own items from the game (runs planned, answers, asks, pings in their saved file's `pending`) that the site has, newest first, at most 200. The addon forgets them; until then it sends them again, which changes nothing.
 - WEB-47 (optional, within v1): an answer's `fit` is how the character's level fits the run ("fits", "+3 over", "carry · +12", "4 below"; one rule, `levelFit`), and `reserve: true` marks an I'm in that waits for a full role. A reserve is sent as `"answer": "maybe"`, so older addons, which read only `in`, `maybe` and `cant`, show it as Maybe. `role` is the role chosen for that run (`tank`, `heal`, `dps`), no longer always the character's.
 - Bearer errors as above. Additive within v1: the app writes the fields the addon knows and may drop the rest.
 

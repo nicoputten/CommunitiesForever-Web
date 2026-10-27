@@ -4,12 +4,14 @@ import type { RunsInput } from "@/core/views/runs";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
 import { effectiveTimeZone, getBotSettings } from "./discord";
-import { listRuns } from "./runs";
+import { listRuns, markDidntHappen } from "./runs";
 import { loadState } from "./uploads";
 
 // The Runs pages' input (WEB-40): the runs, the group's characters and people, and the viewer with their time zone.
 
 export function runsInput(db: Db, battleTag: string, now: number, admin = adminBattleTag()): RunsInput {
+  // Runs no upload showed within 4 hours are "didn't happen" (WEB-43), also when the bot isn't polling.
+  markDidntHappen(db, now);
   const data = loadState(db)?.data;
   const zones = new Map<string, string>();
   const timeZoneOf = (tag: string) => {

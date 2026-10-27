@@ -85,6 +85,13 @@
       "when": 1793142526545,
       "tag": "0011_reserve",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793143775199,
+      "tag": "0012_game_items",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { nowSeconds } from "@/app/clock";
 import { cleanLabel } from "@/core/uploader";
 import { uploaderRuns } from "@/core/uploaderRuns";
 import { effectiveTimeZone, getBotSettings } from "@/server/discord";
+import { receivedIds } from "@/server/gameItems";
 import { listRuns } from "@/server/runs";
 import { tokenGuard } from "@/server/session";
 import { touchToken } from "@/server/uploader";
@@ -27,6 +28,7 @@ export function GET(req: Request): Response {
     timeZoneOf: (battleTag) => effectiveTimeZone(db, battleTag),
     reminderMinutes: getBotSettings(db).reminderMinutes,
     siteUrl: siteUrl(req),
+    received: receivedIds(db, caller.battleTag),
     now,
   });
   return Response.json(body, { headers: { "Cache-Control": "no-store" } });
