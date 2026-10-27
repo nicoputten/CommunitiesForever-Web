@@ -19,7 +19,7 @@ import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
-import { characters, locations, members, meta, people, presence, uploads } from "./db/schema";
+import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
 // the derived tables hold the merge of all ok uploads and can be rebuilt from them at any time.
@@ -242,6 +242,7 @@ export function listUploads(db: Db, limit = 20): StoredUpload[] {
   return db
     .select(STORED)
     .from(uploads)
+    .leftJoin(uploaderTokens, eq(uploads.deviceId, uploaderTokens.id))
     .orderBy(desc(uploads.id))
     .limit(limit)
     .all()
@@ -250,7 +251,12 @@ export function listUploads(db: Db, limit = 20): StoredUpload[] {
 
 /** One upload for its report page; undefined when there is none. */
 export function getUpload(db: Db, id: number): StoredUpload | undefined {
-  const row = db.select(STORED).from(uploads).where(eq(uploads.id, id)).get();
+  const row = db
+    .select(STORED)
+    .from(uploads)
+    .leftJoin(uploaderTokens, eq(uploads.deviceId, uploaderTokens.id))
+    .where(eq(uploads.id, id))
+    .get();
   return row === undefined ? undefined : stored(row, firstOkId(db));
 }
 
@@ -263,9 +269,11 @@ const STORED = {
   unreadable: uploads.unreadable,
   schemaVersion: uploads.schemaVersion,
   summary: uploads.summary,
+  /** The uploader app that sent it (WEB-34 "via DESKTOP-NICO"); null from the upload page. */
+  device: uploaderTokens.deviceName,
 };
 
-type StoredRow = Pick<typeof uploads.$inferSelect, keyof typeof STORED>;
+type StoredRow = Pick<typeof uploads.$inferSelect, Exclude<keyof typeof STORED, "device">> & { device: string | null };
 
 export function firstOkId(db: Db): number | undefined {
   return db.select({ id: uploads.id }).from(uploads).where(eq(uploads.status, "ok")).orderBy(asc(uploads.id)).get()?.id;
@@ -283,6 +291,7 @@ function stored(row: StoredRow, firstOk: number | undefined): StoredUpload {
   if (row.unreadable !== null) u.unreadable = row.unreadable;
   if (row.schemaVersion !== null) u.schemaVersion = row.schemaVersion;
   if (row.summary !== null) u.summary = row.summary;
+  if (row.device !== null) u.device = row.device;
   return u;
 }
 

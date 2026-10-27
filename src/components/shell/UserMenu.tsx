@@ -81,9 +81,9 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
         <ul className={styles.items}>
           {viewer.mayUpload && (
             <li className={styles.phoneOnly}>
-              <Link href="/upload" className={styles.item}>
+              <Link href="/uploader" className={styles.item}>
                 <UploadIcon className={styles.icon} />
-                Upload
+                Uploader
               </Link>
             </li>
           )}

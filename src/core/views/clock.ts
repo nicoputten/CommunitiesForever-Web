@@ -55,3 +55,13 @@ export function clockTimeAt(at: number, now: number, timeZone?: string): string 
   const time = text.slice(split + 1);
   return `${day === "today" || day === "yesterday" ? day : `on ${day}`} at ${time}`;
 }
+
+/**
+ * The day of `at` (uploader page, WEB-34): "today", "yesterday", else day and month ("27 Oct"), with the year when it
+ * isn't this year. `withTime` adds the time to today and yesterday ("today 21:14"), as "last upload" does.
+ */
+export function clockDay(at: number, now: number, withTime = false, timeZone?: string): string {
+  const text = clockTime(at, now, timeZone);
+  if (text.startsWith("today ") || text.startsWith("yesterday ")) return withTime ? text : text.split(" ")[0]!;
+  return text.slice(text.indexOf(" ") + 1, text.lastIndexOf(","));
+}

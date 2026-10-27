@@ -178,6 +178,8 @@ export interface StoredUpload {
   summary?: UploadSummary;
   /** The first accepted upload of the site. */
   first: boolean;
+  /** The uploader app's device name, for uploads it sent (WEB-34). */
+  device?: string;
 }
 
 export interface HistoryLine {
@@ -188,6 +190,8 @@ export interface HistoryLine {
   status: "done" | "rejected";
   /** "5 levels gained · 4 skill gains · 1 new character", or the short reason of a rejection. */
   text: string;
+  /** "via DESKTOP-NICO": sent by the uploader app on that device (WEB-34). */
+  via?: string;
 }
 
 /**
@@ -237,11 +241,13 @@ function battleTagName(battleTag: string): string {
 
 /** `names`: display names by battleTagKey(), from the merged data. */
 export function historyLine(u: StoredUpload, names: ReadonlyMap<string, string>): HistoryLine {
-  return {
+  const line: HistoryLine = {
     id: u.id,
     uploadedAt: u.uploadedAt,
     uploader: names.get(battleTagKey(u.uploadedBy)) ?? battleTagName(u.uploadedBy),
     status: u.status === "ok" ? "done" : "rejected",
     text: u.status === "ok" ? summaryLine(u.summary, u.first) : rejectionLine(u),
   };
+  if (u.device !== undefined) line.via = `via ${u.device}`;
+  return line;
 }

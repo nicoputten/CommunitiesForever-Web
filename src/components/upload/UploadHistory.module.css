@@ -60,6 +60,11 @@
   color: var(--text-dim);
 }
 
+.via {
+  display: block;
+  font-size: var(--fs-meta-sm);
+}
+
 .done,
 .rejected {
   padding: var(--s-0-75) var(--s-2);

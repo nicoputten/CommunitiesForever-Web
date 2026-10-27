@@ -14,7 +14,7 @@ import { block, putGuest } from "@/server/access";
 import { getDb } from "@/server/db";
 import { uploads } from "@/server/db/schema";
 import { activeTokens, createToken, decidePairing, findPairing, limits, TooManyTokensError } from "@/server/uploader";
-import { MAX_UPLOAD_BYTES, upload, UploadForbiddenError } from "@/server/uploads";
+import { listUploads, MAX_UPLOAD_BYTES, upload, UploadForbiddenError } from "@/server/uploads";
 
 // The uploader API's routes (WEB-33): every status code of docs/UPLOADER-API.md, and its examples as a contract:
 // each real response has the example's keys with the same value types.
@@ -268,6 +268,8 @@ describe("routes", () => {
       .all()
       .find((u) => u.id === first.uploadId);
     expect(row?.deviceId).toBe(activeTokens(getDb(), "Gwen#4004")[0]?.id);
+    // The history names the device (WEB-34 "via GWEN-PC").
+    expect(listUploads(getDb()).find((u) => u.id === first.uploadId)?.device).toBe("GWEN-PC");
     expect(await (await send(token, lua("Gwen#4004", 10, 100))).json()).toMatchObject({ status: "nothing_new" });
     expect(await (await send(token, lua("Gwen#4004", 10, 150, 8))).json()).toMatchObject({
       status: "rejected",
