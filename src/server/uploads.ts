@@ -18,6 +18,7 @@ import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
+import { notifyBotEvents, recordMilestones } from "./bot";
 import type { Db } from "./db";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
@@ -103,7 +104,8 @@ export function upload(
   if (known !== undefined && !retry(known)) return withOwner(known, file);
 
   const result = read(file);
-  return db.transaction((tx) => {
+  let events = false;
+  const stored = db.transaction((tx): UploadResult => {
     const again = findBySha(tx, sha256, user);
     if (again !== undefined) {
       if (!retry(again)) return withOwner(again, file);
@@ -158,10 +160,14 @@ export function upload(
     writeState(tx, after, sourcesFor(before, after, id));
     addMembers(tx, result.data, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
+    // The Discord bot's milestones (WEB-38): not for the site's first upload, where everything is new.
+    events = recordMilestones(tx, { id, uploadedAt: now }, summary, after, before === undefined);
     const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
   });
+  if (events) notifyBotEvents();
+  return stored;
 }
 
 function findBySha(db: Db | Tx, sha256: string, user: string): UploadResult | undefined {

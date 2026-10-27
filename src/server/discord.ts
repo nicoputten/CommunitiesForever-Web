@@ -224,9 +224,32 @@ export function setTimeZone(db: Db, battleTag: string, timeZone: string, from: "
 
 // --- the bot's settings -------------------------------------------------------------------------------------------
 
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
 /** What the bot posts and where; the defaults until the admin changes something. */
-export function getBotSettings(db: Db): BotSettings {
+export function getBotSettings(db: Db | Tx): BotSettings {
   return botSettingsFrom(db.select().from(botSettings).where(eq(botSettings.id, 1)).get());
+}
+
+/**
+ * The settings as `GET /api/bot/v1/settings` adds them (docs/BOT-API.md "Settings"; optional fields within v1).
+ * Channel and role ids are null until picked; the recap time is in `timeZone` (the admin's).
+ */
+export function botApiSettings(db: Db, admin = adminBattleTag()) {
+  const s = getBotSettings(db);
+  return {
+    posts: { milestones: s.milestones, runs: s.runs, recap: s.recap },
+    channels: { posts: s.postsChannel, recap: s.recapChannel, runs: s.runsChannel },
+    mentionRole: s.mentionRole,
+    recap: { day: s.recapDay, time: s.recapTime, timeZone: effectiveTimeZone(db, admin, admin) },
+    runs: {
+      reminders: s.reminders,
+      reminderMinutes: s.reminderMinutes,
+      startingNow: true,
+      askNow: s.askNow,
+      markDone: s.markDone,
+    },
+  };
 }
 
 export function updateBotSettings(db: Db, change: Partial<BotSettings>, by: string, now: number): BotSettings {
