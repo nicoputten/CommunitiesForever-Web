@@ -110,6 +110,31 @@
   color: var(--gold);
 }
 
+/* "Discord" (WEB-39): a quiet link like the board's, current as the nav links. */
+.discord {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-nav);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.discord:hover {
+  color: var(--text-strong);
+}
+
+.discord[aria-current="page"] {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  background: var(--tint-active);
+}
+
 /* Phone app bar (phone-map board): brand, data age, user. The tab bar takes the navigation; Upload is in the menu. */
 /* Map: the continent switch, then the zone in the centre at zone zoom (4×, WEB-26, map-states board). */
 .continents {
@@ -174,6 +199,7 @@
   .nav,
   .continents,
   .upload,
+  .discord,
   .ageDesktop {
     display: none;
   }

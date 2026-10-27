@@ -49,6 +49,9 @@ export default defineConfig({
       ADMIN_BATTLETAG: ADMIN,
       AUTH_BATTLENET_ID: "e2e-client-id",
       AUTH_BATTLENET_SECRET: "e2e-client-secret",
+      // Discord linking (WEB-39): made-up values; Discord itself is never called.
+      DISCORD_CLIENT_ID: "123456789012345678",
+      DISCORD_CLIENT_SECRET: "e2e-discord-secret",
     },
     port,
     // Always a fresh server: a reused one would have another database and clock.

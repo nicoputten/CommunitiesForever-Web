@@ -1,0 +1,465 @@
+/* The Discord page (board `discord-settings-runs`, WEB-39): the link card and time zone for everyone; what the bot
+   posts and the linked friends side by side (1.15 : 1), then Runs, for the admin. One column below 900 px. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-4);
+}
+
+.headText {
+  flex: 1 1 var(--size-uploader-main);
+  min-width: 0;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, var(--size-discord-main)) minmax(0, 1fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- boxes ------------------------------------------------------------------------------------------------------ */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5) var(--s-5-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-box);
+}
+
+.boxRuns {
+  border-color: var(--line-link);
+}
+
+.boxHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.boxTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.small {
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+.body {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.note {
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.cmd {
+  font-family: var(--font-code);
+  color: var(--gold-pale);
+}
+
+/* --- pills ------------------------------------------------------------------------------------------------------ */
+
+.ok,
+.no {
+  flex: none;
+  padding: var(--s-0-75) var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-meta-sm);
+  white-space: nowrap;
+}
+
+.ok {
+  background: var(--done-tint);
+  color: var(--fresh-text);
+}
+
+.no {
+  background: var(--mute-tint);
+  color: var(--text-dim);
+}
+
+.status {
+  padding: var(--s-1-5) var(--s-3);
+  font-size: var(--fs-meta);
+}
+
+/* --- notices ---------------------------------------------------------------------------------------------------- */
+
+.notice,
+.noticeOk {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-btn);
+  background: var(--hint-bg);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body-sm);
+}
+
+.notice {
+  color: var(--stale-text);
+}
+
+.noticeOk {
+  color: var(--fresh-text);
+}
+
+/* --- buttons ---------------------------------------------------------------------------------------------------- */
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2-5);
+  padding-top: var(--s-1-5);
+}
+
+.primary,
+.secondary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-btn);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.primary {
+  border: 0;
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--gold-bright);
+}
+
+.secondary {
+  border: var(--border) solid var(--line-ghost);
+  background: transparent;
+  color: var(--gold-bright);
+}
+
+.ghost {
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.secondary:hover:not(:disabled),
+.ghost:hover:not(:disabled) {
+  background: var(--tint-hover);
+  color: var(--text-strong);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.ghost:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
+/* --- the link card ---------------------------------------------------------------------------------------------- */
+
+.link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4-5);
+  padding: var(--s-5) var(--s-5-5);
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--line-link);
+  background: radial-gradient(circle at 10% 0%, var(--tint-active), var(--surface-pair) 60%);
+}
+
+.linkAvatar,
+.linkAvatarNone {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-link-avatar);
+  height: var(--size-link-avatar);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-section);
+  font-weight: var(--fw-semibold);
+}
+
+.linkAvatar {
+  background: var(--discord-avatar);
+  color: var(--on-discord-avatar);
+}
+
+.linkAvatarNone {
+  background: var(--avatar);
+  color: var(--gold);
+}
+
+.linkIcon {
+  width: var(--size-tab-icon);
+  height: var(--size-tab-icon);
+}
+
+.linkText {
+  flex: 1 1 var(--size-uploader-main);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.linkTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+/* --- options (switches) ----------------------------------------------------------------------------------------- */
+
+.options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-4);
+  align-items: center;
+  padding: var(--s-1) 0;
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.option:last-child {
+  border-bottom: 0;
+}
+
+.optionName {
+  display: block;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
+.optionText {
+  display: block;
+  margin-top: var(--s-0-5);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+.switchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--size-touch);
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  width: var(--size-switch-w);
+  height: var(--size-switch-h);
+  border-radius: var(--r-pill);
+  background: var(--switch-off);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: var(--s-0-75);
+  left: var(--s-0-75);
+  width: var(--size-switch-knob);
+  height: var(--size-switch-knob);
+  border-radius: var(--r-pill);
+  background: var(--text-dim);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.switchButton[aria-checked="true"] .switch {
+  background: var(--gold);
+}
+
+.switchButton[aria-checked="true"] .switch::after {
+  background: var(--on-gold);
+  transform: translateX(calc(var(--size-switch-w) - var(--size-switch-knob) - 2 * var(--s-0-75)));
+}
+
+.switchButton:disabled {
+  cursor: progress;
+}
+
+/* --- picks (dropdowns) ------------------------------------------------------------------------------------------ */
+
+.picks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3-5);
+  padding-top: var(--s-1-5);
+}
+
+@media (max-width: 599px) {
+  .picks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pickList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+  padding-top: var(--s-2-5);
+}
+
+.label {
+  display: block;
+  font-size: var(--fs-overline);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.select {
+  width: 100%;
+  min-width: 0;
+  height: var(--size-select);
+  margin-top: var(--s-1-5);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-nav);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  accent-color: var(--gold);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  color: var(--text-dim);
+}
+
+@media (max-width: 767px) {
+  .select {
+    height: var(--size-touch);
+  }
+}
+
+.hint {
+  margin-top: var(--s-1-5);
+}
+
+.runsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-8);
+}
+
+@media (max-width: 899px) {
+  .runsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- linked friends --------------------------------------------------------------------------------------------- */
+
+.friends {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.friend {
+  display: grid;
+  grid-template-columns: var(--size-friend-lead) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--s-3-5);
+  align-items: center;
+  padding: var(--s-2-5) 0;
+  border-bottom: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+}
+
+.friend:last-child {
+  border-bottom: 0;
+}
+
+.friendDisc {
+  width: var(--size-friend-disc);
+  height: var(--size-friend-disc);
+  border-radius: var(--r-pill);
+  background: var(--avatar);
+  color: var(--gold-bright);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  line-height: var(--size-friend-disc);
+  text-align: center;
+}
+
+.friendTag,
+.friendName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friendName {
+  color: var(--text-muted);
+}
+
+.friendNone {
+  color: var(--text-dim);
+}
+
+/* --- time zone -------------------------------------------------------------------------------------------------- */
+
+.zoneForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-2-5);
+}
+
+.zoneField {
+  flex: 1 1 var(--size-select-min);
+  min-width: 0;
+}

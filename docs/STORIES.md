@@ -82,15 +82,7 @@ The bot lives in its own public repo, [CommunitiesForever-Discord](https://githu
 
 **Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, the admin can delete any run (one admin, `ADMIN_BATTLETAG`; the board's "Admins: Nico, Mira" is not built). Reminders mention only those who answered I'm in or Maybe.
 
-Order: WEB-32 (roster fixes), WEB-39, WEB-38, WEB-40, WEB-42, WEB-43, WEB-44, WEB-45. In the other repos: addon CF-45 first (ships the empty runs file), then uploader UP-12 and bot BOT-04 once WEB-44 and WEB-38 are in, then addon CF-46..48.
-
-### WEB-39 Link Discord, the Discord page and time zones
-- Board: `discord-settings-runs` (the newer one; `discord-settings` is the same page without the runs section).
-- A "Discord" page in the top bar and account menu: link and unlink your Discord account (Discord OAuth2, `identify` scope only), your link status. Stored: Discord user id and name with the BattleTag; never shown to others except in the admin's linked-friends list, never in posts.
-- **Your time zone:** taken from the browser on first sign-in, changeable on this page. Used for `/plan` times in Discord (Discord doesn't tell a bot the user's time zone) and shown wherever a time is typed. Without one, the admin's time zone.
-- Admin: the bot token (WEB-38), bot status, channel for posts, recap channel, toggles per post type (milestones, runs, recap), recap time (default Sunday 13:00, WEB-41), mention role on new runs, a test post, a recap preview, the linked friends (n of m). Runs section: runs channel, reminder time (15 min, 30 min, 1 hour, 2 hours; default 30 min, also used by the in-game toast), "Starting now" (always on), ask now from the game (on or off), mark runs done from uploads (on or off). "Can delete any run" shows the one admin, not the board's two.
-- `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`, `/runs`), answered for a Discord user id only when it is linked to a member or guest.
-- Manual: Nico creates the Discord application's OAuth2 redirect for the site (secrets only in TrueNAS env).
+Order: WEB-38, WEB-39b, WEB-40, WEB-42, WEB-43, WEB-44, WEB-45. In the other repos: addon CF-45 first (ships the empty runs file), then uploader UP-12 and bot BOT-04 once WEB-44 and WEB-38 are in, then addon CF-46..48.
 
 ### WEB-38 Bot API
 - `/api/bot/v1/` with one Bearer bot token (stored hashed, like the uploader tokens; created and revoked by the admin, shown once). Session cookies are not accepted there, the bot token nowhere else (CLAUDE.md rule 6 gets this endpoint).
@@ -99,6 +91,11 @@ Order: WEB-32 (roster fixes), WEB-39, WEB-38, WEB-40, WEB-42, WEB-43, WEB-44, WE
 - Run actions for the bot: create (`/plan`, `/ask`), answer (buttons; Pick my character lists the asker's characters in range), edit and cancel (`/run`; own runs, the admin any).
 - The contract in `docs/BOT-API.md` (fields, errors, versioning: only optional fields within v1), as `docs/UPLOADER-API.md` is for the uploader.
 - Tests: the token check, the long poll, the cursor and acknowledgement, milestone events from sample uploads, run rights.
+
+### WEB-39b Look-ups for the bot
+Split from WEB-39 (Nico, 2026-10-27); after WEB-38, whose bot token check it uses.
+- `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`, `/runs`), answered for a Discord user id only when it is linked to a member or guest (`linkForDiscordUser`, `src/server/discord.ts`, then the role as for a session).
+- WEB-38's bot API adds the bot token card and the bot's status to the Discord page, and the bot reports its server's channels and roles so the page's dropdowns and test posts work.
 
 ### WEB-40 Runs
 - Boards: `runs`, `run-detail`, `run-create`, `runs-phone`. "Runs" in the top bar with the number of upcoming runs you can join.

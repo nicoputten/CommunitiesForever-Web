@@ -40,6 +40,16 @@ export function UploadIcon(props: IconProps) {
   );
 }
 
+/** A speech bubble: the Discord page (WEB-39). Not Discord's logo. */
+export function ChatIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.6} {...props}>
+      <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" />
+      <path d="M5.5 7h.01M8 7h.01M10.5 7h.01" />
+    </Icon>
+  );
+}
+
 export function ClockIcon(props: IconProps) {
   return (
     <Icon viewBox="0 0 20 20" strokeWidth={1.6} {...props}>

@@ -651,4 +651,19 @@
   --size-hist-status: 110px;
   --size-hist-chevron: 20px;
   --mute-tint: rgba(174, 182, 195, 0.1); /* uploader-page: history "Nothing new" (the board's "Skipped") */
+
+  /* Discord page (WEB-39): the discord-settings-runs board */
+  --discord-avatar: #5865f2; /* discord-settings-runs: the linked account's disc */
+  --on-discord-avatar: #ffffff;
+  --size-link-avatar: 48px; /* discord-settings-runs: "Your Discord is linked" disc */
+  --size-switch-w: 40px; /* discord-settings-runs: on/off switch (hit area --size-touch) */
+  --size-switch-h: 22px;
+  --size-switch-knob: 16px;
+  --switch-off: #2a3446;
+  --size-select: 36px; /* discord-settings-runs: dropdowns (hit area --size-touch on phone) */
+  --size-select-min: 200px;
+  --size-friend-lead: 34px; /* discord-settings-runs: linked friends avatar column */
+  --size-friend-disc: 30px;
+  --size-discord-main: 1.15fr; /* discord-settings-runs: "What the bot posts" : "Linked friends" */
+  --line-link: rgba(212, 175, 106, 0.45); /* discord-settings-runs: the link card and the Runs box */
 }
