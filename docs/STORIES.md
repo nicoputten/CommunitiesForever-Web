@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-27): WEB-40, WEB-44, WEB-43, WEB-46 (guild channels and roles), WEB-39b (look-ups for the bot), WEB-41, WEB-42, WEB-45. WEB-37 takes a free session in between. The order across the repos is under E7.
+Build order (2026-10-27): WEB-40, WEB-44, WEB-43, WEB-46 (guild channels and roles), WEB-39b (look-ups for the bot), WEB-41, WEB-42, WEB-45. The order across the repos is under E7.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -21,18 +21,6 @@ Build order (2026-10-27): WEB-40, WEB-44, WEB-43, WEB-46 (guild channels and rol
 ## E5 Screens
 
 ## E6 Later
-
-### WEB-37 Keep dependencies fresh
-- Goal: no deprecated packages and no stale versions, without hand work (Nico, 2026-10-27).
-- **Dependabot** (GitHub's own, no new dependency): `.github/dependabot.yml` for npm and GitHub Actions, weekly, minor and patch updates grouped into one PR, majors one PR each. CI already decides whether an update is safe; screenshot changes still need Nico's OK.
-- **Today's state** (`npm ci`, `npm outdated`, 2026-10-27):
-  - `@esbuild-kit/core-utils` and `@esbuild-kit/esm-loader` are deprecated ("merged into tsx"). Both come from `drizzle-kit` 0.31.11, the latest. Check for a drizzle-kit release without them, or another way to run `drizzle-kit generate`; otherwise document it as upstream.
-  - ESLint 9.39 is "no longer supported", but ESLint 10 is blocked: `eslint-plugin-react` (in `eslint-config-next`) allows ESLint up to 9. Check whether `eslint-config-next` or the plugin moved on; until then the pin stays, documented in ARCHITECTURE (Version pins).
-  - TypeScript 7 is out, but `typescript-eslint` allows up to 6.0. Same: lift the pin when it allows 7.
-  - `@types/node` stays on 24 on purpose (it follows the Node LTS of `.nvmrc`). Dependabot ignores its majors.
-  - `next-auth` is on `5.0.0-beta.32`. npm's "latest" (4.x) is the old line; follow the v5 betas until v5 is stable.
-- **A CI step** that lists deprecation warnings from `npm ci` in the job summary, so new ones get noticed. It doesn't fail the build, because the upstream ones above can't be fixed here.
-- Done when: Dependabot is on, the docs say why each remaining pin or deprecation exists and when it can go, and anything that can be updated now is updated with green CI.
 
 ## E7 Discord bot and planned runs
 The bot lives in its own public repo, [CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord) (BOT-01..07). The site is its only data source: it decides milestones, runs, the recap and who is linked; the bot formats and posts (decided with Nico, 2026-10-27). Design: the canvas's §12 "Discord bot" and the planned-runs boards (`design/README.md`; the flow: `runs-flow`).

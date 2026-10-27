@@ -14,7 +14,24 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      # WEB-37: deprecated packages from npm's warnings go into the job summary, so new ones get noticed. Not a failure:
+      # the known ones are upstream (docs/ARCHITECTURE.md "Version pins").
+      - name: npm ci (deprecations in the job summary)
+        run: |
+          set -o pipefail
+          npm ci 2>&1 | tee "$RUNNER_TEMP/npm-ci.log"
+          deprecated=$(grep -iE '^npm warn deprecated ' "$RUNNER_TEMP/npm-ci.log" | sed -E 's/^npm warn deprecated //I' || true)
+          {
+            echo "### Deprecated packages"
+            if [ -n "$deprecated" ]; then
+              echo "$deprecated" | sed 's/^/- /'
+              echo
+              echo "Known ones and why they stay: docs/ARCHITECTURE.md \"Version pins\"."
+            else
+              echo "None."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$deprecated" ]; then echo "::notice::$(echo "$deprecated" | wc -l) deprecated packages (job summary)"; fi
       - name: No merge-conflict markers
         run: "! git grep -n -E '^(<<<<<<<|>>>>>>>)( |$)' -- . ':!design/'"
       - run: npm run lint
