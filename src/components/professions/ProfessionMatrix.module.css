@@ -1,0 +1,90 @@
+.frame {
+  overflow-x: auto;
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line-matrix);
+  background: var(--surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: var(--s-1-5);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.table thead th {
+  padding: var(--s-2) var(--s-1-5);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+  border-bottom: var(--border) solid var(--line-thead);
+}
+
+.table abbr {
+  text-decoration: none;
+}
+
+.table tbody th,
+.table td {
+  border-bottom: var(--border) solid var(--line-cell);
+  color: var(--text-chip);
+}
+
+.table tbody th {
+  font-weight: var(--fw-regular);
+}
+
+.table th:first-child {
+  padding-left: var(--s-3);
+  text-align: left;
+}
+
+.table tbody th a {
+  color: var(--class-text, var(--text));
+  text-decoration: none;
+}
+
+.table tbody th a:hover {
+  text-decoration: underline;
+}
+
+.cell {
+  display: inline-block;
+  min-width: var(--size-skill-cell);
+  padding: var(--s-0-75) 0;
+  border-radius: var(--r-pill-sm);
+  background: color-mix(in srgb, var(--gold) calc(var(--skill) * var(--skill-cell-max)), transparent);
+}
+
+/* From 225 the cell is bright: the strongest text (the board's dark text fails contrast there, DESIGN.md §11). */
+.cell[data-high] {
+  color: var(--text-strong);
+}
+
+.table .none {
+  text-align: left;
+  color: var(--text-faint);
+}
+
+/* Phone (no board, DESIGN.md §11): the table scrolls sideways in its frame, the Character column stays. */
+@media (max-width: 767px) {
+  .table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface-thead);
+  }
+
+  .table tbody th a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+}

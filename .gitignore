@@ -9,3 +9,9 @@ playwright-report/
 /data/
 *.sqlite
 *.sqlite-journal
+next-env.d.ts
+*.tsbuildinfo
+*.sqlite-wal
+*.sqlite-shm
+.venv-map/
+__pycache__/

@@ -1,0 +1,16 @@
+// The main navigation: top bar on desktop, tab bar on phone.
+
+export const NAV = [
+  { href: "/", label: "Map" },
+  { href: "/roster", label: "Roster" },
+  { href: "/professions", label: "Professions" },
+] as const;
+
+export type NavHref = (typeof NAV)[number]["href"];
+
+/** The current section: "/" only for the map itself, a section for its sub-pages too (a character page is Roster). */
+export function isCurrent(href: string, pathname: string): boolean {
+  if (href === "/") return pathname === "/";
+  if (href === "/roster" && pathname.startsWith("/character/")) return true;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

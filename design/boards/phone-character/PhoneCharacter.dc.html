@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Phone map — character sheet</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050A12}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes waveA{0%{transform:translate(-5px,0);opacity:.12}50%{opacity:.6}100%{transform:translate(5px,1px);opacity:.12}}
+@keyframes waveB{0%{transform:translate(4px,1px);opacity:.5}50%{opacity:.1}100%{transform:translate(-4px,-1px);opacity:.5}}
+@keyframes surf{0%,100%{stroke-opacity:.22;stroke-width:7}50%{stroke-opacity:.5;stroke-width:11}}
+@keyframes foam{to{stroke-dashoffset:-220}}
+.wa{animation:waveA 7s ease-in-out infinite alternate}
+.wb{animation:waveB 9s ease-in-out infinite alternate}
+.surf{animation:surf 6s ease-in-out infinite}
+.foam{stroke-dasharray:1 8;animation:foam 40s linear infinite}
+.mk{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;box-sizing:border-box;font:600 10px/24px Inter,system-ui,sans-serif;text-align:center;text-decoration:none}
+.pulse{position:absolute;inset:-2px;border-radius:50%;animation:pulse 2.6s ease-out infinite;pointer-events:none}
+.bar{height:6px;border-radius:3px;background:#232C3A;overflow:hidden}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:3px}
+.still .wa,.still .wb,.still .surf,.still .foam,.still .pulse{animation:none}
+@media (prefers-reduced-motion: reduce){.wa,.wb,.surf,.foam,.pulse{animation:none}}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #050A12; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+
+  <!-- MAP zoomed to Stranglethorn (x1.6) -->
+  <svg width="390" height="716" viewBox="651 640 244 447.5" style="position: absolute; left: 0; top: 56px" role="img" aria-label="Map zoomed to Stranglethorn Vale">
+    <defs>
+      <radialGradient id="cSea" cx="40%" cy="40%" r="80%"><stop offset="0" stop-color="#10233A"></stop><stop offset="1" stop-color="#050A14"></stop></radialGradient>
+      <linearGradient id="cLand" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#26354D"></stop><stop offset="1" stop-color="#151E2E"></stop></linearGradient>
+      <filter id="cBlur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4"></feGaussianBlur></filter>
+    </defs>
+    <rect x="640" y="630" width="270" height="470" fill="url(#cSea)"></rect>
+    <g class="wa" fill="none" stroke="#7FA9D6" stroke-width="0.6" stroke-linecap="round"><sc-for list="{{wavesA}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for></g>
+    <g class="wb" fill="none" stroke="#7FA9D6" stroke-width="0.6" stroke-linecap="round"><sc-for list="{{wavesB}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for></g>
+    <path class="surf" d="{{coastE}}" fill="none" stroke="#5E93C9" filter="url(#cBlur)"></path>
+    <path class="foam" d="{{coastE}}" fill="none" stroke="#CFE3F7" stroke-opacity="0.55" stroke-width="0.9" stroke-linecap="round"></path>
+    <sc-for list="{{zones}}" as="z" hint-placeholder-count="0">
+      <path d="{{z.d}}" fill="{{z.fill}}" fill-rule="evenodd" stroke="#0A0F18" stroke-width="1.5"></path>
+    </sc-for>
+    <sc-for list="{{zones}}" as="z" hint-placeholder-count="0">
+      <path d="{{z.d}}" fill="#D4AF6A" fill-opacity="{{z.glow}}" fill-rule="evenodd" stroke="{{z.stroke}}" stroke-width="{{z.sw}}"></path>
+    </sc-for>
+    <path d="{{coastE}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="0.8"></path>
+    <g text-anchor="middle" stroke="#070B12" stroke-width="2.4" paint-order="stroke" stroke-linejoin="round">
+      <sc-for list="{{labels}}" as="l" hint-placeholder-count="0">
+        <text fill="{{l.fill}}" font-size="{{l.fs}}" style="{{l.font}}"><tspan x="{{l.x}}" y="{{l.y1}}">{{l.l1}}</tspan><tspan x="{{l.x}}" y="{{l.y2}}">{{l.l2}}</tspan></text>
+      </sc-for>
+    </g>
+    <!-- Booty Bay (town labels appear at this zoom) -->
+    <circle cx="672.3" cy="867" r="2" fill="#E2BE74" stroke="#070A0F" stroke-width="0.8"></circle>
+    <text x="676" y="869.5" fill="#E8CF97" stroke="#070A0F" stroke-width="2.4" paint-order="stroke" style="font: italic 7px 'Marcellus'">Booty Bay</text>
+    <circle cx="801.4" cy="731.3" r="2" fill="#E2BE74" stroke="#070A0F" stroke-width="0.8"></circle>
+    <text x="805" y="733.5" fill="#E8CF97" stroke="#070A0F" stroke-width="2.4" paint-order="stroke" style="font: italic 7px 'Marcellus'">Karazhan</text>
+    <g stroke="#F0D08E" stroke-opacity="0.8" stroke-width="0.8"><line x1="773" y1="778" x2="747.9" y2="761.3"></line><line x1="773" y1="778" x2="797.9" y2="758.8"></line></g>
+    <circle cx="773" cy="778" r="2" fill="#F0D08E"></circle>
+  </svg>
+
+  <!-- MARKERS -->
+  <a href="PhoneMap.dc.html" class="mk" aria-label="Lia Thornwhisper, level 37 Priest, seen 1 hour ago" style="left: 235px; top: 246px; background: #FFFFFF; color: #0B0F14; border: 2px solid #0B0F14; box-shadow: 0 0 16px rgba(255,255,255,0.55)"><span class="pulse" style="border: 2px solid #FFFFFF"></span>LT</a>
+  <a href="PhoneMap.dc.html" class="mk" aria-label="Ves Doombringer, selected" aria-current="true" style="left: 155px; top: 250px; width: 36px; height: 36px; background: #8788EE; color: #0B0F14; border: 2px solid #F0D08E; font-size: 12px; line-height: 32px; box-shadow: 0 0 0 4px rgba(240,208,142,0.25), 0 0 22px rgba(135,136,238,0.75)"><span class="pulse" style="border: 2px solid #8788EE"></span>VD</a>
+
+  <!-- APP BAR -->
+  <header style="position: absolute; left: 0; right: 0; top: 0; height: 56px; box-sizing: border-box; padding: 0 12px 0 4px; display: flex; align-items: center; gap: 4px; background: linear-gradient(180deg, rgba(5,10,18,0.96), rgba(5,10,18,0.75)); border-bottom: 1px solid rgba(212,175,106,0.18)">
+    <a href="PhoneMap.dc.html" aria-label="Back to map" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#F0D08E" stroke-width="1.8"><path d="M11 3L5 9l6 6"></path></svg></a>
+    <span style="font: 17px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Stranglethorn Vale</span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 11px; color: #8E98A8">2 here</span>
+  </header>
+
+  <!-- HALF SHEET -->
+  <section aria-label="Ves Doombringer" style="position: absolute; left: 0; right: 0; top: 372px; bottom: 72px; border-radius: 18px 18px 0 0; background: rgba(12,18,30,0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(212,175,106,0.35); box-shadow: 0 -12px 30px rgba(0,0,0,0.5); padding: 8px 16px 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: rgba(212,175,106,0.5)"></span>
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: #8788EE; color: #0B0F14; font: 600 15px/44px Inter, sans-serif; text-align: center; flex: none; box-shadow: 0 0 16px rgba(135,136,238,0.5)">VD</div>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <div style="font: 21px/1.1 'Marcellus', serif; color: #A9AAF5">Ves Doombringer</div>
+        <div style="font-size: 12px; color: #AEB6C3">Level 39 Undead Warlock · Horde</div>
+      </div>
+      <a href="PhoneMap.dc.html" aria-label="Close" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05)"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#C9CFD9" stroke-width="1.6"><path d="M2 2l10 10M12 2L2 12"></path></svg></a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 5px">
+      <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8E98A8"><span>Level 39</span><span>21 to go</span></div>
+      <div class="bar"><div style="width: 65%; height: 6px; background: linear-gradient(90deg, #8788EE, #B9BAF7)"></div></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 12px; font-size: 11px; color: #8E98A8">
+      <div>Seen<br><span style="font-size: 13px; color: #E6E1D6">2 h ago</span> <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #7FD99A; vertical-align: middle"></span></div>
+      <div>Player<br><span style="font-size: 13px; color: #E6E1D6">Nico</span></div>
+      <div>Item level<br><span style="font-size: 13px; color: #E6E1D6">34</span></div>
+      <div>Role<br><span style="font-size: 13px; color: #E6E1D6">Damage</span></div>
+      <div>Spec<br><span style="font-size: 13px; color: #E6E1D6">Destruction</span></div>
+      <div>Talents<br><span style="font-size: 13px; color: #E6E1D6">10 / 0 / 20</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 7px">
+      <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr) 62px; align-items: center; gap: 8px; font-size: 12px"><span>Tailoring</span><div class="bar"><div style="width: 83%; height: 6px; background: #D4AF6A"></div></div><span style="text-align: right; color: #AEB6C3">187 / 225</span></div>
+      <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr) 62px; align-items: center; gap: 8px; font-size: 12px"><span>Enchanting</span><div class="bar"><div style="width: 71%; height: 6px; background: #D4AF6A"></div></div><span style="text-align: right; color: #AEB6C3">160 / 225</span></div>
+      <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr) 62px; align-items: center; gap: 8px; font-size: 12px"><span>Cooking</span><div class="bar"><div style="width: 50%; height: 6px; background: #8E98A8"></div></div><span style="text-align: right; color: #AEB6C3">75 / 150</span></div>
+    </div>
+    <div style="flex: 1"></div>
+    <div style="display: flex; gap: 8px">
+      <a href="#" style="flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #D4AF6A; color: #0B0F14; font-size: 14px; font-weight: 600; text-decoration: none">Open character</a>
+      <a href="PhoneMap.dc.html" style="min-height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid rgba(212,175,106,0.4); color: #F0D08E; font-size: 14px; text-decoration: none">Lia · 1 h →</a>
+    </div>
+  </section>
+
+  <!-- TAB BAR -->
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 72px; box-sizing: border-box; padding-bottom: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #070C15; border-top: 1px solid rgba(212,175,106,0.2)">
+    <a href="PhoneMap.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: #F0D08E; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#F0D08E" stroke-width="1.8" aria-hidden="true"><path d="M3 7l7-3 8 3 7-3v17l-7 3-8-3-7 3z M10 4v17 M18 7v17"></path></svg>Map</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #8E98A8; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#8E98A8" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="4"></circle><circle cx="19" cy="11" r="3"></circle><path d="M3 23c1-5 4-7 7-7s6 2 7 7 M16 17c3 0 6 2 7 6"></path></svg>Roster</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: #8E98A8; text-decoration: none"><svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="#8E98A8" stroke-width="1.8" aria-hidden="true"><path d="M5 23l10-10 M13 7l8 8 M16 4l8 8-3 3-8-8z M4 24l3-1-2-2z"></path></svg>Professions</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true,"section":"Atmosphere"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    fetch('./assets/e00c3a54db413db7dd2e2d2dfc63d371.json').then(function (r) { return r.json(); }).then((m) => { this.setState({ map: m }); }).catch(function () {});
+  }
+  waves(o) {
+    var out = [];
+    for (var y = 640 + o * 9; y < 1090; y += 18) {
+      for (var x = 645 + o * 14; x < 900; x += 28) {
+        var h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; var j = h - Math.floor(h);
+        var w = 4 + j * 4;
+        out.push({ d: 'M' + (x + j * 12).toFixed(1) + ' ' + (y + (j - 0.5) * 7).toFixed(1) + ' q' + (w / 2).toFixed(1) + ' -2 ' + w.toFixed(1) + ' 0 t' + w.toFixed(1) + ' 0' });
+      }
+    }
+    return out;
+  }
+  renderVals() {
+    var m = (this.state || {}).map;
+    var occ = { stv: 0.22, westfall: 0.15 };
+    var zones = [], labels = [];
+    if (m) {
+      m.zones.filter(function (z) { return z.cont === 'E' && z.ly > 600; }).forEach(function (z) {
+        var terr = z.kind === 'terrain';
+        var sel = z.id === 'stv';
+        zones.push({ d: z.d, fill: terr ? '#0C121B' : 'url(#cLand)', glow: occ[z.id] || 0, stroke: sel ? '#F0D08E' : 'rgba(201,164,92,0.36)', sw: sel ? 1.1 : 0.5 });
+        var two = z.lines.length > 1, fs = z.size * 0.8;
+        labels.push({ x: z.lx, y1: two ? z.ly - fs * 0.3 : z.ly + fs * 0.35, y2: z.ly + fs * 0.85, l1: z.lines[0], l2: two ? z.lines[1] : '', fs: fs,
+          fill: sel ? '#F3DFAE' : (occ[z.id] ? '#D3D9E3' : '#A4AEBF'), font: "font-family: 'Marcellus SC', serif; letter-spacing: .06em" });
+      });
+    }
+    var motion = this.props.motion ?? true;
+    return { zones: zones, labels: labels, coastE: m ? m.coast.E : '', wavesA: this.waves(0), wavesB: this.waves(1), rootClass: motion ? '' : 'still' };
+  }
+}
+</script>
+</body>
+</html>

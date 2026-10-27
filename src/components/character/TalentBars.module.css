@@ -1,0 +1,27 @@
+/* A talent tree's bar (character board): out of 31, grey, the main tree in the class gradient. */
+
+.track {
+  position: relative;
+  display: block;
+  height: var(--size-character-bar);
+  border-radius: var(--r-badge);
+  background: var(--track-skill);
+  overflow: hidden;
+}
+
+.track::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--fill) * 100%);
+  border-radius: var(--r-badge);
+  background: var(--text-dim);
+}
+
+.track[data-main]::after {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--class) var(--hero-dark-mix), var(--mix-dark)),
+    color-mix(in srgb, var(--class) var(--hero-light-mix), var(--mix-light))
+  );
+}

@@ -1,0 +1,144 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-1);
+  border: 0;
+  border-radius: var(--r-nav);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  cursor: pointer;
+}
+
+.trigger:hover {
+  color: var(--text-strong);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-avatar);
+  height: var(--size-avatar);
+  border-radius: var(--r-pill);
+  background: var(--avatar);
+  color: var(--gold-bright);
+  font-weight: var(--fw-semibold);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  right: 0;
+  z-index: 30;
+  width: var(--size-menu);
+  padding: var(--s-2);
+  border-radius: var(--r-panel);
+  background: var(--surface-strong);
+  backdrop-filter: blur(var(--blur-surface));
+  border: var(--border) solid var(--line-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--s-1);
+  padding: var(--s-2) var(--s-2-5) var(--s-2-5);
+  border-bottom: var(--border) solid var(--line);
+}
+
+.whoTag {
+  font-size: var(--fs-body-sm);
+  color: var(--text-strong);
+}
+
+.role {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-2-5);
+  border: 0;
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--tint-hover);
+  color: var(--text-strong);
+}
+
+.icon {
+  flex: none;
+  width: var(--size-icon);
+  height: var(--size-icon);
+  color: var(--gold);
+}
+
+.state {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.item[aria-checked="true"] .state {
+  color: var(--gold);
+}
+
+.phoneOnly {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Only the avatar shows; the BattleTag stays in the accessible name (as .visually-hidden in globals.css). */
+  .tag {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .trigger {
+    justify-content: center;
+    min-width: var(--size-touch);
+  }
+
+  .avatar {
+    width: var(--size-avatar-phone);
+    height: var(--size-avatar-phone);
+  }
+
+  .phoneOnly {
+    display: block;
+  }
+}

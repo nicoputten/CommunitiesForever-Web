@@ -1,0 +1,180 @@
+.frame {
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line);
+  background: var(--surface-panel);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-body-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Column headers stick to the top of the window while the page scrolls (roster-table board). */
+.th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-thead);
+  text-align: left;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-overline);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border-bottom: var(--border) solid var(--line-thead);
+  white-space: nowrap;
+}
+
+.th:first-child {
+  border-top-left-radius: var(--r-card);
+}
+
+.th:last-child {
+  border-top-right-radius: var(--r-card);
+}
+
+.sort {
+  display: block;
+  padding: var(--s-2-5) var(--s-3);
+  color: inherit;
+  text-decoration: none;
+}
+
+.sort:hover,
+.sort[data-current] {
+  color: var(--gold-bright);
+}
+
+.sort:focus-visible {
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.row td {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: var(--border) solid var(--line-row);
+  white-space: nowrap;
+  color: var(--text-chip);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.row:hover td,
+.row[data-own] td {
+  background: var(--tint-row);
+}
+
+.group:last-child .row:last-child td,
+.table > tbody:only-of-type .row:last-child td {
+  border-bottom: 0;
+}
+
+.character {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+/* Old data: the disc and level bar fade as on the board; the text keeps its contrast (DESIGN.md §11, WEB-21). */
+.row[data-old] .character > [role="img"],
+.row[data-old] .bar {
+  opacity: var(--opacity-old);
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-sm);
+  color: var(--class-text, var(--text));
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--class-text, var(--text));
+  text-decoration: underline;
+}
+
+.via {
+  color: var(--text-faint);
+}
+
+.old {
+  color: var(--stale-note);
+}
+
+.bar {
+  position: relative;
+  display: inline-block;
+  width: var(--size-table-bar);
+  height: var(--size-table-bar-h);
+  margin-left: var(--s-2);
+  vertical-align: middle;
+  border-radius: var(--r-level-bar);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(var(--level) * 100%);
+  background: var(--class, var(--avatar));
+}
+
+.bar[data-max]::after {
+  background: linear-gradient(90deg, var(--class, var(--avatar)), var(--gold-bright));
+}
+
+.row td.wrap {
+  white-space: normal;
+}
+
+/* Pills wrap when the row is wider than the page (three professions and a long zone name). */
+.professions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.profession {
+  white-space: nowrap;
+  padding: var(--s-0-5) var(--s-1-75);
+  border-radius: var(--r-pill-sm);
+  background: var(--surface-pill);
+  font-size: var(--fs-meta-sm);
+}
+
+.none {
+  color: var(--text-faint);
+}
+
+.friend {
+  padding: var(--s-3) var(--s-3) var(--s-2);
+  border-bottom: var(--border) solid var(--line-row);
+  text-align: left;
+  font-weight: var(--fw-regular);
+}
+
+.friend > * + * {
+  margin-left: var(--s-2-5);
+}
+
+.friendName {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  letter-spacing: var(--ls-display);
+  color: var(--text-strong);
+}
+
+.friendTag {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+/* Narrower than the board's canvas: the table scrolls sideways in its frame; headers no longer stick. */
+@media (max-width: 1199px) {
+  .frame {
+    overflow-x: auto;
+  }
+}

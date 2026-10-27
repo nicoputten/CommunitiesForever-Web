@@ -1,0 +1,489 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`every fixture normalizes > addon/v0.3/savedvariables.lua 1`] = `
+{
+  "characters": {
+    "Player-1-0000A001": {
+      "classFile": "MAGE",
+      "faction": "Horde",
+      "guid": "Player-1-0000A001",
+      "hasRecord": true,
+      "ilvl": 1,
+      "lastPlayed": 1240,
+      "level": 21,
+      "name": "Ada Example",
+      "owner": "Ada#1001",
+      "professions": {
+        "185": {
+          "max": 75,
+          "name": "Cooking",
+          "rank": 2,
+        },
+        "186": {
+          "max": 150,
+          "name": "Mining",
+          "rank": 64,
+        },
+      },
+      "quests": {
+        "5001": {
+          "dungeon": false,
+          "title": "A Fixture Quest",
+        },
+      },
+      "raceID": 6,
+      "realm": "Classic Beta PvP",
+      "talents": [],
+      "updatedAt": 1060,
+    },
+    "Player-1-0000B001": {
+      "classFile": "ROGUE",
+      "faction": "Horde",
+      "guid": "Player-1-0000B001",
+      "hasRecord": true,
+      "ilvl": 1,
+      "lastPlayed": 1000,
+      "level": 22,
+      "name": "Bob Example",
+      "owner": "Bob#2002",
+      "professions": {
+        "185": {
+          "max": 75,
+          "name": "Cooking",
+          "rank": 2,
+        },
+        "186": {
+          "max": 150,
+          "name": "Mining",
+          "rank": 64,
+        },
+      },
+      "quests": {},
+      "raceID": 6,
+      "realm": "Classic Beta PvP",
+      "talents": [],
+      "updatedAt": 1000,
+    },
+  },
+  "community": {
+    "id": "40000001",
+    "name": "Test Friends",
+  },
+  "locations": {
+    "Player-1-0000A001": {
+      "seenAt": 1001,
+      "zone": "Durotar",
+    },
+    "Player-1-0000B001": {
+      "seenAt": 1001,
+      "zone": "Durotar",
+    },
+  },
+  "people": {
+    "Ada#1001": {
+      "accountId": "093c975edb2d",
+      "battleTag": "Ada#1001",
+      "displayName": "Ada",
+      "hasRecord": true,
+      "isUploader": true,
+      "key": "Ada#1001",
+      "removed": {},
+      "version": 1060,
+    },
+    "Bob#2002": {
+      "accountId": "b8401522f710",
+      "battleTag": "Bob#2002",
+      "displayName": "Bob",
+      "hasRecord": true,
+      "isUploader": false,
+      "key": "Bob#2002",
+      "receivedAt": 1002,
+      "removed": {},
+      "version": 1000,
+    },
+  },
+  "presence": {
+    "Player-1-0000B001": {
+      "battleTag": "Bob#2002",
+      "lastSeen": 1001,
+    },
+  },
+  "schemaVersion": 1,
+  "uploader": "Ada#1001",
+  "version": 1060,
+}
+`;
+
+exports[`every fixture normalizes > addon/v0.4/savedvariables.lua 1`] = `
+{
+  "characters": {
+    "Player-1-0000A001": {
+      "classFile": "MAGE",
+      "faction": "Horde",
+      "guid": "Player-1-0000A001",
+      "hasRecord": true,
+      "ilvl": 1,
+      "lastPlayed": 1240,
+      "level": 21,
+      "name": "Ada Example",
+      "owner": "Ada#1001",
+      "professions": {
+        "185": {
+          "max": 75,
+          "name": "Cooking",
+          "rank": 2,
+        },
+        "186": {
+          "max": 150,
+          "name": "Mining",
+          "rank": 64,
+        },
+      },
+      "quests": {
+        "5001": {
+          "dungeon": false,
+          "title": "A Fixture Quest",
+        },
+      },
+      "raceID": 6,
+      "realm": "Classic Beta PvP",
+      "talents": [],
+      "updatedAt": 1060,
+    },
+    "Player-1-0000B001": {
+      "classFile": "ROGUE",
+      "faction": "Horde",
+      "guid": "Player-1-0000B001",
+      "hasRecord": true,
+      "ilvl": 1,
+      "lastPlayed": 1000,
+      "level": 22,
+      "name": "Bob Example",
+      "owner": "Bob#2002",
+      "professions": {
+        "185": {
+          "max": 75,
+          "name": "Cooking",
+          "rank": 2,
+        },
+        "186": {
+          "max": 150,
+          "name": "Mining",
+          "rank": 64,
+        },
+      },
+      "quests": {},
+      "raceID": 6,
+      "realm": "Classic Beta PvP",
+      "talents": [],
+      "updatedAt": 1000,
+    },
+  },
+  "community": {
+    "id": "40000001",
+    "name": "Test Friends",
+  },
+  "locations": {
+    "Player-1-0000A001": {
+      "seenAt": 1001,
+      "zone": "Durotar",
+    },
+    "Player-1-0000B001": {
+      "seenAt": 1001,
+      "zone": "Durotar",
+    },
+  },
+  "people": {
+    "Ada#1001": {
+      "accountId": "093c975edb2d",
+      "battleTag": "Ada#1001",
+      "displayName": "Ada",
+      "hasRecord": true,
+      "isUploader": true,
+      "key": "Ada#1001",
+      "removed": {},
+      "version": 1060,
+    },
+    "Bob#2002": {
+      "accountId": "b8401522f710",
+      "battleTag": "Bob#2002",
+      "displayName": "Bob",
+      "hasRecord": true,
+      "isUploader": false,
+      "key": "Bob#2002",
+      "receivedAt": 1002,
+      "removed": {},
+      "version": 1000,
+    },
+  },
+  "presence": {
+    "Player-1-0000B001": {
+      "battleTag": "Bob#2002",
+      "lastSeen": 1001,
+    },
+  },
+  "schemaVersion": 1,
+  "uploader": "Ada#1001",
+  "version": 1060,
+}
+`;
+
+exports[`every fixture normalizes > real/beta-2026-10.lua 1`] = `
+{
+  "characters": {
+    "Player-6842-0000A001": {
+      "autoRole": "dps",
+      "classFile": "WARLOCK",
+      "faction": "Horde",
+      "guid": "Player-6842-0000A001",
+      "hasRecord": true,
+      "ilvl": 1,
+      "lastPlayed": 1792615003,
+      "level": 6,
+      "mainTree": 1,
+      "mainTreeName": "Affliction",
+      "name": "Ada Example",
+      "owner": "Ada#1001",
+      "professions": {
+        "185": {
+          "max": 75,
+          "name": "Cooking",
+          "rank": 1,
+        },
+        "186": {
+          "max": 75,
+          "name": "Mining",
+          "rank": 3,
+        },
+      },
+      "quests": {
+        "784": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Vanquish the Betrayers",
+        },
+        "786": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Thwarting Kolkar Aggression",
+        },
+        "806": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Dark Storms",
+        },
+        "808": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Minshina's Skull",
+        },
+        "815": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Break a Few Eggs",
+        },
+        "817": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Practical Prey",
+        },
+        "818": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "A Solvent Spirit",
+        },
+        "826": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Zalazane",
+        },
+        "837": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Encroachment",
+        },
+        "97223": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Bloodtalon Matriarch",
+        },
+        "97225": {
+          "area": "Durotar",
+          "dungeon": false,
+          "title": "Forgotten Loa Idols",
+        },
+        "97907": {
+          "area": "Camping",
+          "dungeon": false,
+          "title": "Camping 101: Mining",
+        },
+      },
+      "raceID": 2,
+      "realm": "CAMWOW EU4 Realm 2 PvP",
+      "role": "dps",
+      "talents": [
+        {
+          "name": "Affliction",
+          "points": 1,
+        },
+        {
+          "name": "Demonology",
+          "points": 0,
+        },
+        {
+          "name": "Destruction",
+          "points": 0,
+        },
+      ],
+      "updatedAt": 1792614961,
+    },
+    "Player-6943-0000C001": {
+      "guid": "Player-6943-0000C001",
+      "hasRecord": false,
+      "owner": "Cleo#3003",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+    "Player-6943-0000E001": {
+      "guid": "Player-6943-0000E001",
+      "hasRecord": false,
+      "owner": "Esme#5005",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+    "Player-6946-0000C002": {
+      "guid": "Player-6946-0000C002",
+      "hasRecord": false,
+      "owner": "Cleo#3003",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+    "Player-6946-0000D001": {
+      "guid": "Player-6946-0000D001",
+      "hasRecord": false,
+      "owner": "Dax#4004",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+    "Player-6948-0000F001": {
+      "guid": "Player-6948-0000F001",
+      "hasRecord": false,
+      "owner": "Finn#6006",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+    "Player-6950-0000B001": {
+      "guid": "Player-6950-0000B001",
+      "hasRecord": false,
+      "owner": "Bob#2002",
+      "professions": {},
+      "quests": {},
+      "talents": [],
+    },
+  },
+  "community": {
+    "id": "400000001",
+    "name": "Test Friends",
+  },
+  "locations": {
+    "Player-6842-0000A001": {
+      "seenAt": 1792612947,
+      "zone": "Durotar",
+    },
+    "Player-6943-0000C001": {
+      "seenAt": 1792607368,
+      "zone": "Durotar",
+    },
+    "Player-6946-0000C002": {
+      "seenAt": 1792608771,
+      "zone": "Mulgore",
+    },
+  },
+  "people": {
+    "Ada#1001": {
+      "accountId": "0a1b2c3d4e5f",
+      "battleTag": "Ada#1001",
+      "displayName": "Ada",
+      "hasRecord": true,
+      "isUploader": true,
+      "key": "Ada#1001",
+      "removed": {},
+      "version": 1792614961,
+    },
+    "Bob#2002": {
+      "battleTag": "Bob#2002",
+      "displayName": "Bob",
+      "hasRecord": false,
+      "isUploader": false,
+      "key": "Bob#2002",
+      "removed": {},
+    },
+    "Cleo#3003": {
+      "battleTag": "Cleo#3003",
+      "displayName": "Cleo",
+      "hasRecord": false,
+      "isUploader": false,
+      "key": "Cleo#3003",
+      "removed": {},
+    },
+    "Dax#4004": {
+      "battleTag": "Dax#4004",
+      "displayName": "Dax",
+      "hasRecord": false,
+      "isUploader": false,
+      "key": "Dax#4004",
+      "removed": {},
+    },
+    "Esme#5005": {
+      "battleTag": "Esme#5005",
+      "displayName": "Esme",
+      "hasRecord": false,
+      "isUploader": false,
+      "key": "Esme#5005",
+      "removed": {},
+    },
+    "Finn#6006": {
+      "battleTag": "Finn#6006",
+      "displayName": "Finn",
+      "hasRecord": false,
+      "isUploader": false,
+      "key": "Finn#6006",
+      "removed": {},
+    },
+  },
+  "presence": {
+    "Player-6943-0000C001": {
+      "battleTag": "Cleo#3003",
+      "lastSeen": 1792607322,
+    },
+    "Player-6943-0000E001": {
+      "battleTag": "Esme#5005",
+      "lastSeen": 1792614915,
+    },
+    "Player-6946-0000C002": {
+      "battleTag": "Cleo#3003",
+      "lastSeen": 1792608762,
+    },
+    "Player-6946-0000D001": {
+      "battleTag": "Dax#4004",
+      "lastSeen": 1792614915,
+    },
+    "Player-6948-0000F001": {
+      "battleTag": "Finn#6006",
+      "lastSeen": 1792614915,
+    },
+    "Player-6950-0000B001": {
+      "battleTag": "Bob#2002",
+      "lastSeen": 1792614915,
+    },
+  },
+  "schemaVersion": 1,
+  "uploader": "Ada#1001",
+  "version": 1792614961,
+}
+`;

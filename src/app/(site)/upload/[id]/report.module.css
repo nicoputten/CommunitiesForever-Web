@@ -1,0 +1,9 @@
+/* A rejected upload, or one that changed nothing: the title and the upload screen's state card (WEB-20). */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  max-width: var(--size-upload-main);
+  margin-inline: auto;
+}

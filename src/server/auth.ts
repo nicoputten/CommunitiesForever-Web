@@ -1,0 +1,72 @@
+import NextAuth from "next-auth";
+import BattleNet from "next-auth/providers/battlenet";
+import { maySignIn } from "@/core/access";
+import { loadAccessList } from "./access";
+import { getDb } from "./db";
+import { rememberRefused } from "./refused";
+
+// Auth.js with Battle.net, EU (WEB-06, docs/ARCHITECTURE.md "Access"). Battle.net gives the BattleTag and nothing
+// else; who may sign in comes from the database (src/server/access.ts).
+//
+// Sessions are JWT cookies that hold only the BattleTag. The role is not in the cookie: src/proxy.ts and the route
+// guards (src/server/session.ts) read it from the database on every request, so a block or a guest list removal
+// takes effect at once without a session table.
+
+/** Battle.net's EU OpenID issuer (https://eu.battle.net/oauth/.well-known/openid-configuration). */
+export const BATTLENET_ISSUER = "https://eu.battle.net/oauth";
+
+/**
+ * Battle.net's own logout (WEB-17). It ends the Battle.net login and sends the browser on to `ref`, so the next sign-in
+ * asks for an account again. Battle.net ignores OIDC `prompt=login`, and its OIDC end_session_endpoint
+ * (/oauth/logout) answers 400; both tried by Nico on 2026-10-27.
+ */
+export function battleNetLogoutUrl(back: string): string {
+  return `https://eu.battle.net/login/logout?ref=${encodeURIComponent(back)}`;
+}
+
+/** Days a session lasts without a visit. */
+const SESSION_DAYS = 30;
+
+/** The BattleTag claim: `battle_tag` in the ID token, `battletag` in the userinfo response. */
+function battleTagOf(profile: Record<string, unknown> | undefined): string | undefined {
+  const tag = profile?.battle_tag ?? profile?.battletag;
+  return typeof tag === "string" && tag.trim() !== "" ? tag.trim() : undefined;
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  providers: [
+    BattleNet({
+      clientId: process.env.AUTH_BATTLENET_ID,
+      clientSecret: process.env.AUTH_BATTLENET_SECRET,
+      issuer: BATTLENET_ISSUER,
+      // Only the BattleTag is needed; Battle.net knows no "profile" or "email" scope.
+      authorization: { params: { scope: "openid" } },
+      // Battle.net refuses an authorize request without `state` ("The state parameter must be provided"), and it puts
+      // a `nonce` in the ID token even when none was sent, which Auth.js then rejects. Auth.js sends only PKCE for
+      // OIDC providers by default.
+      checks: ["pkce", "state", "nonce"],
+    }),
+  ],
+  session: { strategy: "jwt", maxAge: SESSION_DAYS * 24 * 60 * 60 },
+  pages: { signIn: "/signin", error: "/signin" },
+  callbacks: {
+    async signIn({ profile }) {
+      const tag = battleTagOf(profile);
+      if (maySignIn(tag, loadAccessList(getDb()))) return true;
+      // "not on the list" shows who came back from Battle.net (WEB-17); there is no session to read it from.
+      if (tag !== undefined) await rememberRefused(tag);
+      return "/not-on-list";
+    },
+    jwt({ token, profile }) {
+      const tag = battleTagOf(profile);
+      if (tag !== undefined) token.battleTag = tag;
+      return token;
+    },
+    session({ session, token }) {
+      if (typeof token.battleTag === "string") session.user = { ...session.user, name: token.battleTag };
+      return session;
+    },
+  },
+  // Behind the nginx reverse proxy (docs/ARCHITECTURE.md "Hosting"); AUTH_URL names the public origin.
+  trustHost: true,
+});

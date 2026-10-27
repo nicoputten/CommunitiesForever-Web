@@ -3,96 +3,64 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order: WEB-01, WEB-02 (design workshop runs alongside WEB-03..07), WEB-03, WEB-04, WEB-05, WEB-06, WEB-07, then the views WEB-08..11 once the design is settled, WEB-12 (uploader) last.
+Build order: WEB-06, WEB-15, WEB-30, WEB-16, WEB-07, then the screens WEB-17..29 in number order, then the uploader's server side WEB-33, WEB-34, WEB-35. WEB-12 was replaced by WEB-33..35 and the uploader repo (2026-10-27).
+WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the design workshop.
 
-## E1 Foundation
-
-### WEB-01 Repo skeleton and CI
-- Next.js (App Router) + TypeScript strict, ESLint, Prettier, Vitest, Playwright, per `docs/ARCHITECTURE.md` Stack and Layering.
-- ESLint forbids imports from `src/server`, `src/app`, `src/components`, React and Node built-ins inside `src/core`.
-- Scripts: `npm run dev`, `lint`, `test`, `test:e2e`, `build`. CLAUDE.md "Commands" filled in.
-- GitHub Actions on PRs and `develop`: lint, test, build.
-- `CHANGELOG.md` with `## Unreleased`, `.env.example`, `README.md` with local setup.
-- Done when: a placeholder page renders, one core unit test and one Playwright smoke test pass in CI.
-
-### WEB-02 Design prompt for Claude Design
-- Goal: a prompt Nico pastes into Claude Design to workshop the whole site's UX and look until it is close to ideal, and a record of what was decided.
-- Deliverable `docs/DESIGN-PROMPT.md`, self-contained (Claude Design knows nothing about this project):
-  - What the site is, who uses it (Nico uploads; 4-8 friends browse, mostly to plan play sessions and find crafters), when (not in game: at work, on the couch, on a phone).
-  - **Visual direction:** Vanilla WoW (parchment, gold-trimmed frames, class colors, serif display type in the spirit of Friz Quadrata, Azeroth map art) made with modern techniques: drifting fog and volumetric light, parallax depth, subtle particle embers, smooth transitions, glass and blur layers. "Really cool looking" is the bar; it should feel like a premium fan site, not a spreadsheet. Respect `prefers-reduced-motion`.
-  - **Screens, in priority order:**
-    1. **World map (hero):** a big map of Azeroth (Eastern Kingdoms, Kalimdor) with small icons (class color, or portrait) of characters at their last known zone, region-level precision. Clustering when many sit in one zone, hover/tap for name, level, class, "seen 3 h ago", fading for old sightings, dungeon sightings shown at the dungeon's zone. Filters: person, online recently, faction.
-    2. **Alts / roster:** per friend, their characters: class, race, level, item level, role, main talent tree, professions, last played. Sort and filter; compare across the group ("who has a level 60", "who is closest to 40").
-    3. **Professions:** who has which profession at what skill (rank/max bars), gaps in the group ("nobody has Alchemy"), later recipes ("who can craft Bolt of Silk Cloth").
-    4. **Character detail:** everything about one character.
-    5. **Upload (admin):** drag and drop the `.lua` file, result summary (what changed: new characters, level ups, profession gains), upload history.
-    6. **Login:** "Sign in with Battle.net", not-allowed state.
-  - Shared states: data age per person ("data from 2 days ago, via Bob"), empty state before the first upload, a friend without the addon, a character with no location.
-  - Real data shape and edge cases: names with a space ("Ves Doombringer"), 10+ alts for one person, realm names that change, item level missing, sample data generated from the addon fixtures (invented players).
-  - Responsive: desktop first, map and tables that work with touch at 375 px wide.
-  - Technical constraints for the output: React components, the libraries in `docs/ARCHITECTURE.md` plus the map/styling/animation choices the design proposes (listed as proposals, Nico decides), accessible contrast.
-  - A list of open UX questions to work through in the workshop (navigation model, map interaction, how much motion, density of the roster, phone layout of the map).
-- After the workshop: `docs/DESIGN.md` records decisions (tokens: colors, type, spacing; components; screen layouts; chosen map/styling/animation libraries) and links the Claude Design result. Those libraries get added to `docs/ARCHITECTURE.md`.
-- Open question for Nico before writing the prompt: **map art.** Blizzard's in-game map textures are their copyright. Options: a custom illustrated map in Vanilla style (designed in the workshop), or a fan-made map with a license that allows it. The prompt should say which.
-- Done when: Nico has run the prompt and `docs/DESIGN.md` holds the decisions.
-
-## E2 Data
-
-### WEB-03 SavedVariables parser (core)
-- `parseLua(text)`: parses a SavedVariables file (`Name = { ... }` assignments, also the fixtures' `return { ... }`) into plain JS values. Supports what the game writes: tables with `["key"] =` and `[n] =` keys, array parts, strings with escapes, numbers (incl. negative, float, exponent), booleans, nil, `--` comments.
-- Never executes anything. Limits: 5 MB file, depth 32, clear errors with line and column.
-- Copy the addon's fixtures to `tests/fixtures/addon/v0.3`, `v0.4` (unchanged) and a real file from Nico (wrapped as the game writes it, anonymized if he wants).
-- Unit tests: every construct above, errors, limits, all fixtures parse.
-
-### WEB-04 Normalize and merge (core)
-- `normalize(db)`: `CommunitiesForeverDB.global` per `schemaVersion` into the internal shape (`docs/SOURCE-DATA.md`). Unknown newer schema: rejected with the version in the message.
-- Sanitize: strip `|` escapes from every string, display names capped at 24.
-- `merge(current, incoming)`: per GUID newest `updatedAt` wins; locations newest `seenAt`; `removed` hides a character; person display name: own `displayName` > BattleTag name part (addon rule).
-- `tests/compat`: every addon fixture normalizes; snapshot of the result.
-- Unit tests: missing fields everywhere, merge order independence, removed characters.
-
-### WEB-05 Storage and upload service
-- Drizzle schema and first migration for `uploads` and the derived tables (`docs/ARCHITECTURE.md` Storage).
-- `upload(file, user)`: store raw (gzip, sha256; same file again is a no-op), parse, normalize, merge into derived tables in one transaction; a rejected file is stored with its reason and changes nothing.
-- `rebuild()`: recompute derived tables from all ok uploads in order.
-- Diff of an upload against the previous state (new characters, level ups, profession gains) for the upload result screen.
-- Tests against a temporary SQLite file.
+## Every UI story
+- Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
+- Always the design system (CLAUDE.md rules 11 and 12): no raw values outside the tokens, design system components first. A deviation only after Nico said so, recorded in `docs/DESIGN.md` "Deviations".
+- The screen gets its design checks (WEB-30): computed-style checks for its key elements, accessibility scan, screenshot baselines at desktop and phone size.
+- Accessible: semantic HTML, visible focus states, keyboard use, 44 px touch targets, contrast as in `docs/DESIGN.md`, `prefers-reduced-motion` honoured.
+- Works at 375 px (phone) and 1440 px (desktop canvas); page max-width 1280.
+- Empty, loading and error states of the screen are part of the story.
+- Playwright test for the main flow at desktop and phone size; screenshots of both in the PR next to the board.
 
 ## E3 Access and hosting
 
-### WEB-06 Battle.net login
-- Auth.js with the Battle.net provider (EU). Allow-list of BattleTags; `ADMIN_BATTLETAG` gets the admin role.
-- Every page and API route needs a session except login and callback (CLAUDE.md rule 6); upload needs admin.
-- Open questions: allow-list from an env var, or managed on an admin page? Also allow every BattleTag that appears in the uploaded data automatically? Session: JWT or database?
-- Manual: create the app at develop.battle.net with the redirect URL for localhost and `wow.vestras.nl`, put the client id and secret in the TrueNAS app config.
+## E4 Design foundations
 
-### WEB-07 Docker image and deploy to TrueNAS
-- Multi-stage Dockerfile (Next.js standalone, non-root user), `/data` volume, health endpoint, migrations run at start.
-- GitHub Actions on tag `v*` on `main`: build and push to GHCR (`:<tag>`, `:latest`).
-- `deploy/` with the TrueNAS Custom App compose YAML, the nginx server block for `wow.vestras.nl` (TLS, proxy headers, `client_max_body_size`), and a step-by-step `deploy/README.md`.
-- Manual: Hostnet DNS record, nginx config and certificate, dataset and app on TrueNAS, first login, first upload.
+## E5 Screens
 
-## E4 Views (after WEB-02's workshop)
+### WEB-28 Phone map
+- Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet: peek → half → full (built without `vaul`, see `docs/ARCHITECTURE.md`).
+- Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
+- Bug (found in WEB-27, Nico 2026-10-27): on a phone, `?continent=eastern-kingdoms` framed the continent and sprang back to the whole world about 120 ms later. Fixed: a continent frames at 1.25× at least and the phone map fills the screen (`map-continent-phone` shows the continent again).
+- Decided with Nico (2026-10-27, all 12 proposals): the sheet below 1024 px; snap points 136 / 400 px above the tab bar and 96 px from the top; full names in the peek and the next button; `?character=` as a history entry (Back closes); the WEB-27 filters in the full sheet; the approved phone app bar plus Filters; the edge hint on either side; 120 ms fade without motion. Deviations in `docs/DESIGN.md` §11.
 
-### WEB-08 Upload page
-- Per `docs/DESIGN.md`: drag and drop, result summary from WEB-05's diff, history list. Admin only.
+## E6 Later
 
-### WEB-09 Alts and roster
-- Per `docs/DESIGN.md`: people with their characters, sort and filter, character detail page.
+### WEB-33 Uploader API
+- Goal: the server side of the Windows uploader (repo `CommunitiesForever-Upload`), as `docs/UPLOADER-API.md` describes. Finalise that contract in this story (it is a draft) and keep it in sync.
+- Pairing: start (device name, app version), short user code without look-alike characters, 10-minute expiry, poll (pending, approved with the token once, denied, expired), rate limit per IP.
+- Upload tokens: one per device, upload-only, long random secret stored hashed; created by pairing approval or by hand; revoked by the user, by the app ("Disconnect") or when the user is blocked. A new Drizzle migration (forward-only, rule 5).
+- `POST /api/uploader/v1/uploads` with a Bearer token, raw bytes: the same checks and storage as manual uploads (WEB-06, WEB-19), plus `summaryLine`, `highlights`, `counts` and `reportUrl` for the app (from the WEB-14/20 report view models). `401 token_revoked`, `403 may_not_upload`, `413`, `429`.
+- `GET` and `DELETE /api/uploader/v1/me`.
+- Uploads made with a token record which device sent them (`uploads.device_id`); WEB-34 shows it in the history ("via DESKTOP-NICO").
+- Several uploaders at once (Nico, 2026-10-27): files arrive out of sync; only newer data changes the state, in any order, and the response names only what that upload changed (`nothing_new` otherwise). Server tests with three uploaders in every order.
+- Tests: unit tests for codes, tokens and hashing; route tests for every status code; a contract test that checks responses against `docs/UPLOADER-API.md` examples.
+- The uploader repo builds against this; changes to the contract are additive (new optional fields) once v1 is released.
+- WEB-33b (Nico, 2026-10-27): connecting and disconnecting follow the OAuth 2.0 standards so the app can use a standard OAuth client library: RFC 8628 device flow (`device_authorization`, `token` with `authorization_pending` / `slow_down` / `access_denied` / `expired_token`), RFC 6750 Bearer errors with `WWW-Authenticate`, RFC 7009 `revoke` instead of `DELETE /me`, OAuth-style `{ error, error_description }`. Long-lived access tokens without refresh tokens. Changed in place in v1: nothing was released yet.
+- Decided with Nico (2026-10-27, all 16 proposals): the app's own response shape and snake_case codes; `cfu_` tokens stored as SHA-256, max 5 per person; 8-character codes; in-memory rate limits; `tokenGuard`; the pairing approval UI and "via" in WEB-34 on top of `src/server/uploader.ts`; CLAUDE.md rule 6 names the uploader API; the contract is v1 final.
 
-### WEB-10 Professions
-- Per `docs/DESIGN.md`: matrix of people/characters by profession with skill bars, group gaps. Profession IDs and names from a sourced table (rule 10).
+### WEB-34 Uploader page
+- Board `uploader-page` (copied from the uploader repo). Page `/uploader` for everyone who may upload.
+- Intro, "Download for Windows" (WEB-35) with version and size, the three steps, "Your uploaders" (device, connected, last upload, active, Revoke), "Create a token by hand" (shown once, copy button), the note that uploader uploads count like manual ones.
+- Pairing approval: with `?code=` the page shows "Connect an uploader?" with the device name and code, Allow / Deny; a wrong or expired code says so.
+- Top bar: "Upload" becomes "Uploader". The manual upload page stays and is reached by a small "Upload manually" link on the uploader page (decided with Nico).
+- Every UI story criteria, design checks.
 
-### WEB-11 World map
-- Per `docs/DESIGN.md`: last known location per character on the map of Azeroth.
-- Core: a zone name → map position table (Vanilla zones and dungeons, sourced, rule 10); unknown zones are listed in an "elsewhere" tray instead of being dropped; age of each sighting.
+### WEB-35 Installer hosting and update feed
+- The repos are private, so the site hosts the uploader: `/uploader/download` (signed-in users) and the Velopack update feed for the app (Bearer token), from a folder on the data volume (`/data/uploader`).
+- `POST /api/uploader/v1/releases` with a deploy secret (env var), used by the uploader repo's release workflow to publish a new version (installer, packages, feed files). Only the newest few versions are kept.
+- Tests for access (no download without sign-in, no feed without a valid token, no publish without the secret).
+- Manual: set the deploy secret in the TrueNAS app config and as a GitHub secret in the uploader repo.
 
-## E5 Later
-
-### WEB-12 Automatic uploader
-- A small program on Nico's PC that watches the SavedVariables file and uploads it after the game writes it, with an admin-scoped API token (new API route). Language and packaging decided in the story.
+### WEB-32 Known bugs
+- **On hold** until Nico has tested everything (decided 2026-10-27).
+One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
 
 ### Backlog (unordered, not yet stories)
+- Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
-- Recipes, once addon CF-38 ships ("who can craft X").
 - Dungeons: who has which dungeon quests.
+- Final emblem and logo for the site.

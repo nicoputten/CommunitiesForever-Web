@@ -1,0 +1,84 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--r-panel);
+  background: var(--surface-panel);
+  border: var(--border) solid var(--line);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: 0 var(--s-0-5) var(--s-1-5);
+}
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-avatar-friend);
+  height: var(--size-avatar-friend);
+  border-radius: var(--r-pill);
+  background: var(--avatar-muted);
+  color: var(--text-dim);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+}
+
+.panel[data-addon] .avatar {
+  background: var(--avatar);
+  color: var(--gold-bright);
+}
+
+.who {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--fs-friend);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-display);
+  line-height: var(--lh-name);
+  color: var(--text-muted);
+}
+
+.panel[data-addon] .name {
+  color: var(--text-strong);
+}
+
+.tag {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.noAddon {
+  padding: var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: var(--border) dashed var(--line-neutral);
+  text-align: center;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-relaxed);
+  color: var(--text-dim);
+}
+
+.addon {
+  color: var(--text);
+}
+
+.note {
+  padding: var(--s-0-5) var(--s-1);
+  font-size: var(--fs-meta);
+  color: var(--stale-note);
+}
+
+@media (max-width: 767px) {
+  .head {
+    flex-wrap: wrap;
+  }
+}

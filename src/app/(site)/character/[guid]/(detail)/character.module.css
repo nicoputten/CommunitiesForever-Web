@@ -1,0 +1,104 @@
+/* The character page (character board): back link, hero, then three columns; two below 1200 px with the last-seen
+ * column across the bottom, one on a phone in the order decided with Nico (WEB-23). */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  margin: calc(var(--s-3) * -1) 0;
+  font-size: var(--fs-body-sm);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--gold-bright);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--size-character-aside);
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.column,
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.others:empty {
+  display: none;
+}
+
+@media (max-width: 1199px) {
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .aside {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 767px) {
+  .columns {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .column,
+  .aside {
+    display: contents;
+  }
+
+  .glance {
+    order: 1;
+  }
+
+  .seen {
+    order: 2;
+  }
+
+  .talents {
+    order: 3;
+  }
+
+  .professions {
+    order: 4;
+  }
+
+  .quests {
+    order: 5;
+  }
+
+  .others {
+    order: 6;
+  }
+}
+
+.loadingHero {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.loadingText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}

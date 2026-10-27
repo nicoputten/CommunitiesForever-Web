@@ -1,0 +1,274 @@
+/* The world map (DESIGN.md §5, map board): full width under the top bar, the world fitted inside without cropping. */
+
+/* clip, not hidden: focusing a marker outside the frame must not scroll the map. */
+.frame {
+  position: relative;
+  height: calc(100dvh - var(--size-bar));
+  overflow: clip;
+  /* Past the drawn sea it is still sea: the gradient's deep edge, never the page behind it. */
+  background: var(--sea-deep);
+}
+
+.fit {
+  container-type: size;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* The fitted world: as large as the frame allows at the view box's aspect ratio. */
+.stage {
+  position: relative;
+  width: min(100cqw, calc(100cqh * var(--map-w) / var(--map-h)));
+  aspect-ratio: var(--map-w) / var(--map-h);
+}
+
+/* Beyond the view box the rest of the world stays visible, so a continent has its sea around it. */
+.svg {
+  display: block;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+
+.landTop {
+  stop-color: var(--land-top);
+}
+
+.landBottom {
+  stop-color: var(--land-bottom);
+}
+
+.decor,
+.passive,
+.grain {
+  pointer-events: none;
+}
+
+.maelstromLabel {
+  fill: var(--maelstrom);
+  fill-opacity: var(--maelstrom-label);
+  font-family: var(--font-display);
+  font-size: var(--fs-tiny);
+  letter-spacing: var(--ls-maelstrom);
+  text-anchor: middle;
+}
+
+.compass {
+  fill: none;
+  stroke: var(--map-ink);
+  stroke-opacity: var(--map-ink-compass);
+}
+
+.compassDash {
+  stroke-dasharray: 2 4;
+}
+
+.compassStar {
+  fill: var(--map-ink);
+  fill-opacity: var(--compass-star);
+}
+
+.compassN {
+  fill: var(--map-ink);
+  fill-opacity: var(--compass-n);
+  font-family: var(--font-display);
+  font-size: var(--fs-tiny);
+  text-anchor: middle;
+}
+
+/* Zone fills: land gradient, a dark seam between zones. Only real zones react to the pointer. */
+.zoneFill,
+.terrainFill {
+  stroke: var(--zone-edge);
+  stroke-width: calc(2 / var(--zoom, 1));
+}
+
+.zoneFill {
+  fill: url(#map-land);
+  cursor: pointer;
+  transition: opacity var(--dur-zone) ease;
+}
+
+/* Zone zoom (4×, WEB-26): the zone in the centre stays, the others dim slightly (map-states board). */
+[data-level="zone"] .zoneFill:not([data-focus]) {
+  opacity: var(--zone-dim);
+}
+
+/* Its name is in the top bar now ("the zone name moves to the top bar"). */
+[data-level="zone"] .label[data-focus] {
+  display: none;
+}
+
+.terrainFill {
+  fill: var(--terrain);
+  pointer-events: none;
+}
+
+/* Over the grain: the occupied tint and the zone border (idle · occupied · hover · terrain). */
+.zoneLine {
+  fill: var(--gold);
+  fill-opacity: 0;
+  stroke: var(--zone-line);
+  stroke-width: calc(var(--zone-stroke) / var(--zoom, 1));
+  stroke-linejoin: round;
+  transition:
+    fill-opacity var(--dur-zone) ease,
+    stroke var(--dur-zone) ease,
+    stroke-width var(--dur-zone) ease;
+}
+
+.zoneLine[data-occupied="live"] {
+  fill-opacity: var(--zone-tint-live);
+}
+
+.zoneLine[data-occupied="recent"] {
+  fill-opacity: var(--zone-tint-recent);
+}
+
+.zoneLine[data-occupied="days"] {
+  fill-opacity: var(--zone-tint-days);
+}
+
+.zoneLine[data-occupied="week"] {
+  fill-opacity: var(--zone-tint-week);
+}
+
+.zoneLine[data-hover] {
+  fill-opacity: var(--zone-tint-hover);
+  stroke: var(--gold-bright);
+  stroke-width: calc(var(--zone-stroke-hover) / var(--zoom, 1));
+}
+
+.zoneLine[data-hover][data-occupied="live"] {
+  fill-opacity: calc(var(--zone-tint-live) + var(--zone-tint-hover-add));
+}
+
+.zoneLine[data-hover][data-occupied="recent"] {
+  fill-opacity: calc(var(--zone-tint-recent) + var(--zone-tint-hover-add));
+}
+
+.terrainLine {
+  fill: none;
+  stroke: var(--zone-line-terrain);
+  stroke-width: calc(var(--zone-stroke) / var(--zoom, 1));
+}
+
+.coast {
+  fill: none;
+  stroke: var(--coast);
+  stroke-opacity: var(--coast-opacity);
+  stroke-width: calc(var(--coast-stroke) / var(--zoom, 1));
+}
+
+/* Zoom (WEB-26): lines keep their width and labels, towns and capitals their screen size at any scale (--zoom is set
+ * by MapStage; --ox/--oy are the anchor in world units). */
+.keepScale {
+  transform-box: view-box;
+  transform-origin: calc(var(--ox) * 1px) calc(var(--oy) * 1px);
+  transform: scale(calc(1 / var(--zoom, 1)));
+}
+
+/* Towns from continent zoom (2×, map-states board): a dot and an italic name, like a capital but smaller. */
+.towns {
+  display: none;
+}
+
+[data-level="continent"] .towns,
+[data-level="zone"] .towns {
+  display: inline;
+}
+
+.town {
+  fill: var(--capital-label);
+  stroke: var(--capital-edge);
+  stroke-width: 1;
+}
+
+.capital {
+  fill: var(--capital);
+  stroke: var(--capital-edge);
+  stroke-width: 1.5;
+}
+
+.capitalLabel {
+  fill: var(--capital-label);
+  stroke: var(--capital-edge);
+  stroke-width: 3;
+  paint-order: stroke;
+  font-family: var(--font-name);
+  font-size: var(--fs-tiny);
+  font-style: italic;
+}
+
+.label,
+.terrainLabel {
+  stroke: var(--label-halo);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  text-anchor: middle;
+}
+
+.label {
+  fill: var(--label-idle);
+  font-family: var(--font-display);
+  letter-spacing: var(--ls-place);
+}
+
+.label[data-occupied] {
+  fill: var(--label-occupied);
+}
+
+.label[data-occupied="live"] {
+  fill: var(--gold-pale);
+}
+
+.terrainLabel {
+  fill: var(--label-terrain);
+  font-family: var(--font-name);
+  font-style: italic;
+  letter-spacing: var(--ls-terrain);
+}
+
+.continentName {
+  fill: var(--map-ink);
+  fill-opacity: var(--map-ink-names);
+  font-family: var(--font-display);
+  font-size: var(--fs-continent);
+  letter-spacing: var(--ls-continent);
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+
+/* Phone before the first upload (WEB-29): the whole world across the screen width, the empty-site card under it. */
+@media (max-width: 767px) {
+  .frame {
+    height: auto;
+  }
+
+  .fit {
+    container-type: inline-size;
+    height: auto;
+  }
+
+  .stage {
+    width: 100%;
+  }
+
+  /* With data (WEB-28): the map fills the screen between the app bar and the tab bar, the sea running on above and
+     below the world, the roll call's bottom sheet over its lower part. */
+  .frame[data-sheet] {
+    height: calc(100dvh - var(--size-bar-phone) - var(--size-tabbar) - env(safe-area-inset-bottom));
+  }
+
+  .frame[data-sheet] .fit {
+    container-type: size;
+    height: 100%;
+  }
+
+  .frame[data-sheet] .stage {
+    width: min(100cqw, calc(100cqh * var(--map-w) / var(--map-h)));
+  }
+}

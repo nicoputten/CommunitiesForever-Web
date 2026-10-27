@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Character — Ves Doombringer</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+@keyframes pulse{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes waveA{0%{transform:translate(-3px,0);opacity:.15}50%{opacity:.6}100%{transform:translate(3px,1px);opacity:.15}}
+.pulse{position:absolute;inset:-2px;border-radius:50%;animation:pulse 2.6s ease-out infinite;pointer-events:none}
+.wa{animation:waveA 7s ease-in-out infinite alternate}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.78);border:1px solid rgba(212,175,106,.2);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:16px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;font-size:12px;color:#8E98A8}
+.kv b{display:block;font-weight:500;font-size:15px;color:#E6E1D6;margin-top:2px}
+.r{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:13px}
+.r .v{text-align:right;color:#AEB6C3;font-variant-numeric:tabular-nums}
+.trk{position:relative;height:8px;border-radius:4px;background:#161E2B;overflow:hidden}
+.cap{position:absolute;left:0;top:0;bottom:0;background:rgba(212,175,106,.16)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.tk{position:absolute;top:0;bottom:0;width:1px;background:rgba(7,12,21,.9)}
+.q{display:flex;gap:10px;align-items:center;font-size:13px;color:#C9CFD9;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.q:before{content:"";width:6px;height:6px;transform:rotate(45deg);background:#D4AF6A;flex:none}
+.pill{font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid rgba(174,182,195,.25);color:#C9CFD9;white-space:nowrap}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+.still .pulse,.still .wa{animation:none}
+@media (prefers-reduced-motion: reduce){.pulse,.wa{animation:none}}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="min-height: 1100px; background: radial-gradient(900px 420px at 18% 0%, rgba(135,136,238,0.22), rgba(7,12,21,0) 70%), radial-gradient(1200px 500px at 60% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a>
+      <a href="Roster.dc.html" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Roster</a>
+      <a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #8E98A8">Data uploaded just now</div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 20px 24px 48px; display: flex; flex-direction: column; gap: 20px">
+    <a href="Roster.dc.html" style="font-size: 13px; text-decoration: none">← Roster</a>
+
+    <!-- HERO -->
+    <section style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap">
+      <div style="position: relative; width: 104px; height: 104px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #B9BAF7, #6B6CD0); box-shadow: 0 0 0 3px #0B0F14, 0 0 0 5px #D4AF6A, 0 0 40px rgba(135,136,238,0.55); font: 600 32px/104px Inter, sans-serif; text-align: center; color: #0B0F14; flex: none">VD<span style="position: absolute; right: -4px; bottom: 2px; min-width: 36px; height: 26px; border-radius: 13px; background: #0B0F14; border: 1.5px solid #D4AF6A; font: 600 13px/23px Inter, sans-serif; color: #F0D08E">39</span></div>
+      <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font: 46px/1 'Marcellus', serif; color: #B3B4F8; text-shadow: 0 0 30px rgba(135,136,238,0.4)">Ves Doombringer</h1>
+        <div style="font-size: 15px; color: #C9CFD9">Level 39 Undead <span style="color: #A9AAF5">Warlock</span> · <span style="color: #F08A80">Horde</span> · PvP</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px">
+          <span class="pill">Played by <b style="color: #F3EBDA; font-weight: 600">Nico</b></span>
+          <span class="pill" style="border-color: rgba(127,217,154,0.4); color: #9BE3B0">Last played 2 h ago</span>
+          <span class="pill">Data just now · own addon</span>
+        </div>
+      </div>
+      <div style="width: 360px; max-width: 100%; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #8E98A8"><span>Level 39</span><span>21 levels to 60</span></div>
+        <div style="position: relative; height: 10px; border-radius: 5px; background: #161E2B; overflow: hidden"><div style="width: 64.4%; height: 10px; background: linear-gradient(90deg, #6B6CD0, #B9BAF7)"></div></div>
+        <div style="font-size: 12px; color: #F3DFAE">Fits Scarlet Monastery (26–45) with Lia, Tok and Bob</div>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 380px; gap: 16px; align-items: start">
+      <!-- column 1 -->
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <section class="box"><h2 class="bt">At a glance</h2>
+          <div class="kv"><div>Item level<b>34</b></div><div>Role<b>Damage</b></div><div>Main tree<b>Destruction</b></div><div>Faction<b style="color: #F08A80">Horde</b></div><div>Ruleset<b>PvP</b></div></div>
+        </section>
+        <section class="box"><h2 class="bt">Talents</h2>
+          <div style="font-size: 12px; color: #8E98A8">30 of 30 points spent (level − 9)</div>
+          <div class="r"><span>Affliction</span><div class="trk"><span class="fill" style="width: 32.3%; background: #8E98A8"></span></div><span class="v">10</span></div>
+          <div class="r"><span>Demonology</span><div class="trk"><span class="fill" style="width: 0%; background: #8E98A8"></span></div><span class="v">0</span></div>
+          <div class="r"><span style="color: #B3B4F8">Destruction</span><div class="trk"><span class="fill" style="width: 64.5%; background: linear-gradient(90deg, #6B6CD0, #B9BAF7)"></span></div><span class="v" style="color: #E6E1D6">20</span></div>
+          <div style="font-size: 11px; color: #7E8898">Bars are out of 31, the deepest a tree goes</div>
+        </section>
+      </div>
+
+      <!-- column 2 -->
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <section class="box"><h2 class="bt">Professions</h2>
+          <div class="r"><span>Tailoring</span><div class="trk"><span class="cap" style="width: 75%"></span><span class="fill" style="width: 62.3%; background: #D4AF6A"></span><span class="tk" style="left: 25%"></span><span class="tk" style="left: 50%"></span><span class="tk" style="left: 75%"></span></div><span class="v">187 / 225</span></div>
+          <div class="r"><span>Enchanting</span><div class="trk"><span class="cap" style="width: 75%"></span><span class="fill" style="width: 53.3%; background: #D4AF6A"></span><span class="tk" style="left: 25%"></span><span class="tk" style="left: 50%"></span><span class="tk" style="left: 75%"></span></div><span class="v">160 / 225</span></div>
+          <div class="r"><span style="color: #AEB6C3">Cooking</span><div class="trk"><span class="cap" style="width: 50%"></span><span class="fill" style="width: 25%; background: #8E98A8"></span><span class="tk" style="left: 25%"></span><span class="tk" style="left: 50%"></span><span class="tk" style="left: 75%"></span></div><span class="v">75 / 150</span></div>
+          <a href="Professions.dc.html" style="font-size: 12px; text-decoration: none">Compare with the group →</a>
+        </section>
+        <section class="box"><h2 class="bt">Quest log</h2>
+          <div style="display: flex; flex-direction: column">
+            <span class="q">Tiger Mastery</span>
+            <span class="q">Panther Mastery</span>
+            <span class="q">Raptor Mastery</span>
+            <span class="q">Bloodscalp Ears</span>
+            <span class="q">The Defense of Grom'gol</span>
+            <span class="q" style="border-bottom: 0">Hostile Takeover</span>
+          </div>
+          <div style="font-size: 11px; color: #7E8898">Titles only, as the addon recorded them 2 h ago</div>
+        </section>
+      </div>
+
+      <!-- column 3 -->
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <section class="box" style="padding-bottom: 14px"><h2 class="bt">Last seen</h2>
+          <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212,175,106,0.2)">
+            <svg width="340" height="300" viewBox="690 700 170 150" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Map of Stranglethorn Vale">
+              <defs><linearGradient id="chLand" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#26354D"></stop><stop offset="1" stop-color="#151E2E"></stop></linearGradient></defs>
+              <rect x="680" y="690" width="190" height="170" fill="#0A172A"></rect>
+              <g class="wa" fill="none" stroke="#7FA9D6" stroke-width="0.4"><sc-for list="{{waves}}" as="w" hint-placeholder-count="0"><path d="{{w.d}}"></path></sc-for></g>
+              <sc-for list="{{zones}}" as="z" hint-placeholder-count="0">
+                <path d="{{z.d}}" fill="url(#chLand)" fill-rule="evenodd" stroke="#0A0F18" stroke-width="1"></path>
+                <path d="{{z.d}}" fill="#D4AF6A" fill-opacity="{{z.glow}}" fill-rule="evenodd" stroke="{{z.stroke}}" stroke-width="{{z.sw}}"></path>
+              </sc-for>
+              <path d="{{coastE}}" fill="none" stroke="#A9C8EA" stroke-opacity="0.55" stroke-width="0.6"></path>
+              <g text-anchor="middle" stroke="#070B12" stroke-width="1.6" paint-order="stroke">
+                <sc-for list="{{labels}}" as="l" hint-placeholder-count="0">
+                  <text x="{{l.x}}" y="{{l.y}}" fill="{{l.fill}}" font-size="{{l.fs}}" style="font-family: 'Marcellus SC', serif">{{l.t}}</text>
+                </sc-for>
+              </g>
+              <circle cx="672.3" cy="867" r="1.2" fill="#E2BE74"></circle>
+            </svg>
+            <span style="position: absolute; left: 39%; top: 43%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; background: #8788EE; border: 2px solid #F0D08E; box-sizing: border-box; font: 600 11px/26px Inter, sans-serif; text-align: center; color: #0B0F14; box-shadow: 0 0 18px rgba(135,136,238,0.7)"><span class="pulse" style="border: 2px solid #8788EE"></span>VD</span>
+            <span style="position: absolute; left: 59%; top: 39%; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: #FFFFFF; border: 2px solid #0B0F14; box-sizing: border-box; font: 600 9px/18px Inter, sans-serif; text-align: center; color: #0B0F14; opacity: .8">LT</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <div><div style="font: 17px 'Marcellus', serif; color: #F3DFAE">Stranglethorn Vale</div><div style="font-size: 12px; color: #8E98A8">Seen 2 h ago · Lia is here too</div></div>
+            <a href="Main.dc.html" style="font-size: 12px; text-decoration: none">On the map →</a>
+          </div>
+        </section>
+        <section class="box"><h2 class="bt">Nico's other characters</h2>
+          <a href="#" style="display: flex; gap: 10px; align-items: center; text-decoration: none; color: #E6E1D6"><span style="width: 30px; height: 30px; border-radius: 50%; background: #C69B6D; color: #0B0F14; font: 600 10px/30px Inter, sans-serif; text-align: center">GA</span><span style="flex: 1"><span style="display: block; color: #C69B6D; font-size: 14px">Grom Ashfeller</span><span style="display: block; font-size: 12px; color: #8E98A8">24 Warrior · Tank · 3 days ago</span></span></a>
+          <a href="#" style="display: flex; gap: 10px; align-items: center; text-decoration: none; color: #E6E1D6"><span style="width: 30px; height: 30px; border-radius: 50%; background: #FF7C0A; color: #0B0F14; font: 600 10px/30px Inter, sans-serif; text-align: center">SM</span><span style="flex: 1"><span style="display: block; color: #FF9A45; font-size: 14px">Sela Moonbrook</span><span style="display: block; font-size: 12px; color: #8E98A8">12 Druid · Healer · 2 weeks ago</span></span></a>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    fetch('./assets/e00c3a54db413db7dd2e2d2dfc63d371.json').then(function (r) { return r.json(); }).then((m) => { this.setState({ map: m }); }).catch(function () {});
+  }
+  renderVals() {
+    var m = (this.state || {}).map;
+    var zones = [], labels = [], waves = [];
+    for (var y = 702; y < 852; y += 9) {
+      for (var x = 680; x < 870; x += 16) {
+        var h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; var j = h - Math.floor(h);
+        waves.push({ d: 'M' + (x + j * 8).toFixed(1) + ' ' + (y + (j - 0.5) * 4).toFixed(1) + ' q1.5 -1 3 0 t3 0' });
+      }
+    }
+    if (m) {
+      var occ = { stv: 0.2, westfall: 0.12 };
+      m.zones.filter(function (z) { return z.cont === 'E' && z.ly > 640; }).forEach(function (z) {
+        var sel = z.id === 'stv';
+        zones.push({ d: z.d, glow: occ[z.id] || 0, stroke: sel ? '#F0D08E' : 'rgba(201,164,92,0.36)', sw: sel ? 0.8 : 0.35 });
+        labels.push({ x: z.lx, y: z.id === 'stv' ? z.ly + 14 : z.ly + 2, t: z.name, fs: sel ? 6 : 4.5, fill: sel ? '#F3DFAE' : '#A4AEBF' });
+      });
+    }
+    return { zones: zones, labels: labels, waves: waves, coastE: m ? m.coast.E : '', rootClass: (this.props.motion ?? true) ? '' : 'still' };
+  }
+}
+</script>
+</body>
+</html>

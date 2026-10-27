@@ -1,1 +1,4 @@
 * text=auto eol=lf
+# Fixtures are kept byte-for-byte as captured (the game writes CRLF).
+tests/fixtures/** -text
+tools/map/source/*.svg -text
