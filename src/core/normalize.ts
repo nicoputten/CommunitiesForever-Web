@@ -34,26 +34,26 @@ export function dict<T>(): Record<string, T> {
 
 // --- reading untrusted values -------------------------------------------------------------------------------
 
-type Table = LuaTable | LuaValue[];
+export type Table = LuaTable | LuaValue[];
 
-function table(value: LuaValue | undefined): Table | undefined {
+export function table(value: LuaValue | undefined): Table | undefined {
   return typeof value === "object" && value !== null ? value : undefined;
 }
 
-function field(t: Table | undefined, key: string): LuaValue | undefined {
+export function field(t: Table | undefined, key: string): LuaValue | undefined {
   if (t === undefined || !Object.prototype.hasOwnProperty.call(t, key)) return undefined;
   return (t as LuaTable)[key];
 }
 
 /** Own entries of a table; an array's entries are keyed "1", "2", ... like Lua. */
-function entries(t: Table | undefined): [string, LuaValue][] {
+export function entries(t: Table | undefined): [string, LuaValue][] {
   if (t === undefined) return [];
   if (Array.isArray(t)) return t.map((v, i) => [String(i + 1), v]);
   return Object.entries(t);
 }
 
 /** Values of a Lua list, whether it came out as an array or as an object with keys 1..n (or {}), in index order. */
-function list(t: Table | undefined): LuaValue[] {
+export function list(t: Table | undefined): LuaValue[] {
   if (t === undefined) return [];
   if (Array.isArray(t)) return t;
   return Object.entries(t)
@@ -62,17 +62,17 @@ function list(t: Table | undefined): LuaValue[] {
     .map(([, v]) => v);
 }
 
-function num(t: Table | undefined, key: string): number | undefined {
+export function num(t: Table | undefined, key: string): number | undefined {
   const v = field(t, key);
   return typeof v === "number" && Number.isFinite(v) ? v : undefined;
 }
 
-function str(t: Table | undefined, key: string): string | undefined {
+export function str(t: Table | undefined, key: string): string | undefined {
   const v = field(t, key);
   return typeof v === "string" ? stripEscapes(v) : undefined;
 }
 
-function bool(t: Table | undefined, key: string): boolean | undefined {
+export function bool(t: Table | undefined, key: string): boolean | undefined {
   const v = field(t, key);
   return typeof v === "boolean" ? v : undefined;
 }
@@ -86,7 +86,7 @@ function compact<T extends object>(o: T): T {
 // --- normalize -----------------------------------------------------------------------------------------------
 
 /** The `global` table: from `CommunitiesForeverDB = {...}` as the game writes it, or a fixture's `return {...}`. */
-function findGlobal(chunk: LuaChunk): Table | undefined {
+export function findGlobal(chunk: LuaChunk): Table | undefined {
   const db = table(field(chunk.globals, "CommunitiesForeverDB"));
   if (db !== undefined) return table(field(db, "global"));
   return table(chunk.returned);

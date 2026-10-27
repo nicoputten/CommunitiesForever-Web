@@ -1,5 +1,6 @@
 import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
+import type { FeedDay } from "@/core/feed";
 import type { Character, Dataset, Person } from "@/core/model";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
@@ -333,3 +334,44 @@ export const guildReports = sqliteTable("guild_reports", {
   /** Unix seconds. */
   reportedAt: integer("reported_at").notNull(),
 });
+
+// History for the weekly recap (WEB-41, src/server/history.ts). Derived from the stored uploads: written with every
+// accepted upload, rebuilt by rebuild(). The addon keeps only the last 7 days; these keep every day the site saw.
+
+/** The addon's activity feed (CF-22) per realm day per character; the copy with the latest activity wins. */
+export const feedDays = sqliteTable(
+  "feed_days",
+  {
+    /** Realm day: days since 1970-01-01. */
+    day: integer("day").notNull(),
+    guid: text("guid").notNull(),
+    /** Person key of the feed's owner. */
+    owner: text("owner").notNull(),
+    /** Unix seconds of the last activity that day, when known. */
+    at: integer("at"),
+    /** The upload it came from. */
+    sourceUpload: integer("source_upload").notNull(),
+    data: text("data", { mode: "json" }).$type<FeedDay>().notNull(),
+  },
+  (t) => [uniqueIndex("feed_days_day_guid_unique").on(t.day, t.guid)],
+);
+
+/** Whether each person shares their activity ("Share my activity", CF-22), from their newest record seen. */
+export const feedSharing = sqliteTable("feed_sharing", {
+  owner: text("owner").primaryKey(),
+  shared: integer("shared", { mode: "boolean" }).notNull(),
+  sourceUpload: integer("source_upload").notNull(),
+});
+
+/** Every sighting of every upload (the `locations` table keeps only the newest per character). */
+export const sightings = sqliteTable(
+  "sightings",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    guid: text("guid").notNull(),
+    zone: text("zone").notNull(),
+    seenAt: integer("seen_at").notNull(),
+    sourceUpload: integer("source_upload").notNull(),
+  },
+  (t) => [uniqueIndex("sightings_guid_seen_at_unique").on(t.guid, t.seenAt)],
+);

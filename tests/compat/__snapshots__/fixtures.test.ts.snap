@@ -114,6 +114,30 @@ exports[`every fixture normalizes > addon/v0.3/savedvariables.lua 1`] = `
 }
 `;
 
+exports[`every fixture normalizes > addon/v0.3/savedvariables.lua: its feeds 1`] = `
+[
+  {
+    "days": {
+      "20744": {
+        "Player-1-0000A001": {
+          "at": 1060,
+          "classFile": "MAGE",
+          "learned": [],
+          "levelFrom": 20,
+          "levelTo": 21,
+          "name": "Ada Example",
+          "quests": {},
+          "ranks": {},
+          "runs": [],
+        },
+      },
+    },
+    "owner": "Ada#1001",
+    "shared": true,
+  },
+]
+`;
+
 exports[`every fixture normalizes > addon/v0.4/savedvariables.lua 1`] = `
 {
   "characters": {
@@ -226,6 +250,30 @@ exports[`every fixture normalizes > addon/v0.4/savedvariables.lua 1`] = `
   "uploader": "Ada#1001",
   "version": 1060,
 }
+`;
+
+exports[`every fixture normalizes > addon/v0.4/savedvariables.lua: its feeds 1`] = `
+[
+  {
+    "days": {
+      "20744": {
+        "Player-1-0000A001": {
+          "at": 1060,
+          "classFile": "MAGE",
+          "learned": [],
+          "levelFrom": 20,
+          "levelTo": 21,
+          "name": "Ada Example",
+          "quests": {},
+          "ranks": {},
+          "runs": [],
+        },
+      },
+    },
+    "owner": "Ada#1001",
+    "shared": true,
+  },
+]
 `;
 
 exports[`every fixture normalizes > real/beta-2026-10.lua 1`] = `
@@ -486,4 +534,36 @@ exports[`every fixture normalizes > real/beta-2026-10.lua 1`] = `
   "uploader": "Ada#1001",
   "version": 1792614961,
 }
+`;
+
+exports[`every fixture normalizes > real/beta-2026-10.lua: its feeds 1`] = `
+[
+  {
+    "days": {
+      "20747": {
+        "Player-6842-0000A001": {
+          "at": 1792614959,
+          "classFile": "WARLOCK",
+          "learned": [
+            "Cooking",
+            "Mining",
+          ],
+          "levelFrom": 1,
+          "levelTo": 6,
+          "name": "Ada Example",
+          "quests": {
+            "Camping": 3,
+            "Durotar": 5,
+            "Valley of Trials": 10,
+            "Warlock": 3,
+          },
+          "ranks": {},
+          "runs": [],
+        },
+      },
+    },
+    "owner": "Ada#1001",
+    "shared": true,
+  },
+]
 `;
