@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Runs character and role picker</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.card{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.85);border:1px solid rgba(212,175,106,.22)}
+.h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.cap{font-size:12px;color:#8E98A8;line-height:1.5}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.t-fit{background:rgba(127,217,154,.14);color:#9BE3B0}
+.t-over{background:rgba(63,199,235,.14);color:#8FE3F7}
+.t-carry{background:rgba(212,175,106,.18);color:#F3DFAE}
+.t-low{background:rgba(240,167,116,.16);color:#F6C29C}
+.t-no{background:rgba(174,182,195,.1);color:#8E98A8}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:44px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0B1220;color:#AEB6C3;font:600 13px Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.seg button small{font:500 11px Inter,sans-serif;color:#7E8898}
+.seg button.on{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.seg button.on small{color:#D4AF6A}
+.seg button[disabled]{opacity:.4;cursor:not-allowed}
+.crow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow.sel{border-color:#D4AF6A;background:rgba(212,175,106,.10)}
+.crow.dis{opacity:.45;cursor:not-allowed}
+.cn{font:16px Marcellus,serif}
+.cm{font-size:12px;color:#8E98A8;margin-top:1px}
+.d{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 12px Inter,sans-serif;color:#0B0F14;flex:none}
+.menu{padding:6px;border-radius:12px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;font-size:14px;color:#E6E1D6}
+.mi.hl{background:rgba(212,175,106,.14)}
+.mi small{font-size:12px;color:#8E98A8}
+.mi.dis{color:#6E7888}
+.mg{padding:10px 10px 4px;font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.trig{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.trig.open{border-color:#D4AF6A;box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.f{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(174,182,195,.14)}
+.fn{width:32px;height:32px;border-radius:50%;background:#121B2A;border:1px solid rgba(212,175,106,.45);color:#F0D08E;font:600 13px/30px Inter,sans-serif;text-align:center}
+.f b{display:block;color:#F3EBDA;font-size:14px;font-weight:600;margin-bottom:3px}
+.f p{margin:0;font-size:13px;color:#AEB6C3;line-height:1.5}
+.f .fix{margin-top:6px;color:#9BE3B0}
+.f q{color:#F6C29C;quotes:'“' '”'}
+.sev{font:700 10px/1 Inter,sans-serif;padding:4px 6px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:2px}
+.s-bug{background:rgba(218,55,60,.2);color:#F59A9C}.s-ux{background:rgba(212,175,106,.2);color:#F3DFAE}.s-copy{background:rgba(140,149,245,.2);color:#C3C7FB}.s-pol{background:rgba(174,182,195,.14);color:#C4C9D0}
+
+</style>
+</helmet>
+<div style="width: 1440px; box-sizing: border-box; padding: 44px 48px 56px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px"><div><h1 style="margin: 0; font: 38px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">Runs · character &amp; role picker</h1><p style="margin: 6px 0 0; font-size: 14px; color: #8E98A8; max-width: 1150px; line-height: 1.55">Replaces the native character dropdown on the run page, in Plan a run (Lead as) and in Edit run. Pick any character, then a role the class can play, then answer. Example: Ivo joining the Graveyard (26–36) with a level 22 priest or a level 57 mage.</p></div><div style="display: grid; grid-template-columns: 520px 375px minmax(0, 1fr); gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Desktop · popover from the Answer button</div><section class="card" style="width: 520px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; border-color: rgba(212,175,106,.5); box-shadow: 0 24px 60px rgba(0,0,0,.55)">
+  <div style="display: flex; justify-content: space-between; align-items: baseline"><div><div style="font: 20px Marcellus, serif; color: #F3EBDA">Join Scarlet Monastery: Graveyard</div><div class="cap">Fri 30 Oct 20:30 · levels 26–36</div></div><span style="color: #8E98A8">✕</span></div>
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div class="lab">1 · Character</div>
+    <div role="listbox" aria-label="Your characters" style="display: flex; flex-direction: column; gap: 2px">
+      <div class="crow sel" role="option" aria-selected="true"><span class="d" style="background: #FFFFFF; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">KC</span><div style="min-width: 0"><div class="cn pr">Kaz Coldbrew</div><div class="cm">22 Priest · Holy</div></div><div style="display: flex; gap: 8px; align-items: center"><span class="tag t-low">4 below</span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3.5"></path></svg></div></div>
+      <div class="crow" role="option" aria-selected="false"><span class="d" style="background: #3FC7EB; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">IF</span><div style="min-width: 0"><div class="cn ma">Icyra Frostwhisper</div><div class="cm">57 Mage · Frost</div></div><div style="display: flex; gap: 8px; align-items: center"><span class="tag t-carry">carry · +21</span></div></div>
+    </div>
+    <div class="cap">All your characters are listed. The tag says how well each one fits; nothing is hidden.</div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div class="lab">2 · Role</div>
+    <div class="seg" role="radiogroup" aria-label="Role">
+      <button class="on" role="radio" aria-checked="true">Healer<small>open · your talents</small></button>
+      <button role="radio" aria-checked="false">Damage<small>3 open</small></button>
+      <button role="radio" aria-checked="false" disabled="" title="Priests can't tank">Tank<small>not for priests</small></button>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <div class="lab">3 · Answer</div>
+    <div class="seg">
+      <button class="on" style="border-color: rgba(127,217,154,.6); background: rgba(127,217,154,.14); color: #9BE3B0">I'm in</button><button>Maybe</button><button>Can't</button>
+    </div>
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06)">
+    <div style="flex: 1; font-size: 13px; color: #AEB6C3">You join as <b class="pr" style="font-weight: 500">Kaz Coldbrew</b> · Healer<br><span class="cap">4 levels below: tough, but the group can carry you.</span></div>
+    <button class="btn pri">Save answer</button>
+  </div>
+</section></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Phone · bottom sheet</div><div style="width: 375px; height: 720px; border-radius: 30px; padding: 10px; background: #02050A; box-shadow: 0 0 0 1px rgba(212,175,106,.3); box-sizing: border-box">
+  <div style="width: 100%; height: 100%; border-radius: 22px; overflow: hidden; position: relative; background: #070C15">
+    <div style="position: absolute; inset: 0; background: rgba(2,5,10,.6)"></div>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; border-radius: 18px 18px 0 0; background: #0B1322; border-top: 1px solid rgba(212,175,106,.45); padding: 10px 16px 18px; display: flex; flex-direction: column; gap: 12px">
+      <span style="align-self: center; width: 40px; height: 4px; border-radius: 2px; background: #3A4558"></span>
+      <div style="font: 18px Marcellus, serif; color: #F3EBDA">Join the Graveyard</div>
+      <div class="lab">Character</div>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div class="crow" role="option" aria-selected="false"><span class="d" style="background: #FFFFFF; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">KC</span><div style="min-width: 0"><div class="cn pr">Kaz Coldbrew</div><div class="cm">22 Priest</div></div><div style="display: flex; gap: 8px; align-items: center"><span class="tag t-low">4 below</span></div></div>
+        <div class="crow sel" role="option" aria-selected="true"><span class="d" style="background: #3FC7EB; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">IF</span><div style="min-width: 0"><div class="cn ma">Icyra Frostwhisper</div><div class="cm">57 Mage</div></div><div style="display: flex; gap: 8px; align-items: center"><span class="tag t-carry">carry</span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3.5"></path></svg></div></div>
+      </div>
+      <div class="lab">Role</div>
+      <div class="seg"><button disabled="">Healer<small>not for mages</small></button><button class="on">Damage<small>3 open</small></button><button disabled="">Tank<small>—</small></button></div>
+      <div style="padding: 10px 12px; border-radius: 10px; background: rgba(212,175,106,.08); border: 1px solid rgba(212,175,106,.3); font-size: 12px; color: #E6D3A6; line-height: 1.5">Icyra is 21 levels over. The others get less XP from kills, but runs go fast.</div>
+      <div class="seg"><button class="on" style="border-color: rgba(127,217,154,.6); background: rgba(127,217,154,.14); color: #9BE3B0">I'm in</button><button>Maybe</button><button>Can't</button></div>
+      <button class="btn pri" style="width: 100%">Save answer</button>
+    </div>
+  </div>
+</div></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">States</div><section class="card" style="display: flex; flex-direction: column; gap: 14px">
+  <h2 class="h2" style="font-size: 18px">After answering</h2>
+  <div style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; background: rgba(127,217,154,.08); border: 1px solid rgba(127,217,154,.35)"><span class="d" style="background: #FFFFFF; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">KC</span><div style="flex: 1"><div style="font-size: 14px; color: #E6E1D6">You're in as <span class="pr">Kaz Coldbrew</span> · Healer</div><div class="cap">Answered Tue 21:40 · Discord updated</div></div><button class="btn sec" style="min-height: 38px">Change</button></div>
+  <div style="display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; background: rgba(212,175,106,.06); border: 1px solid rgba(212,175,106,.3)"><span class="d" style="background: #3FC7EB; color: #0B0F14; width: 36px; height: 36px; font-size: 12px">IF</span><div style="flex: 1"><div style="font-size: 14px; color: #E6E1D6">Damage is full · you'd be <b style="color: #F3DFAE">reserve</b> as Icyra Frostwhisper</div><div class="cap">You move up when someone drops out. The organiser can also move you.</div></div></div>
+</section></div>
+  </div>
+  <div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: start"><section class="card" style="display: flex; flex-direction: column; gap: 12px">
+  <h2 class="h2" style="font-size: 18px">Level fit rules (same everywhere)</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #C9CFD9">
+    <tr><td style="padding: 6px 0; width: 150px"><span class="tag t-fit">fits</span></td><td>Inside the range</td><td style="color: #8E98A8">Counts as “can join”</td></tr>
+    <tr><td style="padding: 6px 0"><span class="tag t-over">+3 over</span></td><td>1–9 levels above the top</td><td style="color: #8E98A8">Selectable, no warning</td></tr>
+    <tr><td style="padding: 6px 0"><span class="tag t-carry">carry · +21</span></td><td>10+ above the top</td><td style="color: #8E98A8">Selectable, one-line note about XP</td></tr>
+    <tr><td style="padding: 6px 0"><span class="tag t-low">4 below</span></td><td>1–5 below the bottom</td><td style="color: #8E98A8">Selectable, “tough” note</td></tr>
+    <tr><td style="padding: 6px 0"><span class="tag t-no">16 below</span></td><td>6+ below the bottom</td><td style="color: #8E98A8">Listed, can only answer Maybe</td></tr>
+  </table>
+  <div class="cap">Suggestions (“could fill”) only use <b style="color: #E6E1D6">fits</b> and <b style="color: #E6E1D6">over</b>. Carries are never suggested, only chosen.</div>
+</section><section class="card" style="display: flex; flex-direction: column; gap: 12px">
+  <h2 class="h2" style="font-size: 18px">Roles per class</h2>
+  <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px 18px; font-size: 13px; color: #C9CFD9">
+    <span class="lab">Class</span><span class="lab">Tank</span><span class="lab">Healer</span><span class="lab">Damage</span>
+    <span class="wa">Warrior</span><span>✓</span><span class="muted">–</span><span>✓</span>
+    <span class="pa">Paladin</span><span>✓</span><span>✓</span><span>✓</span>
+    <span class="dr">Druid</span><span>✓</span><span>✓</span><span>✓</span>
+    <span class="pr">Priest</span><span class="muted">–</span><span>✓</span><span>✓</span>
+    <span class="sh">Shaman</span><span class="muted">–</span><span>✓</span><span>✓</span>
+    <span class="ma">Mage · Warlock · Hunter · Rogue</span><span class="muted">–</span><span class="muted">–</span><span>✓</span>
+  </div>
+  <div class="cap">The default role comes from talents (or the role set in the addon). Changing it here is per run and never changes the addon.</div>
+</section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

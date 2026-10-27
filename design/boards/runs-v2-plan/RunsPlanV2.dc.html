@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan a run v2</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.card{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.85);border:1px solid rgba(212,175,106,.22)}
+.h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.cap{font-size:12px;color:#8E98A8;line-height:1.5}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.t-fit{background:rgba(127,217,154,.14);color:#9BE3B0}
+.t-over{background:rgba(63,199,235,.14);color:#8FE3F7}
+.t-carry{background:rgba(212,175,106,.18);color:#F3DFAE}
+.t-low{background:rgba(240,167,116,.16);color:#F6C29C}
+.t-no{background:rgba(174,182,195,.1);color:#8E98A8}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:44px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0B1220;color:#AEB6C3;font:600 13px Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.seg button small{font:500 11px Inter,sans-serif;color:#7E8898}
+.seg button.on{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.seg button.on small{color:#D4AF6A}
+.seg button[disabled]{opacity:.4;cursor:not-allowed}
+.crow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow.sel{border-color:#D4AF6A;background:rgba(212,175,106,.10)}
+.crow.dis{opacity:.45;cursor:not-allowed}
+.cn{font:16px Marcellus,serif}
+.cm{font-size:12px;color:#8E98A8;margin-top:1px}
+.d{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 12px Inter,sans-serif;color:#0B0F14;flex:none}
+.menu{padding:6px;border-radius:12px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;font-size:14px;color:#E6E1D6}
+.mi.hl{background:rgba(212,175,106,.14)}
+.mi small{font-size:12px;color:#8E98A8}
+.mi.dis{color:#6E7888}
+.mg{padding:10px 10px 4px;font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.trig{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.trig.open{border-color:#D4AF6A;box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.f{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(174,182,195,.14)}
+.fn{width:32px;height:32px;border-radius:50%;background:#121B2A;border:1px solid rgba(212,175,106,.45);color:#F0D08E;font:600 13px/30px Inter,sans-serif;text-align:center}
+.f b{display:block;color:#F3EBDA;font-size:14px;font-weight:600;margin-bottom:3px}
+.f p{margin:0;font-size:13px;color:#AEB6C3;line-height:1.5}
+.f .fix{margin-top:6px;color:#9BE3B0}
+.f q{color:#F6C29C;quotes:'“' '”'}
+.sev{font:700 10px/1 Inter,sans-serif;padding:4px 6px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:2px}
+.s-bug{background:rgba(218,55,60,.2);color:#F59A9C}.s-ux{background:rgba(212,175,106,.2);color:#F3DFAE}.s-copy{background:rgba(140,149,245,.2);color:#C3C7FB}.s-pol{background:rgba(174,182,195,.14);color:#C4C9D0}
+
+</style>
+</helmet>
+<div style="width: 1440px; box-sizing: border-box; padding: 44px 48px 56px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px"><div><h1 style="margin: 0; font: 38px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">Runs · Plan a run v2, dropdowns &amp; bands</h1><p style="margin: 6px 0 0; font-size: 14px; color: #8E98A8; max-width: 1150px; line-height: 1.55">Plan a run with the new dungeon dropdown (search and groups), Lead as with a role, day and time as chips. Plus the dropdown component every native select gets replaced with, and the fixed roster bands.</p></div><div style="display: grid; grid-template-columns: 600px minmax(0, 1fr); gap: 36px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Plan a run · form</div><section class="card" style="width: 600px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px"><span class="lab">Dungeon</span><div class="trig"><span>Scarlet Monastery: Graveyard <span class="muted">· 26–36</span></span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div><span class="cap">6 friends' characters fit · no healer in range</span></div>
+  <div style="display: flex; flex-direction: column; gap: 8px"><span class="lab">Lead as</span>
+    <div class="trig"><span style="display: flex; gap: 10px; align-items: center"><span class="d" style="background: #C69B6D; color: #0B0F14; width: 28px; height: 28px; font-size: 9px">VB</span><span class="wa">Vesgar Bloodhoof</span> <span class="muted">27</span> <span class="tag t-fit">fits</span></span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div>
+    <div class="seg"><button class="on">Tank<small>your talents</small></button><button>Damage<small></small></button><button disabled="">Healer<small>not for warriors</small></button></div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px"><span class="lab">Day</span>
+    <div style="display: flex; gap: 8px">
+      <button class="chip" style="height: 44px; flex: none">Today</button><button class="chip" style="height: 44px; flex: none">Wed 28</button><button class="chip" style="height: 44px; flex: none">Thu 29</button><button class="chip act" style="height: 44px; flex: none">Fri 30</button><button class="chip" style="height: 44px; flex: none">Sat 31</button><button class="chip" style="height: 44px; flex: none">Sun 1</button><button class="chip" aria-label="Pick another date" style="height: 44px; width: 44px; padding: 0; justify-content: center; flex: none"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4AF6A" stroke-width="1.4" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="10" rx="2"></rect><path d="M1.5 6h11M4.5 1v3M9.5 1v3"></path></svg></button>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px"><span class="lab">Time</span>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="chip" style="height: 44px">19:00</button><button class="chip" style="height: 44px">19:30</button><button class="chip" style="height: 44px">20:00</button><button class="chip act" style="height: 44px">20:30</button><button class="chip" style="height: 44px">21:00</button><button class="chip" style="height: 44px">Other…</button></div>
+    <span class="cap">Your time · Europe/Amsterdam · friends see it in their own time</span>
+  </div>
+  <div style="display: flex; gap: 10px"><button class="btn pri">Plan run</button><button class="btn ghost">Cancel</button></div>
+</section></div>
+    <div style="display: flex; flex-direction: column; gap: 26px">
+      <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Dungeon dropdown · searching “scar”</div><div style="position: relative; width: 520px">
+  <div class="trig open"><span style="display: flex; gap: 8px; align-items: center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8E98A8" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5L13 13"></path></svg>scar<span style="color: #F0D08E">|</span></span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div>
+  <div class="menu" role="listbox" style="margin-top: 6px">
+    <div class="mg">Fits your characters</div>
+    <div class="mi hl" role="option" aria-selected="true"><span><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3.5"></path></svg></span><span>Scarlet Monastery: Graveyard <small>· 26–36</small></span><small style="color: #9BE3B0">Vesgar 27 fits</small></div>
+    <div class="mg">Other Scarlet Monastery wings</div>
+    <div class="mi" role="option" aria-selected="false"><span></span><span>Scarlet Monastery: Library <small>· 29–39</small></span><small style="color: #F6C29C">Vesgar 2 below</small></div>
+    <div class="mi" role="option" aria-selected="false"><span></span><span>Scarlet Monastery: Armory <small>· 32–42</small></span><small style="color: #F6C29C">Vesgar 5 below</small></div>
+    <div class="mi" role="option" aria-selected="false"><span></span><span>Scarlet Monastery: Cathedral <small>· 35–45</small></span><small style="">no fit</small></div>
+    <div style="padding: 8px 10px 4px; font-size: 12px; color: #7E8898; display: flex; justify-content: space-between"><span>↑↓ to move · Enter to pick · Esc to close</span><span>4 of 31</span></div>
+  </div>
+</div></div>
+      <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Dungeon dropdown · opened, no search yet</div><div class="menu" role="listbox" style="width: 520px; box-sizing: border-box">
+  <div class="mg">Fits your characters</div>
+  <div class="mi"><span></span><span>Scarlet Monastery: Graveyard <small>· 26–36</small></span><small style="color: #9BE3B0">fits</small></div>
+  <div class="mi"><span></span><span>Shadowfang Keep <small>· 22–30</small></span><small style="color: #9BE3B0">fits</small></div>
+  <div class="mi"><span></span><span>Excavation Site <small>· 26–33 · Forever</small></span><small style="color: #9BE3B0">fits</small></div>
+  <div class="mg">All dungeons by level</div>
+  <div class="mi"><span></span><span>Ragefire Chasm <small>· 13–18</small></span><small>Twinkle 5 below</small></div>
+  <div class="mi"><span></span><span>Hall of Thanes <small>· 13–20 · Forever</small></span><small>Twinkle 3 below</small></div>
+  <div class="mi dis"><span></span><span>… 24 more, sorted by level</span><small></small></div>
+</div></div>
+      <section class="card" style="display: flex; flex-direction: column; gap: 16px">
+  <h2 class="h2" style="font-size: 18px">Dropdown component (replaces every native select)</h2>
+  <div style="display: grid; grid-template-columns: repeat(2, max-content); gap: 14px 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px"><span class="cap">Default</span><div class="trig " style="width: 260px"><span>Scarlet Monastery: Graveyard</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div></div>
+    <div style="display: flex; flex-direction: column; gap: 6px"><span class="cap">Placeholder</span><div class="trig " style="width: 260px"><span class="muted">Pick a dungeon</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div></div>
+    <div style="display: flex; flex-direction: column; gap: 6px"><span class="cap">Open / focus</span><div class="trig open" style="width: 260px"><span>Scarlet Monastery: Graveyard</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div></div>
+    <div style="display: flex; flex-direction: column; gap: 6px"><span class="cap">Disabled</span><div class="trig " style="width: 260px"><span style="color: #6E7888">No characters yet</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5"></path></svg></div></div>
+  </div>
+  <div class="cap" style="max-width: 560px">Trigger 44 px, #0B1220, 1 px line, gold caret. Menu: surface #0E1626 with a gold line, 12 px radius, group headers in caps, an option shows a name, dim meta and a right-side hint; selected gets a gold check, keyboard highlight is a gold wash. Disabled options stay visible with a reason. With 8+ options there's a search field at the top. Under 640 px it opens as a bottom sheet.</div>
+</section>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab">Roster bands v2</div><section class="card" style="display: flex; flex-direction: column; gap: 10px; box-sizing: border-box">
+  <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="h2" style="font-size: 16px">Roster · dungeon bands</h2><span class="cap">8 of 11 shown</span></div>
+  <div style="position: relative; height: 104px"><span style="position: absolute; left: 20.3%; width: 8.5%; top: 0px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="Ragefire Chasm 13–18 · 2">Ragefire Chasm 13–18 · 2</span><span style="position: absolute; left: 35.6%; width: 13.6%; top: 0px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="Shadowfang Keep 22–30 · 4">Shadowfang Keep 22–30 · 4</span><span style="position: absolute; left: 52.5%; width: 16.9%; top: 0px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="SM Armory 32–42 · 2">SM Armory 32–42 · 2</span><span style="position: absolute; left: 20.3%; width: 11.9%; top: 26px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="Hall of Thanes 13–20 · 2">Hall of Thanes 13–20 · 2</span><span style="position: absolute; left: 42.4%; width: 16.9%; top: 26px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.22); color: #F3DFAE; border: 1px solid #D4AF6A" title="SM Graveyard 26–36 · 6 · 1 run">SM Graveyard 26–36 · 6 · 1 run</span><span style="position: absolute; left: 39.0%; width: 13.6%; top: 52px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="Blackfathom Deeps 24–32 · 4">Blackfathom Deeps 24–32 · 4</span><span style="position: absolute; left: 47.5%; width: 16.9%; top: 52px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="SM Library 29–39 · 4">SM Library 29–39 · 4</span><span style="position: absolute; left: 39.0%; width: 13.6%; top: 78px; height: 22px; border-radius: 5px; font-size: 11px; line-height: 22px; padding: 0 6px; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(212,175,106,0.08); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3)" title="The Stockade 24–32 · 4">The Stockade 24–32 · 4</span>
+    <div class="menu" style="position: absolute; left: 42.4%; top: 50px; width: 250px; z-index: 4; padding: 12px 14px"><div style="font: 15px Marcellus, serif; color: #F3EBDA">Scarlet Monastery: Graveyard</div><div class="cap">26–36 · 6 characters fit · no healer</div><div style="font-size: 12px; color: #F3DFAE; margin: 4px 0 8px">1 run · Fri 20:30</div><div style="display: flex; gap: 6px"><button class="btn pri" style="min-height: 34px; padding: 0 12px; font-size: 12px">Plan a run</button><button class="btn ghost" style="min-height: 34px; padding: 0 12px; font-size: 12px">View run</button></div></div>
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center"><span class="cap">Max 4 rows · sorted by how many fit · short names, full name on hover</span><a href="#" style="font-size: 13px; text-decoration: none">Show all 11</a></div>
+</section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
