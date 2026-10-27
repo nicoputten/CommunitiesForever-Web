@@ -85,6 +85,32 @@ One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one he
 - **Scarlet Monastery is four dungeons** (`src/core/gamedata/dungeons.ts`, roster bands, character page fit). It is one entry with 26–45; Graveyard, Library, Armory and Cathedral each have their own level range. Split it into four wings with sourced ranges (`docs/WOW-FOREVER.md`, CLAUDE.md rule 10; check whether Forever changed them). The addon's zone text is "Scarlet Monastery" for every wing, so the map and zone aliases keep one place (Nico, 2026-10-27).
 - **Flaky e2e test** `tests/e2e/atmosphere.spec.ts` "the map page is alive, data pages are calm": in CI it sometimes finds animations still running on `/roster` (24 on PR #40's first run, twice in a row), passes on a rerun and locally. Find what runs there (likely skeleton shimmer or a transition right after navigation) and wait for it properly.
 
+## E7 Discord bot
+The bot lives in its own public repo, [CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord) (BOT-01..07). The site is its only data source: it decides milestones, asks, the recap and who is linked; the bot formats and posts (decided with Nico, 2026-10-27). Design: the canvas's §12 "Discord bot" (summary and boards in the bot repo's `docs/DESIGN-NOTES.md` and `design/boards/`). Order: WEB-38, WEB-39, then WEB-40..42 as the bot needs them.
+
+### WEB-38 Bot API
+- `/api/bot/v1/` with one Bearer bot token (stored hashed, like the uploader tokens; created and revoked by the admin, shown once). Session cookies are not accepted there, the bot token nowhere else (CLAUDE.md rule 6 gets this endpoint).
+- `GET settings`, `GET events?after=<cursor>` (oldest first, ids, a cursor that survives restarts), `POST events/<id>/posted` (the Discord message id; an event is handed out until acknowledged, never posted twice).
+- Milestone events per accepted upload, from the session report's data: every 10 levels, level 60, a profession at its cap, a new character; grouped per upload.
+- The contract in `docs/BOT-API.md` (fields, errors, versioning: only optional fields within v1), as `docs/UPLOADER-API.md` is for the uploader.
+- Tests: the token check, the cursor and acknowledgement, milestone events from sample uploads.
+
+### WEB-39 Link Discord and the Discord page
+- A "Discord" page from the account menu: link and unlink your Discord account (Discord OAuth2, `identify` scope only), your link status. Stored: Discord user id ↔ BattleTag; never shown to others, never in posts.
+- Admin (on the same page): the bot token (WEB-38), channel, toggles per post type (milestones, asks, recap), recap day and time, mention role, a test post, the list of linked friends.
+- `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`), answered for a Discord user id only when it is linked to a member or guest.
+- No board for this page yet (`BotAdmin` is named in §12 but not exported): ask Nico for the export or his OK to build it from existing components (rule 12).
+- Manual: Nico creates the Discord application's OAuth2 redirect for the site (secrets only in TrueNAS env).
+
+### WEB-40 Group asks
+- Asks from the site ("Ask who's up for it") and from the bot (`/ask`), later from the game (addon story: whether asks are stored in SavedVariables). An ask: dungeon, time, level range, role slots, answers (in / maybe / can't, with a character). Events for new asks and changed answers.
+- Open: roles per character (tank / healer / DPS) are not in the addon's data; ask Nico before inventing a rule.
+
+### WEB-41 Weekly recap and card images
+- The recap engine in `src/core` (pure, unit tested): headline templates, 4 core numbers, award, 4 rotating cards from the 48-card catalogue (bot repo, `bot-recap` board) with thresholds, interest score, 4-week cooldown, one card per friend, the week number as seed (a re-run gives the same recap), a short recap for quiet weeks. Cards whose data the addon doesn't record (dungeon runs, evenings together, shared quests) are left out until it does.
+- A recap event at the set day and time; a recap preview for the admin.
+- Card images rendered by the site (`GET cards/<id>.png`: level 60, recap header, map crops), with the map's CC BY-SA attribution where the map shows.
+
 ### Backlog (unordered, not yet stories)
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
