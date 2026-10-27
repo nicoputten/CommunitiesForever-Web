@@ -22,6 +22,24 @@ test.beforeEach(async ({ context, baseURL }) => {
   await signInAs(context, baseURL!, ADMIN);
 });
 
+/** The zoom's transform holds still for longer than the map's settle (MapStage SETTLE_MS, 120 ms). */
+async function mapSettled(page: import("@playwright/test").Page) {
+  const content = page.getByRole("group", { name: /^Map\./ }).locator(":scope > div");
+  const read = () => content.evaluate((el) => (el as HTMLElement).style.transform);
+  let last = "";
+  await expect
+    .poll(
+      async () => {
+        const now = await read();
+        const still = now !== "" && now === last;
+        last = now;
+        return still;
+      },
+      { intervals: [300] },
+    )
+    .toBe(true);
+}
+
 const marker = (page: import("@playwright/test").Page, name: string) =>
   page.getByRole("button", { name: new RegExp(`^${name},`) });
 
@@ -131,15 +149,13 @@ test("map: zoom buttons", async ({ page }) => {
 
 test("map: screenshot at continent zoom (2×)", async ({ page }) => {
   await openScreen(page, "/?continent=eastern-kingdoms");
-  // The first view frames the continent (a jump without motion); zooming before it lands zooms around the world's
-  // centre instead.
-  const zoomContent = page.getByRole("group", { name: /^Map\./ }).locator(":scope > div");
-  await expect
-    .poll(() => zoomContent.evaluate((el) => (el as HTMLElement).style.transform))
-    .not.toMatch(/^(|translate\(0px, 0px\) scale\(1\))$/);
+  // Zoom from the settled first view. It frames the continent, then settles (120 ms): on a phone the continent fits
+  // at 1×, so the view springs back to the whole world. Zooming before or after that gave two different screenshots.
+  await mapSettled(page);
   if (!isPhone(page)) await page.getByRole("button", { name: "Zoom in" }).click();
   else await page.getByRole("group", { name: /^Map\./ }).press("+");
   await expect(page.locator('[data-level="continent"]')).toBeVisible();
+  await mapSettled(page);
   await expectStyles(page.getByText("Booty Bay", { exact: true }), { "font-family": "var(--font-name)" });
   await expectAccessible(page, isPhone(page) ? OVERLAP : []);
   await expectScreenshot(page, "map-continent");
