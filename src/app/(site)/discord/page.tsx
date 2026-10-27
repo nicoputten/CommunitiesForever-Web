@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
@@ -46,6 +47,7 @@ import {
   linkAction,
   revokeBotTokenAction,
   testPostAction,
+  testRunPostAction,
   timeZoneAction,
   unlinkAction,
 } from "./actions";
@@ -400,12 +402,19 @@ function AdminSections({ adminTag, bot, now }: { adminTag: string | undefined; b
           </div>
         </div>
         <div className={styles.buttons}>
-          <button type="button" className={styles.secondary} disabled title="Comes with runs">
-            Send a test run post
-          </button>
-          <button type="button" className={styles.ghost} disabled title="Comes with runs">
+          <form action={testRunPostAction}>
+            <button
+              type="submit"
+              className={styles.secondary}
+              disabled={bot.state === "none" || !s.runs}
+              title={bot.state === "none" ? "Create a bot token first" : !s.runs ? "Run posts are off" : undefined}
+            >
+              Send a test run post
+            </button>
+          </form>
+          <Link href="/runs/new" className={styles.ghost}>
             See how runs look in Discord
-          </button>
+          </Link>
         </div>
       </section>
     </>

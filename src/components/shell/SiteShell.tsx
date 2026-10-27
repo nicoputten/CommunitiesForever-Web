@@ -18,6 +18,8 @@ export interface SiteShellProps {
   /** Undefined: signed out (no user menu, no Upload). */
   viewer?: Viewer;
   signOut: () => Promise<void>;
+  /** Upcoming runs the viewer can join and hasn't answered (WEB-40). */
+  runsBadge?: number;
   children: ReactNode;
 }
 
@@ -25,7 +27,7 @@ export interface SiteShellProps {
  * The app shell around every signed-in page: top bar, stale-site banner, content, phone tab bar. Pages
  * are calm by default (the data-page glow); the map page adds its own <Atmosphere variant="map"> over it.
  */
-export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, children }: SiteShellProps) {
+export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, runsBadge, children }: SiteShellProps) {
   const stale = staleBanner(lastUploadAt, now);
   return (
     <PendingProvider>
@@ -39,6 +41,7 @@ export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, childr
           dataAgo={lastUploadAt === undefined ? undefined : timeAgo(lastUploadAt, now)}
           viewer={viewer}
           signOut={signOut}
+          {...(runsBadge === undefined ? {} : { runsBadge })}
         />
         {stale !== undefined && (
           <div className={styles.banner}>
@@ -50,7 +53,7 @@ export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, childr
         <main id="content" tabIndex={-1} className={styles.main}>
           {children}
         </main>
-        <TabBar />
+        <TabBar {...(runsBadge === undefined ? {} : { runsBadge })} />
       </div>
     </PendingProvider>
   );
