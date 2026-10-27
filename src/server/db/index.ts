@@ -9,9 +9,14 @@ export type Db = BetterSQLite3Database<typeof schema> & { $client: Database.Data
 
 export const DB_FILE = "communitiesforever.sqlite";
 
-/** DATA_DIR (.env.example): `./data` locally, `/data` in the container. */
+/**
+ * DATA_DIR (.env.example): `/data` in the container. Locally the default sits next to the repo, not in it: `next dev`
+ * watches the project folder, so a database inside it makes every write rebuild and reload the page (a reload loop).
+ */
+export const LOCAL_DATA_DIR = "../CommunitiesForever-Web-data";
+
 export function dataDir(env: Record<string, string | undefined> = process.env): string {
-  return env.DATA_DIR || "./data";
+  return env.DATA_DIR || LOCAL_DATA_DIR;
 }
 
 /** Opens (and creates) the database file and brings it to the latest migration. */

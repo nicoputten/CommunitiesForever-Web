@@ -76,7 +76,7 @@ Schema: `src/server/db/schema.ts`; service: `src/server/uploads.ts` (WEB-05).
 - `rebuild()` re-reads every stored upload in upload order, rejected ones too (a file with a newer schema can become ok after a site update), applies the own-file and community checks (not "may upload": that was checked when the file was stored) and recomputes statuses, summaries, members and the derived tables.
 - Migrations: `npm run db:generate -- --name <what>` writes `drizzle/NNNN_<what>.sql`; `openDatabase` applies them on open, and the server opens the database at start (`src/instrumentation.ts`, WEB-07). Released migration files are never edited (CLAUDE.md rule 5).
 - Sessions: JWT cookies (Auth.js, no session table) holding only the BattleTag; the role is read from the database on every request (see Access).
-- Data directory: `DATA_DIR` (`.env.example`; `./data` locally, `/data` in the container), file `communitiesforever.sqlite`, a TrueNAS dataset on the host.
+- Data directory: `DATA_DIR` (`.env.example`; locally `../CommunitiesForever-Web-data`, outside the repo because `next dev` watches the project folder and a database inside it reloads the page on every write; `/data` in the container), file `communitiesforever.sqlite`, a TrueNAS dataset on the host.
 
 ## Access
 Battle.net OAuth (region EU, OpenID issuer `https://eu.battle.net/oauth`, scope `openid`) only gives the BattleTag; it cannot tell who is in an in-game community. Membership therefore comes from the data (WEB-06). The rules are pure functions in `src/core/access.ts`; `src/server/access.ts` reads the access list from the database.
