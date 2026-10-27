@@ -1,0 +1,29 @@
+/* Admin page layout (WEB-18, no board; decided with Nico): members wide on the left, guests and blocked stacked on
+   the right, one column below 1024 px. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5-5);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.main,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

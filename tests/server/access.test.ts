@@ -5,15 +5,19 @@ import { gzipSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   AccessError,
+  addGuest,
   block,
   currentRole,
   listBlocks,
   listGuests,
+  listLastSeen,
   listMembers,
   putGuest,
   removeGuest,
+  touchLastSeen,
   unblock,
 } from "@/server/access";
+import { loadAdminView } from "@/server/admin";
 import { openDatabase, type Db } from "@/server/db";
 import { uploads } from "@/server/db/schema";
 import { loadState, rebuild, upload, UploadForbiddenError } from "@/server/uploads";
@@ -220,5 +224,46 @@ describe("guest list", () => {
     for (const bad of ["", "Gus", "Gus#", "#1234", "Gus Smith#1234", "Gus#12a"]) {
       expect(() => putGuest(db, bad, false, ADMIN)).toThrow(AccessError);
     }
+  });
+});
+
+describe("admin page (WEB-18)", () => {
+  it("adds a guest, refusing the admin, members, guests already listed and non-BattleTags", () => {
+    up(nicoFile, ADMIN);
+    expect(addGuest(db, "Gwen#4004", true, ADMIN, 1000, ADMIN)).toMatchObject({
+      battleTag: "Gwen#4004",
+      mayUpload: true,
+    });
+    expect(() => addGuest(db, "gwen#4004", false, ADMIN, 1000, ADMIN)).toThrow(
+      "Gwen#4004 is already on the guest list.",
+    );
+    expect(() => addGuest(db, "bob#2002", false, ADMIN, 1000, ADMIN)).toThrow("Bob#2002 is already a member.");
+    expect(() => addGuest(db, "nico#1000", false, ADMIN, 1000, ADMIN)).toThrow("That's you, the admin.");
+    expect(() => addGuest(db, "Gwen", false, ADMIN, 1000, ADMIN)).toThrow(AccessError);
+    expect(listGuests(db)).toHaveLength(1);
+  });
+
+  it("writes last seen at most once an hour", () => {
+    touchLastSeen(db, "Bob#2002", 1000);
+    touchLastSeen(db, "bob#2002", 1000 + 3599);
+    expect(listLastSeen(db).get("bob#2002")).toBe(1000);
+    touchLastSeen(db, "Bob#2002", 1000 + 3600);
+    expect(listLastSeen(db).get("bob#2002")).toBe(4600);
+  });
+
+  it("lists members with the upload that added them, guests and blocks", () => {
+    up(nicoFile, ADMIN);
+    addGuest(db, "Gwen#4004", false, ADMIN, 1100, ADMIN);
+    block(db, "Bob#2002", ADMIN, 1200, ADMIN);
+    touchLastSeen(db, ADMIN, 1300);
+    const view = loadAdminView(db, 1300 + 7200, ADMIN);
+    expect(view.members.map((m) => [m.battleTag, m.isAdmin, m.blocked, m.seen])).toEqual([
+      [ADMIN, true, false, "Last seen 2 h ago"],
+      ["Ada#1001", false, false, "Not seen yet"],
+      ["Bob#2002", false, true, "Not seen yet"],
+    ]);
+    expect(view.members[1]?.added).toEqual({ text: "Added by Nico's upload", uploadId: 1, at: 1000 });
+    expect(view.guests).toMatchObject([{ battleTag: "Gwen#4004", mayUpload: false, added: "Added by Nico" }]);
+    expect(view.blocks).toMatchObject([{ battleTag: "Bob#2002", blocked: "Blocked by Nico", blockedAt: 1200 }]);
   });
 });

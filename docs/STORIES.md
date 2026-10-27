@@ -21,10 +21,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E5 Screens
 
-### WEB-18 Admin page: guest list
-- Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
-- Validation of BattleTag format; adding an existing member says so.
-
 ### WEB-27 Roll call panel
 - Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
 - Filters: everyone or one friend, New (under 32 h), faction, level range; legend (new, days, week+).

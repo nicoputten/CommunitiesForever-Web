@@ -62,7 +62,8 @@ test.describe("app shell", () => {
     await trigger.click();
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
     const panel = page.locator(`[id="${await trigger.getAttribute("aria-controls")}"]`);
-    await expect(panel.getByText("Admin", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Admin", { exact: true }).first()).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
     await expect(panel.getByRole("button", { name: "Sign out" })).toBeVisible();
     // On phone, Upload moves from the bar into the menu.
     const menuUpload = panel.getByRole("link", { name: "Upload" });

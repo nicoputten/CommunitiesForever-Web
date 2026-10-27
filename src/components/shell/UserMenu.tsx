@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { motionOn, setMotion, subscribeMotion } from "@/components/atmosphere/motion";
-import { MotionIcon, SignOutIcon, UploadIcon } from "@/components/ui/icons";
+import { AdminIcon, MotionIcon, SignOutIcon, UploadIcon } from "@/components/ui/icons";
 import type { Viewer } from "./viewer";
 import styles from "./UserMenu.module.css";
 
@@ -16,7 +16,8 @@ export interface UserMenuProps {
 }
 
 /**
- * The signed-in user: avatar and BattleTag, opening a panel with the Motion switch and sign out (and Upload on phone).
+ * The signed-in user: avatar and BattleTag, opening a panel with Admin (admin only, WEB-18), the Motion switch and sign
+ * out (and Upload on phone).
  * A disclosure, not an ARIA menu: a short list reached with Tab; Escape and a click outside close it.
  */
 export function UserMenu({ viewer, signOut }: UserMenuProps) {
@@ -83,6 +84,14 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
               <Link href="/upload" className={styles.item}>
                 <UploadIcon className={styles.icon} />
                 Upload
+              </Link>
+            </li>
+          )}
+          {viewer.role === "admin" && (
+            <li>
+              <Link href="/admin" className={styles.item} aria-current={pathname === "/admin" ? "page" : undefined}>
+                <AdminIcon className={styles.icon} />
+                Admin
               </Link>
             </li>
           )}
