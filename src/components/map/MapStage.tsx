@@ -341,6 +341,9 @@ export function MapStage({
   /** After a pan or zoom: keep the world on screen, name the continent and (at 4×) the zone in the centre. */
   const settled = useCallback(() => {
     const z = zoomer.current;
+    // A fly or spring under way is not a view to settle on, even when its frames lag behind (a busy page): its last
+    // frame is a transform too, which settles again.
+    if (z?.instance.animation != null) return;
     const c = centre();
     const scale = layout()?.scale;
     if (z === null || c === undefined || scale === undefined || split === undefined) return;
@@ -412,7 +415,11 @@ export function MapStage({
     if (!zoomable || frame == null) return;
     const observer = new ResizeObserver(() => {
       const v = view.current;
-      if (v !== undefined) void goTo(v.x, v.y, v.scale, 0);
+      if (v === undefined) return;
+      // A jump (0 ms) does not stop a fly under way, whose next frames would win and leave the map half-way (the
+      // phone's sheet appears during the first fly to a linked character, WEB-28): a short animation replaces it.
+      const flying = zoomer.current?.instance.animation != null;
+      void goTo(v.x, v.y, v.scale, flying ? motionMs("--dur-fast") : 0);
     });
     observer.observe(frame);
     if (root.current !== null) observer.observe(root.current);
