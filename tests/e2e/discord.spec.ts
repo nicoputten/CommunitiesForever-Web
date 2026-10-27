@@ -202,4 +202,19 @@ test.describe("the admin", () => {
     await page.getByRole("link", { name: "Back to Discord" }).click();
     await expect(page).toHaveURL(/\/discord$/);
   });
+
+  test("the bot gets card images from the production server (WEB-41d)", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one bot token for the site");
+    await page.goto("/discord");
+    const card = page.getByRole("region", { name: "Bot token" });
+    await card.getByRole("button", { name: /^(Create|Replace) token$/ }).click();
+    const token = await card.getByLabel(/won't be shown again/).inputValue();
+    const headers = { authorization: `Bearer ${token}` };
+    // Ves Doombringer of the sample, seen in a zone the map draws.
+    const res = await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png", { headers });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toBe("image/png");
+    expect((await res.body()).subarray(1, 4).toString("latin1")).toBe("PNG");
+    expect((await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png")).status()).toBe(401);
+  });
 });

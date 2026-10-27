@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Every dropdown on the site is now the site's own (Plan a run, your answer's character, the Discord page): a search from 8 options, groups, and on a phone a sheet from the bottom. The date and time fields are the site's own too, without the browser's icons, and pages no longer jump sideways when the scrollbar appears.
+- Card images for the Discord bot: the weekly recap's header (the award winner or the busiest zone on the map), the Zone of the week map, milestone cards (level 60, a new character at 60, a profession at 300) and where a character was last seen, in the site's own style.
 - The weekly recap: every week at the recap time (the Discord page, Sunday 13:00 by default) the site puts together the week of the community (a headline, the numbers, "<community> of the week", four cards that change from week to week and a challenge) and the bot posts it. The admin sees the coming one under Discord › Preview next recap.
 - The uploader app can fetch the upcoming runs (the next 14 days) to show them in the game, once the app and the addon support it.
 
