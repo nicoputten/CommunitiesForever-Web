@@ -34,6 +34,14 @@ test("the top bar's Uploader opens the page, which links to the manual upload", 
   await expect(page).toHaveURL(/\/upload$/);
 });
 
+test("the upload history on the uploader page opens a report", async ({ page }) => {
+  await page.goto("/uploader");
+  const history = page.getByRole("complementary", { name: "History" });
+  await expect(history).toBeVisible();
+  await history.getByTestId("history-line").first().click();
+  await expect(page).toHaveURL(/\/upload\/\d+$/);
+});
+
 test("allowing a connection gives the app its token", async ({ page }, info) => {
   const name = device(info, "allow");
   const started = await startPairing(page.request, name);

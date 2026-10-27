@@ -24,11 +24,30 @@
   min-height: var(--size-touch);
 }
 
+/* Desktop: Get the app with the upload history under it, Your uploaders beside both. Phone: Get the app, Your
+   uploaders, History (the history is not on the board: Nico, 2026-10-27). */
 .columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  grid-template-areas:
+    "get yours"
+    "history yours";
+  grid-template-rows: auto 1fr;
   gap: var(--s-5);
   align-items: start;
+}
+
+.get {
+  grid-area: get;
+}
+
+.yours {
+  grid-area: yours;
+}
+
+.history {
+  grid-area: history;
+  min-width: 0;
 }
 
 /* --- boxes ------------------------------------------------------------------------------------------------------ */
@@ -401,6 +420,11 @@
 @media (max-width: 767px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "get"
+      "yours"
+      "history";
+    grid-template-rows: none;
   }
 
   .pairButtons,

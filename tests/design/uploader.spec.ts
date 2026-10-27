@@ -74,6 +74,10 @@ test("uploader: design values", async ({ page }) => {
     "min-height": "var(--size-touch)",
   });
   await expectStyles(page.getByText("Create a token by hand"), { color: "var(--gold)" });
+  await expectStyles(page.getByRole("complementary", { name: "History" }), {
+    "border-radius": "var(--r-panel)",
+    "background-color": "var(--surface)",
+  });
 });
 
 test("uploader: touch targets", async ({ page }) => {

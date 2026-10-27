@@ -10,9 +10,12 @@ import { PairingRequest } from "@/components/uploader/PairingRequest";
 import { TokenByHand } from "@/components/uploader/TokenByHand";
 import { UploaderList } from "@/components/uploader/UploaderList";
 import { DownloadIcon } from "@/components/ui/icons";
+import { UploadHistory } from "@/components/upload/UploadHistory";
+import { historyLine } from "@/core/views/upload";
 import { NOTICES, noticeOk, type Notice, parseNotice, uploaderRows } from "@/core/views/uploader";
 import { getDb } from "@/server/db";
 import { activeTokens, findPairing, limits, type PendingPairing } from "@/server/uploader";
+import { displayNames, listUploads } from "@/server/uploads";
 import { createTokenAction, decideAction, revokeAction } from "./actions";
 import styles from "@/components/uploader/Uploader.module.css";
 
@@ -52,6 +55,7 @@ export default async function UploaderPage({
   }
   const site = getSiteInfo().name;
   const rows = uploaderRows(activeTokens(db, viewer.battleTag), now);
+  const names = displayNames(db);
 
   return (
     <div className={styles.page}>
@@ -74,7 +78,7 @@ export default async function UploaderPage({
       {pairing !== undefined && <PairingRequest pairing={pairing} site={site} action={decideAction} />}
 
       <div className={styles.columns}>
-        <section aria-labelledby="uploader-get" className={styles.box}>
+        <section aria-labelledby="uploader-get" className={`${styles.box} ${styles.get}`}>
           <h2 id="uploader-get" className={styles.boxTitle}>
             Get the app
           </h2>
@@ -110,7 +114,7 @@ export default async function UploaderPage({
           </ol>
         </section>
 
-        <section aria-labelledby="uploader-yours" className={styles.box}>
+        <section aria-labelledby="uploader-yours" className={`${styles.box} ${styles.yours}`}>
           <div className={styles.boxHead}>
             <h2 id="uploader-yours" className={styles.boxTitle}>
               Your uploaders
@@ -120,6 +124,11 @@ export default async function UploaderPage({
           <UploaderList rows={rows} revoke={revokeAction} />
           <TokenByHand action={createTokenAction} />
         </section>
+
+        {/* Not on the board (Nico, 2026-10-27): the upload page's history, each line opening its report. */}
+        <div className={styles.history}>
+          <UploadHistory lines={listUploads(db).map((u) => historyLine(u, names))} />
+        </div>
       </div>
 
       <p className={styles.note}>
