@@ -40,6 +40,22 @@ export function revokeBotToken(db: Db, now: number): boolean {
   return db.update(botTokens).set({ revokedAt: now }).where(isNull(botTokens.revokedAt)).run().changes > 0;
 }
 
+export interface BotTokenStatus {
+  createdAt: number;
+  /** BattleTag of the admin who made it. */
+  createdBy: string;
+  lastUsedAt?: number;
+}
+
+/** The active bot token's dates (never the token), for the Discord page (WEB-39); undefined without one. */
+export function botTokenStatus(db: Db): BotTokenStatus | undefined {
+  const row = db.select().from(botTokens).where(isNull(botTokens.revokedAt)).get();
+  if (row === undefined) return undefined;
+  const status: BotTokenStatus = { createdAt: row.createdAt, createdBy: row.createdBy };
+  if (row.lastUsedAt !== null) status.lastUsedAt = row.lastUsedAt;
+  return status;
+}
+
 /** Whether a token is the active bot token; notes its use. */
 export function checkBotToken(db: Db, token: string, now: number): boolean {
   return (

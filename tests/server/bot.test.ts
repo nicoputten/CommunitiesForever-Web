@@ -11,7 +11,7 @@ import { GET as settingsRoute } from "@/app/api/bot/v1/settings/route";
 import { EVENT_TTL_SECONDS, type MilestonesEvent } from "@/core/bot";
 import { isPublic } from "@/proxy";
 import { putGuest } from "@/server/access";
-import { acknowledge, createBotToken, longPoll, pendingEvents } from "@/server/bot";
+import { acknowledge, botTokenStatus, createBotToken, longPoll, pendingEvents } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { botEvents } from "@/server/db/schema";
 import { createToken } from "@/server/uploader";
@@ -229,6 +229,7 @@ describe("bot API", () => {
 
   it("a new token ends the old one; revoking ends it too", async () => {
     const next = createBotToken(getDb(), ADMIN, now());
+    expect(botTokenStatus(getDb())).toEqual({ createdAt: expect.any(Number), createdBy: ADMIN });
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token }))).status).toBe(401);
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token: next }))).status).toBe(200);
     expect((await revokeRoute(await req("/api/admin/bot-token", { method: "DELETE", as: "Gwen#4004" }))).status).toBe(
@@ -236,6 +237,7 @@ describe("bot API", () => {
     );
     const revoked = await revokeRoute(await req("/api/admin/bot-token", { method: "DELETE", as: ADMIN }));
     expect(await revoked.json()).toEqual({ revoked: true });
+    expect(botTokenStatus(getDb())).toBeUndefined();
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token: next }))).status).toBe(401);
   });
 });
