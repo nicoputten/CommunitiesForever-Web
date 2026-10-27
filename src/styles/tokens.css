@@ -730,6 +730,7 @@
   --text-disabled: #6e7888; /* runs-v2-plan: disabled trigger and options (inactive, so no contrast minimum) */
   --r-menu: 12px;
   --size-menu-list: 320px; /* runs-v2-plan: the list scrolls beyond this */
+  --size-menu-max: 520px; /* runs-v2-plan: the dungeon dropdown's menu */
   /* card images (WEB-41d): Nico's references in design/cards/; read by src/core/cards/palette.ts, kept equal by a test */
   --card-w: 800px; /* cards: milestone, zone of the week, /whereis */
   --card-wide: 1200px; /* cards: the recap headers */
