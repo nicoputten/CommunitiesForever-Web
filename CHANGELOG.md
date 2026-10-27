@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Discord page: the channel and mention dropdowns list the Discord server's channels and roles once the bot has reported them. A picked channel or role that was deleted on Discord shows as removed until you pick another.
 
 ## v0.2.0 (2026-10-27)
 - The site has its own icon: the shield in the browser tab, on a phone's home screen ("Add to home screen" opens it like an app, named after the community) and on iOS.

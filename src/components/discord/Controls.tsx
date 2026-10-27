@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useTransition, type ReactNode } from "react";
+import type { PickOption } from "@/core/guild";
 import styles from "./Discord.module.css";
 
 type Action = (form: FormData) => Promise<void>;
@@ -71,10 +72,7 @@ export function SettingFixed({ name, text, state }: { name: string; text: string
   );
 }
 
-export interface PickOption {
-  value: string;
-  label: string;
-}
+export type { PickOption } from "@/core/guild";
 
 /**
  * A dropdown that saves on change (board: `.lab` over `.sel`). Disabled with `none` as its one line while there is
