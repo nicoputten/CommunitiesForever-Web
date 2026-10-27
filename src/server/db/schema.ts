@@ -170,3 +170,41 @@ export const uploaderPairings = sqliteTable(
   },
   (t) => [uniqueIndex("uploader_pairings_user_code_unique").on(t.userCode)],
 );
+
+// The Discord bot (WEB-38, docs/BOT-API.md).
+
+/** Bot tokens: one active at a time. Only the SHA-256 of the token is stored; a revoked token is kept for history. */
+export const botTokens = sqliteTable(
+  "bot_tokens",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Hex SHA-256 of the token. */
+    tokenHash: text("token_hash").notNull(),
+    /** BattleTag of the admin who made it. */
+    createdBy: text("created_by").notNull(),
+    /** Unix seconds. */
+    createdAt: integer("created_at").notNull(),
+    lastUsedAt: integer("last_used_at"),
+    revokedAt: integer("revoked_at"),
+  },
+  (t) => [uniqueIndex("bot_tokens_token_hash_unique").on(t.tokenHash)],
+);
+
+/**
+ * What the bot posts, oldest first by id (the feed's cursor). Not derived: a rebuild of the uploads never makes or
+ * removes events, so nothing is posted twice. An event is handed out until the bot acknowledges it.
+ */
+export const botEvents = sqliteTable("bot_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** `milestones` for now; run events follow with WEB-40 (docs/BOT-API.md). */
+  type: text("type").notNull(),
+  /** The event's payload as the API hands it out. */
+  data: text("data", { mode: "json" }).notNull(),
+  /** Unix seconds. */
+  createdAt: integer("created_at").notNull(),
+  /** The upload that made it (milestones). */
+  uploadId: integer("upload_id"),
+  /** When the bot acknowledged it, and the Discord message it posted. */
+  postedAt: integer("posted_at"),
+  messageId: text("message_id"),
+});
