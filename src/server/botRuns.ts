@@ -2,7 +2,7 @@ import { mayAdmin, roleOf } from "@/core/access";
 import { RUNNABLE_DUNGEONS, rolesFor } from "@/core/gamedata";
 import { isUpcoming, runDungeon, type MoveTo, type SlotRole } from "@/core/runs";
 import { levelFit } from "@/core/levelFit";
-import { zonedToUtc } from "@/core/runTime";
+import { nextDays, zonedToUtc } from "@/core/runTime";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
 import { effectiveTimeZone, linkForDiscordUser } from "./discord";
@@ -61,14 +61,23 @@ export function runIdParam(id: string): number | undefined {
 }
 
 /**
- * A start time as the bot sends it: `startsAt` (Unix seconds), or `date` and `time` typed in the friend's own time
- * zone (Discord doesn't tell the bot the user's zone, WEB-39). Undefined for neither or a time that doesn't exist.
+ * A start time as the bot sends it: `startsAt` (Unix seconds); `date` and `time` typed in the friend's own time zone
+ * (Discord doesn't tell the bot the user's zone, WEB-39); or `dayOffset` (0 today … 6, in the friend's own zone, for
+ * `/plan`'s Today, Tomorrow and weekdays, BOT-04) and `time`. Undefined for none or a time that doesn't exist.
  */
-export function startTime(body: Record<string, unknown>, timeZone: string): number | undefined {
+export function startTime(body: Record<string, unknown>, timeZone: string, now: number): number | undefined {
   if (typeof body.startsAt === "number" && Number.isInteger(body.startsAt)) return body.startsAt;
-  if (typeof body.date === "string" && typeof body.time === "string") return zonedToUtc(body.date, body.time, timeZone);
+  if (typeof body.time !== "string") return undefined;
+  if (typeof body.date === "string") return zonedToUtc(body.date, body.time, timeZone);
+  const offset = body.dayOffset;
+  if (typeof offset === "number" && Number.isInteger(offset) && offset >= 0 && offset < DAY_CHOICES) {
+    return zonedToUtc(nextDays(now, timeZone, DAY_CHOICES)[offset]!.date, body.time, timeZone);
+  }
   return undefined;
 }
+
+/** `/plan`'s days: today and the next six (BOT-04). */
+export const DAY_CHOICES = 7;
 
 /** Upcoming runs as the bot shows them (`/runs`), by start. */
 export function upcomingRuns(db: Db, now: number) {

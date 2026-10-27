@@ -126,6 +126,24 @@ describe("runs through the bot", () => {
     expect(eventTypes(before)).toEqual(["runCreated"]);
   });
 
+  it("reads /plan's day as an offset in the asker's own calendar (BOT-04)", async () => {
+    // Bob is in London. NOW is Thu 19 Nov 2026 20:00 UTC: day 1 is Friday 20 Nov there.
+    const made = await json(
+      await planRoute(
+        req("/api/bot/v1/runs", "POST", { discordUserId: IDS.bob, dungeonId: "rfk", dayOffset: 1, time: "19:00" }),
+      ),
+    );
+    expect(made.body.run.startsAt).toBe(Date.parse("2026-11-20T19:00:00Z") / 1000);
+    const bad = await planRoute(
+      req("/api/bot/v1/runs", "POST", { discordUserId: IDS.bob, dungeonId: "rfk", dayOffset: 7, time: "19:00" }),
+    );
+    expect((await json(bad)).body.error).toBe("invalid_time");
+    await cancelRoute(
+      req(`/api/bot/v1/runs/${made.body.run.id}/cancel`, "POST", { discordUserId: IDS.bob }),
+      params(made.body.run.id),
+    );
+  });
+
   it("refuses a lead character that isn't the organiser's", async () => {
     const res = await planRoute(
       req("/api/bot/v1/runs", "POST", {

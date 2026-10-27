@@ -226,8 +226,8 @@ For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit,
 | `GET /api/bot/v1/dungeons` | | `{ dungeons: [{ id, name, shortName, typicalLevels }] }`: Scarlet Monastery as its four wings |
 | `GET /api/bot/v1/runs` | | `{ runs: [run] }`: upcoming (not cancelled, not past), by start |
 | `GET /api/bot/v1/runs/<id>` | | `{ run }` |
-| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt` or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
-| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt` or `date` and `time`, `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
+| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt`, or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, or `dayOffset` (`0` today … `6`, the user's own calendar; BOT-04) and `time`, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
+| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt`, or `date` and `time`, or `dayOffset` and `time`, and `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
 | `POST /api/bot/v1/runs/<id>/cancel` | `discordUserId` | `{ run }`. The organiser, or the admin any run |
 | `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `characterId` (or `guid`; required for `in`), `role` (optional, WEB-47: `tank`, `healer` or `damage`, one the class can play; default the character's role) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
 | `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role, roles, fit }] }`: the user's characters that may say I'm in (Pick my character); `roles` the roles their class can play, `fit` how their level fits (WEB-47) |
