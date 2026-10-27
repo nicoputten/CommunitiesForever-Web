@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.2.0 (2026-10-27)
 - The site has its own icon: the shield in the browser tab, on a phone's home screen ("Add to home screen" opens it like an app, named after the community) and on iOS.
 - The Discord page (top bar and account menu › Discord): link your Discord account so the bot knows which characters are yours (the site only asks Discord for your username), or unlink it, and set your time zone, which the browser fills in after you sign in. The admin also sets what the bot posts (milestones, runs, weekly recap), the recap time, the runs options and reminder time, and sees who linked. The admin makes and revokes the bot's token there, sees whether the bot is online and sends a test post. Picking channels and roles follows with the bot.
