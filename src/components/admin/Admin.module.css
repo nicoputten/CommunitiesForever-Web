@@ -258,6 +258,13 @@
     grid-row: 2;
   }
 
+  /* A guest's three buttons go on their own line under the name. */
+  .actions:has(> :nth-child(3)) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
   .primary {
     flex: 1;
     justify-content: center;

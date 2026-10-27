@@ -47,7 +47,10 @@ export default function AdminPage() {
                     <span className={rows.meta}>
                       {m.added !== undefined && (
                         <Link href={`/upload/${m.added.uploadId}`} className={rows.link}>
-                          {m.added.text}, <LocalTime at={m.added.at} />
+                          {/* One span: the link is a flex box, which would drop the space after the comma. */}
+                          <span>
+                            {m.added.text}, <LocalTime at={m.added.at} />
+                          </span>
                         </Link>
                       )}
                       <span>{m.seen}</span>
