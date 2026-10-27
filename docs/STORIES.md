@@ -46,6 +46,10 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ### WEB-12 Automatic uploader
 - A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route). Language and packaging decided in the story.
 
+### WEB-32 Known bugs
+One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
+- **Phone map: the endless sea stops.** On a phone the map frame is only as tall as the land (WEB-25/26), so the sea ends under it and the plain page shows below; the sea does not run on around the world as it does on desktop (WEB-25 "endless sea"). Seen in `tests/design/__screenshots__/map.spec.ts/map-phone.png`. Check against WEB-28 (full-screen phone map), which may change the frame.
+
 ### Backlog (unordered, not yet stories)
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
