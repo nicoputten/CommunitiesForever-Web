@@ -5,14 +5,18 @@ import { getDb } from "@/server/db";
 import { sessionBattleTag } from "@/server/session";
 
 // Every page and API route needs a session (CLAUDE.md rule 6, WEB-06), except sign-in, Auth.js's own routes (the
-// callback among them), the "not on the list" page a refused sign-in lands on and the health check (WEB-07, which
-// tells only ok and the version). The role is read from the database on every request, so a block takes effect at
-// once. Upload and admin routes check their permission again (src/server/session.ts guard).
+// callback among them), the "not on the list" page a refused sign-in lands on, the health check (WEB-07, which
+// tells only ok and the version) and the uploader API, which checks its own token instead (WEB-33). The role is
+// read from the database on every request, so a block takes effect at once. Upload and admin routes check their
+// permission again (src/server/session.ts guard).
 
 const PUBLIC = ["/signin", "/not-on-list", "/api/health"];
 
+/** The uploader API checks its own Bearer token (WEB-33, src/server/session.ts tokenGuard); pairing is open. */
+export const UPLOADER_API = "/api/uploader/v1/";
+
 export function isPublic(pathname: string): boolean {
-  return PUBLIC.includes(pathname) || pathname.startsWith("/api/auth/");
+  return PUBLIC.includes(pathname) || pathname.startsWith("/api/auth/") || pathname.startsWith(UPLOADER_API);
 }
 
 export async function proxy(req: NextRequest): Promise<NextResponse> {

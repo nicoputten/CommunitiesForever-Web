@@ -1,7 +1,7 @@
-import { asc, eq, lte } from "drizzle-orm";
+import { and, asc, eq, isNull, lte } from "drizzle-orm";
 import { battleTagKey, mayBlock, sameBattleTag, type AccessList, type Role, roleOf } from "@/core/access";
 import type { Db } from "./db";
-import { blocks, guests, lastSeen, members } from "./db/schema";
+import { blocks, guests, lastSeen, members, uploaderTokens } from "./db/schema";
 
 // The access list from the database (WEB-06): members (derived from uploads, src/server/uploads.ts), the guest list
 // and blocks (both kept by the admin page, WEB-18). The rules themselves are in src/core/access.ts.
@@ -190,6 +190,11 @@ export function block(
   db.insert(blocks)
     .values({ key: battleTagKey(tag), battleTag: tag, blockedAt: now, blockedBy: by })
     .onConflictDoNothing()
+    .run();
+  // A block also ends every uploader token (WEB-33): unblocking needs pairing again.
+  db.update(uploaderTokens)
+    .set({ revokedAt: now })
+    .where(and(eq(uploaderTokens.key, battleTagKey(tag)), isNull(uploaderTokens.revokedAt)))
     .run();
   return db
     .select({ battleTag: blocks.battleTag, blockedAt: blocks.blockedAt, blockedBy: blocks.blockedBy })
