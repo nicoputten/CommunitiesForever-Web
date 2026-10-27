@@ -242,10 +242,33 @@
   text-transform: uppercase;
 }
 
-/* Phone (WEB-28): the map fills the screen between the app bar and the tab bar; the sea runs on above and below the
-   world, and the bottom sheet lies over its lower part. */
+/* Phone before the first upload (WEB-29): the whole world across the screen width, the empty-site card under it. */
 @media (max-width: 767px) {
   .frame {
+    height: auto;
+  }
+
+  .fit {
+    container-type: inline-size;
+    height: auto;
+  }
+
+  .stage {
+    width: 100%;
+  }
+
+  /* With data (WEB-28): the map fills the screen between the app bar and the tab bar, the sea running on above and
+     below the world, the roll call's bottom sheet over its lower part. */
+  .frame[data-sheet] {
     height: calc(100dvh - var(--size-bar-phone) - var(--size-tabbar) - env(safe-area-inset-bottom));
+  }
+
+  .frame[data-sheet] .fit {
+    container-type: size;
+    height: 100%;
+  }
+
+  .frame[data-sheet] .stage {
+    width: min(100cqw, calc(100cqh * var(--map-w) / var(--map-h)));
   }
 }

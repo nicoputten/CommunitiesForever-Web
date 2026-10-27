@@ -49,7 +49,13 @@ const anchor = (x: number, y: number) => ({ "--ox": x, "--oy": y }) as CSSProper
 export function WorldMap({ view, continent, selected, drop, panel, sheet }: WorldMapProps) {
   const box = WORLD;
   return (
-    <section className={styles.frame} aria-label="World map" data-page="map" data-continent={continent}>
+    <section
+      className={styles.frame}
+      aria-label="World map"
+      data-page="map"
+      data-continent={continent}
+      data-sheet={sheet === undefined ? undefined : ""}
+    >
       <MapStage
         places={view.places}
         box={box}

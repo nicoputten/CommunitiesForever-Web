@@ -187,7 +187,8 @@
     display: inline;
   }
 
-  .bar .filters {
+  /* Only over a map with the roll call sheet (not before the first upload). */
+  :global(body:has([data-snap])) .bar .filters {
     display: flex;
   }
 
