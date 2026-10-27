@@ -572,4 +572,19 @@
   --line-panel: rgba(212, 175, 106, 0.28); /* map: roll call border */
   --tint-row-selected: rgba(212, 175, 106, 0.1); /* map: picked roll call row */
   --opacity-earlier: 0.85; /* map: the "Earlier" rows */
+
+  /* empty site and loading (WEB-29): the empty-site and loading boards */
+  --veil-empty: rgba(5, 10, 18, 0.35); /* empty-site: dims the map under the card */
+  --line-guest: #5a6476; /* empty-site: dashed disc of a guest */
+  --size-guest: 26px; /* empty-site: guest disc */
+  --size-empty-icon: 64px; /* empty-site: compass over the title */
+  --loading-line: linear-gradient(
+    90deg,
+    rgba(240, 208, 142, 0),
+    var(--gold-bright),
+    rgba(240, 208, 142, 0)
+  ); /* loading */
+  --dur-line: 1.4s; /* loading: the thin gold line runs */
+  --dur-line-delay: 300ms; /* loading: the line shows only after 300 ms */
+  --dur-markers-in: 400ms; /* loading: markers fade in */
 }

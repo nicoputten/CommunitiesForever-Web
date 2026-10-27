@@ -192,7 +192,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 | `ProfessionMatrix` | characters × professions |
 | `TalentBars`, `QuestLog`, `MiniMap` | character detail |
 | `Dropzone`, `UploadHistory`, `SessionReport` | admin upload flow |
-| `Banner`, `EmptyState`, `Skeleton` | global states |
+| `Banner`, `EmptyState`, `FirstUploadState`, `Skeleton`, `LoadingLine` | global states (WEB-29: the first-upload card, the thin gold line while a page loads) |
 | `Atmosphere` | fog, light shafts, embers, sea; reads reduced-motion + a user toggle |
 
 ## 8. Decisions and rules
@@ -288,3 +288,5 @@ Approved departures from this design (CLAUDE.md rule 12). Only Nico approves one
 | 2026-10-27 | Admin page (WEB-18, no board): `/admin` from an "Admin" item (key icon) in the account menu; Members, Guests and Blocked as panels in the upload history's style (members wide left, the others stacked right, one column below 1024 px); rows in the history line pattern with display name over BattleTag, "Added by Bob's upload" and "Last seen …"; quiet row buttons in the menu item style (Block and Remove in `--stale-text`), the "May upload" `FilterChip`, the add-guest field in the roster search's look and the empty-state card's gold button; neutral "Admin" / "Blocked" badges, blocked rows dimmed; no confirm dialogs | No board draws the admin page; built only from existing components | Nico |
 | 2026-10-27 | Roll call legend (WEB-27): four static entries, "New < 32 h · Recent · Days · Week +" (the board: "Live < 6 h · Days · Week +") | The data age scale for daily uploads has four states | Nico |
 | 2026-10-27 | Roll call without a board (WEB-27): the faction and level chips open the roster's filter menus (level in the roster's ranges); the filters also filter the map's markers and live in the URL; a row off the map (battleground, "elsewhere") and an unknown-whereabouts row open the character; "No characters match" with "Clear filters" when nothing matches; the panel shows from 1024 px (below, the phone sheet of WEB-28) | The board shows only the closed chips and one filled list | Nico |
+| 2026-10-27 | Empty map on a phone (WEB-29, no board): the centre card and the guest list follow under the map; from 768 to 1023 px they scroll over it, card first | The phone map is only as tall as its width allows, and the roll call sheet (WEB-28) isn't there yet | Nico |
+| 2026-10-27 | Loading line (WEB-29): shown while a navigation from the top bar or tab bar is pending, not by a route loading state; none without motion | A route loading state turns a page's 404 into a 200 and delays the map's first paint; the board's reduced-motion line has no size either | Nico |

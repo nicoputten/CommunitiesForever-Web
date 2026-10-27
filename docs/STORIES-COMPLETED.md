@@ -319,3 +319,14 @@
 - Unknown whereabouts tray and the no-addon line.
 - Decided with Nico (2026-10-27): proposals 1–10. Legend: New < 32 h, Recent, Days, Week + (static). Row age short ("now", "N min", "N h", "N d"). Faction and level menus are the roster's `FilterMenu` (level: the roster's ranges). Friend chips: All plus everyone with the addon, uploader first. Filters live in the URL (`friend`, `new`, `faction`, `level`), Back undoes them, and the map shows only the matching characters. A row on the map flies there and selects it (`?character=`); a battleground or "elsewhere" row, and an unknown-whereabouts row, open the character. Sub-line "Zone · Owner, via X", or the amber "X's data is N days old". Panel from 1024 px; below, the phone sheet (WEB-28). No match: "No characters match" with "Clear filters".
 - Done: `src/components/rollcall/` (`RollCallPanel` on the server, `RollCallFilters` and `PickRow` on the client), `data-map-panel` on the panel and the zoom buttons left of it; `rollCallQuery.ts` (URL), `rowAge` in `age.ts`, `onMap` and `ago` on the roll call rows, `worldMap(d, now, only)` and `isMapZone` in `map.ts`; Playwright `tests/e2e/rollcall.spec.ts`, design checks in `tests/design/map.spec.ts`.
+### WEB-29 Empty site, loading and stale data
+- Boards: `empty-site`, `loading`.
+- Before the first upload: "The map is still empty", "Upload the first file" for admin and members; for guests: "Nico hasn't uploaded any data yet. Check back after the next session."; the guest list shown in the roll call.
+- Loading: zones paint at once, markers fade in, a thin gold line only after 300 ms; skeletons that keep the layout still.
+- Stale: the site-wide banner (last upload 7 days or more), a friend's amber badge after 7 days.
+- Decided with Nico (2026-10-27):
+  - Only the admin gets "Upload the first file" (before the admin's first upload nobody else can upload, WEB-19); everyone else reads "<admin> hasn't uploaded any data yet. Check back after the next session.", the admin named by the part of `ADMIN_BATTLETAG` before the `#`. Map, roster and professions say it alike (`FirstUploadState`).
+  - The roll call before the first upload: "0 located" and the guest list (the admin, then the guests) with dashed discs; members only come with uploads. Desktop: the panel at the roll call's place. Phone: card and list follow under the map (no sheet yet).
+  - The thin gold line: one line under the top bar while a navigation from the shell's links is pending, visible after 300 ms; none without motion (as on the board). No route `loading.tsx` for it, so a page's 404 keeps its status. Markers fade in (400 ms).
+  - Skeletons stay per screen (roster, table, professions, character, report have theirs).
+  - Stale data: the banner (WEB-15) and the amber badge (WEB-21) were already built; their look is in the component gallery's baselines.

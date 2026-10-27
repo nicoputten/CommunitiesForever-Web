@@ -14,6 +14,11 @@ const port = 3200;
 // A fresh database per run. Workers load this file again and inherit the environment, so the directory is made once.
 process.env.DESIGN_DATA_DIR ??= mkdtempSync(path.join(tmpdir(), "communitiesforever-design-"));
 
+// The desktop canvas of the boards (DESIGN.md §3).
+const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 };
+// A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
+const phone = { ...devices["Pixel 7"], viewport: { width: 375, height: 812 }, deviceScaleFactor: 2 };
+
 export default defineConfig({
   testDir: "tests/design",
   testMatch: /\.(spec|setup)\.ts$/,
@@ -25,19 +30,12 @@ export default defineConfig({
   // Clock times are the viewer's local time (WEB-19): one zone, so they read the same on every machine.
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure", timezoneId: "Europe/Amsterdam" },
   projects: [
-    { name: "seed", testMatch: /seed\.setup\.ts$/ },
-    {
-      name: "desktop",
-      dependencies: ["seed"],
-      // The desktop canvas of the boards (DESIGN.md §3).
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
-    },
-    {
-      name: "phone",
-      dependencies: ["seed"],
-      // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
-      use: { ...devices["Pixel 7"], viewport: { width: 375, height: 812 }, deviceScaleFactor: 2 },
-    },
+    // The site before the first upload (WEB-29): before `seed` uploads the sample.
+    { name: "empty-desktop", testMatch: /\.empty\.ts$/, use: desktop },
+    { name: "empty-phone", testMatch: /\.empty\.ts$/, use: phone },
+    { name: "seed", testMatch: /seed\.setup\.ts$/, dependencies: ["empty-desktop", "empty-phone"] },
+    { name: "desktop", dependencies: ["seed"], use: desktop },
+    { name: "phone", dependencies: ["seed"], use: phone },
   ],
   webServer: {
     command: "npm run start",

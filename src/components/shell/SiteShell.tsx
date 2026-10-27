@@ -3,6 +3,7 @@ import { Atmosphere } from "@/components/atmosphere/Atmosphere";
 import { Banner } from "@/components/ui/Banner";
 import { timeAgo } from "@/core/views/age";
 import { staleBanner } from "@/core/views/site";
+import { PendingProvider } from "./Pending";
 import { TabBar } from "./TabBar";
 import { TopBar } from "./TopBar";
 import type { Viewer } from "./viewer";
@@ -27,28 +28,30 @@ export interface SiteShellProps {
 export function SiteShell({ siteName, lastUploadAt, now, viewer, signOut, children }: SiteShellProps) {
   const stale = staleBanner(lastUploadAt, now);
   return (
-    <div className={styles.shell}>
-      <Atmosphere variant="calm" />
-      <a href="#content" className={styles.skip}>
-        Skip to content
-      </a>
-      <TopBar
-        siteName={siteName}
-        dataAgo={lastUploadAt === undefined ? undefined : timeAgo(lastUploadAt, now)}
-        viewer={viewer}
-        signOut={signOut}
-      />
-      {stale !== undefined && (
-        <div className={styles.banner}>
-          <Banner>
-            Last upload was <b>{stale.days} days ago</b>. Positions and levels may be behind.
-          </Banner>
-        </div>
-      )}
-      <main id="content" tabIndex={-1} className={styles.main}>
-        {children}
-      </main>
-      <TabBar />
-    </div>
+    <PendingProvider>
+      <div className={styles.shell}>
+        <Atmosphere variant="calm" />
+        <a href="#content" className={styles.skip}>
+          Skip to content
+        </a>
+        <TopBar
+          siteName={siteName}
+          dataAgo={lastUploadAt === undefined ? undefined : timeAgo(lastUploadAt, now)}
+          viewer={viewer}
+          signOut={signOut}
+        />
+        {stale !== undefined && (
+          <div className={styles.banner}>
+            <Banner>
+              Last upload was <b>{stale.days} days ago</b>. Positions and levels may be behind.
+            </Banner>
+          </div>
+        )}
+        <main id="content" tabIndex={-1} className={styles.main}>
+          {children}
+        </main>
+        <TabBar />
+      </div>
+    </PendingProvider>
   );
 }

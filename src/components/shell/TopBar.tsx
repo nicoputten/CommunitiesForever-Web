@@ -6,6 +6,7 @@ import { CONTINENTS, parseContinent } from "@/core/views/mapMarkers";
 import { SegmentedNav } from "@/components/ui/SegmentedNav";
 import { EmblemIcon, UploadIcon } from "@/components/ui/icons";
 import { NAV, isCurrent } from "./nav";
+import { LinkPending } from "./Pending";
 import { UserMenu } from "./UserMenu";
 import type { Viewer } from "./viewer";
 import styles from "./TopBar.module.css";
@@ -30,6 +31,7 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
       <Link href="/" className={styles.brand}>
         <EmblemIcon className={styles.emblem} />
         <span>{siteName}</span>
+        <LinkPending />
       </Link>
       <nav aria-label="Main" className={styles.nav}>
         {NAV.map((item) => (
@@ -40,6 +42,7 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
             aria-current={isCurrent(item.href, pathname) ? "page" : undefined}
           >
             {item.label}
+            <LinkPending />
           </Link>
         ))}
       </nav>
@@ -66,6 +69,7 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
         <Link href="/upload" className={styles.upload} aria-current={uploadCurrent ? "page" : undefined}>
           <UploadIcon className={styles.uploadIcon} />
           Upload
+          <LinkPending />
         </Link>
       )}
       {viewer !== undefined && <UserMenu viewer={viewer} signOut={signOut} />}

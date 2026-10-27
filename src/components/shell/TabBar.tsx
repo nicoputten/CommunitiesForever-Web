@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MapIcon, ProfessionsIcon, RosterIcon } from "@/components/ui/icons";
 import { NAV, isCurrent, type NavHref } from "./nav";
+import { LinkPending } from "./Pending";
 import styles from "./TabBar.module.css";
 
 const ICONS: Record<NavHref, typeof MapIcon> = { "/": MapIcon, "/roster": RosterIcon, "/professions": ProfessionsIcon };
@@ -24,6 +25,7 @@ export function TabBar() {
           >
             <Icon className={styles.icon} />
             {item.label}
+            <LinkPending />
           </Link>
         );
       })}

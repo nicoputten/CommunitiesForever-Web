@@ -12,7 +12,8 @@ export interface WorldMapProps {
   selected?: string;
   /** GUIDs of the sightings that drop in (`?drop=`, WEB-26). */
   drop?: string[];
-  /** A panel over the map's right side (the roll call, WEB-27). */
+  /** Over the map, outside pan and zoom: the roll call (WEB-27), or before the first upload the empty-site card and
+   * guest list (WEB-29). */
   panel?: ReactNode;
 }
 
