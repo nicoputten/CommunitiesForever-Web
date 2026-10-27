@@ -110,3 +110,14 @@ export const guests = sqliteTable("guests", {
   addedAt: integer("added_at").notNull(),
   addedBy: text("added_by").notNull(),
 });
+
+/**
+ * When each signed-in BattleTag last opened the site (admin page, WEB-18). Written by src/proxy.ts at most once an
+ * hour per BattleTag; sessions are JWT cookies, so there is no session table to read it from.
+ */
+export const lastSeen = sqliteTable("last_seen", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  /** Unix seconds. */
+  seenAt: integer("seen_at").notNull(),
+});

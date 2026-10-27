@@ -1,4 +1,5 @@
 import { listGuests, putGuest, removeGuest } from "@/server/access";
+import { nowSeconds } from "@/app/clock";
 import { attempt, badRequest, jsonBody } from "@/server/http";
 import { guard } from "@/server/session";
 
@@ -19,7 +20,7 @@ export async function PUT(req: Request): Promise<Response> {
     return badRequest("Send { battleTag, mayUpload }.");
   }
   const { battleTag, mayUpload } = body;
-  return attempt(() => putGuest(caller.db, battleTag, mayUpload, caller.battleTag));
+  return attempt(() => putGuest(caller.db, battleTag, mayUpload, caller.battleTag, nowSeconds()));
 }
 
 /** Removes a guest: `{ battleTag }`. */

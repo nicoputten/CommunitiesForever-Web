@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { currentRole } from "@/server/access";
+import { nowSeconds } from "@/app/clock";
+import { currentRole, touchLastSeen } from "@/server/access";
 import { getDb } from "@/server/db";
 import { sessionBattleTag } from "@/server/session";
 
@@ -30,6 +31,8 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     if (api) return NextResponse.json({ error: "You're not on the list." }, { status: 403 });
     return NextResponse.redirect(new URL("/not-on-list", req.url));
   }
+  // "Last seen" for the admin page (WEB-18), at most one write an hour per BattleTag.
+  touchLastSeen(getDb(), battleTag, nowSeconds());
   return NextResponse.next();
 }
 

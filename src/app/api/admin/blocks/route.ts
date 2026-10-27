@@ -1,4 +1,5 @@
 import { block, listBlocks, listMembers, unblock } from "@/server/access";
+import { nowSeconds } from "@/app/clock";
 import { attempt, badRequest, jsonBody } from "@/server/http";
 import { guard } from "@/server/session";
 
@@ -18,7 +19,7 @@ export async function PUT(req: Request): Promise<Response> {
   const body = await jsonBody(req);
   if (typeof body?.battleTag !== "string") return badRequest("Send { battleTag }.");
   const { battleTag } = body;
-  return attempt(() => block(caller.db, battleTag, caller.battleTag));
+  return attempt(() => block(caller.db, battleTag, caller.battleTag, nowSeconds()));
 }
 
 /** Lifts a block: `{ battleTag }`. */

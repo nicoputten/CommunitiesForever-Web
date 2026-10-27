@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
-import { battleTagKey, mayBlock, type AccessList, type Role, roleOf } from "@/core/access";
+import { asc, eq, lte } from "drizzle-orm";
+import { battleTagKey, mayBlock, sameBattleTag, type AccessList, type Role, roleOf } from "@/core/access";
 import type { Db } from "./db";
-import { blocks, guests, members } from "./db/schema";
+import { blocks, guests, lastSeen, members } from "./db/schema";
 
 // The access list from the database (WEB-06): members (derived from uploads, src/server/uploads.ts), the guest list
 // and blocks (both kept by the admin page, WEB-18). The rules themselves are in src/core/access.ts.
@@ -56,7 +56,7 @@ export class AccessError extends Error {
 function cleanTag(battleTag: string): string {
   const tag = battleTag.trim();
   // Name#digits; the name part may hold any letters (Battle.net allows accented ones).
-  if (!/^[^\s#]{1,32}#\d{1,10}$/u.test(tag)) throw new AccessError(`"${battleTag}" is not a BattleTag (Name#1234).`);
+  if (!/^[^\s#]{1,32}#\d{1,10}$/u.test(tag)) throw new AccessError("That's not a BattleTag (Name#1234).");
   return tag;
 }
 
@@ -128,6 +128,29 @@ export function putGuest(
     .get();
 }
 
+/**
+ * Adds a new guest from the admin page's form (WEB-18): refuses the admin, a member and someone already on the list,
+ * each with the message the form shows. Changing "may upload" of a listed guest goes through putGuest.
+ */
+export function addGuest(
+  db: Db,
+  battleTag: string,
+  mayUpload: boolean,
+  by: string,
+  now = Math.floor(Date.now() / 1000),
+  admin = adminBattleTag(),
+): GuestEntry {
+  const tag = cleanTag(battleTag);
+  if (sameBattleTag(tag, admin)) throw new AccessError("That's you, the admin.");
+  // The message names the BattleTag as stored, not as typed.
+  const key = battleTagKey(tag);
+  const member = db.select({ battleTag: members.battleTag }).from(members).where(eq(members.key, key)).get();
+  if (member !== undefined) throw new AccessError(`${member.battleTag} is already a member.`);
+  const guest = db.select({ battleTag: guests.battleTag }).from(guests).where(eq(guests.key, key)).get();
+  if (guest !== undefined) throw new AccessError(`${guest.battleTag} is already on the guest list.`);
+  return putGuest(db, tag, mayUpload, by, now);
+}
+
 /** Removes a guest; true when they were on the list. */
 export function removeGuest(db: Db, battleTag: string): boolean {
   return (
@@ -182,5 +205,33 @@ export function unblock(db: Db, battleTag: string): boolean {
       .delete(blocks)
       .where(eq(blocks.key, battleTagKey(battleTag)))
       .run().changes > 0
+  );
+}
+
+// --- last seen -----------------------------------------------------------------------------------------------
+
+/** How often a BattleTag's "last seen" is written: once an hour is precise enough for the admin page. */
+export const LAST_SEEN_EVERY = 60 * 60;
+
+/** Notes that a signed-in BattleTag opened the site (src/proxy.ts); writes only when the stored time is an hour old. */
+export function touchLastSeen(db: Db, battleTag: string, now = Math.floor(Date.now() / 1000)): void {
+  db.insert(lastSeen)
+    .values({ key: battleTagKey(battleTag), battleTag, seenAt: now })
+    .onConflictDoUpdate({
+      target: lastSeen.key,
+      set: { battleTag, seenAt: now },
+      setWhere: lte(lastSeen.seenAt, now - LAST_SEEN_EVERY),
+    })
+    .run();
+}
+
+/** Last seen (Unix seconds) by battleTagKey(). */
+export function listLastSeen(db: Db): Map<string, number> {
+  return new Map(
+    db
+      .select({ key: lastSeen.key, seenAt: lastSeen.seenAt })
+      .from(lastSeen)
+      .all()
+      .map((r) => [r.key, r.seenAt]),
   );
 }

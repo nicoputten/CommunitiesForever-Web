@@ -21,9 +21,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E5 Screens
 
-### WEB-18 Admin page: guest list
-- Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
-- Validation of BattleTag format; adding an existing member says so.
 
 ### WEB-28 Phone map
 - Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.

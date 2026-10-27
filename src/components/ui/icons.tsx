@@ -102,6 +102,16 @@ export function MotionIcon(props: IconProps) {
   );
 }
 
+/** A key: the user menu's Admin item (WEB-18; no board draws it, the stroke matches SignOutIcon). */
+export function AdminIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.5} {...props}>
+      <circle cx="5.5" cy="8" r="3" />
+      <path d="M8.5 8H14.5M12.5 8v2.5M14.5 8v2" />
+    </Icon>
+  );
+}
+
 /** The ledger (upload board): a page with lines, a gold upload disc on its corner. `drag`: without the disc. */
 export function LedgerIcon({ drag = false, ...props }: IconProps & { drag?: boolean }) {
   const page = drag ? "var(--gold-bright)" : "var(--gold)";
