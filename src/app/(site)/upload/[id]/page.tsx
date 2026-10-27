@@ -54,5 +54,5 @@ export default async function UploadReportPage({ params }: { params: Promise<{ i
   }
 
   const report = sessionReport(upload.summary, upload.uploadedAt, getDataset(), uploader, upload.first);
-  return <SessionReport report={report} mayUpload={viewer.mayUpload} />;
+  return <SessionReport report={report} mayUpload={viewer.mayUpload} mapHref={`/?drop=${id}`} />;
 }

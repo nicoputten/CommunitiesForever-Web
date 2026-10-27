@@ -297,3 +297,12 @@
 - Decided: **map art** is a custom illustrated Vanilla-style map, made in the workshop (Blizzard's in-game map textures are their copyright).
 - Part 1 (done): `docs/DESIGN-PROMPT.md`.
 - Part 2 (done): the workshop; decisions in `docs/DESIGN.md`, boards in `design/boards/`.
+
+### WEB-26 Map zoom, pan and motion
+- Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
+- Bounded, springy pan (Nico, 2026-10-26): the sea is endless (WEB-25), but the view stays near the world. Dragging past the edge gives resistance, and on release it springs back so some land stays in view (no spring with reduced motion).
+- Fly to a character (600 ms pan + zoom; jump with reduced motion).
+- New sightings after an upload: drop + one ripple (from the session report link).
+- Decided with Nico (2026-10-26/27): proposals 1–8 (range 1–4×, + and − step 1 → 2 → 4; the continent switch as a fly that follows a pan; labels and markers keep their screen size; the zone in the centre named in the top bar at 4×; fly-to from `?character=` and `flyToCharacter` for WEB-27/28; the drop from `?drop=<upload id>`; 44 px buttons and keys; `react-zoom-pan-pinch` pinned). Azeroth centres the land; the centre leaves room for the roll call panel.
+- Done: `src/components/map/MapStage.tsx` (zoom, levels, fly, drop, settle), `Zoom.module.css`, `flyTo.ts` (`flyToCharacter(guid)`: WEB-27 and WEB-28 call it); zoom helpers in `src/core/views/mapMarkers.ts` and `CONTINENT_SPLIT` in `map.ts`; towns, dungeons and name tags; the top bar's zone slot; the session report links to `/?drop=<id>`. WEB-27: give the roll call panel `data-map-panel` and move the zoom buttons left of it (the board's `right: 352px`).
+

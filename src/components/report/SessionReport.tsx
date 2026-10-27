@@ -87,9 +87,11 @@ export interface SessionReportProps {
   report: Report;
   /** "Upload another" shows only to someone who may upload. */
   mayUpload: boolean;
+  /** Where "See them drop in on the map" leads: the map with this upload's sightings dropping in (WEB-26). */
+  mapHref?: string;
 }
 
-export function SessionReport({ report: r, mayUpload }: SessionReportProps) {
+export function SessionReport({ report: r, mayUpload, mapHref = "/" }: SessionReportProps) {
   const sub = r.first ? (
     <>
       First upload by {r.uploader} · {plural(r.characters, "character")} from {plural(r.friends, "friend")}
@@ -219,7 +221,7 @@ export function SessionReport({ report: r, mayUpload }: SessionReportProps) {
           </span>
         ))}
       </MoreList>
-      <Link href="/" className={styles.link}>
+      <Link href={mapHref} className={styles.link}>
         See them drop in on the map →
       </Link>
     </Section>

@@ -112,3 +112,59 @@ test("map: screenshot of Kalimdor", async ({ page }) => {
   await openScreen(page, "/?continent=kalimdor");
   await expectScreenshot(page, "map-kalimdor");
 });
+
+// WEB-26: zoom levels (map-states board), the zoom buttons and the zone name in the top bar.
+
+test("map: zoom buttons", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: a phone pinches");
+  await openScreen(page, "/");
+  await expectStyles(page.getByRole("button", { name: "Zoom in" }), {
+    width: "var(--size-touch)",
+    height: "var(--size-touch)",
+    "border-radius": "var(--r-btn)",
+    "background-color": "var(--control-map)",
+    color: "var(--gold-bright)",
+    "font-size": "var(--fs-zoom)",
+  });
+});
+
+test("map: screenshot at continent zoom (2×)", async ({ page }) => {
+  await openScreen(page, "/?continent=eastern-kingdoms");
+  if (!isPhone(page)) await page.getByRole("button", { name: "Zoom in" }).click();
+  else await page.getByRole("group", { name: /^Map\./ }).press("+");
+  await expect(page.locator('[data-level="continent"]')).toBeVisible();
+  await expectStyles(page.getByText("Booty Bay", { exact: true }), { "font-family": "var(--font-name)" });
+  await expectAccessible(page, isPhone(page) ? OVERLAP : []);
+  await expectScreenshot(page, "map-continent");
+});
+
+test("map: zone zoom (4×): name tags, dungeons, zone in the top bar", async ({ page }) => {
+  await openScreen(page, "/?character=Player-1-0000A001");
+  await expect(page.locator('[data-level="zone"]')).toBeVisible();
+  // Settled: the zone in the centre is marked.
+  await expect(page.locator("[data-label][data-focus]")).toBeAttached();
+  if (!isPhone(page))
+    await expectStyles(page.locator("[data-map-zone]"), {
+      "font-family": "var(--font-display)",
+      "font-size": "var(--fs-section)",
+      color: "var(--gold-bright)",
+    });
+  await expectStyles(page.getByText("Ves Doombringer", { exact: true }).first(), {
+    "font-family": "var(--font-name)",
+    "font-size": "var(--fs-meta-sm)",
+  });
+  await expect(page.getByText("The Deadmines", { exact: true }).last()).toBeVisible();
+  await expectAccessible(page);
+  await expectNoMotion(page);
+  await page.mouse.move(0, 0);
+  await expectScreenshot(page, "map-zone");
+});
+
+test("map: zone zoom touch targets", async ({ page }) => {
+  test.skip(!isPhone(page), "phone only");
+  await openScreen(page, "/?character=Player-1-0000A001");
+  await expect(page.locator('[data-level="zone"]')).toBeVisible();
+  // Settled: the zone in the centre is marked.
+  await expect(page.locator("[data-label][data-focus]")).toBeAttached();
+  await expectTouchTargets(page);
+});

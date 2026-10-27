@@ -464,6 +464,13 @@
   --size-hub-dot: 6px; /* map: centre of an open fan */
   --compass-star: 0.12;
   --compass-n: 0.7;
+  /* map zoom and motion (WEB-26): the map and map-states boards */
+  --zone-dim: 0.62; /* map-states: at zone zoom (4×) the other zones dim slightly */
+  --control-map: rgba(12, 18, 30, 0.72); /* map: zoom buttons */
+  --fs-zoom: 20px; /* map: + and − on the zoom buttons */
+  --drop-rise: -39px; /* map-states: a new sighting drops from 130% of the marker above its place */
+  --ripple-scale: 3; /* map-states: the one ripple after the drop */
+  --ripple-opacity: 0.8;
   /* professions (WEB-24): the professions board */
   --fs-summary: 26px; /* professions: "4 covered" (Marcellus) */
   --fs-profession: 17px; /* professions: card title (Marcellus SC) */
