@@ -28,7 +28,7 @@ The certificate comes from Let's Encrypt through your nginx app, like your other
 3. SSL: "Request a new SSL certificate", tick Force SSL, HTTP/2 support and HSTS enabled; agree to the Let's Encrypt terms; Save. NPM renews it by itself.
 4. Advanced → Custom Nginx Configuration:
    ```nginx
-   client_max_body_size 30m;
+   client_max_body_size 200m;
    proxy_request_buffering off;
    proxy_send_timeout 120s;
    proxy_read_timeout 120s;
@@ -37,7 +37,7 @@ The certificate comes from Let's Encrypt through your nginx app, like your other
 
 **If it is plain nginx with config files:** copy [`nginx/wow.vestras.nl.conf`](nginx/wow.vestras.nl.conf) into its config folder (often `conf.d/`), replace `<truenas-ip>` and point `ssl_certificate` / `ssl_certificate_key` at where your other sites' certificates live. Get the certificate the way you do for those (with certbot: `certbot certonly --webroot -w /var/www/letsencrypt -d wow.vestras.nl`, with the HTTP block loaded first). Then `nginx -t` and reload.
 
-Why these settings: uploads go up to 25 MiB (`MAX_UPLOAD_BYTES`), so the body limit is 30 MiB; a large upload is parsed and merged before the answer, so the timeouts are 2 minutes; Auth.js trusts the forwarded host and protocol (`trustHost`, with `AUTH_URL` naming the public origin) to build the Battle.net callback and secure cookies.
+Why these settings: uploads go up to 25 MiB (`MAX_UPLOAD_BYTES`, checked by the site) and an uploader release is about 125 MB (WEB-35b), so the body limit is 200 MB; a large upload is parsed and merged before the answer, so the timeouts are 2 minutes; Auth.js trusts the forwarded host and protocol (`trustHost`, with `AUTH_URL` naming the public origin) to build the Battle.net callback and secure cookies.
 
 ## 3. The dataset
 1. Datasets → select `<pool>/apps` (or create `apps` first) → Add Dataset: name `cf`, preset **Apps**. Leave compression on.

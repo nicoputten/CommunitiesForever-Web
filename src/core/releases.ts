@@ -1,11 +1,14 @@
 // The uploader's releases (WEB-35, docs/UPLOADER-API.md "Installer and updates"): the Velopack files the release
-// workflow publishes, the feed the app reads and which versions the site keeps. Pure: files come in as names, sizes
-// and hashes.
+// workflow publishes and the feed the app reads. Since WEB-35b the workflow owns the feed: it pulls the site's feed,
+// packs, signs and sends the whole feed, which the site keeps byte for byte (the app checks the signature) with exactly
+// the packages it lists. Pure: files come in as names, sizes and hashes.
 
 /** Velopack's feed for the `win` channel: what the app reads first. */
 export const FEED_NAME = "releases.win.json";
-/** Versions kept on the site; older packages are deleted. */
-export const KEEP_VERSIONS = 3;
+/** The feed's signature: DER ECDSA P-256 / SHA-256 over the feed's exact bytes, made by the release workflow. */
+export const SIGNATURE_NAME = "releases.win.json.sig";
+/** A DER P-256 signature is at most 72 bytes; anything much bigger isn't one. */
+export const MAX_SIGNATURE_BYTES = 256;
 /** The installer's name for the person downloading it. */
 export const SETUP_DOWNLOAD_NAME = "CommunitiesForever-Uploader-Setup.exe";
 
@@ -31,7 +34,7 @@ export interface CurrentRelease {
   publishedAt: number;
 }
 
-export type ReleaseFileKind = "setup" | "full" | "delta" | "feed";
+export type ReleaseFileKind = "setup" | "full" | "delta" | "feed" | "signature";
 
 /** Plain file names only: no folders, no "..", nothing a path could be built from. */
 export function isSafeName(name: string): boolean {
@@ -42,6 +45,7 @@ export function isSafeName(name: string): boolean {
 export function releaseFileKind(name: string): ReleaseFileKind | undefined {
   if (!isSafeName(name)) return undefined;
   if (name === FEED_NAME) return "feed";
+  if (name === SIGNATURE_NAME) return "signature";
   if (name.endsWith("-Setup.exe")) return "setup";
   if (name.endsWith("-full.nupkg")) return "full";
   if (name.endsWith("-delta.nupkg")) return "delta";
@@ -117,44 +121,87 @@ export interface SentFile {
 export interface CheckedRelease {
   version: string;
   setup: SentFile;
-  /** The new version's packages, as the feed names them. */
+  /** Every package the new feed lists: the site keeps these and no others. */
   assets: ReleaseAsset[];
+  /** The packages that came with this publish (the others are already on the site). */
+  sent: ReleaseAsset[];
 }
 
+const sameFile = (a: { size: number; sha256: string }, b: ReleaseAsset) =>
+  a.size === b.Size && a.sha256.toLowerCase() === b.SHA256.toLowerCase();
+
 /**
- * Checks what the release workflow sent: one installer, the feed, and every package of the new (newest) version the
- * feed names, each with its exact size and SHA-256. Packages of older versions in the feed are ignored (the site
- * keeps its own). The version must be newer than `current`.
+ * Checks what the release workflow sent: one installer, the feed and its signature, and the packages. The newest
+ * version in the feed is the release; every package it lists must either come with this publish (exact size and
+ * SHA-256) or already be on the site with the same size and SHA-256 (`existing`: the site's current feed). The version
+ * must be newer than `current`. The signature isn't checked here: the site has no key, the app has.
  */
-export function checkRelease(files: SentFile[], feedText: string, current: string | undefined): CheckedRelease {
+export function checkRelease(
+  files: SentFile[],
+  feedText: string,
+  current: string | undefined,
+  existing: ReleaseAsset[] = [],
+): CheckedRelease {
   const setups = files.filter((f) => releaseFileKind(f.name) === "setup");
   if (setups.length !== 1) throw new ReleaseError("invalid_release", "Send exactly one *-Setup.exe.");
+  const signature = files.find((f) => f.name === SIGNATURE_NAME);
+  if (signature === undefined) throw new ReleaseError("invalid_release", `Send ${SIGNATURE_NAME}.`);
+  if (signature.size === 0 || signature.size > MAX_SIGNATURE_BYTES) {
+    throw new ReleaseError("invalid_release", `${SIGNATURE_NAME} is not a signature.`);
+  }
   const feed = parseFeed(feedText);
   const version = feed
     .map((a) => a.Version)
     .sort(compareVersions)
     .at(-1);
   if (version === undefined) throw new ReleaseError("invalid_release", `${FEED_NAME} lists no packages.`);
-  const assets = feed.filter((a) => a.Version === version);
-  if (!assets.some((a) => a.Type === "Full")) throw new ReleaseError("invalid_release", "No full package.");
-  for (const asset of assets) {
+  if (!feed.some((a) => a.Version === version && a.Type === "Full")) {
+    throw new ReleaseError("invalid_release", "No full package.");
+  }
+  if (new Set(feed.map((a) => a.FileName)).size !== feed.length) {
+    throw new ReleaseError("invalid_release", `${FEED_NAME} lists a package twice.`);
+  }
+  const sent: ReleaseAsset[] = [];
+  for (const asset of feed) {
     const file = files.find((f) => f.name === asset.FileName);
-    if (file === undefined) throw new ReleaseError("invalid_release", `${asset.FileName} is missing.`);
-    if (file.size !== asset.Size || file.sha256.toLowerCase() !== asset.SHA256.toLowerCase()) {
-      throw new ReleaseError("invalid_release", `${asset.FileName} doesn't match its size or SHA256.`);
+    if (file !== undefined) {
+      if (!sameFile(file, asset)) {
+        throw new ReleaseError("invalid_release", `${asset.FileName} doesn't match its size or SHA256.`);
+      }
+      sent.push(asset);
+      continue;
+    }
+    if (asset.Version === version) throw new ReleaseError("invalid_release", `${asset.FileName} is missing.`);
+    const kept = existing.find((a) => a.FileName === asset.FileName);
+    if (kept === undefined) {
+      throw new ReleaseError("invalid_release", `${asset.FileName} is neither sent nor on the site.`);
+    }
+    if (!sameFile({ size: kept.Size, sha256: kept.SHA256 }, asset)) {
+      throw new ReleaseError("invalid_release", `${asset.FileName} differs from the one on the site.`);
     }
   }
   if (current !== undefined && compareVersions(version, current) <= 0) {
     throw new ReleaseError("not_newer", `${version} is not newer than ${current}.`);
   }
-  return { version, setup: setups[0]!, assets };
+  return { version, setup: setups[0]!, assets: feed, sent };
 }
 
-/** The feed after a release: the new packages and those of the newest earlier versions, `keep` versions in all. */
-export function mergeFeed(existing: ReleaseAsset[], added: ReleaseAsset[], keep = KEEP_VERSIONS): ReleaseAsset[] {
-  const all = [...existing.filter((a) => !added.some((b) => b.FileName === a.FileName)), ...added];
-  const versions = [...new Set(all.map((a) => a.Version))].sort(compareVersions).slice(-keep);
-  return all.filter((a) => versions.includes(a.Version));
+/** What `GET updates/status` answers (UP-10): the newest release, and the oldest uploader the site still accepts. */
+export interface UpdateStatus {
+  latest: string;
+  releasedAt: number;
+  minimumVersion: string | null;
+  notesUrl: string | null;
+}
+
+/** UPLOADER_MINIMUM_VERSION as X.Y.Z; null when unset or not a plain version. */
+export function minimumVersion(value: string | undefined): string | null {
+  const v = value?.trim() ?? "";
+  return /^\d+\.\d+\.\d+$/.test(v) ? v : null;
+}
+
+export function updateStatus(current: CurrentRelease, minimum: string | null): UpdateStatus {
+  return { latest: current.version, releasedAt: current.publishedAt, minimumVersion: minimum, notesUrl: null };
 }
 
 /** "about 64 MB" (uploader-page board: "about [size]"). */

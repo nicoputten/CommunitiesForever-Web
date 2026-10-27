@@ -6,16 +6,19 @@ import { encode } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as downloadRoute } from "@/app/(site)/uploader/download/route";
+import { GET as pullRoute } from "@/app/api/uploader/v1/releases/[file]/route";
 import { POST as publishRoute } from "@/app/api/uploader/v1/releases/route";
 import { GET as updatesRoute } from "@/app/api/uploader/v1/updates/[file]/route";
-import { FEED_NAME } from "@/core/releases";
+import { GET as statusRoute } from "@/app/api/uploader/v1/updates/status/route";
+import { FEED_NAME, SIGNATURE_NAME } from "@/core/releases";
 import { putGuest } from "@/server/access";
 import { getDb } from "@/server/db";
 import { receiveFiles } from "@/server/multipart";
 import { createToken } from "@/server/uploader";
 
 // WEB-35: publishing a release with the deploy secret, the update feed with a token, the installer download with a
-// session; no access without them.
+// session; no access without them. WEB-35b: the workflow sends the whole signed feed, which is kept and served byte
+// for byte with exactly the packages it lists; the workflow pulls it first with the deploy secret; the update status.
 
 const SECRET = "test-secret-at-least-32-characters-long";
 const DEPLOY = "deploy-secret-of-at-least-32-characters!";
@@ -45,15 +48,30 @@ afterAll(() => {
 const sha = (data: string) => createHash("sha256").update(data).digest("hex");
 const full = (v: string) => `${ID}-${v}-full.nupkg`;
 
-/** A release as `vpk pack` would leave it: the installer, the full package and the feed. */
-function release(version: string, extra: Record<string, string> = {}): Record<string, string> {
-  const pkg = `package ${version}`;
-  const feed = JSON.stringify({
-    Assets: [
-      { PackageId: ID, Version: version, Type: "Full", FileName: full(version), SHA256: sha(pkg), Size: pkg.length },
-    ],
-  });
-  return { [SETUP]: `setup ${version}`, [full(version)]: pkg, [FEED_NAME]: feed, ...extra };
+const pkgOf = (v: string) => `package ${v}`;
+const assetOf = (v: string) => ({
+  PackageId: ID,
+  Version: v,
+  Type: "Full",
+  FileName: full(v),
+  SHA256: sha(pkgOf(v)),
+  Size: pkgOf(v).length,
+});
+
+/**
+ * A release as the workflow sends it after `vpk pack` and signing: the installer, the new full package, the whole
+ * feed (the new version and `kept` earlier ones, already on the site) and its signature. Velopack's own formatting
+ * (indented, CRLF) shows the feed is stored byte for byte.
+ */
+function release(version: string, kept: string[] = [], extra: Record<string, string> = {}): Record<string, string> {
+  const feed = JSON.stringify({ Assets: [...kept, version].map(assetOf) }, null, 2).replace(/\n/g, "\r\n");
+  return {
+    [SETUP]: `setup ${version}`,
+    [full(version)]: pkgOf(version),
+    [FEED_NAME]: feed,
+    [SIGNATURE_NAME]: `sig of ${version}`,
+    ...extra,
+  };
 }
 
 function multipart(files: Record<string, string>, boundary = "----cfboundary7"): string {
@@ -89,6 +107,19 @@ const publish = (files: Record<string, string>, secret = DEPLOY) =>
       body: chunked(multipart(files)),
       duplex: "half",
     } as RequestInit),
+  );
+
+const pull = (file: string, secret?: string) =>
+  pullRoute(
+    new Request(`${BASE}/api/uploader/v1/releases/${file}`, {
+      headers: secret ? { authorization: `Bearer ${secret}` } : {},
+    }),
+    { params: Promise.resolve({ file }) },
+  );
+
+const status = (auth?: string) =>
+  statusRoute(
+    new Request(`${BASE}/api/uploader/v1/updates/status`, { headers: auth ? { authorization: `Bearer ${auth}` } : {} }),
   );
 
 const updates = (file: string, auth?: string) =>
@@ -130,6 +161,9 @@ describe("releases", () => {
   it("has nothing before the first release", async () => {
     expect((await download(ADMIN)).status).toBe(404);
     expect((await updates(FEED_NAME, token)).status).toBe(404);
+    expect((await status(token)).status).toBe(404);
+    // The first release has nothing to pull.
+    expect((await pull(FEED_NAME, DEPLOY)).status).toBe(404);
   });
 
   it("publishes only with the deploy secret and only Velopack's files", async () => {
@@ -138,6 +172,10 @@ describe("releases", () => {
     expect([bad.status, (await bad.json()).error]).toEqual([400, "invalid_release"]);
     const mismatch = await publish({ ...release("1.0.0"), [full("1.0.0")]: "tampered" });
     expect([mismatch.status, (await mismatch.json()).error]).toEqual([400, "invalid_release"]);
+    const unsigned = release("1.0.0");
+    delete unsigned[SIGNATURE_NAME];
+    const noSig = await publish(unsigned);
+    expect([noSig.status, (await noSig.json()).error_description]).toEqual([400, `Send ${SIGNATURE_NAME}.`]);
 
     const ok = await publish(release("1.0.0"));
     expect(ok.status).toBe(201);
@@ -162,7 +200,10 @@ describe("releases", () => {
     const feed = await updates(FEED_NAME, token);
     expect(feed.status).toBe(200);
     expect(feed.headers.get("cache-control")).toBe("no-store");
-    expect((await feed.json()).Assets.map((a: { Version: string }) => a.Version)).toEqual(["1.0.0"]);
+    // Byte for byte as sent (the signature covers these bytes).
+    expect(await feed.text()).toBe(release("1.0.0")[FEED_NAME]);
+    const sig = await updates(SIGNATURE_NAME, token);
+    expect([sig.status, sig.headers.get("cache-control"), await sig.text()]).toEqual([200, "no-store", "sig of 1.0.0"]);
     const pkg = await updates(full("1.0.0"), token);
     expect(await pkg.text()).toBe("package 1.0.0");
     expect(pkg.headers.get("cache-control")).toContain("immutable");
@@ -179,11 +220,54 @@ describe("releases", () => {
     expect(await ok.text()).toBe("setup 1.0.0");
   });
 
-  it("keeps the newest three versions", async () => {
-    for (const v of ["1.1.0", "1.2.0", "1.3.0"]) expect((await publish(release(v))).status).toBe(201);
-    const versions = (await (await updates(FEED_NAME, token)).json()).Assets.map((a: { Version: string }) => a.Version);
-    expect(versions).toEqual(["1.1.0", "1.2.0", "1.3.0"]);
+  it("answers the update status to an active token", async () => {
+    expect((await status()).status).toBe(401);
+    process.env.UPLOADER_MINIMUM_VERSION = "1.0.0";
+    try {
+      const res = await status(token);
+      expect(res.headers.get("cache-control")).toBe("no-store");
+      expect(await res.json()).toEqual({
+        latest: "1.0.0",
+        releasedAt: expect.any(Number),
+        minimumVersion: "1.0.0",
+        notesUrl: null,
+      });
+    } finally {
+      delete process.env.UPLOADER_MINIMUM_VERSION;
+    }
+    expect(((await (await status(token)).json()) as { minimumVersion: unknown }).minimumVersion).toBeNull();
+  });
+
+  it("lets the workflow pull the feed and packages with the deploy secret only", async () => {
+    expect((await pull(FEED_NAME)).status).toBe(401);
+    expect((await pull(FEED_NAME, token)).status).toBe(401);
+    const feed = await pull(FEED_NAME, DEPLOY);
+    expect([feed.status, await feed.text()]).toEqual([200, release("1.0.0")[FEED_NAME]]);
+    expect(await (await pull(full("1.0.0"), DEPLOY)).text()).toBe("package 1.0.0");
+    expect((await pull(SETUP, DEPLOY)).status).toBe(404);
+    expect((await pull("..%2Fcurrent.json", DEPLOY)).status).toBe(404);
+  });
+
+  it("refuses a feed that lists a package the site doesn't have, or another one under its name", async () => {
+    const unknown = await publish(release("1.1.0", ["0.9.0"]));
+    expect([unknown.status, (await unknown.json()).error]).toEqual([400, "invalid_release"]);
+    const other = release("1.1.0", ["1.0.0"]);
+    other[FEED_NAME] = other[FEED_NAME]!.replace(sha(pkgOf("1.0.0")), sha("another package"));
+    const changed = await publish(other);
+    expect([changed.status, (await changed.json()).error]).toEqual([400, "invalid_release"]);
+    expect(await (await updates(FEED_NAME, token)).text()).toBe(release("1.0.0")[FEED_NAME]);
+  });
+
+  it("keeps exactly the packages the new feed lists", async () => {
+    expect((await publish(release("1.1.0", ["1.0.0"]))).status).toBe(201);
+    expect((await publish(release("1.2.0", ["1.0.0", "1.1.0"]))).status).toBe(201);
+    // The workflow trimmed 1.0.0 from the feed: its package goes.
+    expect((await publish(release("1.3.0", ["1.1.0", "1.2.0"]))).status).toBe(201);
+    expect(await (await updates(FEED_NAME, token)).text()).toBe(release("1.3.0", ["1.1.0", "1.2.0"])[FEED_NAME]);
+    expect(await (await updates(SIGNATURE_NAME, token)).text()).toBe("sig of 1.3.0");
     expect(existsSync(path.join(dir, "uploader", "releases", full("1.0.0")))).toBe(false);
+    expect(existsSync(path.join(dir, "uploader", "releases", full("1.1.0")))).toBe(true);
+    expect((await updates(full("1.0.0"), token)).status).toBe(404);
     expect(await (await download(ADMIN)).text()).toBe("setup 1.3.0");
   });
 
@@ -191,6 +275,7 @@ describe("releases", () => {
     delete process.env.UPLOADER_DEPLOY_SECRET;
     try {
       expect((await publish(release("9.0.0"))).status).toBe(404);
+      expect((await pull(FEED_NAME, DEPLOY)).status).toBe(404);
     } finally {
       process.env.UPLOADER_DEPLOY_SECRET = DEPLOY;
     }

@@ -46,6 +46,7 @@ test.describe("a friend", () => {
     });
     await page.goto("/discord");
     await page.getByRole("button", { name: "Link Discord" }).click();
+    await page.waitForURL(/^https:\/\/discord\.com\//);
     await expect.poll(() => authorize?.pathname).toBe("/oauth2/authorize");
     expect(authorize!.searchParams.get("scope")).toBe("identify");
     expect(authorize!.searchParams.get("code_challenge_method")).toBe("S256");
@@ -66,6 +67,8 @@ test.describe("a friend", () => {
     });
     await page.goto("/discord");
     await page.getByRole("button", { name: "Link Discord" }).click();
+    // Wait for the navigation to Discord to finish, so it doesn't interrupt the next one.
+    await page.waitForURL(/^https:\/\/discord\.com\//);
     await expect.poll(() => state).not.toBe("");
     await page.goto(`/api/discord/callback?error=access_denied&state=${state}`);
     await expect(page.getByRole("status")).toHaveText("Linking was cancelled. Nothing changed.");
