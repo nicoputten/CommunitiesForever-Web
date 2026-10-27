@@ -93,6 +93,24 @@ export function SignOutIcon(props: IconProps) {
   );
 }
 
+/** Three lines narrowing: the phone map's Filters button (phone-map board). */
+export function FiltersIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 20 20" strokeWidth={1.6} {...props}>
+      <path d="M3 5h14M6 10h8M8.5 15h3" />
+    </Icon>
+  );
+}
+
+/** A chevron left: back (phone-character board). */
+export function BackIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 18 18" strokeWidth={1.8} {...props}>
+      <path d="M11 3L5 9l6 6" />
+    </Icon>
+  );
+}
+
 /** Two waves: the user menu's Motion setting (WEB-16; no board draws this item, the stroke matches SignOutIcon). */
 export function MotionIcon(props: IconProps) {
   return (

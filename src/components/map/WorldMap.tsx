@@ -15,6 +15,8 @@ export interface WorldMapProps {
   /** Over the map, outside pan and zoom: the roll call (WEB-27), or before the first upload the empty-site card and
    * guest list (WEB-29). */
   panel?: ReactNode;
+  /** Below 1024 px: the roll call in the phone's bottom sheet (WEB-28). */
+  sheet?: ReactNode;
 }
 
 // Placed as on the map board (design/boards/map), world coordinates: decoration, not game data.
@@ -44,7 +46,7 @@ const anchor = (x: number, y: number) => ({ "--ox": x, "--oy": y }) as CSSProper
  * the markers as an HTML overlay (MapStage). The whole 1440 × 900 world is drawn; pan, zoom and the continent switch
  * (a fly to the continent's frame) are MapStage's (WEB-26). Towns show from 2×, dungeons from 4×.
  */
-export function WorldMap({ view, continent, selected, drop, panel }: WorldMapProps) {
+export function WorldMap({ view, continent, selected, drop, panel, sheet }: WorldMapProps) {
   const box = WORLD;
   return (
     <section className={styles.frame} aria-label="World map" data-page="map" data-continent={continent}>
@@ -56,6 +58,7 @@ export function WorldMap({ view, continent, selected, drop, panel }: WorldMapPro
         split={CONTINENT_SPLIT}
         dungeons={dungeons}
         drop={drop}
+        sheet={sheet}
       >
         <svg
           className={styles.svg}

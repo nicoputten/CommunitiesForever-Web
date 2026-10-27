@@ -1,0 +1,111 @@
+/* The phone map's bottom sheet (WEB-28): phone-map, phone-character and phone-roll-call boards. */
+
+/* Moved with transform: as tall as the screen, only its top part shows above the tab bar. */
+.sheet {
+  position: fixed;
+  z-index: 15;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100dvh;
+  box-sizing: border-box;
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  border-top: var(--border) solid var(--line-strong);
+  background: var(--surface-sheet-peek);
+  backdrop-filter: blur(var(--blur-modal));
+  box-shadow: var(--shadow-sheet);
+  color: var(--text);
+  touch-action: none;
+  /* Before it measured the screen (first paint, server HTML): at the peek, above the tab bar. */
+  transform: translateY(var(--sheet-y, calc(100dvh - var(--size-sheet-peek) - var(--size-tabbar))));
+  /* DESIGN.md §6: 280 ms, ease-out; while dragged it follows the finger. */
+  transition: transform var(--dur-sheet) var(--ease-out);
+}
+
+.sheet[data-dragging] {
+  transition: none;
+}
+
+.sheet[data-snap="half"] {
+  background: var(--surface-sheet);
+}
+
+.sheet[data-snap="full"] {
+  background: var(--surface-sheet-full);
+  backdrop-filter: none;
+}
+
+/* Without motion: no slide, the sheet fades in where it lands (BottomSheet). */
+html[data-motion="off"] .sheet {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) .sheet {
+    transition: none;
+  }
+}
+
+/* Scrolled lists and sideways chip rows keep their own touch scrolling. */
+.sheet [data-sheet-scroll] {
+  touch-action: pan-y;
+}
+
+.sheet [data-sheet-row] {
+  touch-action: pan-x;
+}
+
+/* What shows above the tab bar at the snap point (BottomSheet sets --sheet-visible). */
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  box-sizing: border-box;
+  height: var(--sheet-visible, var(--size-sheet-peek));
+  padding-top: var(--s-2);
+  overflow: hidden;
+}
+
+/* A 44 px target around the board's 60 × 20 handle, without moving what follows. */
+.handle {
+  flex: none;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-handle-hit);
+  height: var(--size-touch);
+  margin: calc(-1 * var(--s-3)) 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+}
+
+.bar {
+  flex: none;
+  align-self: center;
+  display: block;
+  width: var(--size-handle-w);
+  height: var(--size-handle-h);
+  border-radius: var(--r-pill);
+  background: var(--handle);
+}
+
+/* The strip of map above the full sheet. */
+.dim {
+  position: fixed;
+  z-index: 14;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: var(--sheet-dim);
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  .sheet,
+  .dim {
+    display: none;
+  }
+}

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CONTINENTS, parseContinent } from "@/core/views/mapMarkers";
 import { SegmentedNav } from "@/components/ui/SegmentedNav";
-import { EmblemIcon, UploadIcon } from "@/components/ui/icons";
+import { requestSheet } from "@/components/map/flyTo";
+import { BackIcon, EmblemIcon, FiltersIcon, UploadIcon } from "@/components/ui/icons";
 import { NAV, isCurrent } from "./nav";
 import { LinkPending } from "./Pending";
 import { UserMenu } from "./UserMenu";
@@ -25,9 +26,21 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
   const pathname = usePathname();
   const onMap = pathname === "/";
   const uploadCurrent = isCurrent("/upload", pathname);
-  const continent = parseContinent(useSearchParams().get("continent"));
+  const params = useSearchParams();
+  const continent = parseContinent(params.get("continent"));
+  // The phone map with a character open in its sheet: back, the zone and "2 here" (phone-character board, WEB-28).
+  const character = onMap && params.get("character") !== null;
   return (
-    <header className={styles.bar} data-variant={onMap ? "map" : "data"}>
+    <header className={styles.bar} data-variant={onMap ? "map" : "data"} data-character={character || undefined}>
+      {character && (
+        <>
+          <button type="button" className={styles.back} aria-label="Back to map" onClick={() => requestSheet("close")}>
+            <BackIcon className={styles.backIcon} />
+          </button>
+          {/* MapStage fills this slot with the zone and the count. */}
+          <span className={styles.phoneTitle} data-map-phone-title="" />
+        </>
+      )}
       <Link href="/" className={styles.brand}>
         <EmblemIcon className={styles.emblem} />
         <span>{siteName}</span>
@@ -65,6 +78,11 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
         <span className={styles.ageDesktop}>{dataAgo === undefined ? "No data yet" : `Data uploaded ${dataAgo}`}</span>
         <span className={styles.agePhone}>{dataAgo === undefined ? "No data yet" : `Updated ${dataAgo}`}</span>
       </span>
+      {onMap && (
+        <button type="button" className={styles.filters} aria-label="Filters" onClick={() => requestSheet("full")}>
+          <FiltersIcon className={styles.filtersIcon} />
+        </button>
+      )}
       {viewer?.mayUpload && (
         <Link href="/upload" className={styles.upload} aria-current={uploadCurrent ? "page" : undefined}>
           <UploadIcon className={styles.uploadIcon} />

@@ -22,9 +22,10 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ## E5 Screens
 
 ### WEB-28 Phone map
-- Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
+- Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet: peek → half → full (built without `vaul`, see `docs/ARCHITECTURE.md`).
 - Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
-- Bug (found in WEB-27, Nico 2026-10-27): on a phone, `?continent=eastern-kingdoms` frames the continent and springs back to the whole world about 120 ms later, because at 1× the map centres the land (WEB-26). A continent on a phone stays framed; the design check's `map-continent-phone` baseline (temporarily the 2× view over the Maelstrom) shows the continent again.
+- Bug (found in WEB-27, Nico 2026-10-27): on a phone, `?continent=eastern-kingdoms` framed the continent and sprang back to the whole world about 120 ms later. Fixed: a continent frames at 1.25× at least and the phone map fills the screen (`map-continent-phone` shows the continent again).
+- Decided with Nico (2026-10-27, all 12 proposals): the sheet below 1024 px; snap points 136 / 400 px above the tab bar and 96 px from the top; full names in the peek and the next button; `?character=` as a history entry (Back closes); the WEB-27 filters in the full sheet; the approved phone app bar plus Filters; the edge hint on either side; 120 ms fade without motion. Deviations in `docs/DESIGN.md` §11.
 
 ## E6 Later
 
@@ -36,7 +37,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ### WEB-32 Known bugs
 One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
-- **Phone map: the endless sea stops.** On a phone the map frame is only as tall as the land (WEB-25/26), so the sea ends under it and the plain page shows below; the sea does not run on around the world as it does on desktop (WEB-25 "endless sea"). Seen in `tests/design/__screenshots__/map.spec.ts/map-phone.png`. Check against WEB-28 (full-screen phone map), which may change the frame.
 
 ### Backlog (unordered, not yet stories)
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").

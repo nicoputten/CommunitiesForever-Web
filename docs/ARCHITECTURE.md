@@ -22,7 +22,7 @@
 | Map | inline SVG rendered on the server from `src/core/map/zones.json`, HTML overlay for markers | no tiles, no WebGL |
 | Pan, zoom, pinch | `react-zoom-pan-pinch` | map (WEB-26) |
 | Popovers | `@floating-ui/react` | marker cards, filter menus |
-| Bottom sheet | `vaul` | phone map (WEB-28) |
+| Bottom sheet | own component (`BottomSheet`), no library | phone map (WEB-28): `vaul` was approved but not used, its Drawer always opens Radix's modal Dialog (hides the page from screen readers, traps focus, blocks the map), also with `modal={false}` |
 | Motion | CSS keyframes and transitions; `motion` only if the sheet drag or cluster fan need physics (ask first) | |
 
 Every dependency beyond this list needs Nico's OK (CLAUDE.md rule 9).

@@ -587,4 +587,33 @@
   --dur-line: 1.4s; /* loading: the thin gold line runs */
   --dur-line-delay: 300ms; /* loading: the line shows only after 300 ms */
   --dur-markers-in: 400ms; /* loading: markers fade in */
+
+  /* phone map (WEB-28): the phone-map, phone-character and phone-roll-call boards */
+  --size-sheet-peek: 136px; /* phone-map: the roll call peek, above the tab bar */
+  --size-sheet-half: 400px; /* phone-character: the half sheet, above the tab bar */
+  --size-sheet-top: 96px; /* phone-roll-call: the full sheet's top */
+  --surface-sheet-peek: rgba(12, 18, 30, 0.92); /* phone-map: sheet */
+  --surface-sheet: rgba(12, 18, 30, 0.94); /* phone-character: half sheet */
+  --surface-sheet-full: rgba(12, 18, 30, 0.97); /* phone-roll-call: full sheet */
+  --surface-hint: rgba(12, 18, 30, 0.82); /* phone-map: edge hint, continent switch */
+  --line-hint: rgba(212, 175, 106, 0.3); /* phone-map: edge hint */
+  --line-sheet-head: rgba(212, 175, 106, 0.15); /* phone-roll-call: under the filters */
+  --handle: rgba(212, 175, 106, 0.5); /* phone-map: sheet handle */
+  --size-handle-w: 36px;
+  --size-handle-h: 4px;
+  --size-handle-hit: 60px; /* phone-map: handle hit area width */
+  --fs-sheet-title: 18px; /* phone-map: "Roll call" in the peek (Marcellus SC) */
+  --chip-peek-bg: rgba(255, 255, 255, 0.05); /* phone-map: peek row chip; phone-character: close button */
+  --chip-peek-line: rgba(255, 255, 255, 0.08); /* phone-map: peek row chip */
+  --line-row-sheet: rgba(255, 255, 255, 0.05); /* phone-roll-call: between rows */
+  --size-row-sheet: 52px; /* phone-roll-call: row height */
+  --track-sheet: #232c3a; /* phone-character: level and skill bar track */
+  --size-bar-sheet: 6px; /* phone-character: level and skill bars */
+  --r-bar-sheet: 3px;
+  --size-prof-name: 92px; /* phone-character: profession name column */
+  --size-prof-value: 62px; /* phone-character: "187 / 225" column */
+  --line-next: rgba(212, 175, 106, 0.4); /* phone-character: next-character button */
+  --size-chevron: 10px; /* phone-map: edge hint chevron */
+  --dur-sheet-fade: 120ms; /* DESIGN.md §6: the bottom sheet without motion */
+  --sheet-dim: rgba(5, 10, 18, 0.6); /* phone-roll-call: the map strip above the full sheet */
 }

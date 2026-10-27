@@ -186,4 +186,67 @@
   .agePhone {
     display: inline;
   }
+
+  .bar .filters {
+    display: flex;
+  }
+
+  /* A character open in the map's sheet (WEB-28, phone-character board): back, zone, "2 here". */
+  .bar[data-character] {
+    gap: var(--s-1);
+    padding-left: var(--s-1);
+  }
+
+  .bar[data-character] .back,
+  .bar[data-character] .phoneTitle {
+    display: flex;
+  }
+
+  .bar[data-character] .spacer,
+  .bar[data-character] .brand,
+  .bar[data-character] .age,
+  .bar[data-character] .filters,
+  .bar[data-character] [data-user-menu] {
+    display: none;
+  }
+}
+
+/* The phone map's Filters button and the character variant's back arrow (WEB-28): phone only. */
+.filters,
+.back,
+.phoneTitle {
+  display: none;
+}
+
+.filters,
+.back {
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.filtersIcon {
+  width: var(--size-tab-icon);
+  height: var(--size-tab-icon);
+  color: var(--gold);
+}
+
+.backIcon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  color: var(--gold-bright);
+}
+
+.phoneTitle {
+  flex: 1;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
 }

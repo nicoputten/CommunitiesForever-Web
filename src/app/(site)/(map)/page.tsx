@@ -29,7 +29,8 @@ const EMPTY: WorldMapView = { places: [], occupied: {} };
  * selected character (`?character=`) come from the URL; `?drop=<upload id>` (the session report's link, WEB-26) drops
  * that upload's new sightings in. The roll call (WEB-27) sits over the map's right side; its filters
  * (`friend`, `new`, `faction`, `level`) filter the markers too. Before the first upload the map is bare under the
- * empty-site card and the guest list (WEB-29).
+ * empty-site card and the guest list (WEB-29). Below 1024 px the roll call is a bottom sheet over a full-screen map
+ * and a tapped character opens in it (WEB-28).
  */
 export default async function MapPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -58,6 +59,11 @@ export default async function MapPage({ searchParams }: { searchParams: Promise<
             <EmptyMap {...await getFirstUpload()} guestList={guestList()} />
           ) : (
             <RollCallPanel call={call} query={query} clearHref={clearHref(params)} />
+          )
+        }
+        sheet={
+          call === undefined ? undefined : (
+            <RollCallPanel call={call} query={query} clearHref={clearHref(params)} variant="sheet" />
           )
         }
       />

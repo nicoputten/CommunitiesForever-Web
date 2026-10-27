@@ -1,0 +1,85 @@
+/* The phone map's own controls over the map (WEB-28, phone-map and phone-character boards). */
+
+/* "4 in Kalimdor": on the edge the other continent lies past. */
+.hint {
+  position: absolute;
+  z-index: 5;
+  top: 40%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  box-sizing: border-box;
+  min-height: var(--size-touch);
+  padding: var(--s-2) var(--s-2-5);
+  border: var(--border) solid var(--line-hint);
+  background: var(--surface-hint);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta-sm);
+  cursor: pointer;
+}
+
+.hint[data-side="left"] {
+  left: var(--s-2);
+  border-radius: 0 var(--r-btn) var(--r-btn) 0;
+}
+
+.hint[data-side="right"] {
+  right: var(--s-2);
+  flex-direction: row-reverse;
+  border-radius: var(--r-btn) 0 0 var(--r-btn);
+}
+
+.chevron {
+  width: var(--size-chevron);
+  height: var(--size-chevron);
+  fill: none;
+  stroke: var(--gold-bright);
+  stroke-width: 1.5;
+}
+
+/* The continent switch (phone-map board), where the desktop top bar has its segmented one. */
+.continent {
+  position: absolute;
+  z-index: 5;
+  top: var(--s-2-5);
+  left: var(--s-3);
+}
+
+.continent button {
+  background: var(--surface-hint);
+  border-color: var(--line-strong);
+  color: var(--text-strong);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+}
+
+/* The zone and "2 here" in the app bar (phone-character board). */
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--fs-brand-phone);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.here {
+  flex: none;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+@media (min-width: 768px) {
+  .continent {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hint {
+    display: none;
+  }
+}

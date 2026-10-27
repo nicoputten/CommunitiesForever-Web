@@ -27,6 +27,7 @@ test("shows every located character at its zone", async ({ page }) => {
 });
 
 test("opens a cluster, selects a character and keeps it in the URL", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: a phone opens the character in its sheet (phone-map.spec.ts, WEB-28)");
   await page.goto("/");
   const stv = page.getByRole("button", { name: /^2 characters in Stranglethorn Vale/ });
   await stv.click();

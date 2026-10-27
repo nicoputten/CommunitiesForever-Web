@@ -13,7 +13,7 @@ const ICONS: Record<NavHref, typeof MapIcon> = { "/": MapIcon, "/roster": Roster
 export function TabBar() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className={styles.bar}>
+    <nav aria-label="Main" className={styles.bar} data-tabbar="">
       {NAV.map((item) => {
         const Icon = ICONS[item.href];
         return (

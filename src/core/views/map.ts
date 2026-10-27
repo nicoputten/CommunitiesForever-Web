@@ -1,7 +1,9 @@
 import map from "../map/zones.json";
+import { MAX_LEVEL } from "../gamedata";
 import type { Dataset } from "../model";
-import { daysOld, timeAgo, type DataAge } from "./age";
+import { daysOld, rowAge, timeAgo, type DataAge } from "./age";
 import { compareText, peopleViews, shownCharacters } from "./characters";
+import { ROLE_NAMES } from "./rosterQuery";
 import { initials } from "./text";
 import type { Continent, MapMarker, MapPlace } from "./mapMarkers";
 
@@ -170,8 +172,23 @@ export function worldMap(d: Dataset, now: number, only?: ReadonlySet<string>): W
       zoneName: zone.name,
       seenAt: s.seenAt,
       seenAgo: timeAgo(s.seenAt, now),
+      seenShort: rowAge(s.seenAt, now),
       age: s.age,
     };
+    if (c.faction !== undefined) marker.faction = c.faction;
+    if (c.level !== undefined) marker.levelsToMax = Math.max(0, MAX_LEVEL - c.level);
+    if (c.role !== undefined) marker.role = ROLE_NAMES[c.role];
+    if (c.talents.length > 0) marker.talents = c.talents.map((t) => t.points ?? 0).join(" / ");
+    if (c.professions.length > 0)
+      marker.professions = c.professions.map((p) => {
+        const row: NonNullable<MapMarker["professions"]>[number] = {
+          name: p.name,
+          rank: p.rank,
+          primary: p.kind === "primary",
+        };
+        if (p.max !== undefined) row.max = p.max;
+        return row;
+      });
     if (c.name !== undefined) marker.name = c.name;
     if (c.classFile !== undefined) marker.classFile = c.classFile;
     if (c.className !== undefined) marker.className = c.className;

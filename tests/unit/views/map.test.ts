@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import map from "@/core/map/zones.json";
 import {
+  CONTINENT_MIN_SCALE,
   CONTINENT_SPLIT,
   ZOOM_MAX,
   continentAt,
+  continentScale,
+  edgeHint,
+  placeOf,
   continentViewBox,
   markerLabel,
   parseContinent,
@@ -52,6 +56,22 @@ describe("world map", () => {
       age: "live",
     });
     expect(ves?.ageTag).toBeUndefined();
+  });
+
+  it("gives a marker what the phone's character sheet shows (WEB-28)", () => {
+    const ves = place("stv")!.markers[1]!;
+    expect(ves).toMatchObject({
+      seenShort: "2 h",
+      faction: "Horde",
+      levelsToMax: 21,
+      role: "Damage",
+      talents: "10 / 0 / 20",
+      professions: [
+        { name: "Tailoring", rank: 187, max: 225, primary: true },
+        { name: "Enchanting", rank: 160, max: 225, primary: true },
+        { name: "Cooking", rank: 75, max: 150, primary: false },
+      ],
+    });
   });
 
   it("tags every sighting that is not new with its age in days", () => {
@@ -103,7 +123,15 @@ describe("world map", () => {
       "Lia Thornwhisper, level 37 Priest, Stranglethorn Vale, seen 1 h ago",
     );
     expect(
-      markerLabel({ initials: "?", guid: "x", zoneName: "Duskwood", seenAt: 0, seenAgo: "just now", age: "live" }),
+      markerLabel({
+        initials: "?",
+        guid: "x",
+        zoneName: "Duskwood",
+        seenAt: 0,
+        seenAgo: "just now",
+        seenShort: "now",
+        age: "live",
+      }),
     ).toBe("Unknown character, Duskwood, seen just now");
   });
 });
@@ -168,6 +196,44 @@ describe("map zoom", () => {
     // Between the land: Kalimdor's zones end at x 547.7, the Eastern Kingdoms' start at 592 (zones.json).
     expect(CONTINENT_SPLIT).toBeGreaterThan(547.7);
     expect(CONTINENT_SPLIT).toBeLessThan(592);
+  });
+});
+
+describe("phone map (WEB-28)", () => {
+  const view = worldMap(sample(), NOW);
+
+  it("frames a continent past 1x, so it never springs back to the whole world", () => {
+    expect(continentScale("eastern-kingdoms", 0.9)).toBe(CONTINENT_MIN_SCALE);
+    expect(continentScale("kalimdor", 3.4)).toBe(3.4);
+    expect(continentScale("kalimdor", 9)).toBe(ZOOM_MAX);
+    expect(continentScale("azeroth", 3)).toBe(1);
+    expect(zoomLevel(CONTINENT_MIN_SCALE)).toBe("world");
+    expect(continentAt(800, CONTINENT_MIN_SCALE, CONTINENT_SPLIT)).toBe("eastern-kingdoms");
+  });
+
+  it("counts the characters on the other continent for the edge hint", () => {
+    expect(edgeHint(view.places, "eastern-kingdoms", CONTINENT_SPLIT)).toEqual({
+      continent: "kalimdor",
+      label: "4 in Kalimdor",
+      count: 4,
+      side: "left",
+    });
+    expect(edgeHint(view.places, "kalimdor", CONTINENT_SPLIT)).toMatchObject({
+      label: "5 in Eastern Kingdoms",
+      side: "right",
+    });
+    expect(edgeHint(view.places, "azeroth", CONTINENT_SPLIT)).toBeUndefined();
+    expect(edgeHint([], "kalimdor", CONTINENT_SPLIT)).toBeUndefined();
+  });
+
+  it("finds a character's place and the next one there, wrapping", () => {
+    const stv = view.places.find((p) => p.zone === "stv")!;
+    const [lia, ves] = stv.markers;
+    expect(placeOf(view.places, ves!.guid)).toMatchObject({ place: { zone: "stv" }, next: { guid: lia!.guid } });
+    expect(placeOf(view.places, lia!.guid)?.next?.guid).toBe(ves!.guid);
+    const tok = view.places.find((p) => p.zone === "hillsbrad")!.markers[0]!;
+    expect(placeOf(view.places, tok.guid)?.next).toBeUndefined();
+    expect(placeOf(view.places, "nobody")).toBeUndefined();
   });
 });
 

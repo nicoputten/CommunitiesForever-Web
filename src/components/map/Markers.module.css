@@ -523,23 +523,6 @@ html[data-motion="off"] .place[data-drop]::before {
 
 /* Phone: the card sits at the bottom of the screen, above the tab bar (the half sheet is WEB-28). */
 @media (max-width: 767px) {
-  /* Outside the zoom (MapStage), and no transform of its own: that would hold the fixed card. */
-  .cardAnchor {
-    transform: none;
-  }
-
-  .cardAnchor > *,
-  .cardAnchor[data-side="left"] > *,
-  .cardAnchor[data-v] > * {
-    position: fixed;
-    left: var(--gutter-phone);
-    right: var(--gutter-phone);
-    top: auto;
-    bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom) + var(--s-3));
-    width: auto;
-    transform: none;
-  }
-
   .listRow {
     min-height: var(--size-touch);
   }

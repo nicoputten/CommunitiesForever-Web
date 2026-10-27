@@ -242,18 +242,10 @@
   text-transform: uppercase;
 }
 
-/* Phone: the whole world across the screen width, the footer right under it (the phone map is WEB-28). */
+/* Phone (WEB-28): the map fills the screen between the app bar and the tab bar; the sea runs on above and below the
+   world, and the bottom sheet lies over its lower part. */
 @media (max-width: 767px) {
   .frame {
-    height: auto;
-  }
-
-  .fit {
-    container-type: inline-size;
-    height: auto;
-  }
-
-  .stage {
-    width: 100%;
+    height: calc(100dvh - var(--size-bar-phone) - var(--size-tabbar) - env(safe-area-inset-bottom));
   }
 }

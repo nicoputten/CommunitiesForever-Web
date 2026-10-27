@@ -38,7 +38,7 @@ export function RollCallFilters({ query, people }: { query: RollCallQuery; peopl
 
   return (
     <>
-      <div role="group" aria-label="Friend" className={styles.chips}>
+      <div role="group" aria-label="Friend" className={styles.chips} data-sheet-row="">
         <FilterChip pressed={query.friend === undefined} onClick={() => go(withValue("friend", undefined))}>
           All
         </FilterChip>
@@ -48,7 +48,7 @@ export function RollCallFilters({ query, people }: { query: RollCallQuery; peopl
           </FilterChip>
         ))}
       </div>
-      <div className={styles.chips}>
+      <div className={styles.chips} data-sheet-row="">
         <FilterChip pressed={query.liveOnly} onClick={() => go({ ...query, liveOnly: !query.liveOnly })}>
           New
         </FilterChip>
