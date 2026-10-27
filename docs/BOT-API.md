@@ -117,6 +117,18 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 - A channel or role the admin picked that is no longer reported stays picked: the page shows it as removed, and `settings` keeps its id until the admin picks another.
 - Optional within v1: a site without it answers `404`; the bot carries on without reporting.
 
+## Card images (built, WEB-41d)
+`GET /api/bot/v1/cards/<id>.png` → `200 image/png` (`Cache-Control: private, max-age=86400`), for the bot to attach to a post. `404 not_found` for an id the site can't draw. Rendered by the site in its own style (Nico's references in `design/cards/`); a card that shows the map carries its credit ("Map: Syrio, CC BY-SA 4.0").
+
+| id | Size | When it exists |
+|---|---|---|
+| `recap-<week>-header` | 1200 × 400 | every stored recap: the award winner, else the busiest zone, else the headline |
+| `recap-<week>-zone` | 800 × 400 | a recap with the Zone of the week card (`S1`) |
+| `milestone-<event>-<n>` | 800 × 400 | the `n`-th milestone (from 0) of a `milestones` event when it is a `maxLevel`, a `newCharacter` at level 60, or a `professionCap` at 300 |
+| `whereis-<guid>` | 800 × 400 | a character the site has seen in a zone the map draws (for `/whereis`): the newest sighting and up to two earlier ones |
+
+Optional within v1: an older site answers 404 and the bot posts text only.
+
 ## Event types
 
 ### `milestones` (built, WEB-38)
