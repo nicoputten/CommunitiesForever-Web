@@ -35,6 +35,8 @@ export interface UploadSummary {
   sightings: (CharacterRef & { zone: string; seenAt: number; previousZone?: string })[];
   /** Who sent data ("Femke · 1 h", "Jorrit · nothing new", "Sanne · no addon"), per person in the new state. */
   senders: Sender[];
+  /** Answers to planned runs the game sent with this upload (WEB-43, "N run answers"). */
+  runAnswers?: number;
   /** The report header. */
   counts: {
     /** Levels gained, summed over all level ups ("5 levels gained"). */

@@ -100,6 +100,7 @@ export function SessionReport({ report: r, mayUpload, mapHref = "/" }: SessionRe
     <>
       Uploaded <LocalTime at={r.uploadedAt} phrase /> by {r.uploader}
       {r.friendsWithNewData > 0 && <> · new data from {plural(r.friendsWithNewData, "friend")}</>}
+      {r.runAnswers > 0 && <> · {plural(r.runAnswers, "run answer")}</>}
     </>
   );
 

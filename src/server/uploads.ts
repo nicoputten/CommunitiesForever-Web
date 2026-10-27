@@ -12,6 +12,7 @@ import {
   sameBattleTag,
 } from "@/core/access";
 import { diff, type UploadSummary } from "@/core/diff";
+import { readGameItems, type GameItem } from "@/core/gameItems";
 import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
 import { readFeeds, type PersonFeed } from "@/core/feed";
 import { LuaParseError, parseLua } from "@/core/lua";
@@ -20,6 +21,7 @@ import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
 import { notifyBotEvents, recordMilestones } from "./bot";
+import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordSightings } from "./history";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
@@ -68,14 +70,15 @@ export interface UploadResult {
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Read =
-  | { ok: true; data: Dataset; feeds: PersonFeed[] }
+  | { ok: true; data: Dataset; feeds: PersonFeed[]; gameItems: GameItem[] }
   | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
 
 function read(bytes: Uint8Array): Read {
   try {
     const chunk = parseLua(new TextDecoder().decode(bytes));
     // The feed (WEB-41) is read apart from the dataset: it is history, not part of the merged state.
-    return { ok: true, data: normalize(chunk), feeds: readFeeds(chunk) };
+    // So are the game's plans and answers (WEB-43): applied once, after the upload's transaction.
+    return { ok: true, data: normalize(chunk), feeds: readFeeds(chunk), gameItems: readGameItems(chunk) };
   } catch (e) {
     if (e instanceof LuaParseError) return { ok: false, reason: e.message, unreadable: "damaged" };
     if (e instanceof NormalizeError) {
@@ -175,6 +178,16 @@ export function upload(
     return ok;
   });
   if (events) notifyBotEvents();
+  // WEB-43: the game's plans, answers, asks and pings, then which runs the run log shows. Outside the transaction:
+  // each item is applied once (by its id), so an item left out by a crash is applied with the next upload.
+  if (stored.status === "ok" && !stored.duplicate && result.ok) {
+    const game = applyGameItems(db, stored.id, user, result.gameItems, now);
+    markRanIt(db, now);
+    if (game.runAnswers > 0 && stored.summary !== undefined) {
+      stored.summary = { ...stored.summary, runAnswers: game.runAnswers };
+      db.update(uploads).set({ summary: stored.summary }).where(eq(uploads.id, stored.id)).run();
+    }
+  }
   return stored;
 }
 
@@ -413,7 +426,9 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       counts.ok++;
       if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
       const after = state === undefined ? result.data : merge(state.data, result.data);
-      const summary = diff(state?.data, after);
+      // The game's answers aren't applied again; the report keeps their count (WEB-43).
+      const runAnswers = runAnswersOf(tx as unknown as Db, id);
+      const summary: UploadSummary = { ...diff(state?.data, after), ...(runAnswers > 0 ? { runAnswers } : {}) };
       state = { data: after, ...sourcesFor(state, after, id) };
       addMembers(tx, result.data, id);
       recordFeeds(tx, result.feeds, id);

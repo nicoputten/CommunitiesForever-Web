@@ -85,8 +85,11 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                         <span>
                           <b>{p.dungeon}</b> · {p.by}
                         </span>
-                        <span className={styles.pill} data-tone={p.cancelled ? "cancelled" : "done"}>
-                          {p.result}
+                        <span className={styles.pastResult}>
+                          <span className={styles.pill} data-tone={p.result.tone}>
+                            {p.result.label}
+                          </span>
+                          {p.detail !== undefined && <span>{p.detail}</span>}
                         </span>
                       </Link>
                     </li>
