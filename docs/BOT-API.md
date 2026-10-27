@@ -129,6 +129,24 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 
 Optional within v1: an older site answers 404 and the bot posts text only.
 
+## Look-ups (built, WEB-39b)
+`GET /api/bot/v1/lookup/<what>?discordUserId=<id>&…` → `200` the data of the bot's look-up commands (board `bot-commands-runs`); the bot formats it. Only for a Discord user linked (WEB-39) to someone on the list who may sign in: `400 invalid_request` without `discordUserId`, `403 not_linked` for anyone else (the bot then shows "Link your Discord first"); `404 no_data` before the first upload, `404 not_found` for an unknown friend, character or look-up.
+
+A character is `{ guid, name, owner?, classFile?, className?, race?, level?, role? ("tank" | "heal" | "dps"), spec?, ilvl?, talents? (points per tree), professions: [{ name, rank, max? }], seen?: { zone, at } }`: full names, the owner's display name, never a BattleTag. `seen.zone` is the map's zone name (a dungeon's name inside one).
+
+| `<what>` | Parameters | Answer |
+|---|---|---|
+| `names` | `q`, `kind` (`friend`, `character`, both when left out) | `{ names: [{ kind, name, value }] }`, at most 25: friends by display name (`value` = the name), characters by full name (`value` = GUID), for autocomplete |
+| `professions` | | `{ professions: [name] }`: every profession anyone has |
+| `whereis` | `friend` (display name) or `character` (GUID or full name) | `{ friend?, characters, card? }`: newest sighting first; `card` is the GUID for `cards/whereis-<guid>.png` |
+| `who` | `level` (`30-40` or `35`), `role` (`tank`, `healer`, `damage`), `class` (classFile), `recent=true` (seen in the last 24 hours) | `{ total, characters }`: highest level first, at most 15 |
+| `whocancraft` | `profession` | `{ profession, crafters: [character + { rank, max?, best }] }`: best first, `best` for the highest rank |
+| `character` | `name` (GUID or full name) | `{ character }` |
+| `alts` | `friend` (display name) | `{ friend, characters }`: highest level first |
+| `me` | | `{ friend, characters, week? }`: the asker's characters; `week: { levels, quests, runs }` from the activity feed of the last 7 days, only when they share their activity |
+
+Optional within v1: an older site answers 404 and the bot says the look-up isn't available.
+
 ## Event types
 
 ### `milestones` (built, WEB-38)
