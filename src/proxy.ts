@@ -12,6 +12,19 @@ import { sessionBattleTag } from "@/server/session";
 
 const PUBLIC = ["/signin", "/not-on-list", "/api/health"];
 
+/**
+ * The tab icons and the web app manifest (WEB-36): browsers fetch them on the sign-in page too, and the manifest
+ * without cookies. Only the site name is in them, which sign-in shows anyway. `/favicon.ico` skips the proxy (matcher).
+ */
+export const ICONS = [
+  "/icon.svg",
+  "/apple-icon.png",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+];
+
 /** The uploader API checks its own Bearer token (WEB-33, src/server/session.ts tokenGuard); pairing is open. */
 export const UPLOADER_API = "/api/uploader/v1/";
 
@@ -21,6 +34,7 @@ export const BOT_API = "/api/bot/v1/";
 export function isPublic(pathname: string): boolean {
   return (
     PUBLIC.includes(pathname) ||
+    ICONS.includes(pathname) ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith(UPLOADER_API) ||
     pathname.startsWith(BOT_API)

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- The site has its own icon: the shield in the browser tab, on a phone's home screen ("Add to home screen" opens it like an app, named after the community) and on iOS.
 - The Discord page (top bar and account menu › Discord): link your Discord account so the bot knows which characters are yours (the site only asks Discord for your username), or unlink it, and set your time zone, which the browser fills in after you sign in. The admin also sets what the bot posts (milestones, runs, weekly recap), the recap time, the runs options and reminder time, and sees who linked. The admin makes and revokes the bot's token there, sees whether the bot is online and sends a test post. Picking channels and roles follows with the bot.
 - The site can feed the Discord bot: milestones from every upload (every 10 levels, level 60, a profession at its cap, a new character), handed to the bot through its own API with its own token. The bot follows in its own repo; the admin makes the token for now from the browser console (see docs/BOT-API.md).
 - Roster, "Who is around which level": the track shows only dots; hover, focus or tap a dot for the name, level and player. Characters within two levels of each other share one dot with a number, and your own characters have a gold ring. Dungeon bands only say how many fit ("SM Armory 32–42 · 4 fit"), no names. Scarlet Monastery's Graveyard, Library, Armory and Cathedral are separate dungeons with their own level ranges, on the roster and in the character page's "Fits …".

@@ -222,7 +222,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 
 ## 10. Open items
 
-- Final emblem/logo for Doombringers.
+- Final emblem/logo for Doombringers. (WEB-36: Nico's icon set uses the top bar's shield, filled and in `--gold-bright` for small sizes.)
 - ~~Exact addon data-format versioning.~~ The "data format" in the upload copy is the addon's `schemaVersion` (WEB-19).
 - ~~Stale thresholds to confirm.~~ Decided: 7 days for both the site banner and a friend's data (§11).
 - Recipe search UI once the addon shares recipes.
