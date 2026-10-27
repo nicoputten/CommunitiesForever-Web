@@ -180,9 +180,12 @@ test("map: zone zoom (4×): name tags, dungeons, zone in the top bar", async ({ 
   await expectAccessible(page);
   await expectNoMotion(page);
   await page.mouse.move(0, 0);
-  // Flaky before (PR #34, develop): the fly could still be under way when the zone was marked.
+  // Flaky before (PR #34, develop, main): the map was identical, but the pinned card's text rasterised a little
+  // differently from run to run. The card is counter-scaled inside the 4× zoomed layer, and Chromium doesn't always
+  // pick the same raster scale for it. This screenshot is about the zone level (name tags, dungeons, the zone in the top
+  // bar), so the card is masked; its look is checked in "map-selected" and by the hover card's style checks.
   await mapSettled(page);
-  await expectScreenshot(page, "map-zone");
+  await expectScreenshot(page, "map-zone", [page.getByTestId("character-card")]);
 });
 
 test("map: zone zoom touch targets", async ({ page }) => {

@@ -153,7 +153,7 @@ export async function expectNoMotion(page: Page): Promise<void> {
  * The screen matches its screenshot baseline. Baselines are made on Linux in the Playwright image (CI), since fonts
  * render differently on other systems; elsewhere this check is skipped. Open the screen with `openScreen` first.
  */
-export async function expectScreenshot(page: Page, name: string): Promise<void> {
+export async function expectScreenshot(page: Page, name: string, mask: Locator[] = []): Promise<void> {
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
-  await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true });
+  await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, mask });
 }
