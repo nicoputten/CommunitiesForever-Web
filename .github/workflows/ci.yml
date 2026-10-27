@@ -71,6 +71,17 @@ jobs:
             test-results/
           retention-days: 7
 
+  # CLAUDE.md rule 7: no secrets in any commit of the push or PR, history included.
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # The release image (WEB-07), built but not pushed, so a broken Dockerfile shows up before a tag.
   image:
     runs-on: ubuntu-latest

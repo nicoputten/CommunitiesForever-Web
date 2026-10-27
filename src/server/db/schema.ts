@@ -170,3 +170,95 @@ export const uploaderPairings = sqliteTable(
   },
   (t) => [uniqueIndex("uploader_pairings_user_code_unique").on(t.userCode)],
 );
+
+// The Discord bot (WEB-38, docs/BOT-API.md).
+
+/** Bot tokens: one active at a time. Only the SHA-256 of the token is stored; a revoked token is kept for history. */
+export const botTokens = sqliteTable(
+  "bot_tokens",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Hex SHA-256 of the token. */
+    tokenHash: text("token_hash").notNull(),
+    /** BattleTag of the admin who made it. */
+    createdBy: text("created_by").notNull(),
+    /** Unix seconds. */
+    createdAt: integer("created_at").notNull(),
+    lastUsedAt: integer("last_used_at"),
+    revokedAt: integer("revoked_at"),
+  },
+  (t) => [uniqueIndex("bot_tokens_token_hash_unique").on(t.tokenHash)],
+);
+
+/**
+ * What the bot posts, oldest first by id (the feed's cursor). Not derived: a rebuild of the uploads never makes or
+ * removes events, so nothing is posted twice. An event is handed out until the bot acknowledges it.
+ */
+export const botEvents = sqliteTable("bot_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** `milestones` for now; run events follow with WEB-40 (docs/BOT-API.md). */
+  type: text("type").notNull(),
+  /** The event's payload as the API hands it out. */
+  data: text("data", { mode: "json" }).notNull(),
+  /** Unix seconds. */
+  createdAt: integer("created_at").notNull(),
+  /** The upload that made it (milestones). */
+  uploadId: integer("upload_id"),
+  /** When the bot acknowledged it, and the Discord message it posted. */
+  postedAt: integer("posted_at"),
+  messageId: text("message_id"),
+});
+
+// Discord (WEB-39): links, time zones and the bot's settings. The bot token is WEB-38's (`bot_tokens`).
+
+/** One Discord account per BattleTag and one BattleTag per Discord account. Never shown to others but the admin. */
+export const discordLinks = sqliteTable(
+  "discord_links",
+  {
+    /** battleTagKey() of the owner. */
+    key: text("key").primaryKey(),
+    battleTag: text("battle_tag").notNull(),
+    /** The Discord user id (a snowflake, as text). */
+    discordId: text("discord_id").notNull(),
+    /** The Discord username at linking time, for the admin's linked-friends list. */
+    discordName: text("discord_name").notNull(),
+    /** Unix seconds. */
+    linkedAt: integer("linked_at").notNull(),
+  },
+  (t) => [uniqueIndex("discord_links_discord_id_unique").on(t.discordId)],
+);
+
+/** Per-user settings. `time_zone` is an IANA name; null until the browser sent one or the user picked one. */
+export const userPrefs = sqliteTable("user_prefs", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  timeZone: text("time_zone"),
+  /** How the time zone was set: from the browser at sign-in, or picked on the Discord page. */
+  timeZoneFrom: text("time_zone_from", { enum: ["browser", "picked"] }),
+  /** Unix seconds. */
+  updatedAt: integer("updated_at").notNull(),
+});
+
+/** One row (id 1): what the bot posts and where (Discord page, admin). Missing row: the defaults (src/core/discord.ts). */
+export const botSettings = sqliteTable("bot_settings", {
+  id: integer("id").primaryKey(),
+  milestones: integer("milestones", { mode: "boolean" }).notNull(),
+  runs: integer("runs", { mode: "boolean" }).notNull(),
+  recap: integer("recap", { mode: "boolean" }).notNull(),
+  /** Discord channel and role ids (snowflakes, as text); null until picked. */
+  postsChannel: text("posts_channel"),
+  recapChannel: text("recap_channel"),
+  runsChannel: text("runs_channel"),
+  mentionRole: text("mention_role"),
+  /** 0 Sunday … 6 Saturday, and "HH:MM", in the admin's time zone (WEB-41). */
+  recapDay: integer("recap_day").notNull(),
+  recapTime: text("recap_time").notNull(),
+  reminders: integer("reminders", { mode: "boolean" }).notNull(),
+  /** 15, 30, 60 or 120; also the in-game toast's time. */
+  reminderMinutes: integer("reminder_minutes").notNull(),
+  askNow: integer("ask_now", { mode: "boolean" }).notNull(),
+  markDone: integer("mark_done", { mode: "boolean" }).notNull(),
+  /** Unix seconds and the admin's BattleTag. */
+  updatedAt: integer("updated_at").notNull(),
+  updatedBy: text("updated_by").notNull(),
+});

@@ -12,6 +12,8 @@ const port = 3100;
 export const E2E = {
   secret: "e2e-only-secret-not-used-anywhere-else",
   admin: "Admin#1000",
+  /** Publishes test releases of the uploader (WEB-35). */
+  deploySecret: "e2e-deploy-secret-not-used-anywhere-else",
 };
 
 // A fresh database per run (WEB-21): the `empty` projects see the site before any upload, then `seed` uploads the
@@ -67,6 +69,10 @@ export default defineConfig({
       ADMIN_BATTLETAG: E2E.admin,
       AUTH_BATTLENET_ID: "e2e-client-id",
       AUTH_BATTLENET_SECRET: "e2e-client-secret",
+      // Discord linking (WEB-39): made-up values; Discord itself is never called.
+      DISCORD_CLIENT_ID: "e2e-discord-client-id",
+      DISCORD_CLIENT_SECRET: "e2e-discord-secret",
+      UPLOADER_DEPLOY_SECRET: E2E.deploySecret,
     },
     port,
     // Always a fresh server: a reused one would have another database.

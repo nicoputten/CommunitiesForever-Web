@@ -64,8 +64,8 @@ const day2 = lua(`
 `);
 
 describe("database", () => {
-  it("reads DATA_DIR, ./data by default", () => {
-    expect(dataDir({})).toBe("./data");
+  it("reads DATA_DIR, by default a folder next to the repo (not in it: next dev watches the project)", () => {
+    expect(dataDir({})).toBe("../CommunitiesForever-Web-data");
     expect(dataDir({ DATA_DIR: "/data" })).toBe("/data");
   });
 

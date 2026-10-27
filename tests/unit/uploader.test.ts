@@ -195,3 +195,13 @@ describe("upload response", () => {
     }
   });
 });
+
+describe("rate limiter full", () => {
+  it("says a key used up its window without counting", () => {
+    const limit = new RateLimiter(1, 60);
+    expect(limit.full("a", 0)).toBe(false);
+    limit.hit("a", 0);
+    expect(limit.full("a", 10)).toBe(true);
+    expect(limit.full("a", 60)).toBe(false);
+  });
+});

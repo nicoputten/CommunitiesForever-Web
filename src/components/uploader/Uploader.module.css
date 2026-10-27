@@ -1,0 +1,622 @@
+/* The uploader page (board `uploader-page`, WEB-34): pairing request on top, "Get the app" and "Your uploaders" side
+   by side (1 : 1.3), one column below 768 px. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.manual {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.manual a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+
+/* --- boxes ------------------------------------------------------------------------------------------------------ */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+  padding: var(--s-5) var(--s-5-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-box);
+}
+
+.boxHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.boxTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.small,
+.note {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.body {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.em {
+  color: var(--text);
+}
+
+/* --- buttons ---------------------------------------------------------------------------------------------------- */
+
+.primary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-5);
+  border-radius: var(--r-btn);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.primary {
+  border: 0;
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+/* "Download for Windows" is a link once there is a release (WEB-35). */
+a.primary {
+  text-decoration: none;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
+.ghost {
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.ghost:hover {
+  background: var(--tint-hover);
+  color: var(--text-strong);
+}
+
+.box > .primary {
+  align-self: flex-start;
+}
+
+.buttonIcon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+/* --- steps ------------------------------------------------------------------------------------------------------ */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.stepNumber {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-step);
+  height: var(--size-step);
+  border-radius: var(--r-pill);
+  border: var(--border-step) solid var(--gold);
+  color: var(--gold-bright);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+}
+
+/* --- pairing request -------------------------------------------------------------------------------------------- */
+
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  padding: var(--s-5) var(--s-5-5);
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--gold);
+  background: radial-gradient(circle at 10% 0%, var(--tint-active), var(--surface-pair) 60%);
+}
+
+.pairText {
+  flex: 1 1 var(--size-uploader-main);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  min-width: 0;
+}
+
+.pairTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+.code {
+  padding: var(--s-2) var(--s-4-5);
+  border-radius: var(--r-btn);
+  background: var(--code-bg);
+  border: var(--border) solid var(--line-code);
+  font-family: var(--font-code);
+  font-size: var(--fs-code);
+  letter-spacing: var(--ls-code);
+  color: var(--code-text);
+}
+
+.pairButtons {
+  display: flex;
+  gap: var(--s-2-5);
+}
+
+.notice,
+.noticeOk {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-btn);
+  background: var(--hint-bg);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body-sm);
+}
+
+.notice {
+  color: var(--stale-text);
+}
+
+.noticeOk {
+  color: var(--fresh-text);
+}
+
+/* --- your uploaders --------------------------------------------------------------------------------------------- */
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.device {
+  display: grid;
+  grid-template-columns: var(--size-device-col) minmax(0, 1fr) auto;
+  gap: var(--s-3-5);
+  align-items: center;
+  padding: var(--s-3) 0;
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.deviceIcon,
+.deviceIconIdle {
+  width: var(--size-device);
+  height: var(--size-device);
+}
+
+.deviceIcon {
+  color: var(--gold);
+}
+
+.deviceIconIdle {
+  color: var(--text-dim);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.deviceName {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.active {
+  color: var(--fresh-text);
+}
+
+.revoke,
+.cancel {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-btn);
+  background: transparent;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.revoke {
+  border: var(--border) solid var(--line-revoke);
+  color: var(--stale-text);
+}
+
+.cancel {
+  border: var(--border) solid var(--line-neutral);
+  color: var(--text-muted);
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+.empty {
+  padding: var(--s-3) 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+/* --- token by hand ---------------------------------------------------------------------------------------------- */
+
+.byHand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.tokenForm,
+.shown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  margin-top: var(--s-2);
+}
+
+.label {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.field {
+  flex: 1 1 var(--size-search-min);
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-neutral);
+}
+
+.field:focus-within {
+  border-color: var(--line-chip-on);
+}
+
+.field:has(input:focus-visible) {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.field:has(input[aria-invalid]) {
+  border-color: var(--stale-text);
+}
+
+.input,
+.token {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-touch);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  outline: none;
+}
+
+.token {
+  font-family: var(--font-code);
+  color: var(--code-text);
+}
+
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+.error {
+  min-height: calc(var(--fs-meta) * var(--lh-body));
+  font-size: var(--fs-meta);
+  color: var(--stale-text);
+}
+
+/* --- upload history (board: full width under the two boxes) ---------------------------------------------------- */
+
+.ownHistory {
+  gap: var(--s-2-5);
+}
+
+.historyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+  margin-left: auto;
+}
+
+.dayGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.dayHead {
+  padding: var(--s-2-5) var(--s-3-5) var(--s-1);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-overline);
+  color: var(--text-faint);
+}
+
+.hrow {
+  display: grid;
+  grid-template-columns: var(--size-hist-when) var(--size-hist-device) minmax(0, 1fr) var(--size-hist-status) var(
+      --size-hist-chevron
+    );
+  gap: var(--s-4);
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: var(--s-3) var(--s-3-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid transparent;
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.hrow:hover {
+  background: var(--code-bg);
+  border-color: var(--line-control);
+  color: var(--text);
+}
+
+.hwhen {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.hdate {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-regular);
+  color: var(--text-dim);
+}
+
+.hdevice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.hicon,
+.hiconManual {
+  flex: none;
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.hicon {
+  color: var(--gold);
+}
+
+.hiconManual {
+  color: var(--text-dim);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+}
+
+.pill,
+.pillGold {
+  padding: var(--s-0-75) var(--s-2);
+  border-radius: var(--r-tag);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.pill {
+  background: var(--chip-peek-bg);
+  color: var(--text-chip);
+}
+
+.pillGold {
+  background: var(--tint-active);
+  color: var(--code-text);
+}
+
+.statusOk,
+.statusWarn,
+.statusMute {
+  justify-self: start;
+  padding: var(--s-0-75) var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-meta-sm);
+}
+
+.statusOk {
+  background: var(--done-tint);
+  color: var(--fresh-text);
+}
+
+.statusWarn {
+  background: var(--rejected-tint);
+  color: var(--stale-text);
+}
+
+.statusMute {
+  background: var(--mute-tint);
+  color: var(--text-dim);
+}
+
+.chevron {
+  color: var(--gold);
+}
+
+.older {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  font-size: var(--fs-body-sm);
+  text-decoration: none;
+}
+
+@media (max-width: 767px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pairButtons,
+  .pairButtons > *,
+  .box > .primary {
+    flex: 1;
+    align-self: stretch;
+  }
+
+  .code {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+
+  /* Phone (no phone board): time and status on the first line, device and pills under them. */
+  .chips {
+    margin-left: 0;
+  }
+
+  .hrow {
+    grid-template-columns: minmax(0, 1fr) auto var(--size-hist-chevron);
+    gap: var(--s-1-5) var(--s-3);
+  }
+
+  .hwhen {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--s-2);
+  }
+
+  .hdevice,
+  .pills {
+    grid-column: 1 / -1;
+  }
+
+  .hdevice {
+    grid-row: 2;
+  }
+
+  .pills {
+    grid-row: 3;
+  }
+
+  .statusOk,
+  .statusWarn,
+  .statusMute {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chevron {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}

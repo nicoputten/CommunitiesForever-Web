@@ -17,9 +17,7 @@ test("shows the group, the level spread and the quick answers", async ({ page })
   await page.goto("/roster");
   await expect(page.getByText("6 friends · 10 characters · Sanne has no addon yet")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Who is around which level" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Dungeon bands" })).toContainText(
-    "Scarlet Monastery 26–45 · fits Bob Example, Ves Doombringer, Lia Thornwhisper, Tok Ironhide, Ruk Bloodhoof",
-  );
+  await expect(page.getByRole("list", { name: "Dungeon bands" })).toContainText("SM Armory 32–42 · 4 fit");
   await expect(page.getByRole("heading", { name: "Healers" }).locator("..")).toContainText(
     "Lia Thornwhisper 37 Priest · Tok Ironhide 33 Shaman · Sela Moonbrook 12 Druid",
   );
@@ -30,6 +28,58 @@ test("shows the group, the level spread and the quick answers", async ({ page })
   await expect(page.getByRole("navigation", { name: "View" }).getByRole("link", { name: "Cards" })).toHaveAttribute(
     "aria-current",
     "page",
+  );
+});
+
+test("the level spread: dots with names in a tooltip, bands without names (WEB-32)", async ({ page }) => {
+  await page.goto("/roster");
+  const spread = page.getByRole("region", { name: "Who is around which level" });
+  const bands = spread.getByRole("list", { name: "Dungeon bands" });
+  // Scarlet Monastery's wings are separate bands; the Armory has the most fits.
+  for (const band of ["SM Graveyard 26–36 · 2 fit", "SM Library 29–39 · 3 fit", "SM Cathedral 35–45 · 3 fit"]) {
+    await expect(bands.getByRole("listitem").filter({ hasText: band })).toHaveCount(1);
+  }
+  await expect(bands.getByRole("listitem").filter({ hasText: "SM Armory 32–42 · 4 fit" })).toHaveAttribute(
+    "data-best",
+    "true",
+  );
+  await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk|Scarlet Monastery 26/);
+  // Lia 37, Ves 39 and Bob 41 share one dot; Ves is the viewer's. A phone merges within 4 levels: Tok 33 too.
+  const phone = isPhone(page);
+  await expect(spread.getByRole("button")).toHaveCount(phone ? 4 : 8);
+  const group = spread.getByRole("button", {
+    name: phone ? "4 characters around level 37" : "3 characters around level 39",
+  });
+  const tip = spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" });
+  await expect(group).toHaveText(phone ? "4" : "3");
+  await expect(group).toHaveAttribute("data-own", "true");
+  await expect(spread.getByRole("button", { name: "Mira Sunstrider 60" })).not.toHaveAttribute("data-own");
+  await expect(tip).toBeHidden();
+  if (phone) {
+    await group.tap();
+    await expect(tip).toBeVisible();
+    await group.tap();
+    await expect(tip).toBeHidden();
+  } else {
+    await group.hover();
+    await expect(tip).toBeVisible();
+    await page.mouse.move(0, 0);
+    await expect(tip).toBeHidden();
+  }
+  await group.click();
+  await expect(tip).toHaveText(
+    phone
+      ? /Tok Ironhide 33 · Bob\s*Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/
+      : /Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/,
+  );
+  await expect(group).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(tip).toBeHidden();
+
+  // Keyboard focus shows a single dot's name.
+  await spread.getByRole("button", { name: "Mira Sunstrider 60" }).focus();
+  await expect(spread.getByRole("tooltip").filter({ hasText: "Mira Sunstrider" })).toHaveText(
+    "Mira Sunstrider 60 · Mira",
   );
 });
 

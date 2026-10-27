@@ -27,42 +27,23 @@
   color: var(--text-dim);
 }
 
-/* The track: label rows (computed on the server per layout width), then the line with the dots. */
+/* The track: the line with the dots (WEB-32). Each dot is a 44 px button; neighbouring targets may overlap, as the
+   map's markers do (WEB-25). */
 .track {
-  --rows: var(--rows-wide);
   position: relative;
-  height: calc(var(--s-1) + var(--rows) * var(--size-label-row) + var(--size-track-line));
+  height: var(--size-spread-track);
   margin: 0 var(--s-2-5);
 }
 
-.mark {
-  --row: var(--row-wide);
-}
-
-.label {
-  position: absolute;
-  left: var(--pos);
-  top: calc(var(--s-1) + var(--row) * var(--size-label-row));
-  transform: translateX(-50%);
-  font-size: var(--fs-meta-sm);
-  line-height: var(--size-label-row);
-  white-space: nowrap;
-  color: var(--class-text);
-}
-
-.label[data-wide="start"] {
-  transform: none;
-}
-
-.label[data-wide="end"] {
-  transform: translateX(-100%);
+.track[data-layout="phone"] {
+  display: none;
 }
 
 .line {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(var(--size-track-line) / 2 - var(--border));
+  top: var(--spread-line-top);
   height: var(--border-strong);
   background: var(--track-line);
 }
@@ -71,13 +52,84 @@
   position: absolute;
   z-index: 1;
   left: var(--pos);
-  bottom: calc(var(--size-track-line) / 2);
+  top: calc(var(--spread-line-top) + var(--border-strong) / 2);
+  display: grid;
+  place-items: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.dot:focus-visible {
+  outline: none;
+}
+
+.disc {
+  display: grid;
+  place-items: center;
   width: var(--size-dot);
   height: var(--size-dot);
   border-radius: var(--r-pill);
-  background: var(--class);
-  border: var(--border-strong) solid var(--bg-night);
-  transform: translate(-50%, 50%);
+  background: var(--fill);
+  box-shadow: var(--ring-dot);
+}
+
+.disc[data-group] {
+  width: var(--size-dot-group);
+  height: var(--size-dot-group);
+}
+
+.dot[data-own] .disc {
+  box-shadow: var(--ring-dot-own);
+}
+
+.dot:focus-visible .disc {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.count {
+  width: var(--size-dot-count);
+  height: var(--size-dot-count);
+  border-radius: var(--r-pill);
+  background: var(--dot-count-bg);
+  color: var(--gold-pale);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-bold);
+  line-height: var(--size-dot-count);
+  text-align: center;
+}
+
+/* Above the track, centred on the dot and kept inside the track at its ends. */
+.tip {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(100% - var(--spread-line-top) + var(--size-dot-group) / 2 + var(--s-1));
+  left: clamp(0px, calc(var(--pos) - var(--size-tooltip) / 2), calc(100% - var(--size-tooltip)));
+  display: flex;
+  flex-direction: column;
+  width: min(var(--size-tooltip), 100%);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-tooltip);
+  border: var(--border) solid var(--line-tooltip);
+  box-shadow: var(--shadow-tooltip);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-relaxed);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.tip[hidden] {
+  display: none;
+}
+
+.owner {
+  color: var(--text-dim);
 }
 
 .ticks {
@@ -97,28 +149,6 @@
 .ticks span[data-end] {
   left: auto;
   right: 0;
-}
-
-/* Visible on phone only; for screen readers everywhere (as .visually-hidden). */
-.names {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-  list-style: none;
-}
-
-.nameText {
-  color: var(--class-text);
-}
-
-.lvl {
-  color: var(--text-dim);
 }
 
 .bands {
@@ -154,87 +184,18 @@
   color: var(--gold-pale);
 }
 
-.count {
-  display: none;
-}
-
-@media (max-width: 1327px) {
-  .track {
-    --rows: var(--rows-mid);
-  }
-
-  .mark {
-    --row: var(--row-mid);
-  }
-
-  .label[data-wide] {
-    transform: translateX(-50%);
-  }
-
-  .label[data-mid="start"] {
-    transform: none;
-  }
-
-  .label[data-mid="end"] {
-    transform: translateX(-100%);
-  }
-}
-
-@media (max-width: 1023px) {
-  .track {
-    --rows: var(--rows-narrow);
-  }
-
-  .mark {
-    --row: var(--row-narrow);
-  }
-
-  .label[data-mid] {
-    transform: translateX(-50%);
-  }
-
-  .label[data-narrow="start"] {
-    transform: none;
-  }
-
-  .label[data-narrow="end"] {
-    transform: translateX(-100%);
-  }
-}
-
-/* Phone (no board, decided with Nico for WEB-21): dots and ticks only, the names in level order under the track,
-   the bands as a list. */
+/* Phone (no board): the bands as a list (decided with Nico for WEB-21); the dots as on desktop, names on tap (WEB-32). */
 @media (max-width: 767px) {
   .spread {
     padding: var(--s-4);
   }
 
-  .track {
-    height: var(--size-track-line);
-  }
-
-  .label {
+  .track[data-layout="wide"] {
     display: none;
   }
 
-  .names {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: var(--s-2-5) 0 0;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-    display: flex;
-    flex-wrap: wrap;
-    font-size: var(--fs-meta);
-    line-height: var(--lh-body);
-  }
-
-  .names li + li::before {
-    content: " · ";
-    white-space: pre;
-    color: var(--text-dim);
+  .track[data-layout="phone"] {
+    display: block;
   }
 
   .bands {
@@ -255,9 +216,5 @@
     font-size: var(--fs-meta-sm);
     line-height: var(--lh-body);
     white-space: normal;
-  }
-
-  .count {
-    display: inline;
   }
 }

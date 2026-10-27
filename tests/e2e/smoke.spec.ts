@@ -43,3 +43,29 @@ test("starts the Battle.net sign-in", async ({ page }) => {
   expect(authorize?.searchParams.get("scope")).toBe("openid");
   expect(authorize?.searchParams.get("redirect_uri")).toMatch(/\/api\/auth\/callback\/battlenet$/);
 });
+
+// WEB-36: the icons and the manifest answer without a session (the sign-in page links them).
+test("serves the tab icons and the web app manifest to everyone", async ({ page, request }) => {
+  const types: Record<string, RegExp> = {
+    "/favicon.ico": /image\/(x-icon|vnd\.microsoft\.icon)/,
+    "/icon.svg": /image\/svg\+xml/,
+    "/apple-icon.png": /image\/png/,
+    "/icon-192.png": /image\/png/,
+    "/icon-512.png": /image\/png/,
+    "/icon-maskable-512.png": /image\/png/,
+    "/manifest.webmanifest": /application\/manifest\+json/,
+  };
+  for (const [url, type] of Object.entries(types)) {
+    const res = await request.get(url, { maxRedirects: 0 });
+    expect(res.status(), url).toBe(200);
+    expect(res.headers()["content-type"], url).toMatch(type);
+  }
+  const manifest = (await (await request.get("/manifest.webmanifest")).json()) as { name: string; icons: unknown[] };
+  expect(manifest.name).toBeTruthy();
+  expect(manifest.icons).toHaveLength(3);
+
+  await page.goto("/signin");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+});

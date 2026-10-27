@@ -249,9 +249,19 @@
   --size-row-seen: 112px; /* roster-cards: character row, last played column */
   --size-level-bar: 3px; /* roster-cards: level bar under the name */
   --r-level-bar: 2px;
-  --size-dot: 12px; /* roster-cards: level spread dot */
-  --size-label-row: 16px; /* roster-cards: name label rows above the track (4 and 20 px tops) */
-  --size-track-line: 20px; /* roster-cards: the line with the dots */
+  --size-dot: 14px; /* roster-cards-runs: level spread dot (hit area --size-touch, WEB-32) */
+  --size-dot-group: 26px; /* roster-cards-runs: dot of characters within 2 levels, with a count */
+  --size-dot-count: 18px; /* roster-cards-runs: the count inside it */
+  --size-spread-track: 52px; /* roster-cards-runs: the track with the dots */
+  --spread-line-top: 28px; /* roster-cards-runs: the 2 px line; the dots centre on it */
+  --size-tooltip: 220px; /* roster-cards-runs: dot tooltip */
+  --ring-dot: 0 0 0 2px var(--bg-night); /* roster-cards-runs: dot edge */
+  --ring-dot-own: 0 0 0 2px var(--bg-night), 0 0 0 3.5px var(--gold); /* roster-cards-runs: the viewer's characters */
+  --dot-count-bg: #0b1220; /* roster-cards-runs: behind the count */
+  --fw-bold: 700; /* roster-cards-runs: the count */
+  --surface-tooltip: #0e1626; /* roster-cards-runs: dot tooltip */
+  --line-tooltip: rgba(212, 175, 106, 0.5); /* roster-cards-runs: dot tooltip */
+  --shadow-tooltip: 0 12px 30px rgba(0, 0, 0, 0.6); /* roster-cards-runs: dot tooltip */
   --size-tick: 12px; /* roster-cards: level ticks */
   --size-band: 20px; /* roster-cards: dungeon band */
   --size-band-row: 26px; /* roster-cards: band rows 0 and 26 px */
@@ -616,4 +626,44 @@
   --size-chevron: 10px; /* phone-map: edge hint chevron */
   --dur-sheet-fade: 120ms; /* DESIGN.md §6: the bottom sheet without motion */
   --sheet-dim: rgba(5, 10, 18, 0.6); /* phone-roll-call: the map strip above the full sheet */
+
+  /* uploader page (WEB-34): the uploader-page board */
+  --font-code: ui-monospace, Consolas, monospace; /* uploader-page: pairing code, a token shown once */
+  --fs-code: 30px; /* uploader-page: pairing code */
+  --ls-code: 0.18em;
+  --code-text: #f3dfae; /* uploader-page: pairing code */
+  --code-bg: rgba(212, 175, 106, 0.08); /* uploader-page: pairing code box */
+  --line-code: rgba(212, 175, 106, 0.4); /* uploader-page: pairing code box */
+  --surface-pair: rgba(12, 18, 30, 0.85); /* uploader-page: pairing request (under --tint-active glow) */
+  --surface-box: rgba(12, 18, 30, 0.8); /* uploader-page: Get the app, Your uploaders */
+  --line-box: rgba(212, 175, 106, 0.22); /* uploader-page: Get the app, Your uploaders */
+  --line-ghost: rgba(212, 175, 106, 0.4); /* uploader-page: secondary button */
+  --line-revoke: rgba(224, 138, 74, 0.45); /* uploader-page: Revoke */
+  --size-device: 32px; /* uploader-page: device icon */
+  --size-device-col: 36px;
+  --size-step: 24px; /* uploader-page: step number ring */
+  --border-step: 1.5px;
+  --opacity-disabled: 0.55; /* uploader-page: "Download for Windows" until the installer exists (WEB-35) */
+  --size-uploader-main: 380px; /* uploader-page: Get the app column (1 : 1.3) */
+  --size-uploader-side: 494px;
+  --size-hist-when: 150px; /* uploader-page: upload history columns */
+  --size-hist-device: 170px;
+  --size-hist-status: 110px;
+  --size-hist-chevron: 20px;
+  --mute-tint: rgba(174, 182, 195, 0.1); /* uploader-page: history "Nothing new" (the board's "Skipped") */
+
+  /* Discord page (WEB-39): the discord-settings-runs board */
+  --discord-avatar: #5865f2; /* discord-settings-runs: the linked account's disc */
+  --on-discord-avatar: #ffffff;
+  --size-link-avatar: 48px; /* discord-settings-runs: "Your Discord is linked" disc */
+  --size-switch-w: 40px; /* discord-settings-runs: on/off switch (hit area --size-touch) */
+  --size-switch-h: 22px;
+  --size-switch-knob: 16px;
+  --switch-off: #2a3446;
+  --size-select: 36px; /* discord-settings-runs: dropdowns (hit area --size-touch on phone) */
+  --size-select-min: 200px;
+  --size-friend-lead: 34px; /* discord-settings-runs: linked friends avatar column */
+  --size-friend-disc: 30px;
+  --size-discord-main: 1.15fr; /* discord-settings-runs: "What the bot posts" : "Linked friends" */
+  --line-link: rgba(212, 175, 106, 0.45); /* discord-settings-runs: the link card and the Runs box */
 }

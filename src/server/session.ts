@@ -1,7 +1,9 @@
 import { getToken } from "next-auth/jwt";
 import { mayAdmin, mayUpload, type Role, roleOf } from "@/core/access";
+import { botBearerToken } from "@/core/bot";
 import { bearerToken } from "@/core/uploader";
 import { adminBattleTag, loadAccessList } from "./access";
+import { checkBotToken } from "./bot";
 import { getDb, type Db } from "./db";
 import { type Device, tokenDevice } from "./uploader";
 
@@ -75,7 +77,7 @@ export interface TokenCaller extends Caller {
  * `may_not_upload` for someone who may not upload (the same check as guard(req, "upload"), per request). Session
  * cookies are not accepted here, and tokens nowhere else.
  */
-export function tokenGuard(req: Request): TokenCaller | Response {
+export function tokenGuard(req: Request, needUpload = true): TokenCaller | Response {
   const header = req.headers.get("authorization");
   if (header === null || !/^Bearer\s/i.test(header)) {
     return apiError(401, "invalid_request", "A Bearer token is required.", {
@@ -92,8 +94,33 @@ export function tokenGuard(req: Request): TokenCaller | Response {
   }
   const list = loadAccessList(db, adminBattleTag());
   const role = roleOf(device.battleTag, list);
-  if (role === undefined || !mayUpload(device.battleTag, list)) {
+  // The update feed (WEB-35) needs only an active token: updating does no harm.
+  if (role === undefined || (needUpload && !mayUpload(device.battleTag, list))) {
     return apiError(403, "may_not_upload", "This user may not upload.");
   }
   return { db, battleTag: device.battleTag, role, device };
+}
+
+// --- the Discord bot (WEB-38, docs/BOT-API.md) --------------------------------------------------------------------
+
+/**
+ * The database for a bot API route when it carries the active bot token (RFC 6750 Bearer), or the response to send
+ * instead: 401 with a `WWW-Authenticate` challenge without a token, `invalid_token` for any other one (an uploader
+ * token too). Session cookies are not accepted here, and the bot token nowhere else.
+ */
+export function botGuard(req: Request, now: number): Db | Response {
+  const header = req.headers.get("authorization");
+  if (header === null || !/^Bearer\s/i.test(header)) {
+    return apiError(401, "invalid_request", "A Bearer token is required.", {
+      "WWW-Authenticate": 'Bearer realm="bot"',
+    });
+  }
+  const token = botBearerToken(header);
+  const db = getDb();
+  if (token === undefined || !checkBotToken(db, token, now)) {
+    return apiError(401, "invalid_token", "Unknown or revoked token.", {
+      "WWW-Authenticate": 'Bearer realm="bot", error="invalid_token"',
+    });
+  }
+  return db;
 }

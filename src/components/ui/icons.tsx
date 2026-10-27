@@ -40,6 +40,16 @@ export function UploadIcon(props: IconProps) {
   );
 }
 
+/** A speech bubble: the Discord page (WEB-39). Not Discord's logo. */
+export function ChatIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.6} {...props}>
+      <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" />
+      <path d="M5.5 7h.01M8 7h.01M10.5 7h.01" />
+    </Icon>
+  );
+}
+
 export function ClockIcon(props: IconProps) {
   return (
     <Icon viewBox="0 0 20 20" strokeWidth={1.6} {...props}>
@@ -218,6 +228,25 @@ export function CompassIcon(props: IconProps) {
       <circle cx="32" cy="32" r="26" strokeOpacity={0.5} strokeDasharray="3 5" />
       <path d="M32 12 L36 32 L32 52 L28 32 Z" fill="currentColor" fillOpacity={0.25} />
       <path d="M12 32 L32 28 L52 32 L32 36 Z" fill="currentColor" fillOpacity={0.12} strokeOpacity={0.6} />
+    </Icon>
+  );
+}
+
+/** uploader-page: "Download for Windows". */
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.8} {...props}>
+      <path d="M8 2v9M4 7.5L8 11l4-3.5M2 14h12" />
+    </Icon>
+  );
+}
+
+/** uploader-page: an uploader's computer. */
+export function DeviceIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 32 32" {...props}>
+      <rect x="4" y="6" width="24" height="16" rx="2" />
+      <path d="M12 26h8M16 22v4" />
     </Icon>
   );
 }
