@@ -23,7 +23,11 @@ export function UploadHistory({ lines }: { lines: HistoryLine[] }) {
                   </span>
                   <span className={styles.uploader}>{line.uploader}</span>
                 </span>
-                <span className={styles.text}>{line.text}</span>
+                <span className={styles.text}>
+                  {line.text}
+                  {/* Sent by the uploader app (WEB-34; not on the upload board: DESIGN.md §11). */}
+                  {line.via !== undefined && <span className={styles.via}>{line.via}</span>}
+                </span>
                 <span className={line.status === "done" ? styles.done : styles.rejected}>
                   {line.status === "done" ? "Done" : "Rejected"}
                 </span>

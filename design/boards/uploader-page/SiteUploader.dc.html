@@ -27,6 +27,20 @@ a{color:#D4AF6A}a:hover{color:#F0D08E}
 .rv{min-height:34px;padding:0 12px;border-radius:8px;border:1px solid rgba(224,138,74,.45);background:transparent;color:#F0A774;font:600 12px Inter,sans-serif;cursor:pointer}
 .step{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:#AEB6C3;line-height:1.5}
 .step i{width:24px;height:24px;border-radius:50%;border:1.5px solid #D4AF6A;color:#F0D08E;font:600 11px/21px Inter,sans-serif;text-align:center;font-style:normal;flex:none;box-sizing:border-box}
+.hrow{display:grid;grid-template-columns:150px 170px minmax(0,1fr) 110px 20px;gap:16px;align-items:center;padding:12px 14px;border-radius:10px;text-decoration:none;color:#E6E1D6;border:1px solid transparent}
+.hrow:hover{background:rgba(212,175,106,.08);border-color:rgba(212,175,106,.3)}
+.hrow .w{font-size:14px;font-weight:500}
+.hrow .w small{display:block;font-size:12px;font-weight:400;color:#8E98A8}
+.hrow .d{display:flex;align-items:center;gap:8px;font-size:13px;color:#AEB6C3}
+.hrow .s{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.05);color:#C9CFD9;white-space:nowrap}
+.pill.gold{background:rgba(212,175,106,.14);color:#F3DFAE}
+.ok{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(127,217,154,.12);color:#9BE3B0;justify-self:start}
+.warn{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(224,138,74,.15);color:#F0A774;justify-self:start}
+.mute{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(174,182,195,.1);color:#8E98A8;justify-self:start}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:transparent;color:#C9CFD9;font:13px Inter,sans-serif;cursor:pointer}
+.chip.on{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.dh{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898;padding:10px 14px 4px}
 a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
 </style>
 </helmet>
@@ -82,11 +96,43 @@ a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2p
       </section>
     </div>
 
+    <!-- UPLOAD HISTORY -->
+    <section class="box" aria-labelledby="histT" style="gap: 10px">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+        <h2 id="histT" class="bt">Upload history</h2>
+        <span style="font-size: 12px; color: #8E98A8">Click an upload to see its session report</span>
+        <span style="flex: 1"></span>
+        <div role="group" aria-label="Filter uploads" style="display: flex; gap: 6px; flex-wrap: wrap">
+          <button class="chip on" aria-pressed="true">All</button>
+          <button class="chip" aria-pressed="false">DESKTOP-NICO</button>
+          <button class="chip" aria-pressed="false">NICO-LAPTOP</button>
+          <button class="chip" aria-pressed="false">Manual</button>
+          <button class="chip" aria-pressed="false">Problems</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column">
+        <div class="dh">Today</div>
+        <a href="UploadResult.dc.html" class="hrow"><span class="w">21:14<small>Mon 27 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="24" height="16" rx="2"></rect><path d="M12 26h8M16 22v4"></path></svg>DESKTOP-NICO</span><span class="s"><span class="pill gold">5 levels gained</span><span class="pill">4 skill gains</span><span class="pill">1 new character</span><span class="pill">7 sightings</span></span><span class="ok">Done</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+        <div class="hrow" style="opacity: .6"><span class="w">19:02<small>Mon 27 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="24" height="16" rx="2"></rect><path d="M12 26h8M16 22v4"></path></svg>DESKTOP-NICO</span><span class="s"><span class="pill">Same as last upload, nothing to report</span></span><span class="mute">Skipped</span><span></span></div>
+
+        <div class="dh">This week</div>
+        <a href="UploadResult.dc.html" class="hrow"><span class="w">23:40<small>Thu 23 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="24" height="16" rx="2"></rect><path d="M12 26h8M16 22v4"></path></svg>DESKTOP-NICO</span><span class="s"><span class="pill gold">2 levels gained</span><span class="pill">9 sightings</span></span><span class="ok">Done</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+        <a href="UploadResult.dc.html" class="hrow"><span class="w">23:38<small>Thu 23 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#D4AF6A" stroke-width="2" aria-hidden="true"><rect x="4" y="6" width="24" height="16" rx="2"></rect><path d="M12 26h8M16 22v4"></path></svg>DESKTOP-NICO</span><span class="s"><span class="pill">Offline at first, sent 2 min later</span></span><span class="warn">Retried</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+        <a href="UploadResult.dc.html" class="hrow"><span class="w">22:05<small>Tue 21 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#8E98A8" stroke-width="2" aria-hidden="true"><path d="M8 11V2M4 5.5L8 2l4 3.5M2 11v3h12v-3" transform="scale(2)"></path></svg>Manual upload</span><span class="s"><span class="pill gold">Mira reached 60</span><span class="pill">3 skill gains</span></span><span class="ok">Done</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+
+        <div class="dh">Earlier</div>
+        <a href="UploadStates.dc.html" class="hrow"><span class="w">18:28<small>Sun 19 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#8E98A8" stroke-width="2" aria-hidden="true"><path d="M8 11V2M4 5.5L8 2l4 3.5M2 11v3h12v-3" transform="scale(2)"></path></svg>Manual upload</span><span class="s"><span class="pill">Wrong file: another addon's data</span></span><span class="warn">Rejected</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+        <a href="UploadResult.dc.html" class="hrow"><span class="w">20:51<small>Tue 14 Oct</small></span><span class="d"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#8E98A8" stroke-width="2" aria-hidden="true"><rect x="6" y="8" width="20" height="13" rx="2"></rect><path d="M3 24h26"></path></svg>NICO-LAPTOP</span><span class="s"><span class="pill gold">1 level gained</span><span class="pill">2 new characters</span></span><span class="ok">Done</span><span aria-hidden="true" style="color: #D4AF6A">›</span></a>
+      </div>
+      <a href="#" style="align-self: center; font-size: 13px; text-decoration: none; padding: 6px 12px">Show older uploads</a>
+    </section>
+
     <div style="font-size: 12px; color: #7E8898">Revoking stops that uploader at its next attempt; the app then shows “Reconnect”. Uploads from an uploader count exactly like a manual upload: same session report, same history.</div>
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1480}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }
