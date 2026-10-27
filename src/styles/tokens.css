@@ -565,12 +565,17 @@
   --size-ping: 10px; /* sign-in: pings on the drifting map */
   --glow-ping: 0 0 12px var(--gold-bright); /* sign-in */
   --dur-ping: 2.8s; /* sign-in: ping ring */
+  /* roll call (WEB-27): the map board's panel */
+  --size-roll-call: 312px; /* map: roll call panel width */
+  --size-dot-row: 8px; /* map: age dot on a roll call row and in the legend */
+  --border-dot: 1.5px; /* map: ring of a "days", "week+" or unknown dot */
+  --line-panel: rgba(212, 175, 106, 0.28); /* map: roll call border */
+  --tint-row-selected: rgba(212, 175, 106, 0.1); /* map: picked roll call row */
+  --opacity-earlier: 0.85; /* map: the "Earlier" rows */
 
   /* empty site and loading (WEB-29): the empty-site and loading boards */
   --veil-empty: rgba(5, 10, 18, 0.35); /* empty-site: dims the map under the card */
-  --line-aside: rgba(212, 175, 106, 0.28); /* empty-site: roll call panel */
   --line-guest: #5a6476; /* empty-site: dashed disc of a guest */
-  --size-roll-call: 312px; /* empty-site: roll call panel width */
   --size-guest: 26px; /* empty-site: guest disc */
   --size-empty-icon: 64px; /* empty-site: compass over the title */
   --loading-line: linear-gradient(

@@ -1,6 +1,6 @@
 import type { Faction } from "../gamedata";
 import type { Dataset } from "../model";
-import { LIVE_UNTIL, type DataAge } from "./age";
+import { LIVE_UNTIL, rowAge, type DataAge } from "./age";
 import {
   compareDesc,
   compareText,
@@ -10,6 +10,7 @@ import {
   type PersonView,
   type SightingView,
 } from "./characters";
+import { isMapZone } from "./map";
 
 // The roll call next to the map (board `map`, `phone-roll-call`): who was seen where, newest first.
 // "Seen" always means seen by the addon (docs/DESIGN.md §4).
@@ -31,6 +32,10 @@ export interface RollCallRow {
   sighting: SightingView;
   /** The owner: their name, "via X", and whether their data is old. Undefined for a GUID nobody owns. */
   person?: PersonView;
+  /** The sighting has a place on the map, so picking the row flies there; else it opens the character (WEB-27). */
+  onMap: boolean;
+  /** How long ago, short ("2 h", "3 d"). */
+  ago: string;
 }
 
 export interface RollCall {
@@ -71,7 +76,13 @@ export function rollCall(d: Dataset, now: number, filter: RollCallFilter = {}): 
     if (character.sighting === undefined) {
       unknown.push(person !== undefined ? { character, person } : { character });
     } else {
-      const row: RollCallRow = { character, sighting: character.sighting };
+      const { sighting } = character;
+      const row: RollCallRow = {
+        character,
+        sighting,
+        onMap: isMapZone(sighting.zone),
+        ago: rowAge(sighting.seenAt, now),
+      };
       if (person !== undefined) row.person = person;
       rows.push(row);
     }
