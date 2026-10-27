@@ -1,0 +1,260 @@
+/* The roll call (WEB-27, map board): a panel over the map's right side, desktop only (the phone has its sheet). */
+
+.panel {
+  position: absolute;
+  z-index: 1;
+  top: var(--s-4);
+  right: var(--s-6);
+  bottom: var(--s-6);
+  width: var(--size-roll-call);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-4);
+  overflow: hidden;
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--line-panel);
+  background: var(--surface-aside);
+  backdrop-filter: blur(var(--blur-surface));
+}
+
+@media (max-width: 1023px) {
+  .panel {
+    display: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.count {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5) var(--s-3-5);
+  margin: 0;
+  padding: var(--s-0-5) 0 0;
+  list-style: none;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-25);
+}
+
+/* The data age dot (DESIGN.md §4): new glows, recent is solid, days a ring, week+ dashed, unknown dotted. */
+.dot {
+  flex: none;
+  box-sizing: border-box;
+  width: var(--size-dot-row);
+  height: var(--size-dot-row);
+  border-radius: var(--r-pill);
+  background: var(--class, var(--text));
+}
+
+.dot[data-age="live"] {
+  box-shadow: var(--glow-dot) var(--class, var(--text));
+}
+
+.dot[data-age="days"],
+.dot[data-age="week"],
+.dot[data-age="unknown"] {
+  background: none;
+  border: var(--border-dot) solid var(--class, var(--text));
+}
+
+.dot[data-age="days"] {
+  opacity: var(--opacity-days);
+}
+
+.dot[data-age="week"] {
+  border-style: dashed;
+  opacity: var(--opacity-week);
+}
+
+.dot[data-age="unknown"] {
+  border-style: dotted;
+}
+
+.divider {
+  flex: none;
+  height: var(--border);
+  background: var(--line);
+}
+
+/* Scrolls on its own; the unknown tray stays at the bottom. */
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.overline {
+  margin: 0;
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows[data-earlier] {
+  opacity: var(--opacity-earlier);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: var(--s-1-5) var(--s-2);
+  border: 0;
+  border-radius: var(--r-nav);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+button.row,
+a.row {
+  cursor: pointer;
+}
+
+button.row:hover,
+a.row:hover {
+  background: var(--tint-hover);
+}
+
+.row[aria-current],
+.row[aria-current]:hover {
+  background: var(--tint-row-selected);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--class-text, var(--text-strong));
+}
+
+.level {
+  font-weight: var(--fw-regular);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.sub[data-old] {
+  color: var(--stale-note);
+}
+
+.age {
+  flex: none;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tray {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  padding-top: var(--s-2-5);
+  border-top: var(--border) solid var(--line);
+}
+
+.unknown {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  min-height: var(--size-touch);
+  font-size: var(--fs-body-sm);
+  color: var(--class-text, var(--text-strong));
+  text-decoration: none;
+}
+
+.unknown .name {
+  display: inline;
+  flex: none;
+  max-width: 60%;
+}
+
+.meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.noAddon {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}

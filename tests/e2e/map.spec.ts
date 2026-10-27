@@ -72,12 +72,20 @@ test("switches continents in the top bar, and Back returns", async ({ page }) =>
 });
 
 const stage = (page: Page) => page.locator("[data-level]");
-/** The zoom's transform of the map: 1× and centred is "translate(0px, 0px) scale(1)". */
+/** The zoom's transform of the map: 1× and centred is "translate(0px, 0px) scale(1)", left of the roll call. */
 const transform = (page: Page) =>
   page
     .getByRole("group", { name: /^Map\./ })
     .locator(":scope > div")
     .evaluate((el) => (el as HTMLElement).style.transform);
+/** 1× and centred: in the part of the map left of the roll call (WEB-27), which shows from 1024 px. */
+const centred = (page: Page) =>
+  page.evaluate(() => {
+    const frame = document.querySelector("[data-page=map]")!.getBoundingClientRect();
+    const panel = document.querySelector("[data-map-panel]")?.getBoundingClientRect();
+    const x = panel === undefined || panel.width === 0 ? 0 : -(frame.right - panel.left) / 2;
+    return `translate(${x}px, 0px) scale(1)`;
+  });
 
 test("zooms through world, continent and zone with the buttons and the keyboard", async ({ page }) => {
   test.skip(isPhone(page), "the buttons are desktop; a phone pinches");
@@ -104,7 +112,7 @@ test("zooms through world, continent and zone with the buttons and the keyboard"
   // 0 on the focused map: the whole world again, centred.
   await page.getByRole("group", { name: /^Map\./ }).press("0");
   await expect(stage(page)).toHaveAttribute("data-level", "world");
-  await expect.poll(() => transform(page)).toBe("translate(0px, 0px) scale(1)");
+  await expect.poll(() => transform(page)).toBe(await centred(page));
   await page.getByRole("group", { name: /^Map\./ }).press("+");
   await expect(stage(page)).toHaveAttribute("data-level", "continent");
 });
@@ -126,11 +134,11 @@ test("the continent switch flies, follows a pan, and Azeroth centres the whole w
   const switcher = page.getByRole("navigation", { name: "Continent" });
   await switcher.getByRole("link", { name: "Eastern Kingdoms" }).click();
   await expect(page).toHaveURL(/\?continent=eastern-kingdoms$/);
-  await expect.poll(() => transform(page)).not.toBe("translate(0px, 0px) scale(1)");
+  await expect.poll(() => transform(page)).not.toBe(await centred(page));
 
   await switcher.getByRole("link", { name: "Azeroth" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect.poll(() => transform(page)).toBe("translate(0px, 0px) scale(1)");
+  await expect.poll(() => transform(page)).toBe(await centred(page));
 
   // Zoomed in over Kalimdor, the switch follows.
   await page.getByRole("group", { name: /^Map\./ }).press("+");

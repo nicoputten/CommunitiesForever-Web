@@ -3,6 +3,7 @@ import { signInAs } from "../e2e/session";
 import {
   DATA,
   SURFACE,
+  TYPE,
   characterName,
   expectAccessible,
   expectBackground,
@@ -167,4 +168,79 @@ test("map: zone zoom touch targets", async ({ page }) => {
   // Settled: the zone in the centre is marked.
   await expect(page.locator("[data-label][data-focus]")).toBeAttached();
   await expectTouchTargets(page);
+});
+
+// WEB-27: the roll call panel (map board), desktop only.
+
+const rollCall = (page: import("@playwright/test").Page) => page.getByRole("complementary", { name: "Roll call" });
+
+test("map: roll call design values", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its sheet (WEB-28)");
+  await openScreen(page, "/");
+  const panel = rollCall(page);
+  await expectStyles(panel, {
+    ...SURFACE,
+    width: "var(--size-roll-call)",
+    "background-color": "var(--surface-aside)",
+    "border-top-color": "var(--line-panel)",
+    "border-radius": "var(--r-panel)",
+    "padding-top": "var(--s-4)",
+  });
+  await expectStyles(panel.getByRole("heading", { name: "Roll call" }), { ...TYPE.title, color: "var(--gold-bright)" });
+  await expectStyles(panel.getByText("9 of 10 located"), { ...TYPE.meta, color: "var(--text-dim)" });
+  await expectStyles(panel.getByRole("heading", { name: "Earlier" }), {
+    "font-size": "var(--fs-overline)",
+    "letter-spacing": "var(--ls-overline)",
+    "text-transform": "uppercase",
+    color: "var(--text-faint)",
+  });
+  const tok = panel.getByRole("button", { name: /^Tok Ironhide/ });
+  await expectStyles(tok, { "min-height": "var(--size-touch)", "border-radius": "var(--r-nav)" });
+  await expectStyles(tok.getByText("Tok Ironhide"), {
+    ...TYPE.bodySm,
+    "font-weight": "var(--fw-medium)",
+    color: "var(--shaman-text)",
+  });
+  await expectStyles(tok.locator("[data-age]"), { "background-color": "var(--shaman)", width: "var(--size-dot-row)" });
+  await expectStyles(panel.getByRole("button", { name: /^Ruk Bloodhoof/ }).locator("[data-age]"), {
+    "border-top-style": "dashed",
+    opacity: "var(--opacity-week)",
+  });
+  await expectStyles(panel.getByText(/Jorrit's data is 9 days old/), { ...TYPE.metaSm, color: "var(--stale-note)" });
+  await expectStyles(panel.getByText("1 d", { exact: true }), { ...DATA, color: "var(--text-muted)" });
+  await expectStyles(panel.getByText("Sanne has no addon data yet."), { ...TYPE.meta, color: "var(--text-dim)" });
+  // Zoom buttons left of the panel (board: right 352px).
+  const zoomBox = await page.getByRole("button", { name: "Zoom in" }).boundingBox();
+  const panelBox = await panel.boundingBox();
+  expect(zoomBox!.x + zoomBox!.width).toBeLessThanOrEqual(panelBox!.x - 16);
+});
+
+test("map: roll call menus and picked row", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its sheet (WEB-28)");
+  await openScreen(page, "/");
+  await rollCall(page).getByRole("button", { name: /^Tok Ironhide/ }).click();
+  await expect(rollCall(page).getByRole("button", { name: /^Tok Ironhide/ })).toHaveAttribute("aria-current", "true");
+  // Past the 80 ms colour transition (globals.css), off the row.
+  await page.mouse.move(0, 0);
+  await expect(rollCall(page).getByRole("button", { name: /^Tok Ironhide/ })).toHaveCSS(
+    "background-color",
+    "rgba(212, 175, 106, 0.1)",
+  );
+  await expectStyles(rollCall(page).getByRole("button", { name: /^Tok Ironhide/ }), {
+    "background-color": "var(--tint-row-selected)",
+  });
+  await rollCall(page).getByRole("button", { name: "Level 1–60" }).click();
+  await expect(page.getByRole("menu", { name: "Level" })).toBeVisible();
+  await expectAccessible(page);
+  await page.keyboard.press("Escape");
+  await page.mouse.move(0, 0);
+  await expectScreenshot(page, "map-roll-call-picked");
+});
+
+test("map: roll call with no match", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its sheet (WEB-28)");
+  await openScreen(page, "/?friend=Bob%232002&faction=alliance");
+  await expect(rollCall(page).getByRole("heading", { name: "No characters match" })).toBeVisible();
+  await expectAccessible(page);
+  await expectScreenshot(page, "map-roll-call-empty");
 });

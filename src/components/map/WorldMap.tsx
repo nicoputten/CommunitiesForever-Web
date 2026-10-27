@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import map from "@/core/map/zones.json";
 import { CONTINENT_SPLIT, continentViewBox, type Continent, type WorldMapView } from "@/core/views/map";
 import { SeaLayers } from "@/components/atmosphere/SeaLayers";
@@ -12,6 +12,8 @@ export interface WorldMapProps {
   selected?: string;
   /** GUIDs of the sightings that drop in (`?drop=`, WEB-26). */
   drop?: string[];
+  /** A panel over the map's right side (the roll call, WEB-27). */
+  panel?: ReactNode;
 }
 
 // Placed as on the map board (design/boards/map), world coordinates: decoration, not game data.
@@ -41,7 +43,7 @@ const anchor = (x: number, y: number) => ({ "--ox": x, "--oy": y }) as CSSProper
  * the markers as an HTML overlay (MapStage). The whole 1440 × 900 world is drawn; pan, zoom and the continent switch
  * (a fly to the continent's frame) are MapStage's (WEB-26). Towns show from 2×, dungeons from 4×.
  */
-export function WorldMap({ view, continent, selected, drop }: WorldMapProps) {
+export function WorldMap({ view, continent, selected, drop, panel }: WorldMapProps) {
   const box = WORLD;
   return (
     <section className={styles.frame} aria-label="World map" data-page="map" data-continent={continent}>
@@ -181,6 +183,7 @@ export function WorldMap({ view, continent, selected, drop }: WorldMapProps) {
           </g>
         </svg>
       </MapStage>
+      {panel}
     </section>
   );
 }

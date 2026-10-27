@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { D, H } from "./sample";
-import { DEFAULT_SITE_NAME, dataAge, daysOld, isOld, siteName, staleBanner } from "@/core/views";
+import { DEFAULT_SITE_NAME, dataAge, daysOld, isOld, rowAge, siteName, staleBanner } from "@/core/views";
 
 const NOW = 1_000_000;
 
@@ -80,5 +80,21 @@ describe("stale-site banner", () => {
 
   it("does not show before the first upload", () => {
     expect(staleBanner(undefined, NOW)).toBeUndefined();
+  });
+});
+
+describe("short age (roll call rows)", () => {
+  it.each([
+    [NOW, "now"],
+    [NOW + 60, "now"],
+    [NOW - 59, "now"],
+    [NOW - 60, "1 min"],
+    [NOW - H + 1, "59 min"],
+    [NOW - H, "1 h"],
+    [NOW - D + 1, "23 h"],
+    [NOW - D, "1 d"],
+    [NOW - 9 * D, "9 d"],
+  ])("%i is %s", (at, label) => {
+    expect(rowAge(at, NOW)).toBe(label);
   });
 });

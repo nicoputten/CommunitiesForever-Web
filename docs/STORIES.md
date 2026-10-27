@@ -25,12 +25,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Admin only. Members (from the data, with the upload that added them, block and unblock), guests (add by BattleTag, remove, "may upload"), who signed in last.
 - Validation of BattleTag format; adding an existing member says so.
 
-### WEB-27 Roll call panel
-- Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
-- Filters: everyone or one friend, New (under 32 h), faction, level range; legend (new, days, week+).
-- Rows grouped by age with zone, owner, "via", age; picking one flies the map to the character.
-- Unknown whereabouts tray and the no-addon line.
-
 ### WEB-28 Phone map
 - Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
 - Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
