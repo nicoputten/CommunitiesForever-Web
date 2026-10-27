@@ -138,6 +138,8 @@ test("a published release turns on Download for Windows", async ({ page }) => {
       setup: { name: `${id}-win-Setup.exe`, mimeType: "application/octet-stream", buffer: Buffer.from("setup") },
       full: { name: `${id}-${version}-full.nupkg`, mimeType: "application/octet-stream", buffer: pkg },
       feed: { name: "releases.win.json", mimeType: "application/json", buffer: Buffer.from(feed) },
+      // WEB-35b: the signature is required; the site doesn't check it (the app does).
+      signature: { name: "releases.win.json.sig", mimeType: "application/octet-stream", buffer: Buffer.from("sig") },
     },
   });
   // The other project may have published a newer one at the same moment (409): either way there is a release.

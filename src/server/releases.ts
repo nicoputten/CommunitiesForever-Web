@@ -8,18 +8,19 @@ import {
   type CurrentRelease,
   FEED_NAME,
   isSafeName,
-  mergeFeed,
   parseFeed,
   type ReleaseAsset,
   ReleaseError,
   releaseFileKind,
+  SIGNATURE_NAME,
 } from "@/core/releases";
 import { dataDir } from "./db";
 import { boundaryOf, receiveFiles } from "./multipart";
 
-// The uploader's releases on the data volume (WEB-35): `DATA_DIR/uploader/releases/` holds the kept packages, the
-// newest installer and the feed; `current.json` names the newest release. A publish is staged in its own folder and
-// moved in with the feed and current.json last, so the app never sees half a release.
+// The uploader's releases on the data volume (WEB-35): `DATA_DIR/uploader/releases/` holds the packages the feed lists,
+// the newest installer, the feed and its signature (WEB-35b: both exactly as the release workflow sent them);
+// `current.json` names the newest release. A publish is staged in its own folder and moved in with the signature, the
+// feed and current.json last, so the app never sees half a release.
 
 const root = () => path.join(dataDir(), "uploader");
 const releasesDir = () => path.join(root(), "releases");
@@ -55,10 +56,12 @@ async function readFeed(): Promise<ReleaseAsset[]> {
   }
 }
 
-/** A file the feed may serve: the feed itself or a package it lists. Undefined for anything else. */
+/** A file the feed may serve: the feed, its signature or a package it lists. Undefined for anything else. */
 export async function feedFile(name: string): Promise<string | undefined> {
   if (!isSafeName(name)) return undefined;
-  if (name !== FEED_NAME && !(await readFeed()).some((a) => a.FileName === name)) return undefined;
+  if (name !== FEED_NAME && name !== SIGNATURE_NAME && !(await readFeed()).some((a) => a.FileName === name)) {
+    return undefined;
+  }
   return path.join(releasesDir(), name);
 }
 
@@ -92,17 +95,15 @@ export async function publish(
     );
     const feedSent = files.find((f) => f.name === FEED_NAME);
     if (feedSent === undefined) throw new ReleaseError("invalid_release", `Send ${FEED_NAME}.`);
-    const release = checkRelease(files, await readFile(feedSent.path, "utf8"), (await readCurrent())?.version);
-
-    // Packages and the installer first, then the feed and current.json: the switch.
     const previous = await readCurrent();
-    for (const asset of release.assets)
+    const release = checkRelease(files, await readFile(feedSent.path, "utf8"), previous?.version, await readFeed());
+
+    // Packages and the installer first, then the signature, the feed (both byte for byte) and current.json: the switch.
+    for (const asset of release.sent)
       await rename(path.join(staging, asset.FileName), path.join(releasesDir(), asset.FileName));
     await rename(path.join(staging, release.setup.name), path.join(releasesDir(), release.setup.name));
-    const feed = mergeFeed(await readFeed(), release.assets);
-    const feedTemp = path.join(staging, "feed.tmp");
-    await writeFile(feedTemp, JSON.stringify({ Assets: feed }, null, 2));
-    await rename(feedTemp, path.join(releasesDir(), FEED_NAME));
+    await rename(path.join(staging, SIGNATURE_NAME), path.join(releasesDir(), SIGNATURE_NAME));
+    await rename(feedSent.path, path.join(releasesDir(), FEED_NAME));
     const current: CurrentRelease = {
       version: release.version,
       setup: release.setup.name,
@@ -113,8 +114,8 @@ export async function publish(
     await writeFile(currentTemp, JSON.stringify(current, null, 2));
     await rename(currentTemp, currentFile());
 
-    // Clean up: packages no longer in the feed, and the previous installer.
-    const keep = new Set([FEED_NAME, current.setup, ...feed.map((a) => a.FileName)]);
+    // Clean up: packages the new feed no longer lists, and the previous installer.
+    const keep = new Set([FEED_NAME, SIGNATURE_NAME, current.setup, ...release.assets.map((a) => a.FileName)]);
     for (const name of await readdir(releasesDir())) {
       if (!keep.has(name) && (name === previous?.setup || releaseFileKind(name) !== undefined)) {
         await rm(path.join(releasesDir(), name), { force: true });
