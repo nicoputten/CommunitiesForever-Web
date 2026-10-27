@@ -105,6 +105,7 @@ All level 60, opening December 9, 2026. Molten Core, Blackwing Lair, Zul'Gurub, 
 Decided by Nico (2026-10-25) where the sources leave a choice:
 - **Races:** Skyborne under both raceIDs (95 Alliance, 96 Horde). Marked unverified until an upload shows a Skyborne character.
 - **Professions:** no new skill line. Camping is quest and recipe content, not a profession.
+- **Roles per class** (WEB-47, `CLASS_ROLES` in `src/core/gamedata/classes.ts`, decided with Nico 2026-10-27): Warrior tank and damage; Paladin and Druid tank, healer and damage; Priest and Shaman healer and damage; Mage, Warlock, Hunter and Rogue damage. As in Vanilla; Forever announced no change to class roles.
 - **Dungeon levels:**
   - The Vanilla dungeons use the addon's `Dungeons.STATIC`.
   - The addon's dungeon ids (WEB-44, for the planned runs file): the Vanilla ones as `Dungeons.STATIC` (Blackrock Spire is `lbrs` and `ubrs` there; the site's one Blackrock Spire is sent as `lbrs`), the four new dungeons the beta Group Finder lists as `lfg` plus their activity (`lfg1984` Hall of Thanes, `lfg1982` Ruins of Lordaeron, `lfg1981` Excavation Site, `lfg1983` City of Dalaran). The other five new dungeons have no addon id yet and are sent with the site's id and their name.

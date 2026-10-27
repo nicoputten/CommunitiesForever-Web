@@ -13,7 +13,9 @@ import {
   phase,
   planRun,
   runDungeon,
-  type Answer,
+  moveSignUp,
+  type MoveRefusal,
+  type MoveTo,
   type AnswerOutcome,
   type AnswerRefusal,
   type PlanRefusal,
@@ -22,6 +24,7 @@ import {
   type RunSource,
   type SlotRole,
 } from "@/core/runs";
+import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
 import { OUTCOME_SECONDS } from "@/core/runOutcome";
 import { enqueueBotEvent } from "./bot";
@@ -47,7 +50,8 @@ function answerFrom(row: AnswerRow): RunAnswer {
     answeredAt: row.answeredAt,
   };
   if (row.guid !== null) a.guid = row.guid;
-  if (row.waitlisted) a.waitlisted = true;
+  // A WEB-40 "Maybe, first in line" is a reserve (WEB-47).
+  if (row.waitlisted && row.answer === "maybe") a.answer = "reserve";
   if (row.movedUp) a.movedUp = true;
   return a;
 }
@@ -100,7 +104,7 @@ function writeAnswers(db: Db, runId: number, answers: readonly RunAnswer[]): voi
         role: a.role,
         source: a.source,
         answeredAt: a.answeredAt,
-        waitlisted: a.waitlisted === true,
+        waitlisted: false,
         movedUp: a.movedUp === true,
       })
       .run();
@@ -198,17 +202,19 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
       .map((a) => ({
         ...person(a.battleTag),
         ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
-        answer: a.answer,
+        // A reserve stays "maybe" with `reserve` for bots from before WEB-47 (optional fields within v1).
+        answer: a.answer === "reserve" ? "maybe" : a.answer,
         role: a.role,
         source: a.source,
+        ...(a.guid === undefined ? {} : { guid: a.guid, fit: fitOf(data, run, a.guid) }),
         ...(a.movedUp ? { movedUp: true } : {}),
-        ...(a.waitlisted ? { waitlisted: true } : {}),
+        ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
       })),
   };
 }
 
 export type RunEventType =
-  "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp" | "runEnded";
+  "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp" | "runMoved" | "runEnded";
 
 /** Writes a run event when the admin's Runs switch is on; the reminders have their own switch. */
 export function runEvent(
@@ -276,6 +282,8 @@ export interface PlanRequest {
   source: RunSource;
   /** The organiser's character to lead as; none when none of theirs fits. */
   leadGuid?: string;
+  /** The lead's role for this run (WEB-47); default the character's role from the addon. */
+  leadRole?: SlotRole;
 }
 
 export function planRunFor(db: Db, req: PlanRequest, now: number): { id: number } | PlanRefusal {
@@ -299,6 +307,8 @@ export function planRunFor(db: Db, req: PlanRequest, now: number): { id: number 
               owner: lead.owner ?? "",
               ...(lead.level === undefined ? {} : { level: lead.level }),
               ...(lead.role === undefined ? {} : { role: lead.role }),
+              ...(lead.classFile === undefined ? {} : { classFile: lead.classFile }),
+              ...(req.leadRole === undefined ? {} : { slot: req.leadRole }),
             },
           }),
     },
@@ -330,10 +340,12 @@ export type RunMissing = "unknown_run";
 
 export interface AnswerRequest {
   battleTag: string;
-  answer: Answer;
+  answer: "in" | "maybe" | "cant";
   source: RunSource;
   /** Required for I'm in; it must be the friend's own. */
   guid?: string;
+  /** The role for this run (WEB-47); default the character's role from the addon. */
+  role?: SlotRole;
 }
 
 export function answerRunFor(
@@ -364,8 +376,10 @@ export function answerRunFor(
               guid: character.guid,
               ...(character.level === undefined ? {} : { level: character.level }),
               ...(character.role === undefined ? {} : { role: character.role }),
+              ...(character.classFile === undefined ? {} : { classFile: character.classFile }),
             },
           }),
+      ...(req.role === undefined ? {} : { role: req.role }),
     },
     now,
     (guid) => runCharacter(data, guid)?.level,
@@ -516,4 +530,66 @@ export function markDidntHappen(db: Db, now: number): number {
     if (setOutcome(db, r.id, { kind: "didntHappen", at: r.startsAt + OUTCOME_SECONDS }, now)) marked++;
   }
   return marked;
+}
+
+// --- the organiser's moves (WEB-47) ---------------------------------------------------------------------------------
+
+/** How a character's level fits the run (WEB-47 levelFit): its kind and label, for the bot and the uploader. */
+export function fitOf(data: Dataset | undefined, run: StoredRun, guid: string): { kind: FitKind; label: string } {
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const fit = levelFit(runCharacter(data, guid)?.level, range.min, range.max);
+  return { kind: fit.kind, label: fit.label };
+}
+
+export type MoveRefusalOrRights = MoveRefusal | RunMissing | "not_allowed";
+
+/**
+ * The organiser (or the admin) moves a sign-up to another role, to reserve, or off the run. The moved friend gets a
+ * quiet notice (`runMoved`, a direct message rather than a channel post), as does anyone who moved up.
+ */
+export function moveRunSignUp(
+  db: Db,
+  runId: number,
+  by: string,
+  isAdmin: boolean,
+  guid: string,
+  to: MoveTo,
+  now: number,
+): StoredRun | MoveRefusalOrRights {
+  const run = getRun(db, runId);
+  if (run === undefined) return "unknown_run";
+  if (!isAdmin && !mayEdit(run, by)) return "not_allowed";
+  const data = loadState(db)?.data;
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const target = run.answers.find((a) => a.guid === guid);
+  const outcome = moveSignUp(
+    { ...run, range },
+    run.answers,
+    guid,
+    to,
+    now,
+    (g) => runCharacter(data, g)?.level,
+    (g) => runCharacter(data, g)?.classFile,
+  );
+  if (typeof outcome === "string") return outcome;
+  db.transaction((tx) => {
+    writeAnswers(tx as unknown as Db, runId, outcome.answers);
+    tx.update(runs).set({ updatedAt: now }).where(eq(runs.id, runId)).run();
+  });
+  const after = getRun(db, runId)!;
+  runEvent(db, "runChanged", after, now, { changed: ["answers"] });
+  const ids = discordIds(db);
+  const who = (battleTag: string) => {
+    const id = ids.get(battleTagKey(battleTag));
+    return { name: displayName(data, battleTag), ...(id === undefined ? {} : { discordId: id }) };
+  };
+  if (target !== undefined) {
+    runEvent(db, "runMoved", after, now, {
+      who: who(target.battleTag),
+      to: to === "remove" ? "removed" : to,
+      by: displayName(data, by),
+    });
+  }
+  if (outcome.movedUp !== undefined) runEvent(db, "runMovedUp", after, now, { who: who(outcome.movedUp.battleTag) });
+  return after;
 }

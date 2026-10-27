@@ -1,16 +1,19 @@
 import { battleTagKey } from "./access";
-import { RUNNABLE_DUNGEONS, type LevelRange, type RunnableDungeon } from "./gamedata";
+import { RUNNABLE_DUNGEONS, rolesFor, type GroupRole, type LevelRange, type RunnableDungeon } from "./gamedata";
+import { levelFit } from "./levelFit";
 import type { Role } from "./views/characters";
 
-// Planned runs (WEB-40, docs/STORIES-COMPLETED.md): the slots, who may answer what, and moving up from Maybe. Pure: the
-// stored run and its answers come in, the new answers and what happened go out. Times are Unix seconds (UTC).
+// Planned runs (WEB-40, WEB-47; docs/STORIES-COMPLETED.md): the slots, who may answer what with which role, reserve,
+// moving up and the organiser's moves. Pure: the stored run and its answers come in, the new answers and what happened
+// go out. Times are Unix seconds (UTC).
 
 /** The five slots of a group (story WEB-40). */
-export type SlotRole = "tank" | "healer" | "damage";
+export type SlotRole = GroupRole;
 export const SLOTS: Readonly<Record<SlotRole, number>> = { tank: 1, healer: 1, damage: 3 };
 export const SLOT_ROLES: readonly SlotRole[] = ["tank", "healer", "damage"];
 
-export type Answer = "in" | "maybe" | "cant";
+/** `reserve` (WEB-47): said I'm in while the role was full; moves up first when a slot of that role frees. */
+export type Answer = "in" | "maybe" | "cant" | "reserve";
 /** Where a run was planned or an answer given. */
 export type RunSource = "website" | "discord" | "game";
 
@@ -51,14 +54,12 @@ export interface RunAnswer {
   /** The character; required for I'm in. */
   guid?: string;
   answer: Answer;
-  /** The slot the character fills (or would). */
+  /** The slot the character fills (or would): chosen per sign-up, one its class can play (WEB-47). */
   role: SlotRole;
   source: RunSource;
-  /** When the answer was last given (Unix seconds); Maybes move up in this order. */
+  /** When the answer was last given (Unix seconds); reserves and Maybes move up in this order. */
   answeredAt: number;
-  /** Answered I'm in while the role was full: first in line (decided with Nico, 2026-10-27). */
-  waitlisted?: boolean;
-  /** Moved up from Maybe when a slot freed. */
+  /** Moved up from reserve or Maybe when a slot freed. */
   movedUp?: boolean;
 }
 
@@ -130,10 +131,13 @@ export function counts(answers: readonly RunAnswer[]): { in: number; maybe: numb
 
 export interface AnswerInput {
   battleTag: string;
-  answer: Answer;
+  /** In, Maybe or Can't; reserve is what an I'm in on a full role becomes. */
+  answer: "in" | "maybe" | "cant";
   source: RunSource;
   /** The character answered with and what the site knows of it. */
-  character?: { guid: string; level?: number; role?: Role };
+  character?: { guid: string; level?: number; role?: Role; classFile?: string };
+  /** The role chosen for this run (WEB-47); default the role the addon reports. */
+  role?: SlotRole;
 }
 
 export type AnswerRefusal =
@@ -141,38 +145,70 @@ export type AnswerRefusal =
   | "closed"
   /** I'm in needs a character. */
   | "no_character"
-  /** I'm in needs a character in the level range; Maybe and Can't don't. */
-  | "out_of_range";
+  /** I'm in needs a character that may join (levelFit: not 6+ below); Maybe and Can't always go. */
+  | "out_of_range"
+  /** The character's class can't play that role (rolesFor). */
+  | "role_not_for_class";
 
 export interface AnswerOutcome {
   answers: RunAnswer[];
-  /** The answer as stored: I'm in on a full role is stored as a waitlisted Maybe. */
+  /** The answer as stored: I'm in on a full role is stored as reserve. */
   stored: RunAnswer;
-  /** A Maybe who moved up into the slot this answer freed (they get a quiet notice). */
+  /** Who moved up into the slot this answer freed (they get a quiet notice). */
   movedUp?: RunAnswer;
 }
 
+type LevelOf = (guid: string) => number | undefined;
+
 /**
- * Gives a friend's answer: it replaces their earlier one. I'm in on a full role is kept as Maybe, first in line. When
- * an I'm in leaves a full role, the first Maybe for that role whose character is in range moves up. `levelOf` gives a
- * character's level now, for that range check.
+ * A slot of a full role freed: the oldest reserve of that role moves up, else the first Maybe for it, in answer order,
+ * whose character may join (decided with Nico, 2026-10-27). A role that wasn't full pulls nobody in: a Maybe there
+ * chose Maybe. `before` are the answers before the change, `next` after it.
+ */
+function moveUp(
+  run: { range: LevelRange },
+  before: readonly RunAnswer[],
+  next: RunAnswer[],
+  freed: SlotRole,
+  levelOf: LevelOf,
+  except: RunAnswer | undefined,
+): { answers: RunAnswer[]; movedUp?: RunAnswer } {
+  if (!(openSlots(before)[freed] <= 0 && openSlots(next)[freed] > 0)) return { answers: next };
+  const waiting = (kind: Answer) =>
+    next
+      .filter((a) => a !== except && a.answer === kind && a.role === freed && a.guid !== undefined)
+      .sort((x, y) => x.answeredAt - y.answeredAt)
+      .find((a) => levelFit(levelOf(a.guid!), run.range.min, run.range.max).canPick);
+  const first = waiting("reserve") ?? waiting("maybe");
+  if (first === undefined) return { answers: next };
+  const up: RunAnswer = { ...first, answer: "in", movedUp: true };
+  return { answers: next.map((a) => (a === first ? up : a)), movedUp: up };
+}
+
+/**
+ * Gives a friend's answer: it replaces their earlier one. I'm in needs a character that may join (levelFit) and a role
+ * its class can play; on a full role it is kept as reserve. When an I'm in leaves a full role, the oldest reserve (else
+ * the first Maybe) for that role moves up. `levelOf` gives a character's level now.
  */
 export function giveAnswer(
   run: RunCore & { range: LevelRange },
   answers: readonly RunAnswer[],
   input: AnswerInput,
   now: number,
-  levelOf: (guid: string) => number | undefined,
+  levelOf: LevelOf,
 ): AnswerOutcome | AnswerRefusal {
   if (run.cancelledAt !== undefined || now >= run.startsAt) return "closed";
+  const role = input.role ?? slotRole(input.character?.role);
+  if (input.character !== undefined && !rolesFor(input.character.classFile).includes(role)) {
+    return "role_not_for_class";
+  }
   if (input.answer === "in") {
     if (input.character === undefined) return "no_character";
-    if (!inRange(input.character.level, run.range)) return "out_of_range";
+    if (!levelFit(input.character.level, run.range.min, run.range.max).canPick) return "out_of_range";
   }
   const key = battleTagKey(input.battleTag);
   const before = answers.find((a) => battleTagKey(a.battleTag) === key);
   const others = answers.filter((a) => a !== before);
-  const role = slotRole(input.character?.role);
   const stored: RunAnswer = {
     battleTag: input.battleTag,
     answer: input.answer,
@@ -181,35 +217,81 @@ export function giveAnswer(
     answeredAt: now,
   };
   if (input.character !== undefined) stored.guid = input.character.guid;
-  if (stored.answer === "in" && openSlots(others)[role] <= 0) {
-    stored.answer = "maybe";
-    stored.waitlisted = true;
-  }
+  if (stored.answer === "in" && openSlots(others)[role] <= 0) stored.answer = "reserve";
   const next = [...others, stored];
-  const outcome: AnswerOutcome = { answers: next, stored };
-  // A slot of a full role freed: the first Maybe for it, in answer order, whose character is in range moves up. A
-  // role that wasn't full pulls nobody in: a Maybe there chose Maybe.
   if (before?.answer === "in" && !(stored.answer === "in" && stored.role === before.role)) {
-    const freed = before.role;
-    if (openSlots(answers)[freed] <= 0 && openSlots(next)[freed] > 0) {
-      const first = next
-        .filter((a) => a !== stored && a.answer === "maybe" && a.role === freed && a.guid !== undefined)
-        .sort((x, y) => x.answeredAt - y.answeredAt)
-        .find((a) => inRange(levelOf(a.guid!), run.range));
-      if (first !== undefined) {
-        const up: RunAnswer = { ...first, answer: "in", movedUp: true };
-        delete up.waitlisted;
-        outcome.answers = next.map((a) => (a === first ? up : a));
-        outcome.movedUp = up;
-      }
-    }
+    return { ...moveUp(run, answers, next, before.role, levelOf, stored), stored };
+  }
+  return { answers: next, stored };
+}
+
+// --- the organiser's moves (WEB-47) -------------------------------------------------------------------------------
+
+/** Where the organiser (or the admin) moves a sign-up: another role, reserve, or off the run. */
+export type MoveTo = SlotRole | "reserve" | "remove";
+
+export type MoveRefusal =
+  | "closed"
+  /** No sign-up with that character. */
+  | "unknown_sign_up"
+  /** The role has no open slot. */
+  | "role_full"
+  | "role_not_for_class"
+  /** It already is there. */
+  | "same";
+
+export interface MoveOutcome {
+  answers: RunAnswer[];
+  /** The sign-up as it is now; undefined when removed. */
+  moved?: RunAnswer;
+  /** Who moved up into a slot the move freed. */
+  movedUp?: RunAnswer;
+}
+
+/**
+ * Moves the sign-up with character `guid`: into another role's open slot (as I'm in), to reserve, or off the run (its
+ * answer removed; they may answer again, decided with Nico 2026-10-27). A slot it frees pulls up the oldest reserve,
+ * else the first Maybe. Rights are the caller's (mayEdit, or the admin).
+ */
+export function moveSignUp(
+  run: RunCore & { range: LevelRange },
+  answers: readonly RunAnswer[],
+  guid: string,
+  to: MoveTo,
+  now: number,
+  levelOf: LevelOf,
+  classOf: (guid: string) => string | undefined,
+): MoveOutcome | MoveRefusal {
+  if (run.cancelledAt !== undefined || now >= run.startsAt) return "closed";
+  const target = answers.find((a) => a.guid === guid);
+  if (target === undefined) return "unknown_sign_up";
+  const others = answers.filter((a) => a !== target);
+  let moved: RunAnswer | undefined;
+  if (to === "reserve") {
+    if (target.answer === "reserve") return "same";
+    moved = { ...target, answer: "reserve" };
+    delete moved.movedUp;
+  } else if (to !== "remove") {
+    if (!rolesFor(classOf(guid)).includes(to)) return "role_not_for_class";
+    if (target.answer === "in" && target.role === to) return "same";
+    if (openSlots(others)[to] <= 0) return "role_full";
+    moved = { ...target, answer: "in", role: to };
+  }
+  const next = moved === undefined ? others : [...others, moved];
+  const outcome: MoveOutcome = { answers: next };
+  if (moved !== undefined) outcome.moved = moved;
+  if (target.answer === "in" && !(moved?.answer === "in" && moved.role === target.role)) {
+    const up = moveUp(run, answers, next, target.role, levelOf, moved);
+    outcome.answers = up.answers;
+    if (up.movedUp !== undefined) outcome.movedUp = up.movedUp;
   }
   return outcome;
 }
 
 // --- planning -----------------------------------------------------------------------------------------------------
 
-export type PlanRefusal = "unknown_dungeon" | "time_passed" | "note_too_long" | "lead_not_yours" | "lead_out_of_range";
+export type PlanRefusal =
+  "unknown_dungeon" | "time_passed" | "note_too_long" | "lead_not_yours" | "lead_out_of_range" | "role_not_for_class";
 
 export interface PlanInput {
   dungeonId: string;
@@ -217,8 +299,8 @@ export interface PlanInput {
   note?: string;
   organiser: string;
   source: RunSource;
-  /** The organiser's character, when one fits ("organiser without a slot" otherwise). */
-  lead?: { guid: string; level?: number; role?: Role; owner: string };
+  /** The organiser's character, when one may join ("organiser without a slot" otherwise), and its role. */
+  lead?: { guid: string; level?: number; role?: Role; classFile?: string; owner: string; slot?: SlotRole };
 }
 
 /**
@@ -232,14 +314,17 @@ export function planRun(input: PlanInput, now: number): { answers: RunAnswer[] }
   if ((input.note ?? "").length > MAX_NOTE) return "note_too_long";
   if (input.lead === undefined) return { answers: [] };
   if (battleTagKey(input.lead.owner) !== battleTagKey(input.organiser)) return "lead_not_yours";
-  if (!inRange(input.lead.level, dungeon.typicalLevels)) return "lead_out_of_range";
+  const { min, max } = dungeon.typicalLevels;
+  if (!levelFit(input.lead.level, min, max).canPick) return "lead_out_of_range";
+  const role = input.lead.slot ?? slotRole(input.lead.role);
+  if (!rolesFor(input.lead.classFile).includes(role)) return "role_not_for_class";
   return {
     answers: [
       {
         battleTag: input.organiser,
         guid: input.lead.guid,
         answer: "in",
-        role: slotRole(input.lead.role),
+        role,
         source: input.source,
         answeredAt: now,
       },

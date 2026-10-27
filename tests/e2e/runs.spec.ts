@@ -80,8 +80,9 @@ test("Plan a run says when the time has passed, and when none of your characters
   baseURL,
 }) => {
   await as(context, baseURL!, E2E.admin);
-  await page.goto("/runs/new?dungeon=zf");
-  await expect(page.getByText(/None of your characters fit Zul'Farrak \(44–54\)/)).toBeVisible();
+  await page.goto("/runs/new?dungeon=scholo");
+  // Ves (39) is 19 below Scholomance: too low to lead (WEB-47 levelFit; 5 below Zul'Farrak he may).
+  await expect(page.getByText(/None of your characters fit Scholomance \(58–60\)/)).toBeVisible();
   await page.getByRole("group", { name: "Day" }).getByRole("radio").first().check();
   await page.getByLabel("Time").fill("00:01");
   await expect(page.getByText(/^Time already passed\./)).toBeVisible();

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Run detail v2</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.card{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.85);border:1px solid rgba(212,175,106,.22)}
+.h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.cap{font-size:12px;color:#8E98A8;line-height:1.5}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.t-fit{background:rgba(127,217,154,.14);color:#9BE3B0}
+.t-over{background:rgba(63,199,235,.14);color:#8FE3F7}
+.t-carry{background:rgba(212,175,106,.18);color:#F3DFAE}
+.t-low{background:rgba(240,167,116,.16);color:#F6C29C}
+.t-no{background:rgba(174,182,195,.1);color:#8E98A8}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:44px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0B1220;color:#AEB6C3;font:600 13px Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.seg button small{font:500 11px Inter,sans-serif;color:#7E8898}
+.seg button.on{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.seg button.on small{color:#D4AF6A}
+.seg button[disabled]{opacity:.4;cursor:not-allowed}
+.crow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow.sel{border-color:#D4AF6A;background:rgba(212,175,106,.10)}
+.crow.dis{opacity:.45;cursor:not-allowed}
+.cn{font:16px Marcellus,serif}
+.cm{font-size:12px;color:#8E98A8;margin-top:1px}
+.d{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 12px Inter,sans-serif;color:#0B0F14;flex:none}
+.menu{padding:6px;border-radius:12px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;font-size:14px;color:#E6E1D6}
+.mi.hl{background:rgba(212,175,106,.14)}
+.mi small{font-size:12px;color:#8E98A8}
+.mi.dis{color:#6E7888}
+.mg{padding:10px 10px 4px;font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.trig{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.trig.open{border-color:#D4AF6A;box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.f{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(174,182,195,.14)}
+.fn{width:32px;height:32px;border-radius:50%;background:#121B2A;border:1px solid rgba(212,175,106,.45);color:#F0D08E;font:600 13px/30px Inter,sans-serif;text-align:center}
+.f b{display:block;color:#F3EBDA;font-size:14px;font-weight:600;margin-bottom:3px}
+.f p{margin:0;font-size:13px;color:#AEB6C3;line-height:1.5}
+.f .fix{margin-top:6px;color:#9BE3B0}
+.f q{color:#F6C29C;quotes:'“' '”'}
+.sev{font:700 10px/1 Inter,sans-serif;padding:4px 6px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:2px}
+.s-bug{background:rgba(218,55,60,.2);color:#F59A9C}.s-ux{background:rgba(212,175,106,.2);color:#F3DFAE}.s-copy{background:rgba(140,149,245,.2);color:#C3C7FB}.s-pol{background:rgba(174,182,195,.14);color:#C4C9D0}
+
+</style>
+</helmet>
+<div style="min-height: 1300px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px"><a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a><a href="Roster-runs.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Roster</a><a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a><a href="SiteRuns.dc.html" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Runs</a></nav>
+    <div style="flex: 1"></div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">V</span>Vane#1001</div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 22px 24px 48px; display: flex; flex-direction: column; gap: 18px">
+    <nav style="font-size: 13px; color: #8E98A8"><a href="#" style="text-decoration: none">Runs</a> › Scarlet Monastery: Graveyard</nav>
+    <section style="display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 420px"><div style="display: flex; gap: 10px; align-items: center"><span class="pill p-open">Open</span><span class="pill" style="background: rgba(135,136,238,.18); color: #C3C4F7">Yours</span></div>
+        <h1 style="margin: 8px 0 0; font: 36px 'Marcellus SC', serif; letter-spacing: .04em; color: #F3DFAE">Scarlet Monastery: Graveyard</h1>
+        <div style="font: 30px Marcellus, serif; color: #F3EBDA; margin-top: 6px">Fri 30 Oct · 20:30 <span style="font: 500 15px Inter, sans-serif; color: #F6C29C; margin-left: 8px">in 3 days</span></div>
+        <div style="font-size: 13px; color: #8E98A8; margin-top: 4px">Levels 26–36 · Tirisfal Glades</div></div>
+      <div style="display: flex; gap: 8px"><button class="btn sec">Edit run</button><button class="btn danger">Delete</button></div>
+    </section>
+
+    <section class="card" style="display: flex; gap: 14px; align-items: center; border-color: rgba(212,175,106,.45)"><span class="d" style="background: #C69B6D; color: #0B0F14; width: 44px; height: 44px; font-size: 14px">VB</span><div style="flex: 1"><div style="font: 18px Marcellus, serif; color: #F3EBDA">You lead as <span class="wa">Vesgar Bloodhoof</span> · Tank</div><div class="cap">27 Warrior · Protection talents</div></div><button class="btn sec">Change character or role</button></section>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; align-items: start">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <section class="card" style="display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="h2" style="font-size: 18px">Group</h2><span style="font-size: 13px; color: #AEB6C3">3 in · 1 maybe · 2 open</span></div>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+            <div style="position: relative; padding: 12px; border-radius: 12px; background: #0E1626; border: 1px solid rgba(174,182,195,.16); display: flex; flex-direction: column; gap: 6px; min-height: 132px; box-sizing: border-box"><div style="display: flex; gap: 8px; align-items: center"><span class="d" style="background: #C69B6D; color: #0B0F14; width: 24px; height: 24px; font-size: 8px">VB</span><span class="lab">Tank</span></div><div class="cn wa" style="font-size: 15px; line-height: 1.25">Vesgar Bloodhoof</div><div class="cm">27 · you · organiser</div></div>
+            <div style="padding: 12px; border-radius: 12px; border: 1px dashed rgba(240,167,116,.55); display: flex; flex-direction: column; gap: 6px; min-height: 132px; box-sizing: border-box"><span class="lab">Healer</span><span style="font: 16px Marcellus, serif; color: #F0A774">Open</span><span class="cap">No healer in range · Kaz Coldbrew is 4 below</span></div>
+            <div style="position: relative"><div style="position: relative; padding: 12px; border-radius: 12px; background: #0E1626; border: 1px solid #D4AF6A; display: flex; flex-direction: column; gap: 6px; min-height: 132px; box-sizing: border-box"><span style="position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #AEB6C3; border: 1px solid rgba(174,182,195,.25)">⋯</span><div style="display: flex; gap: 8px; align-items: center"><span class="d" style="background: #F48CBA; color: #0B0F14; width: 24px; height: 24px; font-size: 8px">JG</span><span class="lab">Damage</span></div><div class="cn pa" style="font-size: 15px; line-height: 1.25">Jasper Goldmane</div><div class="cm">28 Paladin · Yarrow</div><span class="tag t-fit" style="align-self: flex-start">fits</span></div><div class="menu" role="menu" style="position: absolute; left: 0; top: 138px; width: 250px; z-index: 5">
+  <div class="mg">Move Jasper Goldmane to</div>
+  <div class="mi" role="menuitem"><span></span>Tank<small>taken by you</small></div>
+  <div class="mi hl" role="menuitem"><span>→</span>Healer<small>open</small></div>
+  <div class="mi" role="menuitem"><span></span>Damage<small>current</small></div>
+  <div style="height: 1px; background: rgba(255,255,255,.06); margin: 4px 0"></div>
+  <div class="mi" role="menuitem"><span></span>Move to reserve</div>
+  <div class="mi" role="menuitem" style="color: #F59A9C"><span></span>Remove from run</div>
+</div></div>
+            <div style="position: relative; padding: 12px; border-radius: 12px; background: #0E1626; border: 1px solid rgba(174,182,195,.16); display: flex; flex-direction: column; gap: 6px; min-height: 132px; box-sizing: border-box"><span style="position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; color: #AEB6C3; border: 1px solid rgba(174,182,195,.25)">⋯</span><div style="display: flex; gap: 8px; align-items: center"><span class="d" style="background: #3FC7EB; color: #0B0F14; width: 24px; height: 24px; font-size: 8px">IF</span><span class="lab">Damage</span></div><div class="cn ma" style="font-size: 15px; line-height: 1.25">Icyra Frostwhisper</div><div class="cm">57 Mage · Ivo</div><span class="tag t-carry" style="align-self: flex-start">carry · +21</span></div>
+            <div style="padding: 12px; border-radius: 12px; border: 1px dashed rgba(240,167,116,.55); display: flex; flex-direction: column; gap: 6px; min-height: 132px; box-sizing: border-box"><span class="lab">Damage</span><span style="font: 16px Marcellus, serif; color: #F0A774">Open</span><span class="cap">1 left</span></div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.03); font-size: 13px; color: #AEB6C3; flex-wrap: wrap"><b style="color: #E6E1D6; font-weight: 500">Could fill</b> <span class="hu">Khrono Wolfhowl</span> 36 · <span class="ro">Ginji Shadowstep</span> 34 · <span class="ma">Basil Stonegaze</span> 31 <span class="cap">· damage, not answered yet</span></div>
+          <div style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #AEB6C3"><span class="lab" style="margin: 0">Maybe</span><span class="wa">Sjaak Grimhammer</span> 30 · damage <span class="lab" style="margin-left: 18px">Reserve</span><span class="cap">nobody</span></div>
+        </section>
+        <section class="card">
+          <h2 class="h2" style="font-size: 18px; margin-bottom: 8px">Answers</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px">
+            <thead><tr style="text-align: left; color: #7E8898; font-size: 11px; letter-spacing: .1em; text-transform: uppercase"><th style="padding: 8px 6px; font-weight: 500">Character</th><th style="padding: 8px 6px; font-weight: 500">Friend</th><th style="padding: 8px 6px; font-weight: 500">Role</th><th style="padding: 8px 6px; font-weight: 500">Fit</th><th style="padding: 8px 6px; font-weight: 500">Answer</th><th style="padding: 8px 6px; font-weight: 500">When · where</th></tr></thead>
+            <tbody style="color: #C9CFD9">
+              <tr style="border-top: 1px solid rgba(255,255,255,.05)"><td style="padding: 9px 6px" class="wa">Vesgar Bloodhoof 27</td><td>Vane</td><td>Tank</td><td><span class="tag t-fit">fits</span></td><td style="color: #9BE3B0">Organiser</td><td class="muted">Tue 23:24 · website</td></tr>
+              <tr style="border-top: 1px solid rgba(255,255,255,.05)"><td style="padding: 9px 6px" class="pa">Jasper Goldmane 28</td><td>Yarrow</td><td>Damage <span class="cap">(usually tank)</span></td><td><span class="tag t-fit">fits</span></td><td style="color: #9BE3B0">I'm in</td><td class="muted">Wed 09:12 · Discord</td></tr>
+              <tr style="border-top: 1px solid rgba(255,255,255,.05)"><td style="padding: 9px 6px" class="ma">Icyra Frostwhisper 57</td><td>Ivo</td><td>Damage</td><td><span class="tag t-carry">carry · +21</span></td><td style="color: #9BE3B0">I'm in</td><td class="muted">Wed 10:40 · website</td></tr>
+              <tr style="border-top: 1px solid rgba(255,255,255,.05)"><td style="padding: 9px 6px" class="wa">Sjaak Grimhammer 30</td><td>Sorrel</td><td>Damage</td><td><span class="tag t-fit">fits</span></td><td style="color: #F3DFAE">Maybe</td><td class="muted">Wed 12:02 · in game</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+      <aside style="display: flex; flex-direction: column; gap: 18px">
+        <section class="card" style="display: flex; flex-direction: column; gap: 10px">
+          <h2 class="h2" style="font-size: 18px">Organiser tools</h2>
+          <div style="font-size: 13px; color: #AEB6C3; line-height: 1.55">Use <b style="color: #E6E1D6">⋯</b> on a slot to move someone to another role or to reserve. They get a quiet notice in Discord.</div>
+          <div style="font-size: 13px; color: #AEB6C3; line-height: 1.55">Deleting the run tells everyone who answered and marks the Discord post cancelled.</div>
+        </section>
+        <section class="card" style="display: flex; flex-direction: column; gap: 8px">
+          <h2 class="h2" style="font-size: 18px">Reminder</h2>
+          <div style="font-size: 13px; color: #AEB6C3; line-height: 1.55">Discord reminds everyone who answered I'm in or Maybe 30 min before, and again at the start.</div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

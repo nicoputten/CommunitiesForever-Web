@@ -1,6 +1,7 @@
 import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeedDay } from "@/core/feed";
+import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
@@ -304,10 +305,12 @@ export const runAnswers = sqliteTable(
     key: text("key").notNull(),
     battleTag: text("battle_tag").notNull(),
     guid: text("guid"),
-    answer: text("answer", { enum: ["in", "maybe", "cant"] }).notNull(),
+    /** `reserve` (WEB-47): I'm in on a full role. */
+    answer: text("answer", { enum: ["in", "maybe", "cant", "reserve"] }).notNull(),
     role: text("role", { enum: ["tank", "healer", "damage"] }).notNull(),
     source: text("source", { enum: ["website", "discord", "game"] }).notNull(),
     answeredAt: integer("answered_at").notNull(),
+    /** WEB-40's "Maybe, first in line"; since WEB-47 a reserve answer instead (0011 turned them into reserve). */
     waitlisted: integer("waitlisted", { mode: "boolean" }).notNull(),
     movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
   },
@@ -400,4 +403,26 @@ export const gameItems = sqliteTable("game_items", {
   result: text("result").notNull(),
   /** The run it made or answered. */
   runId: integer("run_id"),
+});
+
+// The weekly recap (WEB-41c, src/server/recap.ts): computed once at the recap moment and stored, so a re-run never
+// changes what was posted. Not derived: a rebuild of the uploads leaves it alone.
+
+export const recaps = sqliteTable("recaps", {
+  /** 1 for the first recap after launch. */
+  week: integer("week").primaryKey(),
+  /** Unix seconds, `[start, end)`. */
+  start: integer("start").notNull(),
+  end: integer("end").notNull(),
+  computedAt: integer("computed_at").notNull(),
+  /** The recap as posted (cards, phrasings, facts) and what later recaps need (`past`, `cycles`). */
+  data: text("data", { mode: "json" }).$type<Recap>().notNull(),
+  /** The characters at `end`: the next week's start. */
+  snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
+});
+
+/** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */
+export const recapStart = sqliteTable("recap_start", {
+  id: integer("id").primaryKey(),
+  startedAt: integer("started_at").notNull(),
 });

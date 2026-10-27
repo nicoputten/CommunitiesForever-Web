@@ -1,11 +1,12 @@
 import { nowSeconds } from "@/app/clock";
-import { botFriend, refusal, runIdParam } from "@/server/botRuns";
+import { botFriend, characterParam, refusal, roleParam, runIdParam } from "@/server/botRuns";
 import { jsonBody } from "@/server/http";
 import { answerRunFor, getRun, runPayload } from "@/server/runs";
 import { apiError, botGuard } from "@/server/session";
 
-// POST { discordUserId, answer, guid? }: a friend answers in Discord (WEB-40, the post's buttons). I'm in needs one of
-// their characters in range; on a full role it is kept as Maybe, first in line (`stored.waitlisted`).
+// POST { discordUserId, answer, characterId?, role? }: a friend answers in Discord (WEB-40, the post's buttons). I'm in
+// needs one of their characters that may join; the role is one its class can play (WEB-47). On a full role it is
+// kept as reserve (`stored.reserve`; `waitlisted` too, for bots from before WEB-47).
 
 const ANSWERS = ["in", "maybe", "cant"] as const;
 
@@ -20,19 +21,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (id === undefined) return refusal("unknown_run");
   const answer = ANSWERS.find((a) => a === body.answer);
   if (answer === undefined) return apiError(400, "invalid_request", "answer is in, maybe or cant.");
+  const role = roleParam(body.role);
+  if (role === null) return apiError(400, "invalid_request", "role is tank, healer or damage.");
+  const characterId = characterParam(body);
   const request = {
     battleTag: friend.battleTag,
     answer,
     source: "discord" as const,
-    ...(typeof body.guid === "string" ? { guid: body.guid } : {}),
+    ...(characterId === undefined ? {} : { guid: characterId }),
+    ...(role === undefined ? {} : { role }),
   };
   const outcome = answerRunFor(db, id, request, now);
   if (typeof outcome === "string") return refusal(outcome);
   return Response.json({
     stored: {
-      answer: outcome.stored.answer,
+      answer: outcome.stored.answer === "reserve" ? "maybe" : outcome.stored.answer,
       role: outcome.stored.role,
-      waitlisted: outcome.stored.waitlisted === true,
+      reserve: outcome.stored.answer === "reserve",
+      waitlisted: outcome.stored.answer === "reserve",
     },
     run: runPayload(db, getRun(db, id)!, now),
   });

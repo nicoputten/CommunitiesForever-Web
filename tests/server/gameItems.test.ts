@@ -129,6 +129,23 @@ describe("the game's items", () => {
   });
 });
 
+describe("the role from the game (WEB-47)", () => {
+  it("takes the role the addon sends when the class can play it, else the character's own", () => {
+    const GROM = "Player-1-0000A002"; // Nico, 24 warrior (tank)
+    const bobs = plan("rfk", NOW + 3 * HOUR, "Bob#2002", "Player-1-0000B002");
+    const file = gameFile(`{
+      { id = "r-1", kind = "plan", at = ${NOW - 60}, dungeon = "dm", startsAt = ${NOW + 4 * HOUR}, guid = "${GROM}", role = "dps" },
+      { id = "r-2", kind = "answer", at = ${NOW - 30}, run = "r-${bobs}", answer = "maybe", guid = "${VES}", role = "tank" },
+    }`);
+    expect(upload(db, file, ADMIN, NOW).status).toBe("ok");
+    const planned = listRuns(db).find((r) => r.source === "game")!;
+    // A warrior may deal damage: the role the game sent.
+    expect(planned.answers).toMatchObject([{ guid: GROM, role: "damage", answer: "in" }]);
+    // A warlock can't tank: Ves's own role (damage).
+    expect(getRun(db, bobs)!.answers.find((a) => a.guid === VES)).toMatchObject({ role: "damage", answer: "maybe" });
+  });
+});
+
 describe("how runs ended", () => {
   it("ran it when an upload's run log shows the monastery with two who said I'm in", () => {
     const id = plan("sm-armory", NOW + HOUR, ADMIN, VES);

@@ -109,6 +109,12 @@ describe("the runs list", () => {
     expect(library!.hint).toEqual({ text: "Your Ves Doombringer fits", tone: "good" });
   });
 
+  it("words the hint with the fit label: over still counts as one you can join (WEB-47)", () => {
+    const rfk = run(9, { dungeonId: "rfk", organiser: BOB, startsAt: NOW + 26 * HOUR }); // 29–38: Ves (39) is +1 over
+    const page = runsPage(input(NICO, { runs: [rfk] }), "join");
+    expect(page.thisWeek.map((r) => r.hint?.text)).toEqual(["Your Ves Doombringer can join · +1 over"]);
+  });
+
   it("counts the runs you can join and haven't answered: the top bar's badge", () => {
     expect(joinableUnanswered(input(NICO))).toBe(2);
     expect(joinableUnanswered(input(FEMKE))).toBe(1);
@@ -139,9 +145,11 @@ describe("a run's page", () => {
   });
 
   it("says why I'm in is off, and offers the wing that fits", () => {
-    const d = runDetail(input(JORRIT), 1)!;
+    // Ruk (27) is 8 below the Cathedral: Maybe only (WEB-47). 5 below the Armory he may still join.
+    expect(runDetail(input(JORRIT), 1)!.outOfRange).toBeUndefined();
+    const d = runDetail(input(JORRIT), 4)!;
     expect(d.outOfRange).toBe(
-      "Ruk Bloodhoof (27) is below the Armory (32–42), so I'm in is off. Maybe or Can't still go.",
+      "Ruk Bloodhoof (27) is below the Cathedral (35–45), so I'm in is off. Maybe or Can't still go.",
     );
     expect(d.planOther).toEqual({
       label: "Plan the Graveyard for Ruk Bloodhoof",
@@ -161,8 +169,8 @@ describe("Plan a run", () => {
     expect(p.dungeons.some((d) => d.id === "sm")).toBe(false);
     expect(p.leads["sm-armory"]!.map((l) => l.label)).toEqual([
       "Ves Doombringer 39 · damage",
-      "Grom Ashfeller 24 · too low",
-      "Sela Moonbrook 12 · too low",
+      "Grom Ashfeller 24 · 8 below",
+      "Sela Moonbrook 12 · 20 below",
     ]);
     expect(p.otherZones).toEqual([{ name: "Bob", timeZone: "Europe/London" }]);
     expect(planPage(input(NICO), "nope").dungeonId).toBe("sm-armory");

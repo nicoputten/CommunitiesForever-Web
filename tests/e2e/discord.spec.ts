@@ -36,6 +36,7 @@ test.describe("a friend", () => {
     await expect(page.getByRole("heading", { name: "What the bot posts" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Linked friends" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Bot token" })).toHaveCount(0);
+    expect((await page.goto("/discord/recap"))?.status()).toBe(404);
   });
 
   test("Link Discord asks Discord for identify only, and a forged callback changes nothing", async ({ page }) => {
@@ -188,5 +189,31 @@ test.describe("the admin", () => {
     });
     await page.reload();
     await expect(page.getByLabel("Channel for posts").locator("option:checked")).toHaveText("(removed: # general)");
+  });
+
+  test("previews the coming weekly recap (WEB-41c)", async ({ page }) => {
+    await page.goto("/discord");
+    await page.getByRole("link", { name: "Preview next recap" }).click();
+    await expect(page).toHaveURL(/\/discord\/recap$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Next recap");
+    await expect(page.getByText(/^Week \d+ · /)).toBeVisible();
+    await expect(page.getByRole("region", { name: "This week's challenge" })).toBeVisible();
+    await page.getByRole("link", { name: "Back to Discord" }).click();
+    await expect(page).toHaveURL(/\/discord$/);
+  });
+
+  test("the bot gets card images from the production server (WEB-41d)", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one bot token for the site");
+    await page.goto("/discord");
+    const card = page.getByRole("region", { name: "Bot token" });
+    await card.getByRole("button", { name: /^(Create|Replace) token$/ }).click();
+    const token = await card.getByLabel(/won't be shown again/).inputValue();
+    const headers = { authorization: `Bearer ${token}` };
+    // Ves Doombringer of the sample, seen in a zone the map draws.
+    const res = await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png", { headers });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toBe("image/png");
+    expect((await res.body()).subarray(1, 4).toString("latin1")).toBe("PNG");
+    expect((await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png")).status()).toBe(401);
   });
 });

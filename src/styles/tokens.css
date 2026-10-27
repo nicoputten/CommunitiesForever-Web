@@ -717,4 +717,30 @@
   --discord-button-in: #248046;
   --discord-on-button-in: #ffffff; /* run-create: "I'm in" text; the board's #f2f3f5 is under 4.5 : 1 there */
   --r-discord: 4px;
+
+  /* weekly recap preview (WEB-41c): the bot-recap board's example embed */
+  --size-recap: 760px; /* bot-recap: the embed column (640 on the board, wider for the site's type) */
+
+  /* card images (WEB-41d): Nico's references in design/cards/; read by src/core/cards/palette.ts, kept equal by a test */
+  --card-w: 800px; /* cards: milestone, zone of the week, /whereis */
+  --card-wide: 1200px; /* cards: the recap headers */
+  --card-h: 400px;
+  --card-pad: 40px;
+  --fs-card-overline: 20px; /* cards: "MILESTONE", "WEEKLY RECAP · 20–26 OCT" */
+  --fs-card-title: 64px; /* cards: "Level 60" (Marcellus SC) */
+  --fs-card-award: 46px; /* cards: "<site> of the week" (Marcellus SC) */
+  --fs-card-name: 40px; /* cards: the character or friend (Marcellus) */
+  --fs-card-line: 26px; /* cards: the first detail line */
+  --fs-card-stat: 36px; /* cards: "6 levels · 3 dungeons" on the headers */
+  --fs-card-meta: 20px; /* cards: the second line, the footer */
+  --fs-card-initials: 64px; /* cards: initials on the big disc */
+  --size-card-disc: 230px; /* cards: the class disc with its gold ring */
+  --size-card-disc-small: 60px; /* cards: /whereis */
+  --size-card-ring: 6px;
+  --size-card-marker: 28px; /* cards: a sighting on the map */
+  --card-glow: rgba(240, 208, 142, 0.3); /* cards: the halo behind the disc and the highlighted zone */
+  --card-land: #18233a; /* cards: zones on the map crops */
+  --card-land-line: rgba(126, 136, 152, 0.45);
+  --card-zone: #6b634f; /* cards: the highlighted zone (the references' olive gold) */
+  --card-label-bg: rgba(7, 12, 21, 0.75); /* cards: "2 h ago" pills on the map */
 }

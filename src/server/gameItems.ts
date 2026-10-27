@@ -1,9 +1,9 @@
 import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { battleTagKey, sameBattleTag } from "@/core/access";
 import type { FeedDay } from "@/core/feed";
-import { ASK_EXPIRE_SECONDS, siteRunId, type GameItem } from "@/core/gameItems";
+import { ASK_EXPIRE_SECONDS, siteRunId, type GameItem, type GameRole } from "@/core/gameItems";
 import { OUTCOME_SECONDS, ranIt } from "@/core/runOutcome";
-import { runDungeon, runDungeonByAddonId } from "@/core/runs";
+import { runDungeon, runDungeonByAddonId, type SlotRole } from "@/core/runs";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
 import { feedDays, gameItems, runs } from "./db/schema";
@@ -23,6 +23,11 @@ import { loadState } from "./uploads";
 // What the game sent with an upload (WEB-43): the uploader's runs planned, answers given, asks to post on Discord and
 // Discord pings, each applied once (by its id, so a file uploaded twice changes nothing); and after every upload,
 // whether a planned run happened, from the stored run log. Called after the upload's transaction.
+
+/** The addon's role (tank | heal | dps) as a group slot (WEB-47); undefined when the game sent none. */
+function slotFromGame(role: GameRole | undefined): SlotRole | undefined {
+  return role === "tank" ? "tank" : role === "heal" ? "healer" : role === "dps" ? "damage" : undefined;
+}
 
 export interface GameItemsResult {
   /** Answers the game sent and the site took ("N run answers" in the session report, story WEB-43). */
@@ -86,7 +91,11 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
         organiser: battleTag,
         source: "game" as const,
       };
-      let planned = planRunFor(db, { ...request, ...(item.guid === undefined ? {} : { leadGuid: item.guid }) }, now);
+      const lead = item.guid === undefined ? {} : { leadGuid: item.guid };
+      const role = slotFromGame(item.role);
+      let planned = planRunFor(db, { ...request, ...lead, ...(role === undefined ? {} : { leadRole: role }) }, now);
+      // A role the class can't play: the character's own role (WEB-47).
+      if (planned === "role_not_for_class") planned = planRunFor(db, { ...request, ...lead }, now);
       // The lead the game picked doesn't fit (or isn't known yet): organiser without a slot.
       if (planned === "lead_out_of_range" || planned === "lead_not_yours") planned = planRunFor(db, request, now);
       return typeof planned === "string" ? { outcome: planned } : { outcome: "applied", runId: planned.id };
@@ -94,12 +103,16 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
     case "answer": {
       const runId = siteRunId(item.run);
       if (runId === undefined) return { outcome: "unknown_run" };
-      const answered = answerRunFor(
-        db,
-        runId,
-        { battleTag, answer: item.answer, source: "game", ...(item.guid === undefined ? {} : { guid: item.guid }) },
-        now,
-      );
+      const request = {
+        battleTag,
+        answer: item.answer,
+        source: "game" as const,
+        ...(item.guid === undefined ? {} : { guid: item.guid }),
+      };
+      const role = slotFromGame(item.role);
+      let answered = answerRunFor(db, runId, { ...request, ...(role === undefined ? {} : { role }) }, now);
+      // A role the class can't play: the character's own role (WEB-47).
+      if (answered === "role_not_for_class") answered = answerRunFor(db, runId, request, now);
       return typeof answered === "string" ? { outcome: answered, runId } : { outcome: "applied", runId };
     }
     case "ask": {

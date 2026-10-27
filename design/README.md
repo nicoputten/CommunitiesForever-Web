@@ -37,5 +37,9 @@ View them: `npm run design`, then open http://localhost:4400.
 | `dungeon-page` | `SiteDungeon.dc.html` | Dungeon page with its wings, who fits, planned runs, Plan a run (WEB-42) |
 | `roster-cards-runs` | `Roster-runs.dc.html` | Roster cards with the next run, dots-only level spread, Scarlet Monastery wings, band popover with Plan a run (WEB-32, WEB-45) |
 | `runs-flow` | `RunsFlow.dc.html` | Runs, how it travels: game, uploader, site and Discord, where a /reload is needed and the delays (overview for all run stories) |
+| `runs-v2-findings` | `RunsFindings.dc.html` | Runs v2: 15 findings from testing the live site, each with the fix (WEB-47..50, WEB-45) |
+| `runs-v2-picker` | `RunsPicker.dc.html` | Runs v2: character and role picker, level fit rules, roles per class (WEB-47, WEB-49) |
+| `runs-v2-run-detail` | `RunDetailV2.dc.html` | Runs v2: run detail for the organiser: lead bar, slots with the move menu, could fill, answers (WEB-49) |
+| `runs-v2-plan` | `RunsPlanV2.dc.html` | Runs v2: Plan a run, the dropdown component spec, the dungeon dropdown, roster bands v2 (WEB-48, WEB-50, WEB-45) |
 
-The planned-runs boards (2026-10-27, from `docs/DESIGN-PROMPT-PLANNED-RUNS.md` in the Discord repo) are copies of earlier boards with the runs added; the earlier boards stay as they were. Where they overlap, the runs board is the newer design: `roster-cards-runs` over `roster-cards`, `discord-settings-runs` over `discord-settings`.
+The planned-runs boards (2026-10-27, from `docs/DESIGN-PROMPT-PLANNED-RUNS.md` in the Discord repo) are copies of earlier boards with the runs added; the earlier boards stay as they were. Where they overlap, the runs board is the newer design: `roster-cards-runs` over `roster-cards`, `discord-settings-runs` over `discord-settings`. The Runs v2 boards (2026-10-27, after testing the live site) are newer again: `runs-v2-*` over `runs`, `run-detail`, `run-create` and the bands of `roster-cards-runs`. Their account names (BattleTags, friends) are made up; the character names are from the live site (Nico: fine).
