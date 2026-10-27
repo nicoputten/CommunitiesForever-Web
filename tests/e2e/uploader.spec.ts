@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { expect, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "./session";
@@ -29,7 +30,6 @@ test("the top bar's Uploader opens the page, which links to the manual upload", 
   }
   await expect(page).toHaveURL(/\/uploader$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Automatic uploader");
-  await expect(page.getByRole("button", { name: "Download for Windows" })).toBeDisabled();
   await page.getByRole("link", { name: "Upload manually" }).click();
   await expect(page).toHaveURL(/\/upload$/);
 });
@@ -113,4 +113,41 @@ test("a token by hand is shown once and can be revoked", async ({ page }, info) 
   expect(me.status()).toBe(401);
   await page.reload();
   await expect(page.getByLabel(/Copy it now/)).toHaveCount(0);
+});
+
+test("a published release turns on Download for Windows", async ({ page }) => {
+  // Each run and project publishes a newer version: the site refuses an older one.
+  const version = `1.0.${Date.now()}${Math.floor(Math.random() * 10)}`;
+  const id = "CommunitiesForever.Upload";
+  const pkg = Buffer.from(`package ${version}`);
+  const feed = JSON.stringify({
+    Assets: [
+      {
+        PackageId: id,
+        Version: version,
+        Type: "Full",
+        FileName: `${id}-${version}-full.nupkg`,
+        SHA256: createHash("sha256").update(pkg).digest("hex"),
+        Size: pkg.length,
+      },
+    ],
+  });
+  const published = await page.request.post("/api/uploader/v1/releases", {
+    headers: { authorization: `Bearer ${E2E.deploySecret}` },
+    multipart: {
+      setup: { name: `${id}-win-Setup.exe`, mimeType: "application/octet-stream", buffer: Buffer.from("setup") },
+      full: { name: `${id}-${version}-full.nupkg`, mimeType: "application/octet-stream", buffer: pkg },
+      feed: { name: "releases.win.json", mimeType: "application/json", buffer: Buffer.from(feed) },
+    },
+  });
+  // The other project may have published a newer one at the same moment (409): either way there is a release.
+  expect([201, 409]).toContain(published.status());
+
+  await page.goto("/uploader");
+  const button = page.getByRole("link", { name: "Download for Windows" });
+  await expect(button).toHaveAttribute("href", "/uploader/download");
+  await expect(page.getByText(/· Windows 10 and 11 · about 1 MB$/)).toBeVisible();
+  const download = page.waitForEvent("download");
+  await button.click();
+  expect((await download).suggestedFilename()).toBe("CommunitiesForever-Uploader-Setup.exe");
 });
