@@ -78,33 +78,60 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Done when: Dependabot is on, the docs say why each remaining pin or deprecation exists and when it can go, and anything that can be updated now is updated with green CI.
 
 ### WEB-32 Known bugs
-- **On hold** until Nico has tested everything (decided 2026-10-27).
-One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
+One story for the known bugs, fixed together (Nico, 2026-10-27). No longer on hold: the `roster-cards-runs` board now draws the fixed level spread (dots only, names on hover or tap, characters within 2 levels merge into a number, a gold ring for your own characters, bands that count who fits without names, the Scarlet Monastery wings as separate bands); build the roster parts to it, without its run parts (those are WEB-45). Do it before WEB-45 (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
 - **Roster level spread: which dot is whom isn't clear** (`/roster`, "Who is around which level", WEB-21). The names stack in rows above the track, so with several characters close together it isn't clear which name belongs to which dot; two characters at the same level show one dot under two names (seen: two yellow names, one dot). Fix: the track shows only the dots; a name shows on hover and keyboard focus (tooltip). Characters at the same level get one dot with a count, and its tooltip lists them. Changes the approved WEB-21 layout: record in `docs/DESIGN.md` §11 (Nico, 2026-10-27).
 - **Dungeon bands never show character names** (same place). A band reads "Scarlet Monastery 26–45 · fits Khrono Wolfhowl, Ginji Shadowstep, …"; it must only name the dungeon and its level range. Who fits may show on hover, like the dots (Nico, 2026-10-27).
 - **Scarlet Monastery is four dungeons** (`src/core/gamedata/dungeons.ts`, roster bands, character page fit). It is one entry with 26–45; Graveyard, Library, Armory and Cathedral each have their own level range. Split it into four wings with sourced ranges (`docs/WOW-FOREVER.md`, CLAUDE.md rule 10; check whether Forever changed them). The addon's zone text is "Scarlet Monastery" for every wing, so the map and zone aliases keep one place (Nico, 2026-10-27).
 - **Flaky e2e test** `tests/e2e/atmosphere.spec.ts` "the map page is alive, data pages are calm": in CI it sometimes finds animations still running on `/roster` (24 on PR #40's first run, twice in a row), passes on a rerun and locally. Find what runs there (likely skeleton shimmer or a transition right after navigation) and wait for it properly.
 
-## E7 Discord bot
-The bot lives in its own public repo, [CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord) (BOT-01..07). The site is its only data source: it decides milestones, asks, the recap and who is linked; the bot formats and posts (decided with Nico, 2026-10-27). Design: the canvas's §12 "Discord bot" (summary and boards in the bot repo's `docs/DESIGN-NOTES.md` and `design/boards/`). Order: WEB-38, WEB-39, then WEB-40..42 as the bot needs them.
+## E7 Discord bot and planned runs
+The bot lives in its own public repo, [CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord) (BOT-01..07). The site is its only data source: it decides milestones, runs, the recap and who is linked; the bot formats and posts (decided with Nico, 2026-10-27). Design: the canvas's §12 "Discord bot" and the planned-runs boards (`design/README.md`; the flow: `runs-flow`).
+
+**Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, the admin can delete any run (one admin, `ADMIN_BATTLETAG`; the board's "Admins: Nico, Mira" is not built). Reminders mention only those who answered I'm in or Maybe.
+
+Order: WEB-32 (roster fixes), WEB-39, WEB-38, WEB-40, WEB-42, WEB-43, WEB-44, WEB-45. In the other repos: addon CF-45 first (ships the empty runs file), then uploader UP-12 and bot BOT-04 once WEB-44 and WEB-38 are in, then addon CF-46..48.
+
+### WEB-39 Link Discord, the Discord page and time zones
+- Board: `discord-settings-runs` (the newer one; `discord-settings` is the same page without the runs section).
+- A "Discord" page in the top bar and account menu: link and unlink your Discord account (Discord OAuth2, `identify` scope only), your link status. Stored: Discord user id and name with the BattleTag; never shown to others except in the admin's linked-friends list, never in posts.
+- **Your time zone:** taken from the browser on first sign-in, changeable on this page. Used for `/plan` times in Discord (Discord doesn't tell a bot the user's time zone) and shown wherever a time is typed. Without one, the admin's time zone.
+- Admin: the bot token (WEB-38), bot status, channel for posts, recap channel, toggles per post type (milestones, runs, recap), recap time (default Sunday 13:00, WEB-41), mention role on new runs, a test post, a recap preview, the linked friends (n of m). Runs section: runs channel, reminder time (15 min, 30 min, 1 hour, 2 hours; default 30 min, also used by the in-game toast), "Starting now" (always on), ask now from the game (on or off), mark runs done from uploads (on or off). "Can delete any run" shows the one admin, not the board's two.
+- `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`, `/runs`), answered for a Discord user id only when it is linked to a member or guest.
+- Manual: Nico creates the Discord application's OAuth2 redirect for the site (secrets only in TrueNAS env).
 
 ### WEB-38 Bot API
 - `/api/bot/v1/` with one Bearer bot token (stored hashed, like the uploader tokens; created and revoked by the admin, shown once). Session cookies are not accepted there, the bot token nowhere else (CLAUDE.md rule 6 gets this endpoint).
-- `GET settings`, `GET events?after=<cursor>` (oldest first, ids, a cursor that survives restarts), `POST events/<id>/posted` (the Discord message id; an event is handed out until acknowledged, never posted twice).
-- Milestone events per accepted upload, from the session report's data: every 10 levels, level 60, a profession at its cap, a new character; grouped per upload.
+- `GET settings`; `GET events?after=<cursor>` as a **long poll** (answers at once when there are events, otherwise holds up to about 30 s), so new events reach the bot within about a second without an open port on the bot; `POST events/<id>/posted` with the Discord message id (an event is handed out until acknowledged, never posted twice).
+- Events: milestones per accepted upload (every 10 levels, level 60, a profession at its cap, a new character; grouped per upload), run created, changed (time, note, answers), cancelled, reminder due, starting now, done or didn't happen, ask now from the game, ping from the game.
+- Run actions for the bot: create (`/plan`, `/ask`), answer (buttons; Pick my character lists the asker's characters in range), edit and cancel (`/run`; own runs, the admin any).
 - The contract in `docs/BOT-API.md` (fields, errors, versioning: only optional fields within v1), as `docs/UPLOADER-API.md` is for the uploader.
-- Tests: the token check, the cursor and acknowledgement, milestone events from sample uploads.
+- Tests: the token check, the long poll, the cursor and acknowledgement, milestone events from sample uploads, run rights.
 
-### WEB-39 Link Discord and the Discord page
-- A "Discord" page from the account menu: link and unlink your Discord account (Discord OAuth2, `identify` scope only), your link status. Stored: Discord user id ↔ BattleTag; never shown to others, never in posts.
-- Admin (on the same page): the bot token (WEB-38), channel, toggles per post type (milestones, asks, recap), recap day and time, mention role, a test post, the list of linked friends.
-- `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`), answered for a Discord user id only when it is linked to a member or guest.
-- No board for this page yet (`BotAdmin` is named in §12 but not exported): ask Nico for the export or his OK to build it from existing components (rule 12).
-- Manual: Nico creates the Discord application's OAuth2 redirect for the site (secrets only in TrueNAS env).
+### WEB-40 Runs
+- Boards: `runs`, `run-detail`, `run-create`, `runs-phone`. "Runs" in the top bar with the number of upcoming runs you can join.
+- Model (own database, forward-only migration): run (dungeon or wing, start in UTC, note, organiser and their character, source website / Discord / game, state open, full, started, done, didn't happen, cancelled), five role slots (tank, healer, three damage) filled from the role the addon knows per character (from talents or set by the player), answers (I'm in / Maybe / Can't, character, where it came from and when).
+- Runs page: this week, later, past; filters "Runs I can join" (one of your characters fits), Mine, All; your answers; "Where runs show up". Run detail: slots, answers with their source, who could join, the organiser's edit and delete, the admin's delete; times as "19:30 your time · 20:30 for Nico". Plan a run: dungeon (filled in when coming from a dungeon page or a roster band), lead as, day, time in your time zone ("everyone sees it in their own time"), note, the Discord preview, the time-passed and no-character-fits states.
+- Full run: when someone drops out, the first Maybe whose character fits the free role moves up automatically and gets a quiet notice (Nico, 2026-10-27).
+- Phone: answer buttons 44 px at the bottom; empty, loading and error states; an answer that didn't go through is kept on the phone and retried.
+- Tests: rights (own, admin), slots from roles, moving up from Maybe, time zones around daylight saving.
 
-### WEB-40 Group asks
-- Asks from the site ("Ask who's up for it") and from the bot (`/ask`), later from the game (addon story: whether asks are stored in SavedVariables). An ask: dungeon, time, level range, role slots, answers (in / maybe / can't, with a character). Events for new asks and changed answers.
-- Open: roles per character (tank / healer / DPS) are not in the addon's data; ask Nico before inventing a rule.
+### WEB-42 Dungeon page
+- Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
+- The map's dungeon markers get a badge with the number of planned runs; their popover has Plan a run and Dungeon page.
+
+### WEB-43 Runs from uploads
+- The addon (CF-47, CF-48) writes runs planned, answers given, asks with "Also post on Discord" and Discord pings made in game into its saved file; the site reads them from each upload (parser and compat fixtures, CLAUDE.md rule 4) and turns them into runs, answers and events. Each item carries an id from the addon, so a file uploaded twice changes nothing.
+- An ask now from the game expires 10 minutes after it was made in game, and is only posted while it hasn't.
+- Done: when an upload's run log (addon CF-23: dungeon, time, community members in the group) shows the dungeon within the run's window, the run becomes "Ran it · N of M signed-up came" and counts for the recap (WEB-41). No such upload within 4 hours of the start: "didn't happen".
+- The session report and the uploader's summary show "N run answers".
+
+### WEB-44 Runs for the uploader
+- `GET /api/uploader/v1/runs`: the upcoming runs (next 14 days) of the uploader's community, with slots, answers, the organiser's time zone offset and `updatedAt`; documented in `docs/UPLOADER-API.md` (an optional addition; the uploader's v1 stays valid).
+- Tests: only the token's community, only upcoming runs, the shape the uploader writes into `Runs.lua` (UP-12).
+
+### WEB-45 Runs on the roster and the map
+- Board: `roster-cards-runs`. The "Next run" card on the roster; a dungeon band opens a popover with who fits, planned runs, Plan a run and Dungeon page; the Role filter.
+- After WEB-32, which builds the level spread itself.
 
 ### WEB-41 Weekly recap and card images
 Decided with Nico, 2026-10-27. The catalogue (48 cards), rotation rules and example weeks are on the bot repo's `bot-recap` board.
