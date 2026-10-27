@@ -3,7 +3,7 @@
 services:
   web:
     # A release tag (README step 9). `latest` works too, but a tag makes updates and rollbacks explicit.
-    image: ghcr.io/nicoputten/communitiesforever-web:v0.1.0
+    image: ghcr.io/nicoputten/communitiesforever-web:v0.2.0
     restart: unless-stopped
     # The dataset's owner: TrueNAS's `apps` user and group (568). The image's files are world-readable, so any UID
     # works as long as it may write the dataset.
@@ -28,3 +28,21 @@ services:
       ADMIN_BATTLETAG: "<Name#1234>"
       # `openssl rand -base64 33`; also the GitHub secret UPLOADER_DEPLOY_SECRET in the uploader repo (WEB-35).
       UPLOADER_DEPLOY_SECRET: "<random secret>"
+
+  # The Discord bot (bot repo BOT-07, its docs/DISCORD-SETUP.md; README "The Discord bot"). No ports, no volume: it
+  # asks the site and Discord, and keeps nothing. It runs as the image's own non-root user.
+  bot:
+    # Its own release tags, updated apart from the site's.
+    image: ghcr.io/nicoputten/communitiesforever-discord:v0.1.0
+    restart: unless-stopped
+    # The bot stops within 10 s on SIGTERM.
+    stop_grace_period: 15s
+    environment:
+      # The Discord developer portal: Bot → Reset Token.
+      DISCORD_TOKEN: "<bot token>"
+      # General Information → Application ID.
+      DISCORD_APP_ID: "<application id>"
+      # The public URL, not http://web:3000: the links in Discord posts are built from it.
+      SITE_URL: https://wow.vestras.nl
+      # The site's bot token (docs/BOT-API.md "Token").
+      BOT_API_TOKEN: "<cfb_ token>"

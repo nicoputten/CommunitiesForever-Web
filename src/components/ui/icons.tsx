@@ -95,6 +95,15 @@ export function ProfessionsIcon(props: IconProps) {
   );
 }
 
+/** Runs (WEB-40): a calendar, in the tab bar's line style. */
+export function RunsIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 28 28" strokeWidth={1.8} {...props}>
+      <path d="M5 8h18v15H5z M5 13h18 M10 5v5 M18 5v5 M10 18h3" />
+    </Icon>
+  );
+}
+
 export function SignOutIcon(props: IconProps) {
   return (
     <Icon viewBox="0 0 16 16" strokeWidth={1.5} {...props}>

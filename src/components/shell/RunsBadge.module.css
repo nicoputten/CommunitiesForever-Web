@@ -1,0 +1,19 @@
+/* Runs 3 (runs boards): a gold pill after the label. In the tab bar it sits on the icon's corner. */
+.badge {
+  display: inline-block;
+  margin-left: var(--s-1-5);
+  padding: var(--s-0-75) var(--s-1-5);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  vertical-align: middle;
+}
+
+[data-tabbar] .badge {
+  position: absolute;
+  margin: 0 0 0 var(--s-5);
+  transform: translateY(calc(-1 * var(--s-3)));
+}

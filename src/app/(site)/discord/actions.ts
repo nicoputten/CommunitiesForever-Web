@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { mayAdmin, roleOf } from "@/core/access";
+import { battleTagName, mayAdmin, roleOf } from "@/core/access";
 import {
   authorizeUrl,
   DISCORD_CALLBACK_PATH,
@@ -22,6 +22,7 @@ import { getDb, type Db } from "@/server/db";
 import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
 import { discordApp, setTimeZone, unlinkDiscord, updateBotSettings } from "@/server/discord";
 import { LINK_COOKIE } from "@/server/discordLink";
+import { sendTestRunPost } from "@/server/runs";
 
 // The Discord page's actions (WEB-39). Each checks the caller again (CLAUDE.md rule 6): anyone on the list for their
 // own link and time zone, the admin for the bot's settings. Server actions carry Next.js's Origin check, so none of
@@ -105,6 +106,12 @@ export async function createBotTokenAction(): Promise<BotTokenState> {
 export async function revokeBotTokenAction(): Promise<void> {
   await as("admin", (db) => revokeBotToken(db, nowSeconds()));
   redirect(to("bot-revoked"));
+}
+
+/** "Send a test run post" (WEB-40): a made-up `runCreated` marked as a test, never stored as a run. */
+export async function testRunPostAction(): Promise<void> {
+  await as("admin", (db, battleTag) => sendTestRunPost(db, battleTagName(battleTag), nowSeconds()));
+  redirect(to("test-run-sent"));
 }
 
 /** "Send a test post": a `test` event the bot posts in the posts channel (docs/BOT-API.md). */

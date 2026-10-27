@@ -150,7 +150,8 @@ export function peopleViews(d: Dataset, now: number): PersonView[] {
     );
 }
 
-function role(c: Character): Role | undefined {
+/** The role the addon knows: set by the player, else from talents (WEB-40 fills run slots from it). */
+export function characterRole(c: Character): Role | undefined {
   for (const r of [c.role, c.roleOverride, c.autoRole]) {
     if (r === "tank" || r === "heal" || r === "dps") return r;
   }
@@ -202,7 +203,7 @@ export function characterView(d: Dataset, c: Character, now: number): CharacterV
     raceName: raceInfo(c.raceID)?.name,
     faction: faction(c),
     ruleset: rulesetOf(c.realm),
-    role: role(c),
+    role: characterRole(c),
     mainTreeName: c.mainTreeName,
     ilvl: c.ilvl,
     talents: c.talents.map((t) => ({ ...t })),

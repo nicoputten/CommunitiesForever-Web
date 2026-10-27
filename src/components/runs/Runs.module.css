@@ -1,0 +1,864 @@
+/* The Runs pages (WEB-40): boards `runs`, `run-detail`, `run-create`, `runs-phone`. The boxes and buttons follow the
+   Discord page's (same board family, WEB-39). One column below 1024 px; phone layout below 768 px. */
+
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-runs-aside);
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+  min-width: 0;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+  max-width: var(--size-plan-main);
+}
+
+@media (max-width: 1023px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-4);
+}
+
+.headText {
+  flex: 1 1 var(--size-search-min);
+  min-width: 0;
+}
+
+.crumbs {
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.crumbs a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.section {
+  margin-top: var(--s-1-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.slotGrid,
+.yourAnswers,
+.couldJoin,
+.past {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boxHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2-5);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* --- filters ------------------------------------------------------------------------------------------------------ */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.filterNote {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+/* --- boxes and buttons -------------------------------------------------------------------------------------------- */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-box);
+}
+
+.boxTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.body {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.body b {
+  font-weight: var(--fw-medium);
+  color: var(--text-strong);
+}
+
+.small {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2-5);
+}
+
+.primary,
+.secondary,
+.ghost,
+.danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.primary {
+  border: 0;
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+.secondary {
+  border: var(--border) solid var(--line-ghost);
+  background: transparent;
+  color: var(--gold-bright);
+}
+
+.ghost {
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.danger {
+  border: var(--border) solid var(--danger-line);
+  background: transparent;
+  color: var(--danger-text);
+}
+
+.secondary:hover:not(:disabled),
+.ghost:hover:not(:disabled),
+.danger:hover:not(:disabled) {
+  background: var(--tint-hover);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.ghost:disabled,
+.danger:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
+/* --- pills -------------------------------------------------------------------------------------------------------- */
+
+.pill {
+  flex: none;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+}
+
+.pill[data-tone="open"] {
+  background: var(--pill-open-tint);
+  color: var(--gold-pale);
+}
+
+.pill[data-tone="soon"] {
+  background: var(--pill-soon-tint);
+  color: var(--pill-soon-text);
+}
+
+.pill[data-tone="full"] {
+  background: var(--pill-full-tint);
+  color: var(--fresh-text);
+}
+
+.pill[data-tone="done"] {
+  background: var(--pill-done-tint);
+  color: var(--pill-done-text);
+}
+
+.pill[data-tone="cancelled"] {
+  background: var(--pill-cx-tint);
+  color: var(--pill-cx-text);
+}
+
+.pill[data-tone="yours"] {
+  background: var(--pill-yours-tint);
+  color: var(--pill-yours-text);
+}
+
+/* --- a run card ----------------------------------------------------------------------------------------------------- */
+
+.run {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--size-run-when) minmax(0, 1fr) auto;
+  gap: var(--s-4-5);
+  align-items: center;
+  padding: var(--s-4) var(--s-4-5);
+  border-radius: var(--r-card);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-run);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.run:hover,
+.run:focus-within {
+  border-color: var(--line-link);
+}
+
+.run[data-yours] {
+  border-color: var(--line-link);
+  background: var(--run-yours-glow);
+}
+
+.when {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.when b {
+  font-family: var(--font-name);
+  font-size: var(--fs-run-time);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  color: var(--text-strong);
+}
+
+.when [data-soon] {
+  color: var(--pill-soon-text);
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+.runName {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-card);
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+/* The whole card opens the run; the answer buttons sit above that link. */
+.runName::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-card);
+}
+
+.runName:focus-visible {
+  outline: none;
+}
+
+.runName:focus-visible::after {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.runLine {
+  margin-top: var(--s-0-75);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.hint {
+  margin-top: var(--s-1-5);
+  font-size: var(--fs-meta);
+}
+
+.hint[data-tone="warn"] {
+  color: var(--stale-text);
+}
+
+.hint[data-tone="good"] {
+  color: var(--fresh-text);
+}
+
+.hint[data-tone="muted"] {
+  color: var(--text-muted);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+
+.slots {
+  display: flex;
+  gap: var(--s-1);
+}
+
+.slots i {
+  display: block;
+  width: var(--size-slot-w);
+  height: var(--size-slot-h);
+  border-radius: var(--r-slot);
+  background: var(--slot-empty);
+}
+
+.slots i[data-filled] {
+  background: var(--slot-filled);
+}
+
+.tally {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.hidden {
+  padding: var(--s-1) var(--s-0-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.hidden a,
+.inlineLink {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+/* --- answers ------------------------------------------------------------------------------------------------------- */
+
+.answer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.answerButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+}
+
+.answerButtons[data-size="small"] button {
+  min-height: var(--size-answer-sm);
+  padding: 0 var(--s-3);
+  font-size: var(--fs-body-sm);
+}
+
+.answerButtons button[aria-pressed="true"] {
+  border-color: var(--answer-in-line);
+  background: var(--answer-in-tint);
+  color: var(--fresh-text);
+}
+
+.select {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.retry {
+  font-size: var(--fs-meta);
+  color: var(--stale-text);
+}
+
+.retry button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold-bright);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- past ---------------------------------------------------------------------------------------------------------- */
+
+.past {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line-past);
+  list-style: none;
+}
+
+.past li + li {
+  border-top: var(--border) solid var(--line-row);
+}
+
+.past a {
+  display: grid;
+  grid-template-columns: var(--size-past-day) minmax(0, 1fr) auto;
+  gap: var(--s-4);
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: var(--s-3) var(--s-4-5);
+  background: var(--surface-past);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.past a:hover {
+  background: var(--tint-hover);
+}
+
+.past b {
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
+/* --- side boxes ---------------------------------------------------------------------------------------------------- */
+
+.where {
+  display: grid;
+  grid-template-columns: var(--s-5-5) minmax(0, 1fr);
+  gap: var(--s-2-5);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.where b {
+  font-weight: var(--fw-medium);
+  color: var(--text-strong);
+}
+
+.dot {
+  color: var(--dot-discord);
+}
+
+.yourAnswers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  font-size: var(--fs-body-sm);
+  list-style: none;
+}
+
+.yourAnswers a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.yourAnswers a:hover {
+  color: var(--gold-bright);
+}
+
+.yourAnswers span {
+  color: var(--text-dim);
+}
+
+/* --- a run's page -------------------------------------------------------------------------------------------------- */
+
+.runTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-run-title);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-pale);
+}
+
+.meta {
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.quote {
+  font-size: var(--fs-body-sm);
+  font-style: italic;
+  color: var(--text);
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s-2-5);
+}
+
+@media (max-width: 1279px) {
+  .slotGrid {
+    grid-template-columns: repeat(auto-fill, minmax(var(--size-search-min), 1fr));
+  }
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-slot);
+  border: var(--border) solid var(--line-slot);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.slot[data-open] {
+  background: transparent;
+  border: var(--border) dashed var(--stale-text);
+}
+
+.slotRole {
+  font-size: var(--fs-meta-sm);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.slotName {
+  overflow: hidden;
+  font-family: var(--font-name);
+  font-size: var(--fs-section);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body-sm);
+}
+
+.table th {
+  padding: var(--s-2) var(--s-1-5);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-th);
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.table td {
+  padding: var(--s-2-5) var(--s-1-5);
+  border-top: var(--border) solid var(--line-row);
+  color: var(--text);
+}
+
+.table td[data-answer="in"],
+.table td[data-answer="organiser"] {
+  color: var(--fresh-text);
+}
+
+.table td[data-answer="maybe"] {
+  color: var(--gold-pale);
+}
+
+.table td[data-answer="cant"],
+.table td[data-dim] {
+  color: var(--text-dim);
+}
+
+.couldJoin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+  list-style: none;
+}
+
+/* --- Plan a run ---------------------------------------------------------------------------------------------------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding: var(--s-6);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.field legend {
+  margin-bottom: var(--s-2);
+  padding: 0;
+}
+
+.label {
+  font-size: var(--fs-meta-sm);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--surface-box);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--gold);
+  background: var(--tint-selected);
+  color: var(--text-strong);
+}
+
+.chip:has(input:focus-visible) {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+/* The radio covers its chip, so the whole chip is the 44 px target. */
+.chip input {
+  position: absolute;
+  inset: calc(-1 * var(--border));
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.input {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.textarea {
+  min-height: var(--size-note-min);
+  padding: var(--s-3) var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  font: inherit;
+  font-size: var(--fs-body);
+  color: var(--text);
+  resize: vertical;
+}
+
+.warn {
+  padding: var(--s-3) var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--warn-bg);
+  border: var(--border) solid var(--warn-line);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--warn-text);
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-btn);
+  background: var(--discord-bg);
+  font-size: var(--fs-body);
+  color: var(--discord-text);
+}
+
+.preview b {
+  font-weight: var(--fw-bold);
+  color: var(--discord-strong);
+}
+
+.previewButtons {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+}
+
+.previewButtons span {
+  padding: var(--s-1-5) var(--s-3);
+  border-radius: var(--r-discord);
+  background: var(--discord-button);
+  font-size: var(--fs-body-sm);
+  color: var(--discord-strong);
+}
+
+.previewButtons span:first-child {
+  background: var(--discord-button-in);
+  color: var(--discord-on-button-in);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- phone --------------------------------------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .run {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2-5);
+  }
+
+  .when {
+    flex-direction: row;
+    gap: var(--s-1-5);
+  }
+
+  .when b {
+    font-family: inherit;
+    font-size: var(--fs-meta);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+  }
+
+  .side {
+    align-items: flex-start;
+  }
+
+  .answerButtons[data-size="small"] button {
+    min-height: var(--size-touch);
+  }
+
+  .filterNote {
+    margin-left: 0;
+  }
+
+  .past a {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .past a > span:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .runTitle {
+    font-size: var(--fs-run-time);
+  }
+
+  /* 44 px targets on a phone (CLAUDE.md rule 11). */
+  .runName,
+  .crumbs a,
+  .hidden a,
+  .inlineLink,
+  .yourAnswers a {
+    display: inline-flex;
+    align-items: center;
+    min-width: var(--size-touch);
+    min-height: var(--size-touch);
+  }
+
+  .table th:nth-child(3),
+  .table td:nth-child(3),
+  .table th:nth-child(5),
+  .table td:nth-child(5) {
+    display: none;
+  }
+
+  /* The run's answer sits at the bottom of the screen, in thumb reach (runs-phone board): last in the column and
+     sticky, so it stays above the tab bar while the run scrolls under it. */
+  .answerBar {
+    order: 1;
+    position: sticky;
+    bottom: calc(var(--size-tabbar) + var(--s-2));
+    z-index: 2;
+    padding: var(--s-3);
+    border-radius: var(--r-panel);
+    background: var(--surface-tooltip);
+    border: var(--border) solid var(--line-box);
+    box-shadow: var(--shadow-sheet);
+  }
+
+  .form {
+    padding: var(--s-4);
+  }
+}

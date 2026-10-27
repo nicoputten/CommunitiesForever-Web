@@ -157,7 +157,8 @@ export const RECHECK_MS = 5_000;
 
 /**
  * The events after the cursor at once when there are any; otherwise waits until an upload writes some, `timeoutMs`
- * passes or the request is aborted, and answers what there is then (maybe nothing).
+ * passes or the request is aborted, and answers what there is then (maybe nothing). `beforeLook` runs before every
+ * look, so events that fall due while a poll waits are written within RECHECK_MS.
  */
 export async function waitForEvents(
   db: Db,
@@ -165,9 +166,12 @@ export async function waitForEvents(
   now: () => number,
   timeoutMs: number,
   signal?: AbortSignal,
+  beforeLook?: (now: number) => void,
 ): Promise<BotEvent[]> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
+    // Time-based events (the runs' reminders, WEB-40) are written here: there is no scheduler.
+    beforeLook?.(now());
     const events = pendingEvents(db, after, now());
     const left = deadline - Date.now();
     if (events.length > 0 || left <= 0 || signal?.aborted) return events;
