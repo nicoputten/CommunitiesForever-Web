@@ -4,11 +4,14 @@ import { nowSeconds } from "@/app/clock";
 import { getSiteInfo } from "@/app/site";
 import { getViewer } from "@/app/viewer";
 import { Atmosphere } from "@/components/atmosphere/Atmosphere";
+import { BotTokenCard } from "@/components/discord/BotTokenCard";
 import { SettingFixed, SettingPick, SettingSwitch } from "@/components/discord/Controls";
 import { ChatIcon } from "@/components/ui/icons";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { battleTagName } from "@/core/access";
 import {
+  botStatus,
+  type BotStatusView,
   clockIn,
   DAYS,
   linkedFriends,
@@ -22,6 +25,7 @@ import {
   timeZoneLabel,
 } from "@/core/discord";
 import { adminBattleTag } from "@/server/access";
+import { botTokenStatus } from "@/server/bot";
 import { getDb } from "@/server/db";
 import {
   discordApp,
@@ -33,7 +37,15 @@ import {
   TIME_ZONES,
   timeZoneFor,
 } from "@/server/discord";
-import { botSettingAction, linkAction, timeZoneAction, unlinkAction } from "./actions";
+import {
+  botSettingAction,
+  createBotTokenAction,
+  linkAction,
+  revokeBotTokenAction,
+  testPostAction,
+  timeZoneAction,
+  unlinkAction,
+} from "./actions";
 import styles from "@/components/discord/Discord.module.css";
 
 export const metadata: Metadata = { title: "Discord" };
@@ -41,7 +53,6 @@ export const metadata: Metadata = { title: "Discord" };
 /** Before the bot reports its server's channels and roles (WEB-38), the dropdowns for them are disabled. */
 const NO_CHANNELS = "Start the bot to pick channels";
 const NO_ROLES = "Start the bot to pick a role";
-const LATER = "Once the bot is connected";
 
 /**
  * The Discord page (board `discord-settings-runs`, WEB-39): everyone links their Discord account and sets their time
@@ -66,6 +77,7 @@ export default async function DiscordPage({
   const zone = effectiveTimeZone(db, viewer.battleTag);
   const admin = viewer.role === "admin";
   const adminTag = adminBattleTag();
+  const bot = botStatus(botTokenStatus(db), now);
 
   return (
     <div className={styles.page}>
@@ -78,7 +90,9 @@ export default async function DiscordPage({
             Discord
           </PageTitle>
         </div>
-        <span className={`${styles.no} ${styles.status}`}>Bot not connected</span>
+        <span className={`${bot.state === "online" ? styles.ok : styles.no} ${styles.status}`} data-testid="bot-status">
+          {bot.pill}
+        </span>
       </div>
 
       {notice !== undefined && (
@@ -167,7 +181,7 @@ export default async function DiscordPage({
         </form>
       </section>
 
-      {admin && <AdminSections adminTag={adminTag} />}
+      {admin && <AdminSections adminTag={adminTag} bot={bot} />}
 
       <p className={styles.note}>
         The bot only reads what the site already has. It never posts BattleTags or Discord IDs; posts use display names
@@ -178,13 +192,20 @@ export default async function DiscordPage({
 }
 
 /** What the bot posts, the linked friends and runs: the admin only (the actions check again). */
-function AdminSections({ adminTag }: { adminTag: string | undefined }) {
+function AdminSections({ adminTag, bot }: { adminTag: string | undefined; bot: BotStatusView }) {
   const db = getDb();
   const s = getBotSettings(db);
   const friends = linkedFriends(friendBattleTags(db, adminTag), discordNames(db));
   const recapZone = effectiveTimeZone(db, adminTag, adminTag);
   return (
     <>
+      {/* Not on the board (decided with Nico, DESIGN.md §11): WEB-38's bot token. */}
+      <BotTokenCard
+        line={bot.line}
+        active={bot.state !== "none"}
+        create={createBotTokenAction}
+        revoke={revokeBotTokenAction}
+      />
       <div className={styles.columns}>
         <section aria-labelledby="discord-posts" className={styles.box}>
           <div className={styles.boxHead}>
@@ -253,9 +274,16 @@ function AdminSections({ adminTag }: { adminTag: string | undefined }) {
             />
           </div>
           <div className={styles.buttons}>
-            <button type="button" className={styles.secondary} disabled title={LATER}>
-              Send a test post
-            </button>
+            <form action={testPostAction}>
+              <button
+                type="submit"
+                className={styles.secondary}
+                disabled={bot.state === "none"}
+                title={bot.state === "none" ? "Create a bot token first" : undefined}
+              >
+                Send a test post
+              </button>
+            </form>
             <button type="button" className={styles.ghost} disabled title="Comes with the weekly recap">
               Preview next recap
             </button>
@@ -362,7 +390,7 @@ function AdminSections({ adminTag }: { adminTag: string | undefined }) {
           </div>
         </div>
         <div className={styles.buttons}>
-          <button type="button" className={styles.secondary} disabled title={LATER}>
+          <button type="button" className={styles.secondary} disabled title="Comes with runs">
             Send a test run post
           </button>
           <button type="button" className={styles.ghost} disabled title="Comes with runs">

@@ -1,6 +1,7 @@
 import { battleTagKey } from "./access";
 import { stripEscapes } from "./sanitize";
 import { base64url } from "./uploader";
+import { timeAgo } from "./views/age";
 
 // Discord (WEB-39): linking a Discord account (OAuth 2.0 authorization code flow with PKCE, `identify` only), the
 // bot's settings and time zones. Pure: random bytes, hashes, "now" and the time zone list come in as arguments.
@@ -92,6 +93,8 @@ export const NOTICES = {
   failed: "Discord didn't answer. Nothing changed; try again.",
   expired: "That link took too long or came from another tab. Try again.",
   "time-zone": "Your time zone is saved.",
+  "bot-revoked": "The bot token is revoked. The bot stops at its next call.",
+  "test-sent": "Test post sent. The bot posts it in the channel for posts within a few seconds.",
 } as const;
 
 export type Notice = keyof typeof NOTICES;
@@ -101,7 +104,7 @@ export function parseNotice(value: unknown): Notice | undefined {
 }
 
 export function noticeOk(notice: Notice): boolean {
-  return notice === "linked" || notice === "unlinked" || notice === "time-zone";
+  return notice !== "cancelled" && notice !== "taken" && notice !== "failed" && notice !== "expired";
 }
 
 // --- linked friends (admin) ---------------------------------------------------------------------------------------
@@ -258,4 +261,38 @@ export function clockIn(timeZone: string, now: number): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
     new Date(now * 1000),
   );
+}
+
+// --- the bot's status ---------------------------------------------------------------------------------------------
+
+/** The bot polls at least every 30 s (docs/BOT-API.md), so a minute without a call means it isn't running. */
+export const ONLINE_SECONDS = 60;
+
+export type BotState = "online" | "offline" | "never" | "none";
+
+export interface BotStatusView {
+  state: BotState;
+  /** The page's pill: "● Bot online", "Bot offline", "Bot not connected". */
+  pill: string;
+  /** The token card's line under the title. */
+  line: string;
+}
+
+/** From the active token's dates (WEB-38 `botTokenStatus`; undefined without a token) at `now`. */
+export function botStatus(token: { createdAt: number; lastUsedAt?: number } | undefined, now: number): BotStatusView {
+  if (token === undefined) {
+    return {
+      state: "none",
+      pill: "Bot not connected",
+      line: "No bot token yet. Create one and put it in the bot's environment.",
+    };
+  }
+  const made = `Token made ${timeAgo(token.createdAt, now)}`;
+  if (token.lastUsedAt === undefined) {
+    return { state: "never", pill: "Bot not connected", line: `${made} · the bot hasn't used it yet` };
+  }
+  const seen = `last call ${timeAgo(token.lastUsedAt, now)}`;
+  if (now - token.lastUsedAt <= ONLINE_SECONDS)
+    return { state: "online", pill: "● Bot online", line: `${made} · ${seen}` };
+  return { state: "offline", pill: "Bot offline", line: `${made} · ${seen}` };
 }

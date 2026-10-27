@@ -463,3 +463,54 @@
   flex: 1 1 var(--size-select-min);
   min-width: 0;
 }
+
+/* --- bot token (not on the board, DESIGN.md §11; the uploader page's token style) -------------------------------- */
+
+.shown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.tokenRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2-5);
+}
+
+.token {
+  flex: 1 1 var(--size-search-min);
+  min-width: 0;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--surface-aside);
+  border: var(--border) solid var(--line-neutral);
+  font-family: var(--font-code);
+  font-size: var(--fs-body-sm);
+  color: var(--code-text);
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+.danger {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-revoke);
+  background: transparent;
+  color: var(--stale-text);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.statusOnline {
+  background: var(--done-tint);
+  color: var(--fresh-text);
+}

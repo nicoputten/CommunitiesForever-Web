@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   authorizeUrl,
+  botStatus,
   botSettingsFrom,
   clockIn,
   DEFAULT_BOT_SETTINGS,
@@ -149,5 +150,30 @@ describe("time zones", () => {
     expect(utcOffset("UTC", WINTER)).toBe("UTC");
     expect(timeZoneLabel("America/New_York", WINTER)).toBe("America/New York · UTC-05:00");
     expect(clockIn("Europe/Amsterdam", SUMMER)).toBe("14:00");
+  });
+});
+
+describe("the bot's status", () => {
+  const NOW = 1_800_000_000;
+  it("is online when the bot called in the last minute", () => {
+    expect(botStatus({ createdAt: NOW - 7200, lastUsedAt: NOW - 30 }, NOW)).toEqual({
+      state: "online",
+      pill: "● Bot online",
+      line: "Token made 2 h ago · last call just now",
+    });
+    expect(botStatus({ createdAt: NOW - 7200, lastUsedAt: NOW - 300 }, NOW)).toMatchObject({
+      state: "offline",
+      pill: "Bot offline",
+      line: "Token made 2 h ago · last call 5 min ago",
+    });
+  });
+
+  it("says not connected without a token or before the bot used it", () => {
+    expect(botStatus(undefined, NOW)).toMatchObject({ state: "none", pill: "Bot not connected" });
+    expect(botStatus({ createdAt: NOW - 60 }, NOW)).toMatchObject({
+      state: "never",
+      pill: "Bot not connected",
+      line: "Token made 1 min ago · the bot hasn't used it yet",
+    });
   });
 });

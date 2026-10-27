@@ -19,6 +19,7 @@ import {
 import { adminBattleTag, loadAccessList } from "@/server/access";
 import { auth } from "@/server/auth";
 import { getDb, type Db } from "@/server/db";
+import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
 import { discordApp, setTimeZone, unlinkDiscord, updateBotSettings } from "@/server/discord";
 import { LINK_COOKIE } from "@/server/discordLink";
 
@@ -86,4 +87,28 @@ export async function botSettingAction(form: FormData): Promise<void> {
   await as("admin", (db, by) => {
     if (change !== undefined) updateBotSettings(db, change, by, nowSeconds());
   });
+}
+
+// --- the bot token and test post (WEB-39 on WEB-38's token) ----------------------------------------------------------
+
+/** What the token card shows after "Create token": the token, once. It lives only in the form's state. */
+export interface BotTokenState {
+  token?: string;
+}
+
+/** Makes the bot token (the one before stops working) and hands it to the card once. */
+export async function createBotTokenAction(): Promise<BotTokenState> {
+  const token = await as("admin", (db, by) => createBotToken(db, by, nowSeconds()));
+  return { token };
+}
+
+export async function revokeBotTokenAction(): Promise<void> {
+  await as("admin", (db) => revokeBotToken(db, nowSeconds()));
+  redirect(to("bot-revoked"));
+}
+
+/** "Send a test post": a `test` event the bot posts in the posts channel (docs/BOT-API.md). */
+export async function testPostAction(): Promise<void> {
+  await as("admin", (db) => enqueueBotEvent(db, "test", { kind: "posts" }, nowSeconds()));
+  redirect(to("test-sent"));
 }

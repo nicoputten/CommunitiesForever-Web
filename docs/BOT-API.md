@@ -30,9 +30,7 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 ## Token
 - `cfb_` and 32 random bytes in base64url (47 characters). The site stores only its SHA-256 and shows it once.
 - One active token: making a new one ends the old one. It doesn't expire; it is revoked.
-- **Until the Discord page (WEB-39)** the admin makes and revokes it from the browser console while signed in on the site:
-  - make: `await (await fetch("/api/admin/bot-token", { method: "POST" })).json()` → `{ "token": "cfb_…" }`
-  - revoke: `await (await fetch("/api/admin/bot-token", { method: "DELETE" })).json()` → `{ "revoked": true }`
+- The admin makes, replaces and revokes it on the Discord page (`/discord`, "Bot token", WEB-39); it is shown once. The page shows the bot online while it called in the last minute.
 - The token goes into the bot's environment (never into a repo, CLAUDE.md rule 7).
 
 ## Settings
@@ -119,6 +117,9 @@ One event per accepted upload that reached at least one milestone. `data`: `uplo
 | `newCharacter` | | A character the group didn't know (or knew only by name). Its level and professions are part of it, not milestones of their own |
 
 Decided with Nico (2026-10-27): the site's first accepted upload makes no milestones (everything would be new). After that every accepted upload counts, also a newcomer's first data. A rebuild of the uploads never makes events again.
+
+### `test` (built, WEB-39)
+The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
 ### Run events (planned, WEB-40 and later; not sent yet)
 A draft, so the bot can be designed around them. Each `data` has `run`:

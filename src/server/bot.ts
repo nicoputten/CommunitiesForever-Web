@@ -78,6 +78,16 @@ export interface BotEvent {
 }
 
 /**
+ * Writes an event for the bot and wakes waiting polls (WEB-39: the admin's test post). Returns its id.
+ * Upload events are written in the upload's transaction instead (recordMilestones).
+ */
+export function enqueueBotEvent(db: Db, type: string, data: unknown, now: number): number {
+  const { id } = db.insert(botEvents).values({ type, data, createdAt: now }).returning({ id: botEvents.id }).get();
+  notifyBotEvents();
+  return id;
+}
+
+/**
  * Writes the `milestones` event of an accepted upload, in the upload's transaction; none when it reached nothing or
  * is the site's first upload (`first`: there was no data before it). Returns whether it wrote one.
  */

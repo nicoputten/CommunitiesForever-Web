@@ -82,12 +82,19 @@ The bot lives in its own public repo, [CommunitiesForever-Discord](https://githu
 
 **Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, the admin can delete any run (one admin, `ADMIN_BATTLETAG`; the board's "Admins: Nico, Mira" is not built). Reminders mention only those who answered I'm in or Maybe.
 
-Order: WEB-39b, WEB-40, WEB-42, WEB-43, WEB-44, WEB-45. In the other repos: addon CF-45 first (ships the empty runs file), then uploader UP-12 and bot BOT-04 once WEB-44 and WEB-38 are in, then addon CF-46..48.
+Order: WEB-39b, WEB-46, WEB-40, WEB-42, WEB-43, WEB-44, WEB-45. In the other repos: addon CF-45 first (ships the empty runs file), then uploader UP-12 and bot BOT-04 once WEB-44 and WEB-38 are in, then addon CF-46..48.
 
 ### WEB-39b Look-ups for the bot
 Split from WEB-39 (Nico, 2026-10-27); after WEB-38, whose bot token check it uses.
 - `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`, `/runs`), answered for a Discord user id only when it is linked to a member or guest (`linkForDiscordUser`, `src/server/discord.ts`, then the role as for a session).
-- Open, Nico decides who builds it: the bot token card and the bot's status on the Discord page (WEB-38's `createBotToken`, `revokeBotToken`, `botTokenStatus`), the bot reporting its server's channels and roles for the page's dropdowns, and the test posts.
+
+### WEB-46 Channels and roles from the bot
+Assigned 2026-10-27 (Nico): the Discord page's channel and role dropdowns, disabled since WEB-39, get their options from the bot.
+- `POST /api/bot/v1/guild` with `{ channels: [{ id, name }], roles: [{ id, name }] }` (text channels the bot may post in, mentionable roles): the bot sends it when it connects and when its server's channels or roles change. Stored in its own table (forward-only migration), replaced whole on every report; ids are Discord snowflakes as text, names are untrusted text (CLAUDE.md rule 2).
+- The contract in `docs/BOT-API.md` (an optional new endpoint within v1; an older site answers 404 and the bot carries on).
+- The page lists them as "# name" and "@name"; a picked channel or role that's gone shows as "(removed)" until the admin picks another.
+- Bot repo: BOT-02 reports them.
+- Tests: the token check, replacing the list, untrusted names, a removed pick.
 
 ### WEB-40 Runs
 - Boards: `runs`, `run-detail`, `run-create`, `runs-phone`. "Runs" in the top bar with the number of upcoming runs you can join.
@@ -98,6 +105,7 @@ Split from WEB-39 (Nico, 2026-10-27); after WEB-38, whose bot token check it use
 - Bot API (from WEB-38): the run events and run actions drafted in `docs/BOT-API.md` (create, answer, edit, cancel for a linked Discord user; created, changed, cancelled, reminder, starting, ended), with tests for run rights through the bot.
 - Tests: rights (own, admin), slots from roles, moving up from Maybe, time zones around daylight saving.
 
+- The Discord page's "Send a test run post" (disabled since WEB-39) posts a sample run in the runs channel (Nico, 2026-10-27).
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
 - The map's dungeon markers get a badge with the number of planned runs; their popover has Plan a run and Dungeon page.

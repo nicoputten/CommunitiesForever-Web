@@ -35,6 +35,7 @@ test.describe("a friend", () => {
     await expect(page.getByRole("heading", { name: "Link your Discord" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "What the bot posts" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Linked friends" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Bot token" })).toHaveCount(0);
   });
 
   test("Link Discord asks Discord for identify only, and a forged callback changes nothing", async ({ page }) => {
@@ -112,5 +113,39 @@ test.describe("the admin", () => {
     await expect(page.getByRole("switch", { name: "Milestones" })).toHaveAttribute("aria-checked", after);
     await expect(page.getByLabel("Reminder time (default for new runs)")).toHaveValue("60");
     await expect(page.getByLabel("Recap time")).toHaveValue("5|20:00");
+  });
+
+  test("makes the bot token once, sends a test post the bot gets, and revokes it", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one bot token for the site");
+    await page.goto("/discord");
+    const card = page.getByRole("region", { name: "Bot token" });
+    const make = card.getByRole("button", { name: /^(Create|Replace) token$/ });
+    await make.click();
+    const shown = card.getByLabel(/won't be shown again/);
+    await expect(shown).toHaveValue(/^cfb_/);
+    const token = await shown.inputValue();
+    await expect(page.getByTestId("bot-status")).toHaveText("Bot not connected");
+
+    // The bot calls with it: online.
+    const settings = await page.request.get("/api/bot/v1/settings", { headers: { authorization: `Bearer ${token}` } });
+    expect(settings.ok()).toBe(true);
+    await page.reload();
+    await expect(page.getByTestId("bot-status")).toHaveText("● Bot online");
+    await expect(card.getByLabel(/won't be shown again/)).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Send a test post" }).click();
+    await expect(page.getByRole("status")).toContainText("Test post sent");
+    const feed = await page.request.get("/api/bot/v1/events?after=0", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    const { events } = (await feed.json()) as { events: { type: string }[] };
+    expect(events.some((e) => e.type === "test")).toBe(true);
+
+    await card.getByRole("button", { name: "Revoke" }).click();
+    await card.getByRole("button", { name: "Revoke token" }).click();
+    await expect(page.getByRole("status")).toContainText("bot token is revoked");
+    await expect(page.getByTestId("bot-status")).toHaveText("Bot not connected");
+    const after = await page.request.get("/api/bot/v1/settings", { headers: { authorization: `Bearer ${token}` } });
+    expect(after.status()).toBe(401);
   });
 });
