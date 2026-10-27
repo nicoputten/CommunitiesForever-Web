@@ -449,3 +449,10 @@ Assigned 2026-10-27 (Nico): the Discord page's channel and role dropdowns, disab
 - Bot repo: BOT-08 reports them.
 - Tests: the token check, replacing the list, untrusted names, a removed pick.
 - Done (PR #63): migration `0007_guild` (`guild_items`, `guild_reports`), `src/core/guild.ts` (`parseGuildReport`, `guildOptions`), `src/server/guild.ts`, `POST /api/bot/v1/guild`, the Discord page's four channel and role dropdowns ("Not set", "# name" / "@name" in the bot's order, "(removed: # old-name)", "From the bot, 5 min ago"), `docs/BOT-API.md` "Guild". Defaults sent to Nico: the bot's order, no categories; the last name of a removed pick; the bot chooses which channels and roles; disabled until the first report.
+
+### WEB-44 Runs for the uploader
+- `GET /api/uploader/v1/runs`: the upcoming runs (next 14 days) of the uploader's community, with slots, answers, the organiser's time zone offset and `updatedAt`; documented in `docs/UPLOADER-API.md` (an optional addition; the uploader's v1 stays valid).
+- Tests: only the token's community, only upcoming runs, the shape the uploader writes into `Runs.lua` (UP-12).
+- Decided with Nico (2026-10-27): the answer is the addon's `CF_RUNS` field for field; `dungeon` is the addon's id (`smarm`, `lbrs`, `lfg1984`) where it has one, else the site's, with an optional `dungeonName`; a cancelled run stays, as `cancelled`, until its start. "Only the token's community": the site serves one community, so every run is the token's.
+- Done: `src/core/uploaderRuns.ts`, `addonId` in `src/core/gamedata/dungeons.ts`, `GET /api/uploader/v1/runs`, `docs/UPLOADER-API.md` "Runs" (an example checked against the route). `updatedAt` is when the list last changed, so asking again without a change gives the same answer and the uploader writes nothing.
+

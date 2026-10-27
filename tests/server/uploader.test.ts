@@ -115,7 +115,7 @@ function sameShape(actual: unknown, expected: unknown, at = "$"): void {
 
 describe("contract", () => {
   it("documents every example", () => {
-    for (const name of ["error", "device-authorization", "token", "upload-ok", "upload-rejected", "me"]) {
+    for (const name of ["error", "device-authorization", "token", "upload-ok", "upload-rejected", "me", "runs"]) {
       expect(() => example(name)).not.toThrow();
     }
   });
