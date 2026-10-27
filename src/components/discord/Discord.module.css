@@ -178,6 +178,11 @@
   color: var(--text-muted);
 }
 
+/* "Preview next recap" is a link (WEB-41c). */
+a.ghost {
+  text-decoration: none;
+}
+
 .secondary:hover:not(:disabled),
 .ghost:hover:not(:disabled) {
   background: var(--tint-hover);
@@ -513,4 +518,127 @@
 .statusOnline {
   background: var(--done-tint);
   color: var(--fresh-text);
+}
+
+/* --- the next recap (WEB-41c, /discord/recap; the board's example embed in the site's style) -------------------- */
+
+.recap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5) var(--s-5-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-link);
+  max-width: var(--size-recap);
+}
+
+.recapHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-card);
+  background: radial-gradient(circle at 70% 20%, var(--tint-active), var(--surface-pair) 60%);
+}
+
+.recapDates {
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.recapHeadline {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+}
+
+.recapNumbers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.recapNumber {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-0-5);
+  padding: var(--s-3);
+  border-radius: var(--r-nav);
+  background: var(--surface-pill);
+}
+
+.recapNumber dd {
+  order: -1;
+  margin: 0;
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  color: var(--gold-pale);
+}
+
+.recapNumber dt {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.recapCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.recapCard,
+.recapAward,
+.recapChallenge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  padding: var(--s-3) var(--s-3-5);
+  border-radius: var(--r-nav);
+  background: var(--surface-pill);
+}
+
+.recapAward {
+  background: linear-gradient(90deg, var(--tint-active), var(--surface-pill));
+}
+
+.recapChallenge {
+  border: var(--border) dashed var(--drop-line);
+}
+
+.recapKind {
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.recapTitle {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.recapText {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+@media (max-width: 767px) {
+  .recapNumbers,
+  .recapCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recapCards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -296,9 +296,9 @@ function AdminSections({ adminTag, bot, now }: { adminTag: string | undefined; b
                 Send a test post
               </button>
             </form>
-            <button type="button" className={styles.ghost} disabled title="Comes with the weekly recap">
+            <Link href="/discord/recap" className={styles.ghost}>
               Preview next recap
-            </button>
+            </Link>
           </div>
         </section>
 
