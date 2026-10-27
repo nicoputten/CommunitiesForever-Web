@@ -55,3 +55,32 @@ export function clockTimeAt(at: number, now: number, timeZone?: string): string 
   const time = text.slice(split + 1);
   return `${day === "today" || day === "yesterday" ? day : `on ${day}`} at ${time}`;
 }
+
+/**
+ * The day of `at` (uploader page, WEB-34): "today", "yesterday", else day and month ("27 Oct"), with the year when it
+ * isn't this year. `withTime` adds the time to today and yesterday ("today 21:14"), as "last upload" does.
+ */
+export function clockDay(at: number, now: number, withTime = false, timeZone?: string): string {
+  const text = clockTime(at, now, timeZone);
+  if (text.startsWith("today ") || text.startsWith("yesterday ")) return withTime ? text : text.split(" ")[0]!;
+  return text.slice(text.indexOf(" ") + 1, text.lastIndexOf(","));
+}
+
+/** A history row's time and date (uploader page, WEB-34): "21:14" over "Mon 27 Oct" (with the year when not this year). */
+export function clockParts(at: number, now: number, timeZone?: string): { time: string; date: string } {
+  const text = clockTime(at, now, timeZone);
+  const time = text.slice(text.lastIndexOf(" ") + 1);
+  const f = fields(at, { year: "numeric", month: "short", day: "numeric", weekday: "short" }, timeZone);
+  const thisYear = fields(now, { year: "numeric" }, timeZone).year;
+  return { time, date: `${f.weekday} ${f.day} ${f.month}${f.year === thisYear ? "" : ` ${f.year}`}` };
+}
+
+export type DayGroup = "today" | "week" | "earlier";
+
+export const DAY_GROUPS: Record<DayGroup, string> = { today: "Today", week: "This week", earlier: "Earlier" };
+
+/** Today, the six days before it, or earlier: the uploader page's history headings. */
+export function dayGroup(at: number, now: number, timeZone?: string): DayGroup {
+  const days = calendarDay(now, timeZone) - calendarDay(at, timeZone);
+  return days <= 0 ? "today" : days < 7 ? "week" : "earlier";
+}

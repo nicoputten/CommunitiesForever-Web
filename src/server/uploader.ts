@@ -30,6 +30,8 @@ export const limits = {
   poll: new RateLimiter(1, POLL_SECONDS - 1),
   /** Uploads per token. */
   upload: new RateLimiter(60, 60 * 60),
+  /** Wrong or expired codes per signed-in user on the uploader page (WEB-34), against guessing. */
+  wrongCode: new RateLimiter(10, 10 * 60),
 };
 
 export class TooManyTokensError extends Error {

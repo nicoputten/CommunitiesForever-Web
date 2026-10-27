@@ -37,10 +37,10 @@ test.describe("app shell", () => {
     await expect(nav.getByRole("link", { name: "Map" })).not.toHaveAttribute("aria-current", "page");
     if (isPhone(page)) {
       await expect(header.getByRole("navigation")).toBeHidden();
-      await expect(header.getByRole("link", { name: "Upload" })).toBeHidden();
+      await expect(header.getByRole("link", { name: "Uploader" })).toBeHidden();
     } else {
       await expect(header.getByRole("navigation")).toBeVisible();
-      await expect(header.getByRole("link", { name: "Upload" })).toBeVisible();
+      await expect(header.getByRole("link", { name: "Uploader" })).toBeVisible();
     }
   });
 
@@ -66,7 +66,7 @@ test.describe("app shell", () => {
     await expect(panel.getByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
     await expect(panel.getByRole("button", { name: "Sign out" })).toBeVisible();
     // On phone, Upload moves from the bar into the menu.
-    const menuUpload = panel.getByRole("link", { name: "Upload" });
+    const menuUpload = panel.getByRole("link", { name: "Uploader" });
     if (isPhone(page)) await expect(menuUpload).toBeVisible();
     else await expect(menuUpload).toBeHidden();
     await page.keyboard.press("Escape");

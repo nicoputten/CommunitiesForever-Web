@@ -25,7 +25,8 @@ export interface TopBarProps {
 export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
   const pathname = usePathname();
   const onMap = pathname === "/";
-  const uploadCurrent = isCurrent("/upload", pathname);
+  // "Uploader" (WEB-34): the uploader page, and the manual upload page and reports it links to.
+  const uploadCurrent = isCurrent("/uploader", pathname) || isCurrent("/upload", pathname);
   const params = useSearchParams();
   const continent = parseContinent(params.get("continent"));
   // The phone map with a character open in its sheet: back, the zone and "2 here" (phone-character board, WEB-28).
@@ -84,9 +85,9 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
         </button>
       )}
       {viewer?.mayUpload && (
-        <Link href="/upload" className={styles.upload} aria-current={uploadCurrent ? "page" : undefined}>
+        <Link href="/uploader" className={styles.upload} aria-current={uploadCurrent ? "page" : undefined}>
           <UploadIcon className={styles.uploadIcon} />
-          Upload
+          Uploader
           <LinkPending />
         </Link>
       )}
