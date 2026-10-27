@@ -83,7 +83,7 @@ describe("the runs list", () => {
     expect(page.thisWeek.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Armory", "Scarlet Monastery: Library"]);
     expect(page.later.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Cathedral"]);
     expect(page.hidden).toMatch(/^1 run hidden by “Runs I can join”: Zul'Farrak on .+ \(44–54\)\.$/);
-    expect(page.past.map((p) => [p.dungeon, p.result])).toEqual([
+    expect(page.past.map((p) => [p.dungeon, p.result.label])).toEqual([
       ["Wailing Caverns", "Cancelled"],
       ["Shadowfang Keep", "0 in"],
     ]);

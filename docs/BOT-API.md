@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40). `runEnded`, `askNow` and `ping` are **planned** (WEB-43, WEB-44): their shapes are a draft and the site does not send them yet.
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43).
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -228,9 +228,9 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 | `runStarting` | `mention` | At start time |
 | `runMovedUp` | `who` (`name`, `discordId`) | A reserve (or a Maybe) moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
 | `runMoved` | `who` (`name`, `discordId`), `to` (`tank`, `healer`, `damage`, `reserve` or `removed`), `by` (a name) | WEB-47: the organiser or the admin moved their sign-up: a quiet notice to them, not a channel post |
-| `runEnded` | `outcome`: `done` or `didntHappen` | Planned: marked from an upload (WEB-43) |
-| `askNow` | `ask` (dungeon, level range, roles, from whom) | Planned: an "Ask now" from the game with "Also post on Discord" (WEB-44, addon CF-27) |
-| `ping` | `from`, `text` | Planned: a Discord ping made in the game (WEB-44) |
+| `runEnded` | `outcome`: `done` (with `came` and `signedUp`) or `didntHappen` | An upload's run log showed it ("Ran it · 3 of 5 signed-up came"), or none did within 4 hours of the start. Only with the admin's "Mark runs done from uploads"; not posted for a run that ended more than a day ago |
+| `askNow` | `ask`: `id`, `dungeon` (`id`, `name`, `typicalLevels`), `from` (`name`, `discordId`), `character`, `role` (`tank` / `heal` / `dps`), `note`, `at`, `expiresAt` (no `run`) | An "Ask now" from the game with "Also post on Discord" (addon CF-47), only within 10 minutes of being made (`expiresAt`) and with the admin's "Ask now from the game" on |
+| `ping` | `from` (`name`, `discordId`), `to` (`name`, `character`, `discordId`) | Someone pinged a friend on Discord from the game's start panel (addon CF-48); `run` is the run it's about |
 
 `mention`: Discord user ids of linked friends who answered I'm in or Maybe (decided with Nico: reminders mention only them).
 

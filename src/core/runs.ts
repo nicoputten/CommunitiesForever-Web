@@ -34,6 +34,15 @@ export function inRange(level: number | undefined, range: LevelRange): boolean {
   return level !== undefined && level >= range.min && level <= range.max;
 }
 
+/**
+ * A dungeon a run can be planned for by the addon's id (WEB-43: plans and asks from the game): `smarm`, `lfg1984`.
+ * The addon's Upper Blackrock Spire (`ubrs`) is the site's one Blackrock Spire too.
+ */
+export function runDungeonByAddonId(addonId: string): RunnableDungeon | undefined {
+  const id = addonId === "ubrs" ? "lbrs" : addonId;
+  return RUNNABLE_DUNGEONS.find((d) => d.addonId === id);
+}
+
 /** A dungeon (or Scarlet Monastery wing) a run can be planned for, by id. */
 export function runDungeon(id: string): RunnableDungeon | undefined {
   return RUNNABLE_DUNGEONS.find((d) => d.id === id);
@@ -72,7 +81,12 @@ export interface RunRecord extends RunCore {
   updatedAt: number;
   cancelledBy?: string;
   answers: RunAnswer[];
+  /** WEB-43: "Ran it · N of M came" or "didn't happen". */
+  outcome?: RunOutcome;
 }
+
+export type RunOutcome =
+  { kind: "done"; at: number; came: number; signedUp: number } | { kind: "didntHappen"; at: number };
 
 export type RunPhase = "open" | "full" | "started" | "past" | "cancelled";
 

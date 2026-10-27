@@ -285,6 +285,12 @@ export const runs = sqliteTable("runs", {
   /** When the bot's reminder and "starting now" events were written, so each is written once. */
   remindedAt: integer("reminded_at"),
   startingAt: integer("starting_at"),
+  /** WEB-43: "Ran it" (from an upload's run log) or "didn't happen" (none within 4 hours of the start). */
+  outcome: text("outcome", { enum: ["done", "didntHappen"] }),
+  outcomeAt: integer("outcome_at"),
+  /** Ran it: signed-up characters seen in the run, of those who said I'm in. */
+  came: integer("came"),
+  signedUp: integer("signed_up"),
 });
 
 /** One answer per friend per run; replaced when they answer again. */
@@ -378,6 +384,26 @@ export const sightings = sqliteTable(
   },
   (t) => [uniqueIndex("sightings_guid_seen_at_unique").on(t.guid, t.seenAt)],
 );
+
+/**
+ * What the game sent (WEB-43, the addon's `pending`: plans, answers, asks, pings), by the item's id, so a file
+ * uploaded twice changes nothing. Not derived: a rebuild doesn't apply them again. Their ids go back to the game as
+ * `received` (GET /api/uploader/v1/runs), and the addon then forgets them.
+ */
+export const gameItems = sqliteTable("game_items", {
+  id: text("id").primaryKey(),
+  /** The uploader's BattleTag: the player who did it. */
+  battleTag: text("battle_tag").notNull(),
+  kind: text("kind", { enum: ["plan", "answer", "ask", "ping"] }).notNull(),
+  /** When it happened in game, and when the site got it (Unix seconds). */
+  at: integer("at").notNull(),
+  receivedAt: integer("received_at").notNull(),
+  uploadId: integer("upload_id").notNull(),
+  /** What the site did with it: "applied" or why not ("expired", "time_passed", "unknown_run", …). */
+  result: text("result").notNull(),
+  /** The run it made or answered. */
+  runId: integer("run_id"),
+});
 
 // The weekly recap (WEB-41c, src/server/recap.ts): computed once at the recap moment and stored, so a re-run never
 // changes what was posted. Not derived: a rebuild of the uploads leaves it alone.

@@ -52,12 +52,6 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - **Copy** (finding 12): "Organiser takes a slot"; "Website · Tue 23:24" with the day; the "posted once the admin picks a channel" hint only for the admin.
 - Tests: the dungeon dropdown's groups and search, the day and time chips, no native select, date or time input left on the Runs pages (a test that fails on one).
 
-### WEB-43 Runs from uploads
-- Runs v2 (WEB-47): answers from the game carry a role when the addon sends one; without it the character's current role, as before.
-- The addon (CF-47, CF-48) writes runs planned, answers given, asks with "Also post on Discord" and Discord pings made in game into its saved file; the site reads them from each upload (parser and compat fixtures, CLAUDE.md rule 4) and turns them into runs, answers and events. Each item carries an id from the addon, so a file uploaded twice changes nothing.
-- An ask now from the game expires 10 minutes after it was made in game, and is only posted while it hasn't.
-- Done: when an upload's run log (addon CF-23: dungeon, time, community members in the group) shows the dungeon within the run's window, the run becomes "Ran it · N of M signed-up came" and counts for the recap (WEB-41). No such upload within 4 hours of the start: "didn't happen".
-- The session report and the uploader's summary show "N run answers".
 
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
