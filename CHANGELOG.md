@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.1.0 (2026-10-27)
 - Uploader API v1 for the Windows uploader app: pair the app through the browser, then it uploads your SavedVariables file by itself with its own upload-only token. Uploads from the app pass the same checks as the upload page and get the same session report; a block ends its tokens. (The uploader page follows.)
 - The map on a phone fills the screen, with the roll call in a bottom sheet: the newest sightings peek above the tab bar, drag or tap the handle (or Filters) for the whole roll call with its filters. Tap a character on the map or in the roll call and the map zooms in while the sheet shows level, when seen, player, item level, role, spec, talents and professions, with "Open character" and the next character in that zone; Back or the arrow closes it. "4 in Kalimdor" at the edge flies to the other continent. Picking a continent on a phone no longer springs back to the whole world.
