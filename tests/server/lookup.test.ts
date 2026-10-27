@@ -127,7 +127,8 @@ describe("look-ups", () => {
     });
 
     const me = (await get("me", { discordUserId: NICO_DISCORD })).body;
-    expect(me).toMatchObject({ friend: "Nico", week: { levels: 2, quests: 4, runs: 1 } });
+    expect(me).toMatchObject({ asker: "Nico", friend: "Nico", week: { levels: 2, quests: 4, runs: 1 } });
+    expect(whereis.asker).toBe("Ada");
     expect((me.characters as unknown[]).length).toBe(2);
     // Ada shares no feed: no week line.
     expect((await get("me", { discordUserId: ADA_DISCORD })).body).not.toHaveProperty("week");

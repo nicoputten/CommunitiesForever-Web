@@ -10,6 +10,7 @@ import {
   whoCanCraft,
   whereisFriend,
 } from "@/core/lookup";
+import { battleTagName } from "@/core/access";
 import { botFriend } from "@/server/botRuns";
 import { personKeyOf, weekOf } from "@/server/lookup";
 import { apiError, botGuard } from "@/server/session";
@@ -22,7 +23,7 @@ import { loadState } from "@/server/uploads";
 export const dynamic = "force-dynamic";
 
 const ROLES = { tank: "tank", healer: "heal", damage: "dps" } as const;
-const json = (body: unknown) => Response.json(body, { headers: { "Cache-Control": "no-store" } });
+const headers = { "Cache-Control": "no-store" };
 
 export async function GET(req: Request, { params }: { params: Promise<{ what: string }> }): Promise<Response> {
   const now = nowSeconds();
@@ -34,6 +35,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
   const { what } = await params;
   const d = loadState(db)?.data;
   if (d === undefined) return apiError(404, "no_data", "The site has no data yet.");
+  // Every answer names the asker by display name, for the bot's "Shared by …" (never the BattleTag).
+  const askerKey = personKeyOf(d, friend.battleTag);
+  const asker =
+    (askerKey !== undefined ? d.people[askerKey]?.displayName : undefined) ?? battleTagName(friend.battleTag);
+  const json = (body: Record<string, unknown>) => Response.json({ asker, ...body }, { headers });
   const text = (name: string) => (q.get(name) ?? "").trim().slice(0, 100);
 
   switch (what) {
@@ -84,11 +90,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
       return json({ friend: f.name, characters: alts(d, f.key, now) });
     }
     case "me": {
-      const key = personKeyOf(d, friend.battleTag);
-      const name = key !== undefined ? d.people[key]?.displayName : undefined;
+      const key = askerKey;
       const week = key !== undefined ? weekOf(db, key, now) : undefined;
       return json({
-        friend: name ?? "You",
+        friend: asker,
         characters: key !== undefined ? alts(d, key, now) : [],
         ...(week !== undefined ? { week } : {}),
       });
