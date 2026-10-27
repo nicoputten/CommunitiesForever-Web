@@ -92,20 +92,13 @@ Order: WEB-32 (roster fixes), WEB-39, WEB-38, WEB-40, WEB-42, WEB-43, WEB-44, WE
 - `GET lookup/...` endpoints for the bot's commands (`/whereis`, `/who`, `/whocancraft`, `/character` with autocomplete, `/alts`, `/me`, `/runs`), answered for a Discord user id only when it is linked to a member or guest.
 - Manual: Nico creates the Discord application's OAuth2 redirect for the site (secrets only in TrueNAS env).
 
-### WEB-38 Bot API
-- `/api/bot/v1/` with one Bearer bot token (stored hashed, like the uploader tokens; created and revoked by the admin, shown once). Session cookies are not accepted there, the bot token nowhere else (CLAUDE.md rule 6 gets this endpoint).
-- `GET settings`; `GET events?after=<cursor>` as a **long poll** (answers at once when there are events, otherwise holds up to about 30 s), so new events reach the bot within about a second without an open port on the bot; `POST events/<id>/posted` with the Discord message id (an event is handed out until acknowledged, never posted twice).
-- Events: milestones per accepted upload (every 10 levels, level 60, a profession at its cap, a new character; grouped per upload), run created, changed (time, note, answers), cancelled, reminder due, starting now, done or didn't happen, ask now from the game, ping from the game.
-- Run actions for the bot: create (`/plan`, `/ask`), answer (buttons; Pick my character lists the asker's characters in range), edit and cancel (`/run`; own runs, the admin any).
-- The contract in `docs/BOT-API.md` (fields, errors, versioning: only optional fields within v1), as `docs/UPLOADER-API.md` is for the uploader.
-- Tests: the token check, the long poll, the cursor and acknowledgement, milestone events from sample uploads, run rights.
-
 ### WEB-40 Runs
 - Boards: `runs`, `run-detail`, `run-create`, `runs-phone`. "Runs" in the top bar with the number of upcoming runs you can join.
 - Model (own database, forward-only migration): run (dungeon or wing, start in UTC, note, organiser and their character, source website / Discord / game, state open, full, started, done, didn't happen, cancelled), five role slots (tank, healer, three damage) filled from the role the addon knows per character (from talents or set by the player), answers (I'm in / Maybe / Can't, character, where it came from and when).
 - Runs page: this week, later, past; filters "Runs I can join" (one of your characters fits), Mine, All; your answers; "Where runs show up". Run detail: slots, answers with their source, who could join, the organiser's edit and delete, the admin's delete; times as "19:30 your time · 20:30 for Nico". Plan a run: dungeon (filled in when coming from a dungeon page or a roster band), lead as, day, time in your time zone ("everyone sees it in their own time"), note, the Discord preview, the time-passed and no-character-fits states.
 - Full run: when someone drops out, the first Maybe whose character fits the free role moves up automatically and gets a quiet notice (Nico, 2026-10-27).
 - Phone: answer buttons 44 px at the bottom; empty, loading and error states; an answer that didn't go through is kept on the phone and retried.
+- Bot API (from WEB-38): the run events and run actions drafted in `docs/BOT-API.md` (create, answer, edit, cancel for a linked Discord user; created, changed, cancelled, reminder, starting, ended), with tests for run rights through the bot.
 - Tests: rights (own, admin), slots from roles, moving up from Maybe, time zones around daylight saving.
 
 ### WEB-42 Dungeon page
