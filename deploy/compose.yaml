@@ -3,7 +3,7 @@
 services:
   web:
     # A release tag (README step 9). `latest` works too, but a tag makes updates and rollbacks explicit.
-    image: ghcr.io/nicoputten/communitiesforever-web:v0.1.0
+    image: ghcr.io/nicoputten/communitiesforever-web:v0.2.0
     restart: unless-stopped
     # The dataset's owner: TrueNAS's `apps` user and group (568). The image's files are world-readable, so any UID
     # works as long as it may write the dataset.
