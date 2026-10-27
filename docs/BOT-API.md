@@ -96,6 +96,7 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 
 - From then on the event is never handed out again.
 - The same acknowledgement again is fine (a retry after a lost answer). Another `messageId` for the same event is `409 already_posted`.
+- Several events may be acknowledged with the same `messageId`: the bot groups milestones from uploads within a few minutes into one message by editing it (bot BOT-09).
 - **Posting once.** Post, then acknowledge. If the bot stops between the two, the event comes again; the bot avoids a second post by remembering what it posted (e.g. the event id in the message) before acknowledging. The site never hands out an acknowledged event.
 
 ## Event types
