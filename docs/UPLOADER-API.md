@@ -125,6 +125,39 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
 ```
 `appVersion` and `lastUploadAt` may be `null`.
 
+## Runs (WEB-44)
+`GET /api/uploader/v1/runs` (Bearer, any active upload token): the upcoming runs the app writes into the game as `Interface\AddOns\CommunitiesForever\Data\Runs.lua` (UP-12). The answer is the addon's planned runs file `CF_RUNS` field for field (CommunitiesForever `docs/ARCHITECTURE.md` "Planned runs file"), so the app only turns it into Lua data: every string escaped and length-capped, never code.
+
+<!-- example: runs -->
+```json
+{
+  "v": 1,
+  "updatedAt": 1793120000,
+  "reminderMinutes": 30,
+  "runs": [
+    {
+      "id": "r-102",
+      "dungeon": "smarm",
+      "dungeonName": "Scarlet Monastery: Armory",
+      "startsAt": 1793210400,
+      "state": "open",
+      "source": "site",
+      "note": "Bring water",
+      "url": "https://wow.vestras.nl/runs/102",
+      "organiser": { "battleTag": "Nico#2201", "guid": "Player-1-0000A001", "name": "Ves Doombringer", "utcOffset": 3600 },
+      "answers": [
+        { "battleTag": "Nico#2201", "guid": "Player-1-0000A001", "name": "Ves Doombringer", "answer": "in", "role": "dps", "source": "site", "at": 1793100000 }
+      ]
+    }
+  ]
+}
+```
+- Which runs: those starting within 14 days and not yet past (2 hours after start), at most 50, by start. A cancelled run stays, as `"cancelled"`, until its start, so the game can say it was cancelled (decided with Nico, 2026-10-27).
+- `updatedAt`: when the list last changed (a run planned, answered, edited or cancelled; one coming into the 14 days, starting or leaving). Asking again without a change gives the same value, so the app writes the file only when something changed.
+- `dungeon`: the addon's dungeon id (`smarm`, `lbrs`, `lfg1984` for a Forever dungeon the Group Finder lists); for a dungeon the addon has no id for, the site's id. `dungeonName` (optional for the addon) names it either way.
+- `state`: `open`, `full`, `started` or `cancelled`. `source` and an answer's `source`: `site`, `discord` or `game`. `role`: `tank`, `heal` or `dps` (the slot the site gave it). `answers`: one per friend, oldest first, at most 40. `note` is optional; `guid` and `name` are missing for a friend who answered without a character (Maybe or Can't). `organiser.utcOffset`: seconds east of UTC in the organiser's own time zone at the start ("20:30 for Nico").
+- Bearer errors as above. Additive within v1: the app writes the fields the addon knows and may drop the rest.
+
 ## Disconnecting (RFC 7009)
 `POST /api/uploader/v1/revoke` (no auth: holding the token is the proof), form `token=<access_token>&token_type_hint=access_token&client_id=communitiesforever-uploader` → `200` with an empty body, also for an unknown or already revoked token. Errors: `400 invalid_request` (no token), `401 invalid_client`.
 

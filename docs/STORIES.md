@@ -29,10 +29,6 @@ The bot lives in its own public repo, [CommunitiesForever-Discord](https://githu
 
 Order (2026-10-27; WEB-32 and WEB-38 are done): WEB-40, WEB-44, WEB-43, WEB-39b, WEB-41, WEB-42, WEB-45. WEB-44 comes before WEB-43 because it is small and lets the uploader bring runs into the game (UP-12); WEB-41 before WEB-42 and WEB-45 so the site stores the week's history from launch. In the other repos: bot BOT-02 and BOT-03 now (WEB-38 is in), BOT-07 next so milestones post from launch, BOT-06 after WEB-39, BOT-04 after WEB-40 and WEB-43, BOT-05 after WEB-41; uploader UP-12 after WEB-44; the addon's CF-45..48 are done and wait for a release.
 
-### WEB-44 Runs for the uploader
-- `GET /api/uploader/v1/runs`: the upcoming runs (next 14 days) of the uploader's community, with slots, answers, the organiser's time zone offset and `updatedAt`; documented in `docs/UPLOADER-API.md` (an optional addition; the uploader's v1 stays valid).
-- Tests: only the token's community, only upcoming runs, the shape the uploader writes into `Runs.lua` (UP-12).
-
 ### WEB-43 Runs from uploads
 - The addon (CF-47, CF-48) writes runs planned, answers given, asks with "Also post on Discord" and Discord pings made in game into its saved file; the site reads them from each upload (parser and compat fixtures, CLAUDE.md rule 4) and turns them into runs, answers and events. Each item carries an id from the addon, so a file uploaded twice changes nothing.
 - An ask now from the game expires 10 minutes after it was made in game, and is only posted while it hasn't.
