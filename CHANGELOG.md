@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.3.0 (2026-10-27)
 - Runs (top bar › Runs, a fourth tab on a phone): plan a dungeon run for a day and time, leading as one of your characters; friends answer I'm in, Maybe or Can't here or in Discord. Five slots (tank, healer, three damage) fill from each character's role; when a role is full, I'm in waits as Maybe, first in line, and moves up when someone drops out. Times show in your own time zone ("19:30 your time · 20:30 for Nico"). The list shows this week, later and past runs, filtered on the runs you can join; the count next to Runs is how many you can join and haven't answered. The organiser edits day, time and note or deletes the run; the admin can delete any. Scarlet Monastery's wings are runs of their own. On a phone the answer buttons stay at the bottom, and an answer that didn't go through is kept and sent again.
 - Uploads larger than 10 MB arrive whole again: from the upload page, from the uploader app and the uploader's own releases (they were cut at 10 MB and refused).
