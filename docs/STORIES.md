@@ -24,6 +24,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ### WEB-28 Phone map
 - Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
 - Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
+- Bug (found in WEB-27, Nico 2026-10-27): on a phone, `?continent=eastern-kingdoms` frames the continent and springs back to the whole world about 120 ms later, because at 1× the map centres the land (WEB-26). A continent on a phone stays framed; the design check's `map-continent-phone` baseline (temporarily the 2× view over the Maelstrom) shows the continent again.
 
 ### WEB-29 Empty site, loading and stale data
 - Boards: `empty-site`, `loading`.
