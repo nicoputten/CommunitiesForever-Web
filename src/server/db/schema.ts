@@ -208,3 +208,57 @@ export const botEvents = sqliteTable("bot_events", {
   postedAt: integer("posted_at"),
   messageId: text("message_id"),
 });
+
+// Discord (WEB-39): links, time zones and the bot's settings. The bot token is WEB-38's (`bot_tokens`).
+
+/** One Discord account per BattleTag and one BattleTag per Discord account. Never shown to others but the admin. */
+export const discordLinks = sqliteTable(
+  "discord_links",
+  {
+    /** battleTagKey() of the owner. */
+    key: text("key").primaryKey(),
+    battleTag: text("battle_tag").notNull(),
+    /** The Discord user id (a snowflake, as text). */
+    discordId: text("discord_id").notNull(),
+    /** The Discord username at linking time, for the admin's linked-friends list. */
+    discordName: text("discord_name").notNull(),
+    /** Unix seconds. */
+    linkedAt: integer("linked_at").notNull(),
+  },
+  (t) => [uniqueIndex("discord_links_discord_id_unique").on(t.discordId)],
+);
+
+/** Per-user settings. `time_zone` is an IANA name; null until the browser sent one or the user picked one. */
+export const userPrefs = sqliteTable("user_prefs", {
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  timeZone: text("time_zone"),
+  /** How the time zone was set: from the browser at sign-in, or picked on the Discord page. */
+  timeZoneFrom: text("time_zone_from", { enum: ["browser", "picked"] }),
+  /** Unix seconds. */
+  updatedAt: integer("updated_at").notNull(),
+});
+
+/** One row (id 1): what the bot posts and where (Discord page, admin). Missing row: the defaults (src/core/discord.ts). */
+export const botSettings = sqliteTable("bot_settings", {
+  id: integer("id").primaryKey(),
+  milestones: integer("milestones", { mode: "boolean" }).notNull(),
+  runs: integer("runs", { mode: "boolean" }).notNull(),
+  recap: integer("recap", { mode: "boolean" }).notNull(),
+  /** Discord channel and role ids (snowflakes, as text); null until picked. */
+  postsChannel: text("posts_channel"),
+  recapChannel: text("recap_channel"),
+  runsChannel: text("runs_channel"),
+  mentionRole: text("mention_role"),
+  /** 0 Sunday … 6 Saturday, and "HH:MM", in the admin's time zone (WEB-41). */
+  recapDay: integer("recap_day").notNull(),
+  recapTime: text("recap_time").notNull(),
+  reminders: integer("reminders", { mode: "boolean" }).notNull(),
+  /** 15, 30, 60 or 120; also the in-game toast's time. */
+  reminderMinutes: integer("reminder_minutes").notNull(),
+  askNow: integer("ask_now", { mode: "boolean" }).notNull(),
+  markDone: integer("mark_done", { mode: "boolean" }).notNull(),
+  /** Unix seconds and the admin's BattleTag. */
+  updatedAt: integer("updated_at").notNull(),
+  updatedBy: text("updated_by").notNull(),
+});

@@ -4,15 +4,23 @@ import path from "node:path";
 import { encode } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { DELETE as revokeRoute, POST as createRoute } from "@/app/api/admin/bot-token/route";
 import { POST as postedRoute } from "@/app/api/bot/v1/events/[id]/posted/route";
 import { GET as eventsRoute } from "@/app/api/bot/v1/events/route";
 import { GET as settingsRoute } from "@/app/api/bot/v1/settings/route";
 import { EVENT_TTL_SECONDS, type MilestonesEvent } from "@/core/bot";
 import { isPublic } from "@/proxy";
 import { putGuest } from "@/server/access";
-import { acknowledge, botTokenStatus, createBotToken, longPoll, pendingEvents } from "@/server/bot";
+import {
+  acknowledge,
+  botTokenStatus,
+  createBotToken,
+  enqueueBotEvent,
+  longPoll,
+  pendingEvents,
+  revokeBotToken,
+} from "@/server/bot";
 import { getDb } from "@/server/db";
+import { updateBotSettings } from "@/server/discord";
 import { botEvents } from "@/server/db/schema";
 import { createToken } from "@/server/uploader";
 import { rebuild, upload } from "@/server/uploads";
@@ -88,6 +96,15 @@ const day2 = lua(`
     G = { name = "Grom Example", classFile = "WARRIOR", level = 12, updatedAt = 200 } } },
   settings = { clubId = 1, clubName = "Friends" },
 `);
+// Ves reaches 40: a milestone, unless the admin switched milestones off.
+const day4 = lua(`
+  self = { battleTag = "${ADMIN}", displayName = "Nico", version = 400, chars = {
+    V = { name = "Ves Example", classFile = "WARLOCK", level = 40, updatedAt = 400,
+          professions = { [197] = { name = "Tailoring", rank = 75, max = 150 } } },
+    M = { name = "Mira Example", classFile = "MAGE", level = 60, updatedAt = 400 },
+    G = { name = "Grom Example", classFile = "WARRIOR", level = 12, updatedAt = 400 } } },
+  settings = { clubId = 1, clubName = "Friends" },
+`);
 const day3 = lua(`
   self = { battleTag = "${ADMIN}", displayName = "Nico", version = 300, chars = {
     V = { name = "Ves Example", classFile = "WARLOCK", level = 30, updatedAt = 300,
@@ -114,14 +131,9 @@ describe("bot API", () => {
     expect(await wrong.json()).toMatchObject({ error: "invalid_token" });
   });
 
-  it("the admin makes the token, once; anyone else may not", async () => {
-    expect((await createRoute(await req("/api/admin/bot-token", { method: "POST" }))).status).toBe(401);
-    expect((await createRoute(await req("/api/admin/bot-token", { method: "POST", as: "Gwen#4004" }))).status).toBe(
-      403,
-    );
-    const made = await createRoute(await req("/api/admin/bot-token", { method: "POST", as: ADMIN }));
-    expect(made.status).toBe(200);
-    token = ((await made.json()) as { token: string }).token;
+  // The admin makes it on the Discord page (WEB-39; the server action checks the admin, tests/e2e/discord.spec.ts).
+  it("the token is made once and works for the bot API", async () => {
+    token = createBotToken(getDb(), ADMIN, now());
     expect(token).toMatch(/^cfb_/);
     const settings = await settingsRoute(await req("/api/bot/v1/settings", { token }));
     expect(settings.status).toBe(200);
@@ -130,7 +142,12 @@ describe("bot API", () => {
       siteName: expect.any(String),
       longPollSeconds: 30,
       eventTtlSeconds: EVENT_TTL_SECONDS,
-      posts: { milestones: true },
+      // WEB-39: the admin's settings on the Discord page (defaults here).
+      posts: { milestones: true, runs: true, recap: true },
+      channels: { posts: null, recap: null, runs: null },
+      mentionRole: null,
+      recap: { day: 0, time: "13:00", timeZone: "UTC" },
+      runs: { reminders: true, reminderMinutes: 30, startingNow: true, askNow: true, markDone: true },
     });
   });
 
@@ -221,6 +238,28 @@ describe("bot API", () => {
     expect(acknowledge(db, id, "1", now())).toBe("expired");
   });
 
+  it("with the admin's Milestones switch off, an upload makes no milestone event (WEB-39)", async () => {
+    const db = getDb();
+    updateBotSettings(db, { milestones: false, reminderMinutes: 60 }, ADMIN, now());
+    const before = db.select().from(botEvents).all().length;
+    expect(upload(db, day4, ADMIN, now()).status).toBe("ok");
+    expect(db.select().from(botEvents).all()).toHaveLength(before);
+    const body = (await (await settingsRoute(await req("/api/bot/v1/settings", { token }))).json()) as {
+      posts: { milestones: boolean };
+      runs: { reminderMinutes: number };
+    };
+    expect(body.posts.milestones).toBe(false);
+    expect(body.runs.reminderMinutes).toBe(60);
+    updateBotSettings(db, { milestones: true }, ADMIN, now());
+  });
+
+  it("a test post from the Discord page is handed out like any event (WEB-39)", async () => {
+    const id = enqueueBotEvent(getDb(), "test", { kind: "posts" }, now());
+    const body = (await (await events(token, String(id - 1))).json()) as { events: { id: number; type: string }[] };
+    expect(body.events.map((e) => [e.id, e.type])).toEqual([[id, "test"]]);
+    expect((await posted(token, id, { messageId: "1100000000000000009" })).status).toBe(200);
+  });
+
   it("a rebuild of the uploads makes no events", () => {
     const before = getDb().select().from(botEvents).all().length;
     rebuild(getDb());
@@ -232,11 +271,8 @@ describe("bot API", () => {
     expect(botTokenStatus(getDb())).toEqual({ createdAt: expect.any(Number), createdBy: ADMIN });
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token }))).status).toBe(401);
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token: next }))).status).toBe(200);
-    expect((await revokeRoute(await req("/api/admin/bot-token", { method: "DELETE", as: "Gwen#4004" }))).status).toBe(
-      403,
-    );
-    const revoked = await revokeRoute(await req("/api/admin/bot-token", { method: "DELETE", as: ADMIN }));
-    expect(await revoked.json()).toEqual({ revoked: true });
+    expect(revokeBotToken(getDb(), now())).toBe(true);
+    expect(revokeBotToken(getDb(), now())).toBe(false);
     expect(botTokenStatus(getDb())).toBeUndefined();
     expect((await settingsRoute(await req("/api/bot/v1/settings", { token: next }))).status).toBe(401);
   });

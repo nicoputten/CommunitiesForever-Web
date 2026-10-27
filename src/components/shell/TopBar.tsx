@@ -91,6 +91,17 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
           <LinkPending />
         </Link>
       )}
+      {/* "Discord" (WEB-39, board `discord-settings-runs`): everyone links their own account here. */}
+      {viewer !== undefined && (
+        <Link
+          href="/discord"
+          className={styles.discord}
+          aria-current={isCurrent("/discord", pathname) ? "page" : undefined}
+        >
+          Discord
+          <LinkPending />
+        </Link>
+      )}
       {viewer !== undefined && <UserMenu viewer={viewer} signOut={signOut} />}
     </header>
   );

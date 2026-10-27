@@ -13,6 +13,7 @@ import type { UploadSummary } from "@/core/diff";
 import type { Dataset } from "@/core/model";
 import type { Db } from "./db";
 import { botEvents, botTokens } from "./db/schema";
+import { getBotSettings } from "./discord";
 import { hashToken } from "./uploader";
 
 // The Discord bot's token and event feed (WEB-38, docs/BOT-API.md). One token, made and revoked by the admin, shown
@@ -77,6 +78,16 @@ export interface BotEvent {
 }
 
 /**
+ * Writes an event for the bot and wakes waiting polls (WEB-39: the admin's test post). Returns its id.
+ * Upload events are written in the upload's transaction instead (recordMilestones).
+ */
+export function enqueueBotEvent(db: Db, type: string, data: unknown, now: number): number {
+  const { id } = db.insert(botEvents).values({ type, data, createdAt: now }).returning({ id: botEvents.id }).get();
+  notifyBotEvents();
+  return id;
+}
+
+/**
  * Writes the `milestones` event of an accepted upload, in the upload's transaction; none when it reached nothing or
  * is the site's first upload (`first`: there was no data before it). Returns whether it wrote one.
  */
@@ -87,7 +98,8 @@ export function recordMilestones(
   after: Dataset,
   first: boolean,
 ): boolean {
-  if (first) return false;
+  // The admin's Milestones switch (WEB-39): off makes no events, so turning it on later posts nothing old.
+  if (first || !getBotSettings(tx).milestones) return false;
   const reached = milestones(summary, after);
   if (reached.length === 0) return false;
   const data: MilestonesEvent = { uploadId: upload.id, uploadedAt: upload.uploadedAt, milestones: reached };

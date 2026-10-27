@@ -6,6 +6,10 @@ import { nowSeconds } from "@/app/clock";
 import { getSiteInfo } from "@/app/site";
 import { getViewer } from "@/app/viewer";
 import { SiteShell } from "@/components/shell/SiteShell";
+import { TimeZoneSync } from "@/components/shell/TimeZoneSync";
+import { getDb } from "@/server/db";
+import { timeZoneFor } from "@/server/discord";
+import { browserTimeZoneAction } from "./discord/actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -26,6 +30,10 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
       viewer={viewer}
       signOut={signOut}
     >
+      {/* WEB-39: the browser's time zone, once, until one is stored. */}
+      {viewer !== undefined && timeZoneFor(getDb(), viewer.battleTag) === undefined && (
+        <TimeZoneSync action={browserTimeZoneAction} />
+      )}
       {children}
     </SiteShell>
   );
