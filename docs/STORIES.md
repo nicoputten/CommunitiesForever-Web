@@ -56,6 +56,7 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - `POST /api/uploader/v1/releases` with a deploy secret (env var), used by the uploader repo's release workflow to publish a new version (installer, packages, feed files). Only the newest few versions are kept.
 - Tests for access (no download without sign-in, no feed without a valid token, no publish without the secret).
 - Manual: set the deploy secret in the TrueNAS app config and as a GitHub secret in the uploader repo.
+- Decided with Nico (2026-10-27, all 12 proposals): files in `DATA_DIR/uploader/`; one multipart publish streamed to disk and checked against the feed (size, SHA256, newer version, else 409), switched in with the feed and `current.json` last; `UPLOADER_DEPLOY_SECRET` (off without it); full packages first, deltas accepted; newest 3 versions kept; the feed for any active token, file names only from the feed; the download for those who may upload; "Download for Windows" with version and size once released; an nginx block of 300 MB for the publish endpoint.
 
 ### WEB-32 Known bugs
 - **On hold** until Nico has tested everything (decided 2026-10-27).
