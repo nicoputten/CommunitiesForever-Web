@@ -15,7 +15,7 @@ import { createBotToken, pendingEvents } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { runAnswers } from "@/server/db/schema";
 import { linkDiscord, setTimeZone, updateBotSettings } from "@/server/discord";
-import { answerRunFor, cancelRun, editRun, getRun, planRunFor, writeDueRunEvents } from "@/server/runs";
+import { answerRunFor, cancelRun, editRun, getRun, planRunFor, runPayload, writeDueRunEvents } from "@/server/runs";
 import { upload } from "@/server/uploads";
 import { ADMIN, NOW, sampleSavedVariables } from "../design/sample";
 
@@ -321,6 +321,38 @@ describe("the organiser's moves (WEB-47)", () => {
       ["Bob#2002", "reserve", false],
       ["Femke#3307", "maybe", false],
     ]);
+  });
+});
+
+describe("the bot's run post data (BOT-04)", () => {
+  it("names who could fill each open role, with levels, classes and fit", () => {
+    const db = getDb();
+    const id = (
+      planRunFor(
+        db,
+        { dungeonId: "sm-armory", startsAt: NOW + 8 * HOUR, organiser: ADMIN, source: "website", leadGuid: VES },
+        NOW,
+      ) as { id: number }
+    ).id;
+    const payload = runPayload(db, getRun(db, id)!, NOW);
+    expect(payload.organiser).toMatchObject({
+      name: "Nico",
+      character: "Ves Doombringer",
+      level: 39,
+      classFile: "WARLOCK",
+    });
+    expect(payload.answers[0]).toMatchObject({ character: "Ves Doombringer", level: 39, classFile: "WARLOCK" });
+    const byRole = Object.fromEntries(payload.couldFill.map((r) => [r.role, r]));
+    // Tank: nobody in range; Kel Dawnhammer (18, Mira's paladin tank) is the closest below.
+    expect(byRole.tank).toMatchObject({
+      open: 1,
+      characters: [],
+      close: [{ character: "Kel Dawnhammer", level: 18, name: "Mira" }],
+    });
+    expect(byRole.healer!.characters.map((c) => c.character)).toEqual(["Lia Thornwhisper", "Tok Ironhide"]);
+    // Damage: Bob Example fits; Mira Sunstrider (60) is a carry and Ruk (27) only low: not suggested.
+    expect(byRole.damage!.characters.map((c) => [c.character, c.fit.label])).toEqual([["Bob Example", "fits"]]);
+    expect(JSON.stringify(payload)).not.toContain("#");
   });
 });
 

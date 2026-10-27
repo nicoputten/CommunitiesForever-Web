@@ -10,6 +10,8 @@ import {
   mayDelete,
   mayEdit,
   openSlots,
+  SLOT_ROLES,
+  slotRole,
   phase,
   planRun,
   runDungeon,
@@ -24,6 +26,7 @@ import {
   type RunSource,
   type SlotRole,
 } from "@/core/runs";
+import { rolesFor } from "@/core/gamedata";
 import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
 import { OUTCOME_SECONDS } from "@/core/runOutcome";
@@ -192,11 +195,14 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
     organiser: {
       ...person(run.organiser),
       ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+      ...(lead?.guid === undefined ? {} : characterFacts(data, lead.guid)),
     },
     source: run.source,
     state: phase(run, run.answers, now),
     open,
     counts: counts(run.answers),
+    ...(run.outcome === undefined ? {} : { outcome: run.outcome }),
+    couldFill: couldFill(data, run, open),
     answers: [...run.answers]
       .sort((a, b) => a.answeredAt - b.answeredAt)
       .map((a) => ({
@@ -206,7 +212,9 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
         answer: a.answer === "reserve" ? "maybe" : a.answer,
         role: a.role,
         source: a.source,
-        ...(a.guid === undefined ? {} : { guid: a.guid, fit: fitOf(data, run, a.guid) }),
+        ...(a.guid === undefined
+          ? {}
+          : { guid: a.guid, fit: fitOf(data, run, a.guid), ...characterFacts(data, a.guid) }),
         ...(a.movedUp ? { movedUp: true } : {}),
         ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
       })),
@@ -592,4 +600,56 @@ export function moveRunSignUp(
   }
   if (outcome.movedUp !== undefined) runEvent(db, "runMovedUp", after, now, { who: who(outcome.movedUp.battleTag) });
   return after;
+}
+
+// --- for the bot's run post (BOT-04) --------------------------------------------------------------------------------
+
+/** A character's level and class for the run post ("37 · Femke", "39 Warlock"); optional fields within v1. */
+function characterFacts(data: Dataset | undefined, guid: string): { level?: number; classFile?: string } {
+  const c = runCharacter(data, guid);
+  return {
+    ...(c?.level === undefined ? {} : { level: c.level }),
+    ...(c?.classFile === undefined ? {} : { classFile: c.classFile }),
+  };
+}
+
+/** At most this many names per open role in "Could fill". */
+export const COULD_FILL_MAX = 3;
+
+/**
+ * "Could fill the tank slot" (the bot's run post, BOT-04): per role with an open slot, up to three characters of
+ * friends who haven't answered that fit or are over (WEB-47 levelFit) and whose class can play it; without one, the
+ * closest below the range as `close`.
+ */
+export function couldFill(data: Dataset | undefined, run: StoredRun, open: Record<SlotRole, number>) {
+  if (data === undefined) return [];
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const answered = new Set(run.answers.map((a) => battleTagKey(a.battleTag)));
+  const candidates = Object.keys(data.characters)
+    .map((guid) => runCharacter(data, guid))
+    .filter((c): c is RunCharacter => c !== undefined && c.owner !== undefined && !answered.has(battleTagKey(c.owner)))
+    .map((c) => ({ c, fit: levelFit(c.level, range.min, range.max) }));
+  const show = ({ c, fit }: (typeof candidates)[number]) => ({
+    name: displayName(data, c.owner!),
+    character: c.name ?? c.guid,
+    ...characterFacts(data, c.guid),
+    fit: { kind: fit.kind, label: fit.label },
+  });
+  return SLOT_ROLES.filter((role) => open[role] > 0).map((role) => {
+    const forRole = candidates.filter(({ c }) => rolesFor(c.classFile).includes(role) && slotRole(c.role) === role);
+    const fitting = forRole
+      .filter(({ fit }) => fit.suggested)
+      .sort(
+        (a, b) => Number(b.fit.kind === "fits") - Number(a.fit.kind === "fits") || (b.c.level ?? 0) - (a.c.level ?? 0),
+      );
+    const close = forRole
+      .filter(({ c }) => c.level !== undefined && c.level < range.min)
+      .sort((a, b) => (b.c.level ?? 0) - (a.c.level ?? 0));
+    return {
+      role,
+      open: open[role],
+      characters: fitting.slice(0, COULD_FILL_MAX).map(show),
+      ...(fitting.length === 0 && close.length > 0 ? { close: close.slice(0, COULD_FILL_MAX).map(show) } : {}),
+    };
+  });
 }
