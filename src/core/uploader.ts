@@ -117,6 +117,12 @@ export class RateLimiter {
     return undefined;
   }
 
+  /** Whether `key` used up its window, without counting a hit. */
+  full(key: string, now: number): boolean {
+    const w = this.windows.get(key);
+    return w !== undefined && now - w.start < this.windowSeconds && w.count >= this.limit;
+  }
+
   private sweep(now: number): void {
     for (const [key, w] of this.windows) if (now - w.start >= this.windowSeconds) this.windows.delete(key);
   }

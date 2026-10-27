@@ -221,3 +221,22 @@ export function CompassIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** uploader-page: "Download for Windows". */
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 16 16" strokeWidth={1.8} {...props}>
+      <path d="M8 2v9M4 7.5L8 11l4-3.5M2 14h12" />
+    </Icon>
+  );
+}
+
+/** uploader-page: an uploader's computer. */
+export function DeviceIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 32 32" {...props}>
+      <rect x="4" y="6" width="24" height="16" rx="2" />
+      <path d="M12 26h8M16 22v4" />
+    </Icon>
+  );
+}
