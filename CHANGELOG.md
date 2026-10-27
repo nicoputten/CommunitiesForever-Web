@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- The weekly recap: every week at the recap time (the Discord page, Sunday 13:00 by default) the site puts together the week of the community (a headline, the numbers, "<community> of the week", four cards that change from week to week and a challenge) and the bot posts it. The admin sees the coming one under Discord › Preview next recap.
 - The uploader app can fetch the upcoming runs (the next 14 days) to show them in the game, once the app and the addon support it.
 
 ## v0.3.0 (2026-10-27)

@@ -140,6 +140,27 @@ Decided with Nico (2026-10-27): the site's first accepted upload makes no milest
 ### `test` (built, WEB-39)
 The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
+### `recap` (built, WEB-41c)
+The weekly recap, once per week at the recap moment (the Discord page's day and time in the admin's time zone; default Sunday 13:00), when the page's Weekly recap is on. `data` is the recap as it is to be posted:
+
+| Field | |
+|---|---|
+| `week` | 1 for the first recap after launch |
+| `start`, `end` | the week, Unix seconds, `[start, end)` |
+| `quiet` | under 3 levels in total: the short recap (no award, one card) |
+| `headline` | `{ id, text }` |
+| `numbers` | `{ levels, friendsPlayed, runs, newCharacters }` |
+| `award` | optional: `{ id, slot: "award", name ("<site> of the week · The Grinder"), title, text, facts, friends }` |
+| `cards` | up to 4 cards in slot order (`stat`, `progress`, `social`, `fun`), each `{ id, slot, name, title, text, facts, friends }` |
+| `challenge` | `{ id, text }` |
+| `closing` | a closing line |
+
+- Texts are finished: the bot posts them as they are. `||…||` is a Discord spoiler (the answer of "Who am I?").
+- `facts` are the values the texts were made from (for images and later layouts); `friends` are person keys, never shown.
+- Card ids are the board's catalogue (A1 … F13). Names only: never a BattleTag.
+
+`GET /api/bot/v1/recap/latest` → `200` the last recap in the same shape (for `/recap`), `404 no_recap` before the first one.
+
 ### Run events (built, WEB-40)
 Written when the admin's Runs switch is on (WEB-39); the reminders have their own switch. Each `data` has `run`, the run as it is at that moment; a test post from the Discord page has `"test": true` and `run.id` 0 (nothing was planned).
 

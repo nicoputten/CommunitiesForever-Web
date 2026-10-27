@@ -717,4 +717,7 @@
   --discord-button-in: #248046;
   --discord-on-button-in: #ffffff; /* run-create: "I'm in" text; the board's #f2f3f5 is under 4.5 : 1 there */
   --r-discord: 4px;
+
+  /* weekly recap preview (WEB-41c): the bot-recap board's example embed */
+  --size-recap: 760px; /* bot-recap: the embed column (640 on the board, wider for the site's type) */
 }

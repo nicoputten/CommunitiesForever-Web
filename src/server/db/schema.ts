@@ -1,6 +1,7 @@
 import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeedDay } from "@/core/feed";
+import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
@@ -375,3 +376,25 @@ export const sightings = sqliteTable(
   },
   (t) => [uniqueIndex("sightings_guid_seen_at_unique").on(t.guid, t.seenAt)],
 );
+
+// The weekly recap (WEB-41c, src/server/recap.ts): computed once at the recap moment and stored, so a re-run never
+// changes what was posted. Not derived: a rebuild of the uploads leaves it alone.
+
+export const recaps = sqliteTable("recaps", {
+  /** 1 for the first recap after launch. */
+  week: integer("week").primaryKey(),
+  /** Unix seconds, `[start, end)`. */
+  start: integer("start").notNull(),
+  end: integer("end").notNull(),
+  computedAt: integer("computed_at").notNull(),
+  /** The recap as posted (cards, phrasings, facts) and what later recaps need (`past`, `cycles`). */
+  data: text("data", { mode: "json" }).$type<Recap>().notNull(),
+  /** The characters at `end`: the next week's start. */
+  snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
+});
+
+/** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */
+export const recapStart = sqliteTable("recap_start", {
+  id: integer("id").primaryKey(),
+  startedAt: integer("started_at").notNull(),
+});

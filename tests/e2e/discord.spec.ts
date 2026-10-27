@@ -36,6 +36,7 @@ test.describe("a friend", () => {
     await expect(page.getByRole("heading", { name: "What the bot posts" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Linked friends" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Bot token" })).toHaveCount(0);
+    expect((await page.goto("/discord/recap"))?.status()).toBe(404);
   });
 
   test("Link Discord asks Discord for identify only, and a forged callback changes nothing", async ({ page }) => {
@@ -188,5 +189,16 @@ test.describe("the admin", () => {
     });
     await page.reload();
     await expect(page.getByLabel("Channel for posts").locator("option:checked")).toHaveText("(removed: # general)");
+  });
+
+  test("previews the coming weekly recap (WEB-41c)", async ({ page }) => {
+    await page.goto("/discord");
+    await page.getByRole("link", { name: "Preview next recap" }).click();
+    await expect(page).toHaveURL(/\/discord\/recap$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Next recap");
+    await expect(page.getByText(/^Week \d+ · /)).toBeVisible();
+    await expect(page.getByRole("region", { name: "This week's challenge" })).toBeVisible();
+    await page.getByRole("link", { name: "Back to Discord" }).click();
+    await expect(page).toHaveURL(/\/discord$/);
   });
 });
