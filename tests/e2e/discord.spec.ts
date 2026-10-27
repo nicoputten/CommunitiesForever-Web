@@ -151,4 +151,42 @@ test.describe("the admin", () => {
     const after = await page.request.get("/api/bot/v1/settings", { headers: { authorization: `Bearer ${token}` } });
     expect(after.status()).toBe(401);
   });
+
+  test("picks a channel and a role once the bot reported them (WEB-46)", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one bot token and one settings row for the site");
+    await page.goto("/discord");
+    const card = page.getByRole("region", { name: "Bot token" });
+    await card.getByRole("button", { name: /^(Create|Replace) token$/ }).click();
+    const token = await card.getByLabel(/won't be shown again/).inputValue();
+    const sent = await page.request.post("/api/bot/v1/guild", {
+      headers: { authorization: `Bearer ${token}` },
+      data: {
+        channels: [
+          { id: "80351110224678912", name: "general" },
+          { id: "80351110224678913", name: "runs" },
+        ],
+        roles: [{ id: "80351110224678920", name: "Raiders" }],
+      },
+    });
+    expect(sent.ok()).toBe(true);
+
+    await page.reload();
+    const posts = page.getByLabel("Channel for posts");
+    await expect(posts).toBeEnabled();
+    await expect(page.getByText(/^From the bot, /)).toBeVisible();
+    await posts.selectOption({ label: "# general" });
+    await page.getByLabel("Mention on new runs").selectOption({ label: "@Raiders" });
+    await page.waitForLoadState("networkidle");
+    await page.reload();
+    await expect(page.getByLabel("Channel for posts")).toHaveValue("80351110224678912");
+    await expect(page.getByLabel("Mention on new runs")).toHaveValue("80351110224678920");
+
+    // The channel goes away on Discord: the pick stays, marked removed.
+    await page.request.post("/api/bot/v1/guild", {
+      headers: { authorization: `Bearer ${token}` },
+      data: { channels: [{ id: "80351110224678913", name: "runs" }], roles: [] },
+    });
+    await page.reload();
+    await expect(page.getByLabel("Channel for posts").locator("option:checked")).toHaveText("(removed: # general)");
+  });
 });

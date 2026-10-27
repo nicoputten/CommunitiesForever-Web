@@ -99,6 +99,24 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 - Several events may be acknowledged with the same `messageId`: the bot groups milestones from uploads within a few minutes into one message by editing it (bot BOT-09).
 - **Posting once.** Post, then acknowledge. If the bot stops between the two, the event comes again; the bot avoids a second post by remembering what it posted (e.g. the event id in the message) before acknowledging. The site never hands out an acknowledged event.
 
+## Guild (built, WEB-46)
+`POST /api/bot/v1/guild` with the Discord server's channels and roles, so the site's Discord page can offer them in its dropdowns:
+
+```json
+{
+  "channels": [{ "id": "1100000000000000010", "name": "general" }],
+  "roles": [{ "id": "1100000000000000020", "name": "Raiders" }]
+}
+```
+
+→ `200 { "channels": 1, "roles": 1 }`.
+
+- `channels`: the text channels the bot may post in; `roles`: the roles it may mention. Both lists in Discord's own order; each item an `id` (a snowflake as text) and a `name`. The bot decides what to include (BOT-08).
+- Send it when the bot connects and whenever the server's channels or roles change. Each report replaces the last one whole.
+- At most 500 channels and 250 roles; names are text only (control characters removed, 100 characters at most). Anything else, a missing list, an id twice: `400 invalid_request`, and nothing changes.
+- A channel or role the admin picked that is no longer reported stays picked: the page shows it as removed, and `settings` keeps its id until the admin picks another.
+- Optional within v1: a site without it answers `404`; the bot carries on without reporting.
+
 ## Event types
 
 ### `milestones` (built, WEB-38)
