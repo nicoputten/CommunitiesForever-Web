@@ -28,3 +28,14 @@ View them: `npm run design`, then open http://localhost:4400.
 | `loading` | `Loading.dc.html` | Skeletons, stale site banner, old friend data |
 | `design-system` | `DesignSystem.dc.html` | Tokens and components |
 | `uploader-page` | `SiteUploader.dc.html` | Uploader page: download, steps, pairing approval, your uploaders and tokens, your upload history (WEB-34; from the uploader workshop, history added 2026-10-27) |
+| `discord-settings` | `BotAdmin.dc.html` | Discord page: link your Discord, admin settings for the bot (WEB-39; from the Discord bot workshop) |
+| `discord-settings-runs` | `BotAdmin-runs.dc.html` | Discord page with the runs section: runs channel, reminder time, ask now from the game, mark runs done (WEB-39, WEB-40) |
+| `runs` | `SiteRuns.dc.html` | Runs page: this week, later, past, "runs I can join", your answers (WEB-40) |
+| `run-detail` | `SiteRunDetail.dc.html` | Run detail: slots, answers with where they came from, who could join, organiser and admin actions (WEB-40) |
+| `run-create` | `SiteRunCreate.dc.html` | Plan a run: dungeon, lead as, day, time in your time zone, note, Discord preview, form states (WEB-40) |
+| `runs-phone` | `SiteRunsPhone.dc.html` | Runs on a phone; empty, loading and error states (WEB-40) |
+| `dungeon-page` | `SiteDungeon.dc.html` | Dungeon page with its wings, who fits, planned runs, Plan a run (WEB-42) |
+| `roster-cards-runs` | `Roster-runs.dc.html` | Roster cards with the next run, dots-only level spread, Scarlet Monastery wings, band popover with Plan a run (WEB-32, WEB-45) |
+| `runs-flow` | `RunsFlow.dc.html` | Runs, how it travels: game, uploader, site and Discord, where a /reload is needed and the delays (overview for all run stories) |
+
+The planned-runs boards (2026-10-27, from `docs/DESIGN-PROMPT-PLANNED-RUNS.md` in the Discord repo) are copies of earlier boards with the runs added; the earlier boards stay as they were. Where they overlap, the runs board is the newer design: `roster-cards-runs` over `roster-cards`, `discord-settings-runs` over `discord-settings`.
