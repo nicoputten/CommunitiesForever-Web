@@ -111,6 +111,37 @@
 }
 
 /* Phone app bar (phone-map board): brand, data age, user. The tab bar takes the navigation; Upload is in the menu. */
+/* Map: the continent switch, then the zone in the centre at zone zoom (4×, WEB-26, map-states board). */
+.continents {
+  position: relative;
+}
+
+/* Out of the flow, so a long zone name never wraps the bar; it stops short of the data age. */
+.zone {
+  position: absolute;
+  left: calc(100% + var(--s-4));
+  top: 50%;
+  max-width: var(--size-card-map);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  letter-spacing: var(--ls-place);
+  color: var(--gold-bright);
+  white-space: nowrap;
+}
+
+.zone:empty {
+  display: none;
+}
+
+@media (max-width: 1327px) {
+  .zone {
+    display: none;
+  }
+}
+
 @media (max-width: 767px) {
   .bar,
   .bar[data-variant="map"] {

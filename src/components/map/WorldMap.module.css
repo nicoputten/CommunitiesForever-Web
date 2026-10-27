@@ -11,6 +11,7 @@
 
 .fit {
   container-type: size;
+  width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
@@ -81,12 +82,23 @@
 .zoneFill,
 .terrainFill {
   stroke: var(--zone-edge);
-  stroke-width: 2;
+  stroke-width: calc(2 / var(--zoom, 1));
 }
 
 .zoneFill {
   fill: url(#map-land);
   cursor: pointer;
+  transition: opacity var(--dur-zone) ease;
+}
+
+/* Zone zoom (4×, WEB-26): the zone in the centre stays, the others dim slightly (map-states board). */
+[data-level="zone"] .zoneFill:not([data-focus]) {
+  opacity: var(--zone-dim);
+}
+
+/* Its name is in the top bar now ("the zone name moves to the top bar"). */
+[data-level="zone"] .label[data-focus] {
+  display: none;
 }
 
 .terrainFill {
@@ -99,7 +111,7 @@
   fill: var(--gold);
   fill-opacity: 0;
   stroke: var(--zone-line);
-  stroke-width: var(--zone-stroke);
+  stroke-width: calc(var(--zone-stroke) / var(--zoom, 1));
   stroke-linejoin: round;
   transition:
     fill-opacity var(--dur-zone) ease,
@@ -126,7 +138,7 @@
 .zoneLine[data-hover] {
   fill-opacity: var(--zone-tint-hover);
   stroke: var(--gold-bright);
-  stroke-width: var(--zone-stroke-hover);
+  stroke-width: calc(var(--zone-stroke-hover) / var(--zoom, 1));
 }
 
 .zoneLine[data-hover][data-occupied="live"] {
@@ -140,14 +152,38 @@
 .terrainLine {
   fill: none;
   stroke: var(--zone-line-terrain);
-  stroke-width: var(--zone-stroke);
+  stroke-width: calc(var(--zone-stroke) / var(--zoom, 1));
 }
 
 .coast {
   fill: none;
   stroke: var(--coast);
   stroke-opacity: var(--coast-opacity);
-  stroke-width: var(--coast-stroke);
+  stroke-width: calc(var(--coast-stroke) / var(--zoom, 1));
+}
+
+/* Zoom (WEB-26): lines keep their width and labels, towns and capitals their screen size at any scale (--zoom is set
+ * by MapStage; --ox/--oy are the anchor in world units). */
+.keepScale {
+  transform-box: view-box;
+  transform-origin: calc(var(--ox) * 1px) calc(var(--oy) * 1px);
+  transform: scale(calc(1 / var(--zoom, 1)));
+}
+
+/* Towns from continent zoom (2×, map-states board): a dot and an italic name, like a capital but smaller. */
+.towns {
+  display: none;
+}
+
+[data-level="continent"] .towns,
+[data-level="zone"] .towns {
+  display: inline;
+}
+
+.town {
+  fill: var(--capital-label);
+  stroke: var(--capital-edge);
+  stroke-width: 1;
 }
 
 .capital {

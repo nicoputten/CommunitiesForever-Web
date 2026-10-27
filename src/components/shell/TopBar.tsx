@@ -53,6 +53,8 @@ export function TopBar({ siteName, dataAgo, viewer, signOut }: TopBarProps) {
               current: c.value === continent,
             }))}
           />
+          {/* The zone in the centre at zone zoom (4×, WEB-26): MapStage fills this slot. */}
+          <span className={styles.zone} data-map-zone="" />
         </div>
       )}
       <span className={styles.spacer} />

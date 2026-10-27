@@ -21,12 +21,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 
 ## E5 Screens
 
-### WEB-26 Map zoom, pan and motion
-- Pan, zoom and pinch (`react-zoom-pan-pinch`); zoom levels per §5: world 1× (capitals), continent 2× (towns, fans by default), zone 4× (dungeons, name tags on all markers, zone name in the top bar, other zones dimmed).
-- Bounded, springy pan (Nico, 2026-10-26): the sea is endless (WEB-25), but the view stays near the world. Dragging past the edge gives resistance, and on release it springs back so some land stays in view (no spring with reduced motion).
-- Fly to a character (600 ms pan + zoom; jump with reduced motion).
-- New sightings after an upload: drop + one ripple (from the session report link).
-
 ### WEB-27 Roll call panel
 - Board: `map`. Desktop panel next to the map: "Roll call · 9 of 10 located".
 - Filters: everyone or one friend, New (under 32 h), faction, level range; legend (new, days, week+).
@@ -46,7 +40,14 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ## E6 Later
 
 ### WEB-12 Automatic uploader
-- A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route). Language and packaging decided in the story.
+- A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route).
+- **Built as a .NET app** (decided by Nico, 2026-10-27). The exact .NET version, UI framework, packaging and where it lives in the repo are decided in the story; it is a second stack next to the site, so its toolchain and dependencies get listed in `docs/ARCHITECTURE.md` with Nico's OK (CLAUDE.md rule 9).
+- **Blocked on design:** Nico makes the uploader's design first and supplies it (like the Claude Design boards for the site). No building before that design is in the repo.
+- Open questions for the story (with the design): who gets tokens and how they are created and revoked (admin page or per user), how the program finds the WoW folder, debounce after the game writes the file, offline retry, auto-start with Windows, updates.
+
+### WEB-32 Known bugs
+One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
+- **Phone map: the endless sea stops.** On a phone the map frame is only as tall as the land (WEB-25/26), so the sea ends under it and the plain page shows below; the sea does not run on around the world as it does on desktop (WEB-25 "endless sea"). Seen in `tests/design/__screenshots__/map.spec.ts/map-phone.png`. Check against WEB-28 (full-screen phone map), which may change the frame.
 
 ### Backlog (unordered, not yet stories)
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").

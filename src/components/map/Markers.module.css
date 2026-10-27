@@ -67,6 +67,12 @@
   z-index: 1;
 }
 
+/* Zoom (WEB-26): markers, clusters and the card keep their screen size; --zoom is set by MapStage. */
+.place,
+.cardAnchor {
+  transform: scale(calc(1 / var(--zoom, 1)));
+}
+
 .place:hover,
 .place:focus-within {
   z-index: 3;
@@ -226,6 +232,11 @@
 .badgeIcon {
   width: var(--size-badge-icon);
   height: var(--size-badge-icon);
+}
+
+/* The centre of a fan the zoom keeps open (WEB-26): not a control. */
+.cluster:disabled {
+  cursor: default;
 }
 
 /* Cluster: the count inside a ring split by class colour. */
@@ -392,6 +403,77 @@
   pointer-events: none;
 }
 
+/* Zone zoom (4×, map-states board): every marker gets a name tag under its disc. */
+.nameTag {
+  position: absolute;
+  left: 0;
+  top: calc(var(--size-marker) / 2 + var(--s-1));
+  display: none;
+  transform: translateX(-50%);
+  color: var(--text);
+  font-family: var(--font-name);
+  font-size: var(--fs-meta-sm);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  text-shadow: var(--shadow-hover-name);
+  pointer-events: none;
+}
+
+[data-level="zone"] .nameTag {
+  display: block;
+}
+
+/* In a fan the tags lean outward, so neighbours' names don't run into each other. */
+.fanItem[data-tag="left"] .nameTag {
+  transform: translateX(calc(var(--size-marker) / 2 - 100%));
+}
+
+.fanItem[data-tag="right"] .nameTag {
+  transform: translateX(calc(var(--size-marker) / -2));
+}
+
+/* New sighting after an upload (DESIGN.md §6, map-states board): a 400 ms spring drop, then one ripple. */
+@keyframes drop {
+  from {
+    transform: translateY(var(--drop-rise));
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: var(--ripple-opacity);
+  }
+  to {
+    transform: scale(var(--ripple-scale));
+    opacity: 0;
+  }
+}
+
+.place[data-drop] > .item {
+  animation: drop var(--dur-drop) var(--ease-spring) both;
+}
+
+.place[data-drop]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--size-marker) / -2);
+  top: calc(var(--size-marker) / -2);
+  box-sizing: border-box;
+  width: var(--size-marker);
+  height: var(--size-marker);
+  border: var(--border-strong) solid var(--drop, var(--gold-bright));
+  border-radius: var(--r-pill);
+  opacity: 0;
+  pointer-events: none;
+  animation: ripple calc(2 * var(--dur-drop)) var(--ease-out) var(--dur-drop) both;
+}
+
 /* Reduced motion (DESIGN.md §6): the marker gets its outline only, the card only fades. */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-motion="on"]) .marker:hover .disc,
@@ -405,8 +487,39 @@ html[data-motion="off"] .marker:focus-visible .disc {
   transform: none;
 }
 
+/* Without motion a fan opens at once (DESIGN.md §6: instant), with no stagger; a new sighting just appears. */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) .fanItem,
+  html:not([data-motion="on"]) .spoke {
+    animation-delay: 0s;
+  }
+}
+
+html[data-motion="off"] .fanItem,
+html[data-motion="off"] .spoke {
+  animation-delay: 0s;
+}
+
+/* Without motion a new sighting just appears (DESIGN.md §6). */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="on"]) .place[data-drop] > .item,
+  html:not([data-motion="on"]) .place[data-drop]::before {
+    animation: none;
+  }
+}
+
+html[data-motion="off"] .place[data-drop] > .item,
+html[data-motion="off"] .place[data-drop]::before {
+  animation: none;
+}
+
 /* Phone: the card sits at the bottom of the screen, above the tab bar (the half sheet is WEB-28). */
 @media (max-width: 767px) {
+  /* Outside the zoom (MapStage), and no transform of its own: that would hold the fixed card. */
+  .cardAnchor {
+    transform: none;
+  }
+
   .cardAnchor > *,
   .cardAnchor[data-side="left"] > *,
   .cardAnchor[data-v] > * {
