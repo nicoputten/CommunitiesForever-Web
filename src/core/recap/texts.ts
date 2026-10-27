@@ -205,7 +205,7 @@ export const CARD_TEXTS: Readonly<Record<string, readonly Phrasing[]>> = {
   ],
   // Fun.
   F4: [
-    p("First {site} in {zone}", "{character}, on {weekday}. {seen} of {total} zones seen now."),
+    p("{zone}: a first for the {site}", "{character}, on {weekday}. {seen} of {total} zones seen now."),
     p("{character} discovered {zone}", "A first for the {site}."),
     p("New ground: {zone}", "{character} got there first, on {weekday}."),
   ],
