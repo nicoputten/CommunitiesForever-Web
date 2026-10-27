@@ -129,9 +129,19 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
 `POST /api/uploader/v1/revoke` (no auth: holding the token is the proof), form `token=<access_token>&token_type_hint=access_token&client_id=communitiesforever-uploader` → `200` with an empty body, also for an unknown or already revoked token. Errors: `400 invalid_request` (no token), `401 invalid_client`.
 
 ## Installer and updates (WEB-35)
-- `GET /uploader/download`: the current installer, for signed-in users (the uploader page's "Download for Windows").
-- `GET /api/uploader/v1/updates/<velopack feed files>` (Bearer): the Velopack update feed for the app.
-- `POST /api/uploader/v1/releases` (deploy secret, used only by the uploader repo's release workflow): publishes a new installer and its update packages.
+The repos are private, so the site hosts the app. Velopack (`vpk pack`) makes the files; the site keeps the newest 3 versions and the newest installer in `DATA_DIR/uploader/releases/`.
+
+- **Update feed.** `GET /api/uploader/v1/updates/<file>` (Bearer: any active access token, also one whose user may no longer upload). The app points Velopack's `SimpleWebSource` at `https://wow.vestras.nl/api/uploader/v1/updates/` (channel `win`) with an `IFileDownloader` that adds the `Authorization` header. Files: `releases.win.json` (`Cache-Control: no-store`; query parameters such as `?localVersion=` are ignored) and the packages it lists (`*-full.nupkg`, `*-delta.nupkg`; immutable). Anything else: `404 not_found`. Bearer errors as above.
+- **Download.** `GET /uploader/download`: the newest installer as `CommunitiesForever-Uploader-Setup.exe`, for signed-in users who may upload (the uploader page's "Download for Windows"); `404` for others and before the first release.
+- **Publish.** `POST /api/uploader/v1/releases` with `Authorization: Bearer <UPLOADER_DEPLOY_SECRET>`, used only by the uploader repo's release workflow: `multipart/form-data` with one file part per file (any field name), exactly these from `vpk pack`'s output folder: one `*-Setup.exe`, `releases.win.json`, and every package `releases.win.json` lists for the new version (its `*-full.nupkg`, and a `*-delta.nupkg` if made). At most 8 files; one publish must stay under nginx's 30 MB request limit (Nico, 2026-10-27: the app is framework-dependent and small). A bigger release gets `413` from nginx; raise `client_max_body_size` then. Example with curl: `curl -fsS -H "Authorization: Bearer $SECRET" -F f1=@Releases/CommunitiesForever.Upload-win-Setup.exe -F f2=@Releases/CommunitiesForever.Upload-1.0.0-full.nupkg -F f3=@Releases/releases.win.json https://wow.vestras.nl/api/uploader/v1/releases`.
+  - The newest version in `releases.win.json` is the new release; each of its packages must arrive with the size and SHA256 the feed names. Older versions in the sent feed are ignored: the site keeps its own.
+  - `201`:
+
+    <!-- example: release -->
+    ```json
+    { "version": "1.0.0", "setup": "CommunitiesForever.Upload-win-Setup.exe", "size": 67108864, "publishedAt": 1793000000 }
+    ```
+  - Errors: `401 invalid_token` (wrong secret), `400 invalid_release` (a file that isn't one of these, a package missing or not matching the feed, no installer, not a form), `409 not_newer` (the version is not newer than the current one), `413 too_large`. Nothing changes on an error. `404` when the site has no deploy secret configured.
 
 ## On the site (WEB-34)
 - Page `/uploader` (board `site-uploader-page`): what the app does, download, the three steps, the approval when `?code=` is present, "Your uploaders" (device, connected date, last upload, active, Revoke), "Create a token by hand". Built on `src/server/uploader.ts` (`findPairing`, `decidePairing`, `createToken`, `activeTokens`, `revokeToken`); uploads store the device in `uploads.device_id` for the history's "via DESKTOP-NICO".
