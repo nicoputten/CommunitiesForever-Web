@@ -34,7 +34,7 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; later `recipes` (addon CF-38) | alts, professions |
 | `locations[guid]` | `{ zone, seenAt }`: last zone seen in the community while Nico was online. Zone name text, can be a dungeon. | map |
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
-| `self.feed`, `people[bt].feed` | activity per realm day | later (backlog) |
+| `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`; `false` when "Share my activity" is off; the last 7 realm days only | weekly recap history (WEB-41) |
 | `runs` | Nico's runs in progress | later (backlog) |
 | `settings` | `clubName` only | page title / group name |
 
@@ -47,4 +47,5 @@ Times are Unix seconds. Any field can be missing in older releases.
 - `locations[guid] = { zone, seenAt }`, `presence[guid] = { battleTag, lastSeen }`.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
 - `uploader` (person key of `self`) and `version` (`self.version`).
-- Not read yet: `feed`, `runs`, `invite`, other `settings`.
+- The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state.
+- Not read yet: `runs`, `invite`, other `settings`.

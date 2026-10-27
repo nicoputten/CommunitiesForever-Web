@@ -13,6 +13,7 @@ import {
 } from "@/core/access";
 import { diff, type UploadSummary } from "@/core/diff";
 import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
+import { readFeeds, type PersonFeed } from "@/core/feed";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
@@ -20,6 +21,7 @@ import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normali
 import { adminBattleTag, loadAccessList } from "./access";
 import { notifyBotEvents, recordMilestones } from "./bot";
 import type { Db } from "./db";
+import { clearHistory, recordFeeds, recordSightings } from "./history";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
@@ -65,11 +67,15 @@ export interface UploadResult {
 }
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-type Read = { ok: true; data: Dataset } | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
+type Read =
+  | { ok: true; data: Dataset; feeds: PersonFeed[] }
+  | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
 
 function read(bytes: Uint8Array): Read {
   try {
-    return { ok: true, data: normalize(parseLua(new TextDecoder().decode(bytes))) };
+    const chunk = parseLua(new TextDecoder().decode(bytes));
+    // The feed (WEB-41) is read apart from the dataset: it is history, not part of the merged state.
+    return { ok: true, data: normalize(chunk), feeds: readFeeds(chunk) };
   } catch (e) {
     if (e instanceof LuaParseError) return { ok: false, reason: e.message, unreadable: "damaged" };
     if (e instanceof NormalizeError) {
@@ -159,6 +165,8 @@ export function upload(
     const summary = diff(before?.data, after);
     writeState(tx, after, sourcesFor(before, after, id));
     addMembers(tx, result.data, id);
+    recordFeeds(tx, result.feeds, id);
+    recordSightings(tx, result.data.locations, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
     // The Discord bot's milestones (WEB-38): not for the site's first upload, where everything is new.
     events = recordMilestones(tx, { id, uploadedAt: now }, summary, after, before === undefined);
@@ -359,6 +367,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     let community: string | undefined;
     const counts: RebuildResult = { ok: 0, rejected: 0 };
     tx.delete(members).run();
+    clearHistory(tx);
     for (const { id } of ids) {
       const row = tx
         .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy })
@@ -407,6 +416,8 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       const summary = diff(state?.data, after);
       state = { data: after, ...sourcesFor(state, after, id) };
       addMembers(tx, result.data, id);
+      recordFeeds(tx, result.feeds, id);
+      recordSightings(tx, result.data.locations, id);
       tx.update(uploads)
         .set({
           status: "ok",

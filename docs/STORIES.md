@@ -56,6 +56,8 @@ Decided with Nico, 2026-10-27. The catalogue (48 cards), rotation rules and exam
 - **Re-runs are identical:** the recap is computed once and stored (cards, phrasings, facts); the admin preview shows the coming one, `/recap` the last one.
 - **Card images** rendered by the site (`GET cards/<id>.png`: level 60, recap header, map crops), with the map's CC BY-SA attribution where the map shows.
 - Tests: every card function on sample weeks (eligible, not eligible, score), the rotation (cooldown, one card per friend, quiet week, seed), the phrasing cycle (no repeat before all are used), the week window around daylight saving.
+- Split into four PRs (proposed to Nico, 2026-10-27; shared notes `web-41-questions.md`): a) history and the week window, b) the card functions and rotation, c) the recap job, the bot event and the preview, d) card images.
+- WEB-41a done (PR #68): `readFeeds` (`src/core/feed.ts`, compat snapshots for every release), the history tables `feed_days`, `feed_sharing`, `sightings` (migration `0009_history`, written with every accepted upload and by `rebuild()`), the recap moment in UTC (`src/core/recap/week.ts`: the latest weekday and time in a time zone, daylight saving, the week `[start, end)`).
 
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
