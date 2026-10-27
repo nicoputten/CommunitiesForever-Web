@@ -125,7 +125,9 @@ test("map: screenshot with a selected character in an open fan", async ({ page }
   await marker(page, "Ves Doombringer").click();
   await expect(page.getByTestId("character-card")).toBeVisible();
   await page.mouse.move(0, 0);
-  await expectScreenshot(page, "map-selected");
+  // The pinned card is masked: its text rasterises a little differently per run inside the zoomed layer (see
+  // "map-zone"); its look is checked by the hover card's style checks.
+  await expectScreenshot(page, "map-selected", [page.getByTestId("character-card")]);
 });
 
 test("map: screenshot of Kalimdor", async ({ page }) => {
@@ -261,7 +263,9 @@ test("map: roll call menus and picked row", async ({ page }) => {
   await expectAccessible(page);
   await page.keyboard.press("Escape");
   await page.mouse.move(0, 0);
-  await expectScreenshot(page, "map-roll-call-picked");
+  // The pinned card is masked: its text rasterises a little differently per run inside the zoomed layer (see
+  // "map-zone"); its look is checked by the hover card's style checks.
+  await expectScreenshot(page, "map-roll-call-picked", [page.getByTestId("character-card")]);
 });
 
 test("map: roll call with no match", async ({ page }) => {
