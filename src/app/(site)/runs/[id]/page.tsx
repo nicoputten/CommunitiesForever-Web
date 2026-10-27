@@ -39,7 +39,10 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           <span className={styles.pill} data-tone={c.pill.tone}>
             {c.pill.label}
           </span>
-          <span className={styles.small}>{run.cancelled ?? run.plannedBy}</span>
+          <span className={styles.small}>
+            {run.cancelled ?? run.plannedBy}
+            {run.outcome === undefined ? "" : ` · ${run.outcome}`}
+          </span>
         </div>
         <h1 className={styles.runTitle}>{c.dungeon}</h1>
         <p className={styles.meta}>{run.time}</p>

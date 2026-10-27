@@ -23,6 +23,7 @@ import {
   type SlotRole,
 } from "@/core/runs";
 import { characterRole } from "@/core/views/characters";
+import { OUTCOME_SECONDS } from "@/core/runOutcome";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
 import { discordLinks, runAnswers, runs } from "./db/schema";
@@ -65,6 +66,11 @@ function runFrom(row: RunRow, answers: RunAnswer[]): StoredRun {
   if (row.note !== null) r.note = row.note;
   if (row.cancelledAt !== null) r.cancelledAt = row.cancelledAt;
   if (row.cancelledBy !== null) r.cancelledBy = row.cancelledBy;
+  if (row.outcome === "done" && row.outcomeAt !== null) {
+    r.outcome = { kind: "done", at: row.outcomeAt, came: row.came ?? 0, signedUp: row.signedUp ?? 0 };
+  } else if (row.outcome === "didntHappen" && row.outcomeAt !== null) {
+    r.outcome = { kind: "didntHappen", at: row.outcomeAt };
+  }
   return r;
 }
 
@@ -140,7 +146,7 @@ export function charactersOf(data: Dataset | undefined, battleTag: string): RunC
 // --- bot events -----------------------------------------------------------------------------------------------------
 
 /** The friend's display name (never the BattleTag in a post). */
-function displayName(data: Dataset | undefined, battleTag: string): string {
+export function displayName(data: Dataset | undefined, battleTag: string): string {
   const person =
     data === undefined
       ? undefined
@@ -148,7 +154,7 @@ function displayName(data: Dataset | undefined, battleTag: string): string {
   return person?.displayName ?? battleTag.split("#")[0]!;
 }
 
-function discordIds(db: Db): Map<string, string> {
+export function discordIds(db: Db): Map<string, string> {
   return new Map(
     db
       .select()
@@ -201,10 +207,17 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
   };
 }
 
-export type RunEventType = "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp";
+export type RunEventType =
+  "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp" | "runEnded";
 
 /** Writes a run event when the admin's Runs switch is on; the reminders have their own switch. */
-function runEvent(db: Db, type: RunEventType, run: StoredRun, now: number, extra: Record<string, unknown> = {}): void {
+export function runEvent(
+  db: Db,
+  type: RunEventType,
+  run: StoredRun,
+  now: number,
+  extra: Record<string, unknown> = {},
+): void {
   const settings = getBotSettings(db);
   if (!settings.runs || (type === "runReminder" && !settings.reminders)) return;
   enqueueBotEvent(db, type, { run: runPayload(db, run, now), ...extra }, now);
@@ -225,7 +238,7 @@ function mentions(db: Db, run: StoredRun): string[] {
  */
 export function writeDueRunEvents(db: Db, now: number): number {
   const minutes = getBotSettings(db).reminderMinutes;
-  let written = 0;
+  let written = markDidntHappen(db, now);
   const due = db
     .select()
     .from(runs)
@@ -456,4 +469,51 @@ export function sendTestRunPost(db: Db, adminName: string, now: number): number 
     },
     now,
   );
+}
+
+// --- outcomes (WEB-43) ----------------------------------------------------------------------------------------------
+
+/** A run ended more than this long ago is marked without a post: no news a day late (and none for older runs). */
+const ENDED_POST_SECONDS = 24 * 60 * 60;
+
+/** Stores how a run ended and, while it's news, writes `runEnded` for the bot. Only once per run. */
+export function setOutcome(db: Db, runId: number, outcome: NonNullable<StoredRun["outcome"]>, now: number): boolean {
+  const changed =
+    db
+      .update(runs)
+      .set({
+        outcome: outcome.kind,
+        outcomeAt: outcome.at,
+        came: outcome.kind === "done" ? outcome.came : null,
+        signedUp: outcome.kind === "done" ? outcome.signedUp : null,
+      })
+      .where(and(eq(runs.id, runId), isNull(runs.outcome), isNull(runs.cancelledAt)))
+      .run().changes > 0;
+  if (!changed) return false;
+  const run = getRun(db, runId)!;
+  if (now - (run.startsAt + OUTCOME_SECONDS) < ENDED_POST_SECONDS) {
+    runEvent(db, "runEnded", run, now, {
+      outcome: outcome.kind,
+      ...(outcome.kind === "done" ? { came: outcome.came, signedUp: outcome.signedUp } : {}),
+    });
+  }
+  return true;
+}
+
+/**
+ * Runs no upload showed within 4 hours of their start: "didn't happen" (story WEB-43), when the admin's "Mark runs
+ * done from uploads" is on. Written when the bot polls, as the reminders are.
+ */
+export function markDidntHappen(db: Db, now: number): number {
+  if (!getBotSettings(db).markDone) return 0;
+  const due = db
+    .select({ id: runs.id, startsAt: runs.startsAt })
+    .from(runs)
+    .where(and(isNull(runs.cancelledAt), isNull(runs.outcome), lte(runs.startsAt, now - OUTCOME_SECONDS)))
+    .all();
+  let marked = 0;
+  for (const r of due) {
+    if (setOutcome(db, r.id, { kind: "didntHappen", at: r.startsAt + OUTCOME_SECONDS }, now)) marked++;
+  }
+  return marked;
 }

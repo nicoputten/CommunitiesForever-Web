@@ -7,7 +7,7 @@ import { cleanName, stripEscapes } from "./sanitize";
 // Tables the addon writes as arrays may come out of the parser as {} when empty, so lists accept both.
 
 /** Highest addon schemaVersion this site reads. */
-export const SUPPORTED_SCHEMA = 1;
+export const SUPPORTED_SCHEMA = 2;
 
 /**
  * Why a file can't be read (the upload screen shows each, WEB-19): not a CommunitiesForever file at all, one that is
@@ -105,7 +105,8 @@ export function normalize(chunk: LuaChunk): Dataset {
       schemaVersion,
     );
   }
-  // Schema 1 is the only one so far. A new schema gets its own reader here; older ones keep theirs.
+  // Schema 2 (addon CF-47) adds only `pending`, which is read apart (src/core/gameItems.ts): the same reader. A new
+  // schema with other changes gets its own reader here; older ones keep theirs.
   return readSchema1(global, schemaVersion);
 }
 

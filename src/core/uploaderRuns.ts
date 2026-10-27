@@ -63,6 +63,8 @@ export interface UploaderRuns {
   /** When the list last changed (UTC): unchanged lists keep it, so the uploader writes nothing and sync stays calm. */
   updatedAt: number;
   reminderMinutes: number;
+  /** WEB-43 (addon CF-47): ids of the token owner's game items the site has; the game then forgets them. */
+  received: string[];
   runs: GameRun[];
 }
 
@@ -78,6 +80,8 @@ export interface UploaderRunsInput {
   reminderMinutes: number;
   /** The site's public origin, for each run's link. */
   siteUrl: string;
+  /** The token owner's game items the site has, newest first (at most 200). */
+  received?: readonly string[];
   now: number;
 }
 
@@ -156,6 +160,7 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
     v: UPLOADER_RUNS_VERSION,
     updatedAt: changedAt(input.runs, now),
     reminderMinutes: input.reminderMinutes,
+    received: [...(input.received ?? [])],
     runs,
   };
 }

@@ -51,7 +51,7 @@ export const ANSWER_LABEL: Record<Answer, string> = { in: "I'm in", maybe: "Mayb
 const SOURCE_LABEL: Record<RunSource, string> = { website: "Website", discord: "Discord", game: "In game" };
 const PLANNED_ON: Record<RunSource, string> = { website: "on the website", discord: "in Discord", game: "in the game" };
 
-export type PillTone = "open" | "soon" | "full" | "done" | "cancelled";
+export type PillTone = "open" | "soon" | "full" | "done" | "dim" | "cancelled";
 
 export interface RunCharacterView {
   guid: string;
@@ -111,9 +111,25 @@ export interface PastRunView {
   dungeon: string;
   /** "Nico", "ask now from the game · Nico". */
   by: string;
-  /** "3 in" or "Cancelled"; the outcome (Ran it, Didn't happen) comes with WEB-43. */
-  result: string;
-  cancelled: boolean;
+  /** "Ran it", "Didn't happen", "Cancelled", or "3 in" before the outcome is known (WEB-43). */
+  result: { label: string; tone: PillTone };
+  /** "3 of 5 signed-up came", "no upload showed it". */
+  detail?: string;
+}
+
+/** How a past run ended (WEB-43, runs board): its pill and the line after it. */
+export function pastResult(run: RunRecord): Pick<PastRunView, "result" | "detail"> {
+  if (run.cancelledAt !== undefined) return { result: { label: "Cancelled", tone: "cancelled" } };
+  if (run.outcome?.kind === "done") {
+    return {
+      result: { label: "Ran it", tone: "done" },
+      detail: `${run.outcome.came} of ${run.outcome.signedUp} signed-up came`,
+    };
+  }
+  if (run.outcome?.kind === "didntHappen") {
+    return { result: { label: "Didn't happen", tone: "dim" }, detail: "no upload showed it" };
+  }
+  return { result: { label: `${counts(run.answers).in} in`, tone: "done" } };
 }
 
 export interface YourAnswerView {
@@ -212,12 +228,13 @@ function viewerCharacters(ctx: Ctx, r: LevelRange): RunCharacterView[] {
     .sort((a, b) => Number(b.fits) - Number(a.fits));
 }
 
-function pill(p: RunPhase, startsAt: number, now: number): RunCardView["pill"] {
+function pill(run: RunRecord, p: RunPhase, now: number): RunCardView["pill"] {
+  const startsAt = run.startsAt;
   switch (p) {
     case "cancelled":
       return { label: "Cancelled", tone: "cancelled" };
     case "past":
-      return { label: "Past", tone: "done" };
+      return run.outcome === undefined ? { label: "Past", tone: "done" } : pastResult(run).result;
     case "started":
       return { label: "Started", tone: "soon" };
     case "full":
@@ -350,7 +367,7 @@ function card(ctx: Ctx, run: RunRecord): RunCardView {
     when: runWhen(run.startsAt, ctx.input.viewer.timeZone, now),
     until: untilStart(run.startsAt, now),
     phase: p,
-    pill: pill(p, run.startsAt, now),
+    pill: pill(run, p, now),
     yours,
     line: line(ctx, run),
     tally: tally(run),
@@ -397,8 +414,7 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
         day: runWhen(r.startsAt, tz, now).replace(/ \d{2}:\d{2}$/, ""),
         dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId,
         by: `${r.source === "game" ? "ask now from the game · " : ""}${friendName(ctx, r.organiser)}`,
-        result: r.cancelledAt !== undefined ? "Cancelled" : `${counts(r.answers).in} in`,
-        cancelled: r.cancelledAt !== undefined,
+        ...pastResult(r),
       })),
     yourAnswers: upcoming
       .filter((r) => involved(ctx, r) || viewerFits(ctx, r))
@@ -490,6 +506,8 @@ export interface RunDetail {
   adminDelete: boolean;
   /** "Cancelled by Nico". */
   cancelled?: string;
+  /** How it ended (WEB-43): "3 of 5 signed-up came", "no upload showed it". */
+  outcome?: string;
 }
 
 /** Characters this many levels below a run's range still show under "Could join". */
@@ -600,6 +618,8 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     adminDelete: viewer.isAdmin && !isViewer(ctx, run.organiser),
   };
   if (run.note !== undefined) detail.note = run.note;
+  const ended = run.cancelledAt === undefined ? pastResult(run).detail : undefined;
+  if (ended !== undefined) detail.outcome = ended;
   if (run.cancelledAt !== undefined) {
     detail.cancelled = `Cancelled by ${run.cancelledBy === undefined ? "the organiser" : friendName(ctx, run.cancelledBy)}`;
   }

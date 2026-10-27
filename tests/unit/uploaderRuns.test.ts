@@ -67,6 +67,7 @@ describe("runs for the uploader", () => {
       v: 1,
       updatedAt: NOW - DAY,
       reminderMinutes: 30,
+      received: [],
       runs: [
         {
           id: "r-7",

@@ -36,6 +36,8 @@ export interface UploadReport {
   /** Sightings grouped by zone text ("Lia and Ves · Stranglethorn Vale"), newest first. */
   sightings: ZoneSightings[];
   /** Nothing changed and nobody sent newer data (board `upload-states`, "nothing new"). */
+  /** Answers to planned runs the game sent (WEB-43). */
+  runAnswers: number;
   nothingNew: boolean;
 }
 
@@ -84,7 +86,8 @@ export function uploadReport(summary: UploadSummary, uploadedAt: number): Upload
     itemLevelGains: summary.itemLevelGains,
     senders,
     sightings,
-    nothingNew: changes === 0 && summary.counts.peopleWithNewData === 0,
+    runAnswers: summary.runAnswers ?? 0,
+    nothingNew: changes === 0 && summary.counts.peopleWithNewData === 0 && (summary.runAnswers ?? 0) === 0,
   };
 }
 
@@ -163,6 +166,8 @@ export interface SessionReport {
   counters: ReportCounter[];
   /** "new data from 4 friends", the uploader included. */
   friendsWithNewData: number;
+  /** "2 run answers": answers to planned runs the game sent (WEB-43; in the header line, decided with Nico). */
+  runAnswers: number;
   /** For the first upload: "10 characters from 6 friends" (characters with a record, and their owners). */
   characters: number;
   friends: number;
@@ -282,6 +287,7 @@ export function sessionReport(
       { value: c.sightings, label: word(c.sightings, "new sighting") },
     ],
     friendsWithNewData: c.peopleWithNewData,
+    runAnswers: r.runAnswers,
     characters: withRecord.length,
     friends: new Set(withRecord.map((n) => n.owner).filter((o) => o !== undefined)).size,
     levelUps: r.levelUps.map((l) => ({

@@ -71,6 +71,13 @@
       "when": 1793138602875,
       "tag": "0009_history",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793140262033,
+      "tag": "0010_game_items",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Runs from the game: runs planned and answers given in game (with the coming addon version) reach the site with your next upload, "Ask now" with "Also post on Discord" and Discord pings from the game reach the bot, and past runs say "Ran it · 3 of 5 signed-up came" when an upload's run log shows it, or "Didn't happen". The session report and the upload history say "N run answers". The site reads the coming addon's new file format.
 - The uploader app can fetch the upcoming runs (the next 14 days) to show them in the game, once the app and the addon support it.
 
 ## v0.3.0 (2026-10-27)
