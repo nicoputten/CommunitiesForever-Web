@@ -27,3 +27,4 @@ View them: `npm run design`, then open http://localhost:4400.
 | `empty-site` | `EmptyMap.dc.html` | Before the first upload |
 | `loading` | `Loading.dc.html` | Skeletons, stale site banner, old friend data |
 | `design-system` | `DesignSystem.dc.html` | Tokens and components |
+| `uploader-page` | `SiteUploader.dc.html` | Uploader page: download, steps, pairing approval, your uploaders and tokens (WEB-34; from the uploader workshop) |

@@ -7,6 +7,7 @@ A private website (`wow.vestras.nl`) for a small friend group playing **World of
 - `docs/SOURCE-DATA.md`: the SavedVariables file we read, field by field, and what each addon release writes
 - `docs/WOW-FOREVER.md`: how WoW: Forever differs from Vanilla (races, professions, zones, dungeons, raids, rulesets), with sources and what is confirmed
 - `docs/DESIGN.md`: the design decisions (tokens, data age scale, map, motion, components). `design/boards/`: the Claude Design boards per screen (`design/README.md`, `npm run design` to view)
+- `docs/UPLOADER-API.md`: the contract with the Windows uploader (repo `CommunitiesForever-Upload`); this repo owns it
 - `docs/STORIES.md`: open stories with acceptance criteria, in build order (done ones: `docs/STORIES-COMPLETED.md`)
 - The addon repo's `docs/ARCHITECTURE.md` "Data model" is the source of truth for the uploaded data. When it and `docs/SOURCE-DATA.md` disagree, the addon wins and this repo gets fixed.
 
