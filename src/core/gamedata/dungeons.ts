@@ -19,6 +19,9 @@ import map from "../map/zones.json";
 //   Finder name, and the addon's quest-log headers for it (Dungeons.STATIC `areas`).
 // - Krol'dok Stronghold is in The Riverglades, the Mount Hyjal raids on Mount Hyjal (both zones since WEB-31).
 // - Map positions: zones.json `dungeons` (hand-placed in tools/map/build_zones.py), joined by name.
+// - Addon ids (`addonId`, WEB-44): the addon's dungeon ids (CommunitiesForever src/core/Dungeons.lua, Dungeons.STATIC
+//   `id`), which the planned runs file uses; Forever's new dungeons are "lfg" plus their beta Group Finder activity
+//   (Dungeons.applyGroupFinder; activities in docs/WOW-FOREVER.md). None for the five the Group Finder didn't list.
 
 export type InstanceKind = "dungeon" | "raid";
 
@@ -30,6 +33,8 @@ export interface LevelRange {
 export interface Wing {
   /** Unique among the instance's wings, lower case ("armory"). */
   id: string;
+  /** The addon's id when the wing is a dungeon of its own ("smarm"). */
+  addonId?: string;
   name: string;
   typicalLevels: LevelRange;
 }
@@ -50,6 +55,8 @@ export interface DungeonInfo {
   wingsAreDungeons?: true;
   /** Short name for narrow places, e.g. the roster's bands ("SM Armory"). */
   shortName?: string;
+  /** The addon's dungeon id ("rfc", "lbrs", "lfg1984"); undefined when the addon has none. */
+  addonId?: string;
   /** Zone texts the addon may record for it (the name included). */
   zoneTexts: readonly string[];
 }
@@ -59,6 +66,7 @@ const typical = (min: number, max: number = min): LevelRange => ({ min, max });
 export const DUNGEONS: readonly DungeonInfo[] = [
   {
     id: "rfc",
+    addonId: "rfc",
     name: "Ragefire Chasm",
     kind: "dungeon",
     zone: "durotar",
@@ -67,6 +75,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "wc",
+    addonId: "wc",
     name: "Wailing Caverns",
     kind: "dungeon",
     zone: "barrens",
@@ -75,6 +84,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "dm",
+    addonId: "dm",
     name: "The Deadmines",
     kind: "dungeon",
     zone: "westfall",
@@ -83,6 +93,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "sfk",
+    addonId: "sfk",
     name: "Shadowfang Keep",
     kind: "dungeon",
     zone: "silverpine",
@@ -91,6 +102,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "bfd",
+    addonId: "bfd",
     name: "Blackfathom Deeps",
     kind: "dungeon",
     zone: "ashenvale",
@@ -99,6 +111,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "stocks",
+    addonId: "stocks",
     name: "The Stockade",
     kind: "dungeon",
     zone: "elwynn",
@@ -107,6 +120,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "gnomer",
+    addonId: "gnomer",
     name: "Gnomeregan",
     kind: "dungeon",
     zone: "dunmorogh",
@@ -115,6 +129,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "rfk",
+    addonId: "rfk",
     name: "Razorfen Kraul",
     kind: "dungeon",
     zone: "barrens",
@@ -129,16 +144,17 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     shortName: "SM",
     typicalLevels: typical(26, 45),
     wings: [
-      { id: "graveyard", name: "Graveyard", typicalLevels: typical(26, 36) },
-      { id: "library", name: "Library", typicalLevels: typical(29, 39) },
-      { id: "armory", name: "Armory", typicalLevels: typical(32, 42) },
-      { id: "cathedral", name: "Cathedral", typicalLevels: typical(35, 45) },
+      { id: "graveyard", addonId: "smgy", name: "Graveyard", typicalLevels: typical(26, 36) },
+      { id: "library", addonId: "smlib", name: "Library", typicalLevels: typical(29, 39) },
+      { id: "armory", addonId: "smarm", name: "Armory", typicalLevels: typical(32, 42) },
+      { id: "cathedral", addonId: "smcath", name: "Cathedral", typicalLevels: typical(35, 45) },
     ],
     wingsAreDungeons: true,
     zoneTexts: ["Scarlet Monastery"],
   },
   {
     id: "rfd",
+    addonId: "rfd",
     name: "Razorfen Downs",
     kind: "dungeon",
     zone: "barrens",
@@ -147,6 +163,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "ulda",
+    addonId: "ulda",
     name: "Uldaman",
     kind: "dungeon",
     zone: "badlands",
@@ -155,6 +172,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "zf",
+    addonId: "zf",
     name: "Zul'Farrak",
     kind: "dungeon",
     zone: "tanaris",
@@ -163,6 +181,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "mara",
+    addonId: "mara",
     name: "Maraudon",
     kind: "dungeon",
     zone: "desolace",
@@ -171,6 +190,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "st",
+    addonId: "st",
     name: "Sunken Temple",
     kind: "dungeon",
     zone: "swamp",
@@ -179,6 +199,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "brd",
+    addonId: "brd",
     name: "Blackrock Depths",
     kind: "dungeon",
     zone: "burning",
@@ -187,6 +208,8 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "brs",
+    // The addon has Lower and Upper as two (lbrs, ubrs); the site has one, sent as Lower.
+    addonId: "lbrs",
     name: "Blackrock Spire",
     kind: "dungeon",
     zone: "burning",
@@ -199,6 +222,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "dme",
+    addonId: "dme",
     name: "Dire Maul",
     kind: "dungeon",
     zone: "feralas",
@@ -207,6 +231,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "scholo",
+    addonId: "scholo",
     name: "Scholomance",
     kind: "dungeon",
     zone: "wpl",
@@ -215,6 +240,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "strat",
+    addonId: "strat",
     name: "Stratholme",
     kind: "dungeon",
     zone: "epl",
@@ -231,6 +257,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "thanes",
+    addonId: "lfg1984",
     name: "Hall of Thanes",
     kind: "dungeon",
     zone: "dunmorogh",
@@ -239,6 +266,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "lordaeron",
+    addonId: "lfg1982",
     name: "Ruins of Lordaeron",
     kind: "dungeon",
     zone: "tirisfal",
@@ -247,6 +275,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "excavation",
+    addonId: "lfg1981",
     name: "Excavation Site",
     kind: "dungeon",
     zone: "wetlands",
@@ -255,6 +284,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "dalaran",
+    addonId: "lfg1983",
     name: "City of Dalaran",
     kind: "dungeon",
     zone: "hillsbrad",
@@ -331,6 +361,8 @@ export interface RunnableDungeon {
   shortName: string;
   /** The instance (DUNGEONS) it is in. */
   instanceId: string;
+  /** The addon's dungeon id, for the planned runs file (WEB-44); undefined when the addon has none. */
+  addonId?: string;
   /** Typical level range (label it "typical"). */
   typicalLevels: LevelRange;
 }
@@ -344,6 +376,7 @@ export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d)
           shortName: `${d.shortName ?? d.name} ${w.name}`,
           instanceId: d.id,
           typicalLevels: w.typicalLevels,
+          ...(w.addonId === undefined ? {} : { addonId: w.addonId }),
         }))
       : [
           {
@@ -352,6 +385,7 @@ export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d)
             shortName: d.shortName ?? d.name,
             instanceId: d.id,
             typicalLevels: d.typicalLevels,
+            ...(d.addonId === undefined ? {} : { addonId: d.addonId }),
           },
         ],
 );

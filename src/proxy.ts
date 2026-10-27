@@ -63,6 +63,8 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  // Static build output needs no session; everything else goes through the proxy.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Static build output needs no session; everything else goes through the proxy. The uploader and bot APIs skip it
+  // too (they pass `isPublic` anyway): Next.js buffers a request body for the proxy and cuts it at
+  // `proxyClientMaxBodySize`, which broke uploader releases (about 125 MB). A literal: Next.js reads it statically.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/uploader/v1/|api/bot/v1/).*)"],
 };
