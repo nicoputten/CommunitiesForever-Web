@@ -192,3 +192,14 @@ export function DungeonIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Compass rose over "The map is still empty" (empty-site board); colour from currentColor. */
+export function CompassIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 64 64" strokeWidth={1} {...props}>
+      <circle cx="32" cy="32" r="26" strokeOpacity={0.5} strokeDasharray="3 5" />
+      <path d="M32 12 L36 32 L32 52 L28 32 Z" fill="currentColor" fillOpacity={0.25} />
+      <path d="M12 32 L32 28 L52 32 L32 36 Z" fill="currentColor" fillOpacity={0.12} strokeOpacity={0.6} />
+    </Icon>
+  );
+}

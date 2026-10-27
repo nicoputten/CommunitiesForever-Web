@@ -31,12 +31,6 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 - Boards: `phone-map`, `phone-character`, `phone-roll-call`. Bottom sheet with `vaul`: peek → half → full.
 - Peek: the first roll call rows; edge hint "4 in Kalimdor". Tapping a marker zooms in and opens the character half sheet (level, seen, player, item level, role, spec, talents, professions, "Open character", next character in the zone). The full sheet is the roll call with its filters.
 
-### WEB-29 Empty site, loading and stale data
-- Boards: `empty-site`, `loading`.
-- Before the first upload: "The map is still empty", "Upload the first file" for admin and members; for guests: "Nico hasn't uploaded any data yet. Check back after the next session."; the guest list shown in the roll call.
-- Loading: zones paint at once, markers fade in, a thin gold line only after 300 ms; skeletons that keep the layout still.
-- Stale: the site-wide banner (last upload 7 days or more), a friend's amber badge after 7 days.
-
 ## E6 Later
 
 ### WEB-12 Automatic uploader

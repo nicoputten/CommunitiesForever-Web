@@ -1,0 +1,124 @@
+/* The empty-site board: the map dimmed, the centre card left of the roll call panel. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--veil-empty);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-roll-call);
+  gap: var(--s-6);
+  padding: var(--s-4) var(--gutter) var(--s-6);
+}
+
+.centre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.rollCall {
+  box-sizing: border-box;
+  padding: var(--s-4);
+  border-radius: var(--r-panel);
+  background: var(--surface-aside);
+  backdrop-filter: blur(var(--blur-surface));
+  border: var(--border) solid var(--line-aside);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  overflow-y: auto;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.lead {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+.guests {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guest {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+  overflow-wrap: anywhere;
+}
+
+.disc {
+  flex: none;
+  box-sizing: border-box;
+  width: var(--size-guest);
+  height: var(--size-guest);
+  border-radius: var(--r-pill);
+  border: var(--border-strong) dashed var(--line-guest);
+  display: inline-grid;
+  place-items: center;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
+.note {
+  margin-top: auto;
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  color: var(--text-faint);
+}
+
+/* Narrow screens (no board): the card, then the guest list, scrolling over the map. */
+@media (max-width: 1023px) {
+  .overlay {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: min-content;
+    align-content: start;
+    overflow-y: auto;
+    padding: var(--s-6) var(--gutter-phone);
+  }
+
+  .rollCall {
+    overflow: visible;
+  }
+
+  .note {
+    margin-top: 0;
+  }
+}
+
+/* Phone: the map is only as tall as it is wide allows, so the card and the list follow under it. */
+@media (max-width: 767px) {
+  .overlay {
+    position: relative;
+    inset: auto;
+    background: none;
+    overflow: visible;
+    padding: var(--s-4) var(--gutter-phone) var(--s-6);
+  }
+}

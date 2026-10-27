@@ -10,12 +10,15 @@ export interface EmptyStateProps {
   action?: { href: string; label: string };
   /** A quiet line under the action. */
   note?: ReactNode;
+  /** A decorative icon over the title (empty-site: the compass). */
+  icon?: ReactNode;
 }
 
 /** Centre card for a screen without data (empty-site board): empty map, no-addon friend, gate closed. */
-export function EmptyState({ title, as: Heading = "h2", children, action, note }: EmptyStateProps) {
+export function EmptyState({ title, as: Heading = "h2", children, action, note, icon }: EmptyStateProps) {
   return (
     <section className={styles.card} aria-label={title}>
+      {icon !== undefined && <span className={styles.icon}>{icon}</span>}
       <Heading className={styles.title}>{title}</Heading>
       <div className={styles.body}>{children}</div>
       {action !== undefined && (

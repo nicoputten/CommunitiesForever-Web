@@ -1,0 +1,59 @@
+@keyframes show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(var(--run-end));
+  }
+}
+
+/* Fixed under the top bar, over the page; opacity 0 until the 300 ms have passed. */
+.line {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--size-bar);
+  z-index: 30;
+  height: var(--border-strong);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  animation: show 0s linear var(--dur-line-delay) forwards;
+}
+
+.run {
+  --run-end: 334%;
+  display: block;
+  width: 30%;
+  height: 100%;
+  background: var(--loading-line);
+  animation: run var(--dur-line) ease-in-out var(--dur-line-delay) infinite;
+}
+
+@media (max-width: 767px) {
+  .line {
+    top: var(--size-bar-phone);
+  }
+}
+
+/* Without motion there is no line, as on the board; screen readers still hear "Loading". */
+@media (prefers-reduced-motion: reduce) {
+  :global(html:not([data-motion="on"])) .line,
+  :global(html:not([data-motion="on"])) .run {
+    animation: none !important;
+  }
+}
+
+:global(html[data-motion="off"]) .line,
+:global(html[data-motion="off"]) .run {
+  animation: none !important;
+}

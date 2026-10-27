@@ -48,10 +48,18 @@
   inset: 0;
 }
 
+/* Loading (WEB-29, loading board): the zones paint at once, the markers fade in. */
+@keyframes markersIn {
+  from {
+    opacity: 0;
+  }
+}
+
 .overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  animation: markersIn var(--dur-markers-in) var(--ease-out);
 }
 
 .place,

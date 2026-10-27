@@ -312,3 +312,14 @@
 - Decided with Nico (2026-10-26/27): proposals 1–8 (range 1–4×, + and − step 1 → 2 → 4; the continent switch as a fly that follows a pan; labels and markers keep their screen size; the zone in the centre named in the top bar at 4×; fly-to from `?character=` and `flyToCharacter` for WEB-27/28; the drop from `?drop=<upload id>`; 44 px buttons and keys; `react-zoom-pan-pinch` pinned). Azeroth centres the land; the centre leaves room for the roll call panel.
 - Done: `src/components/map/MapStage.tsx` (zoom, levels, fly, drop, settle), `Zoom.module.css`, `flyTo.ts` (`flyToCharacter(guid)`: WEB-27 and WEB-28 call it); zoom helpers in `src/core/views/mapMarkers.ts` and `CONTINENT_SPLIT` in `map.ts`; towns, dungeons and name tags; the top bar's zone slot; the session report links to `/?drop=<id>`. WEB-27: give the roll call panel `data-map-panel` and move the zoom buttons left of it (the board's `right: 352px`).
 
+### WEB-29 Empty site, loading and stale data
+- Boards: `empty-site`, `loading`.
+- Before the first upload: "The map is still empty", "Upload the first file" for admin and members; for guests: "Nico hasn't uploaded any data yet. Check back after the next session."; the guest list shown in the roll call.
+- Loading: zones paint at once, markers fade in, a thin gold line only after 300 ms; skeletons that keep the layout still.
+- Stale: the site-wide banner (last upload 7 days or more), a friend's amber badge after 7 days.
+- Decided with Nico (2026-10-27):
+  - Only the admin gets "Upload the first file" (before the admin's first upload nobody else can upload, WEB-19); everyone else reads "<admin> hasn't uploaded any data yet. Check back after the next session.", the admin named by the part of `ADMIN_BATTLETAG` before the `#`. Map, roster and professions say it alike (`FirstUploadState`).
+  - The roll call before the first upload: "0 located" and the guest list (the admin, then the guests) with dashed discs; members only come with uploads. Desktop: the panel at the roll call's place. Phone: card and list follow under the map (no sheet yet).
+  - The thin gold line: one line under the top bar while a navigation from the shell's links is pending, visible after 300 ms; none without motion (as on the board). No route `loading.tsx` for it, so a page's 404 keeps its status. Markers fade in (400 ms).
+  - Skeletons stay per screen (roster, table, professions, character, report have theirs).
+  - Stale data: the banner (WEB-15) and the amber badge (WEB-21) were already built; their look is in the component gallery's baselines.
