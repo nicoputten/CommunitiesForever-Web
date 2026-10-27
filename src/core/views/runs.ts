@@ -288,9 +288,17 @@ function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): R
   const fitting = choice.characters.filter((c) => c.fit === "fits" || c.fit === "over");
   if (fitting.length === 0) return undefined;
   const open = openSlots(run.answers);
+  // The fit label when it doesn't simply fit (WEB-47: one wording everywhere): "fits", "can join · +1 over".
+  const how = (c: RunCharacterView) => (c.fit === "fits" ? "fits" : `can join · ${c.off ?? ""}`);
   const forOpen = fitting.find((c) => open[c.role] > 0 && c.role !== "damage");
-  if (forOpen !== undefined) return { text: `Your ${forOpen.name} fits the open ${forOpen.role} slot`, tone: "good" };
-  return { text: `Your ${fitting[0]!.name} fits`, tone: "good" };
+  if (forOpen !== undefined) {
+    const text =
+      forOpen.fit === "fits"
+        ? `Your ${forOpen.name} fits the open ${forOpen.role} slot`
+        : `Your ${forOpen.name} can fill the open ${forOpen.role} slot · ${forOpen.off ?? ""}`;
+    return { text, tone: "good" };
+  }
+  return { text: `Your ${fitting[0]!.name} ${how(fitting[0]!)}`, tone: "good" };
 }
 
 function line(ctx: Ctx, run: RunRecord): string {

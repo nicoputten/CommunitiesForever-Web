@@ -109,6 +109,12 @@ describe("the runs list", () => {
     expect(library!.hint).toEqual({ text: "Your Ves Doombringer fits", tone: "good" });
   });
 
+  it("words the hint with the fit label: over still counts as one you can join (WEB-47)", () => {
+    const rfk = run(9, { dungeonId: "rfk", organiser: BOB, startsAt: NOW + 26 * HOUR }); // 29–38: Ves (39) is +1 over
+    const page = runsPage(input(NICO, { runs: [rfk] }), "join");
+    expect(page.thisWeek.map((r) => r.hint?.text)).toEqual(["Your Ves Doombringer can join · +1 over"]);
+  });
+
   it("counts the runs you can join and haven't answered: the top bar's badge", () => {
     expect(joinableUnanswered(input(NICO))).toBe(2);
     expect(joinableUnanswered(input(FEMKE))).toBe(1);
