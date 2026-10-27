@@ -14,6 +14,11 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* The map fills the window and never scrolls: no empty scrollbar strip beside it. */
+html:has([data-page="map"]) {
+  scrollbar-gutter: auto;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
