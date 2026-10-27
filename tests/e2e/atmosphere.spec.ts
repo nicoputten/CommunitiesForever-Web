@@ -47,8 +47,10 @@ test.describe("signed in", () => {
     expect((await ambient(page)).running).toBeGreaterThan(0);
 
     await page.goto("/roster");
-    // The roster itself, not its loading skeletons (WEB-29), which shimmer while the page streams in.
-    await expect(page.getByRole("heading", { name: "Roster", level: 1 })).toBeVisible();
+    // The roster itself, not its loading skeletons (WEB-29): the loading page has the same "Roster" heading, and its 24
+    // skeletons shimmer until React swaps in the streamed page, which may be after the load event (WEB-32).
+    await expect(page.getByRole("heading", { name: "Who is around which level" })).toBeVisible();
+    await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
     await expect(page.locator('[data-atmosphere="calm"]')).toHaveCount(1);
     await expect(page.locator('[data-atmosphere="map"]')).toHaveCount(0);
     expect(await running(page)).toBe(0);

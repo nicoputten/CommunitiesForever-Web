@@ -1,4 +1,4 @@
-import { DUNGEONS, MAX_LEVEL, type DungeonInfo } from "../gamedata";
+import { MAX_LEVEL, RUNNABLE_DUNGEONS, type RunnableDungeon } from "../gamedata";
 import type { Dataset } from "../model";
 import { DAY } from "./age";
 import {
@@ -59,7 +59,8 @@ export interface RosterFriend {
 }
 
 export interface DungeonBand {
-  dungeon: Pick<DungeonInfo, "id" | "name" | "typicalLevels">;
+  /** A dungeon or a wing that is one (Scarlet Monastery's, WEB-32). */
+  dungeon: RunnableDungeon;
   /** Characters whose level is in the typical range, by level. */
   fits: CharacterView[];
 }
@@ -186,10 +187,9 @@ const width = (b: DungeonBand) => b.dungeon.typicalLevels.max - b.dungeon.typica
 
 export function levelSpread(characters: readonly CharacterView[]): LevelSpread {
   const bands: DungeonBand[] = [];
-  for (const d of DUNGEONS) {
-    if (d.kind !== "dungeon") continue;
+  for (const d of RUNNABLE_DUNGEONS) {
     const fits = inRange(characters, d.typicalLevels.min, d.typicalLevels.max);
-    if (fits.length >= 2) bands.push({ dungeon: { id: d.id, name: d.name, typicalLevels: d.typicalLevels }, fits });
+    if (fits.length >= 2) bands.push({ dungeon: d, fits });
   }
   bands.sort(
     (a, b) =>

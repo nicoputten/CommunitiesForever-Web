@@ -107,6 +107,7 @@ Decided by Nico (2026-10-25) where the sources leave a choice:
 - **Professions:** no new skill line. Camping is quest and recipe content, not a profession.
 - **Dungeon levels:**
   - The Vanilla dungeons use the addon's `Dungeons.STATIC`.
+  - Scarlet Monastery is four dungeons for who fits (WEB-32): Graveyard 26–36, Library 29–39, Armory 32–42, Cathedral 35–45, the addon's `Dungeons.STATIC` entries `smgy`, `smlib`, `smarm` and `smcath` (Group Finder activities 805, 829, 827, 828). Forever announced no change to them; the beta Group Finder findings (API-FINDINGS V46) list no other ranges. The client's zone text is "Scarlet Monastery" in every wing, so the map keeps one place.
   - The four new dungeons the beta Group Finder lists use its ranges, which is what the addon shows in game.
   - The other five new dungeons use Blizzard's article.
 - **Raids:** only the announced ones: Onyxia's Lair, The Barrow Deeps and Hyjal Summit. Molten Core, Blackwing Lair, Zul'Gurub, the Ahn'Qiraj raids and Naxxramas come back when Blizzard announces them.

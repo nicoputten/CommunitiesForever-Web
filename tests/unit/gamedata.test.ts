@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   DUNGEONS,
+  RUNNABLE_DUNGEONS,
   BATTLEGROUND,
   ELSEWHERE,
   PROFESSIONS,
@@ -188,6 +189,30 @@ describe("dungeons", () => {
       expect(Math.max(...d.wings.map((w) => w.typicalLevels.max))).toBe(max);
     }
     expect(d.zoneTexts).toContain(d.name);
+  });
+
+  it("runs Scarlet Monastery as four wings with their own ranges, one place on the map (WEB-32)", () => {
+    const sm = RUNNABLE_DUNGEONS.filter((d) => d.instanceId === "sm");
+    expect(sm.map((d) => [d.id, d.name, d.shortName, d.typicalLevels.min, d.typicalLevels.max])).toEqual([
+      ["sm-graveyard", "Scarlet Monastery: Graveyard", "SM Graveyard", 26, 36],
+      ["sm-library", "Scarlet Monastery: Library", "SM Library", 29, 39],
+      ["sm-armory", "Scarlet Monastery: Armory", "SM Armory", 32, 42],
+      ["sm-cathedral", "Scarlet Monastery: Cathedral", "SM Cathedral", 35, 45],
+    ]);
+    expect(resolveZone("Scarlet Monastery").dungeon?.id).toBe("sm");
+    expect(map.dungeons.filter((d) => d.name.startsWith("Scarlet Monastery"))).toHaveLength(1);
+  });
+
+  it("runs every other dungeon as one, raids left out", () => {
+    const ids = RUNNABLE_DUNGEONS.map((d) => d.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toContain("brs");
+    expect(ids).not.toContain("sm");
+    expect(ids).not.toContain("ony");
+    const others = RUNNABLE_DUNGEONS.filter((d) => d.instanceId !== "sm");
+    expect(others.map((d) => d.id)).toEqual(
+      DUNGEONS.filter((d) => d.kind === "dungeon" && d.id !== "sm").map((d) => d.id),
+    );
   });
 });
 

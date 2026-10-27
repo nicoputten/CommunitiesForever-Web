@@ -35,6 +35,40 @@ test("roster: design values", async ({ page }) => {
     "letter-spacing": "var(--ls-section)",
     color: "var(--gold-bright)",
   });
+  // The level spread (WEB-32, board roster-cards-runs): a merged dot with its count, the gold ring, the tooltip.
+  const spread = page.getByRole("region", { name: "Who is around which level" });
+  const group = spread.getByRole("button", {
+    name: isPhone(page) ? "4 characters around level 37" : "3 characters around level 39",
+  });
+  await expectStyles(group.locator("span").first(), {
+    width: "var(--size-dot-group)",
+    "box-shadow": "var(--ring-dot-own)",
+  });
+  await expectStyles(group.locator("span span"), {
+    "font-size": "var(--fs-meta-sm)",
+    "font-weight": "var(--fw-bold)",
+    color: "var(--gold-pale)",
+    "background-color": "var(--dot-count-bg)",
+  });
+  await expectStyles(spread.getByRole("button", { name: "Mira Sunstrider 60" }).locator("span"), {
+    width: "var(--size-dot)",
+    "background-color": "var(--mage)",
+    "box-shadow": "var(--ring-dot)",
+  });
+  await group.click();
+  await expectStyles(spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" }), {
+    "font-size": "var(--fs-meta)",
+    "border-radius": "var(--r-btn)",
+    "background-color": "var(--surface-tooltip)",
+    "border-color": "var(--line-tooltip)",
+    "box-shadow": "var(--shadow-tooltip)",
+  });
+  await expectStyles(spread.getByText("SM Armory 32–42 · 4 fit"), {
+    "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-tiny)",
+    color: "var(--gold-pale)",
+  });
+  await page.keyboard.press("Escape");
+
   await expectStyles(page.getByRole("heading", { name: "Healers" }), {
     ...TYPE.overline,
     "letter-spacing": "var(--ls-overline)",

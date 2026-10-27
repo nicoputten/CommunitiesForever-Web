@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { nowSeconds } from "@/app/clock";
 import { getDataset } from "@/app/dataset";
+import { getViewer } from "@/app/viewer";
+import { sameBattleTag } from "@/core/access";
 import {
   DEFAULT_SORT,
   defaultSortDir,
   isFiltered,
   joinNames,
   parseRosterQuery,
+  peopleViews,
   professionOptions,
   recordCharacters,
   roster,
@@ -42,6 +45,8 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
   if (data === undefined || recordCharacters(data, now).length === 0) return <RosterEmpty />;
 
   const r = roster(data, now, { filter: rosterFilter(query), sort: query.sort, dir: query.dir });
+  const viewer = await getViewer();
+  const own = peopleViews(data, now).find((p) => sameBattleTag(p.battleTag, viewer?.battleTag))?.key;
   const filtered = isFiltered(query);
   const noAddon = r.noAddon.map((p) => p.displayName);
   const sub = [
@@ -72,7 +77,7 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
         shown={filtered ? { count: r.characters.length, of: r.counts.characters } : undefined}
       />
 
-      <LevelSpread spread={r.spread} />
+      <LevelSpread spread={r.spread} own={own} />
       <QuickAnswers answers={r.quickAnswers} />
 
       {r.characters.length === 0 ? (
