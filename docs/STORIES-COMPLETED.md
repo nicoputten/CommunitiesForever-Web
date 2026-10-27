@@ -406,4 +406,4 @@ Nico, 2026-10-27: "the ideal route", the Velopack way. The uploader's UP-10 sign
 - `GET /api/uploader/v1/updates/status` (UP-10 proposal): latest, releasedAt, minimumVersion (`UPLOADER_MINIMUM_VERSION`), notesUrl (null until a "What's new" page, backlog).
 - The workflow pulls the feed and the newest full package before `vpk pack` with `GET /api/uploader/v1/releases/<file>` and the deploy secret (`vpk download http` can't send a Bearer token), trims the pulled feed to the last 2 earlier versions, packs, signs and publishes (uploader repo).
 - `docs/UPLOADER-API.md` (additive within v1), nginx 200 MB.
-- Done (PR #PRNUM).
+- Done (PR #55; the workflow: uploader repo).
