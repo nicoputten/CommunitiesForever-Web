@@ -33,6 +33,8 @@ export const uploads = sqliteTable(
     rejection: text("rejection", { enum: ["not-your-file", "other-community", "no-community-yet"] }),
     /** Why the file could not be read (WEB-19, src/core/normalize.ts `Unreadable`); null for readable files. */
     unreadable: text("unreadable", { enum: ["not-ledger", "damaged", "newer-format"] }),
+    /** The uploader token (device) that sent it (WEB-33); null for uploads from the upload page. */
+    deviceId: integer("device_id"),
   },
   // The same file from the same uploader is a no-op (WEB-06: per uploader, so a file rejected as someone else's
   // does not block its owner from uploading it).
@@ -121,3 +123,50 @@ export const lastSeen = sqliteTable("last_seen", {
   /** Unix seconds. */
   seenAt: integer("seen_at").notNull(),
 });
+
+// The Windows uploader (WEB-33, docs/UPLOADER-API.md).
+
+/** Upload tokens, one per device. Only the SHA-256 of the token is stored; a revoked token is kept for history. */
+export const uploaderTokens = sqliteTable(
+  "uploader_tokens",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** battleTagKey() of the owner. */
+    key: text("key").notNull(),
+    battleTag: text("battle_tag").notNull(),
+    deviceName: text("device_name").notNull(),
+    /** The app version last seen (pairing, then `X-Uploader-Version`). */
+    appVersion: text("app_version"),
+    /** Hex SHA-256 of the token. */
+    tokenHash: text("token_hash").notNull(),
+    /** How it was made: browser pairing or by hand on the uploader page. */
+    madeBy: text("made_by", { enum: ["pairing", "manual"] }).notNull(),
+    /** Unix seconds. */
+    createdAt: integer("created_at").notNull(),
+    lastUsedAt: integer("last_used_at"),
+    lastUploadAt: integer("last_upload_at"),
+    revokedAt: integer("revoked_at"),
+  },
+  (t) => [uniqueIndex("uploader_tokens_token_hash_unique").on(t.tokenHash)],
+);
+
+/** Browser pairings: short-lived; the token is made when the app collects an approved pairing. */
+export const uploaderPairings = sqliteTable(
+  "uploader_pairings",
+  {
+    /** Random, unguessable: whoever polls it collects the token. */
+    id: text("id").primaryKey(),
+    /** "KXRT-7QMN". */
+    userCode: text("user_code").notNull(),
+    deviceName: text("device_name").notNull(),
+    appVersion: text("app_version"),
+    /** Unix seconds. */
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    status: text("status", { enum: ["pending", "approved", "denied", "claimed"] }).notNull(),
+    /** BattleTag of who allowed or denied it. */
+    decidedBy: text("decided_by"),
+    tokenId: integer("token_id").references(() => uploaderTokens.id),
+  },
+  (t) => [uniqueIndex("uploader_pairings_user_code_unique").on(t.userCode)],
+);

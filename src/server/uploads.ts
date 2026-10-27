@@ -12,7 +12,7 @@ import {
   sameBattleTag,
 } from "@/core/access";
 import { diff, type UploadSummary } from "@/core/diff";
-import { MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
+import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
@@ -59,6 +59,8 @@ export interface UploadResult {
   summary?: UploadSummary;
   /** Unix seconds of the uploader's accepted upload before this one ("the same data as your upload of …"). */
   previousUploadAt?: number;
+  /** Characters with a record in the file, and their owners; for a readable file (the uploader app, WEB-33). */
+  counts?: LedgerCounts;
 }
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -84,6 +86,7 @@ function read(bytes: Uint8Array): Read {
  * normalize, is not the uploader's own or is of another community (src/core/access.ts) is stored as rejected with
  * its reason and changes nothing else. An accepted file makes every BattleTag it names a member.
  * The same file again from the same uploader (same SHA-256) is a no-op that returns the earlier result.
+ * `deviceId`: the uploader token that sent the file (WEB-33); the checks are exactly those of the upload page.
  */
 export function upload(
   db: Db,
@@ -91,6 +94,7 @@ export function upload(
   user: string,
   now = Math.floor(Date.now() / 1000),
   admin = adminBattleTag(),
+  deviceId?: number,
 ): UploadResult {
   if (file.byteLength > MAX_UPLOAD_BYTES) throw new UploadTooLargeError(file.byteLength);
   if (!mayUpload(user, loadAccessList(db, admin))) throw new UploadForbiddenError(user);
@@ -128,6 +132,7 @@ export function upload(
         reason: !result.ok ? result.reason : rejection !== undefined ? rejectionText(rejection) : null,
         rejection: rejection?.code ?? null,
         unreadable: result.ok ? null : result.unreadable,
+        deviceId: deviceId ?? null,
       })
       .returning({ id: uploads.id })
       .get();
@@ -142,8 +147,9 @@ export function upload(
       if (result.schemaVersion !== undefined) failed.schemaVersion = result.schemaVersion;
       return failed;
     }
+    const counts = ledgerCounts(result.data);
     if (rejection !== undefined) {
-      return { ...base, status: "rejected", reason: rejectionText(rejection), rejection };
+      return { ...base, status: "rejected", reason: rejectionText(rejection), rejection, counts };
     }
 
     const before = loadState(tx);
@@ -152,7 +158,7 @@ export function upload(
     writeState(tx, after, sourcesFor(before, after, id));
     addMembers(tx, result.data, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
-    const ok: UploadResult = { ...base, status: "ok", summary };
+    const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
   });
@@ -183,12 +189,20 @@ function findBySha(db: Db | Tx, sha256: string, user: string): UploadResult | un
   return result;
 }
 
-/** The owner of a file rejected as not the uploader's is not stored; a duplicate reads it from the same bytes. */
+/**
+ * What a duplicate's stored row does not hold is read again from the same bytes: the counts, and the owner of a file
+ * rejected as not the uploader's.
+ */
 function withOwner(earlier: UploadResult, file: Uint8Array): UploadResult {
-  if (earlier.rejection?.code !== "not-your-file") return earlier;
+  if (earlier.unreadable !== undefined) return earlier;
   const again = read(file);
-  const owner = again.ok ? fileOwner(again.data) : undefined;
-  return owner === undefined ? earlier : { ...earlier, rejection: { code: "not-your-file", owner } };
+  if (!again.ok) return earlier;
+  const result: UploadResult = { ...earlier, counts: ledgerCounts(again.data) };
+  const owner = fileOwner(again.data);
+  if (earlier.rejection?.code === "not-your-file" && owner !== undefined) {
+    result.rejection = { code: "not-your-file", owner };
+  }
+  return result;
 }
 
 /**
@@ -253,7 +267,7 @@ const STORED = {
 
 type StoredRow = Pick<typeof uploads.$inferSelect, keyof typeof STORED>;
 
-function firstOkId(db: Db): number | undefined {
+export function firstOkId(db: Db): number | undefined {
   return db.select({ id: uploads.id }).from(uploads).where(eq(uploads.status, "ok")).orderBy(asc(uploads.id)).get()?.id;
 }
 

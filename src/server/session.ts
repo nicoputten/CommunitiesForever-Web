@@ -1,7 +1,9 @@
 import { getToken } from "next-auth/jwt";
 import { mayAdmin, mayUpload, type Role, roleOf } from "@/core/access";
+import { bearerToken } from "@/core/uploader";
 import { adminBattleTag, loadAccessList } from "./access";
 import { getDb, type Db } from "./db";
+import { type Device, tokenDevice } from "./uploader";
 
 // Who is asking (WEB-06): the BattleTag from the session cookie, and their role from the database, per request.
 // Used by src/proxy.ts for every route and by route handlers that need more than a session (CLAUDE.md rule 6).
@@ -49,4 +51,33 @@ export async function guard(req: Request, need: Need = "member"): Promise<Caller
   if (need === "upload" && !mayUpload(battleTag, list)) return deny(403, "You may not upload.");
   if (need === "admin" && !mayAdmin(battleTag, list)) return deny(403, "Only the admin may do this.");
   return { db, battleTag, role };
+}
+
+// --- the uploader app (WEB-33, docs/UPLOADER-API.md) --------------------------------------------------------------
+
+/** An uploader API error: `{ error: <code>, message: <text for logs> }`. */
+export function apiError(status: number, error: string, message: string, headers?: HeadersInit): Response {
+  return Response.json({ error, message }, { status, headers });
+}
+
+export interface TokenCaller extends Caller {
+  device: Device;
+}
+
+/**
+ * The caller of an uploader API route, by `Authorization: Bearer cfu_…`, or the response to send instead: 401
+ * `token_revoked` for a missing, unknown or revoked token, 403 `may_not_upload` for someone who may not upload (the
+ * same check as guard(req, "upload"), per request). Session cookies are not accepted here, and tokens nowhere else.
+ */
+export function tokenGuard(req: Request): TokenCaller | Response {
+  const token = bearerToken(req.headers.get("authorization"));
+  const db = getDb();
+  const device = token === undefined ? undefined : tokenDevice(db, token);
+  if (device === undefined) return apiError(401, "token_revoked", "Unknown or revoked token.");
+  const list = loadAccessList(db, adminBattleTag());
+  const role = roleOf(device.battleTag, list);
+  if (role === undefined || !mayUpload(device.battleTag, list)) {
+    return apiError(403, "may_not_upload", "This user may not upload.");
+  }
+  return { db, battleTag: device.battleTag, role, device };
 }
