@@ -4,6 +4,7 @@ export const NAV = [
   { href: "/", label: "Map" },
   { href: "/roster", label: "Roster" },
   { href: "/professions", label: "Professions" },
+  { href: "/runs", label: "Runs" },
 ] as const;
 
 export type NavHref = (typeof NAV)[number]["href"];

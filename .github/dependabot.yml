@@ -1,0 +1,35 @@
+# Weekly dependency updates (WEB-37): minor and patch versions grouped into one PR per ecosystem, majors one PR each.
+# CI decides whether an update is safe; a changed screenshot still needs Nico's OK. Why each ignore exists and when it
+# can go: docs/ARCHITECTURE.md "Version pins".
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Follows the Node LTS of .nvmrc (24), not the newest Node.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+      # Blocked upstream: eslint-plugin-react (in eslint-config-next) allows ESLint 9 at most.
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+      # Blocked upstream: typescript-eslint allows TypeScript below 6.1.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      # Bumped by hand together with the Playwright image of the design job (.github/workflows/ci.yml).
+      - dependency-name: "@playwright/test"
+      # Bumped by hand: npm's allowScripts approval names the exact version (`npm install-scripts approve`).
+      - dependency-name: better-sqlite3
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

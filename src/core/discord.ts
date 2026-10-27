@@ -95,6 +95,8 @@ export const NOTICES = {
   "time-zone": "Your time zone is saved.",
   "bot-revoked": "The bot token is revoked. The bot stops at its next call.",
   "test-sent": "Test post sent. The bot posts it in the channel for posts within a few seconds.",
+  "test-run-sent":
+    "Test run post sent. The bot posts it in the runs channel within a few seconds; nothing was planned.",
 } as const;
 
 export type Notice = keyof typeof NOTICES;
