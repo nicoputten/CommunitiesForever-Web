@@ -44,7 +44,10 @@ WEB-08..11 (the first rough view stories) were replaced by WEB-15..29 after the 
 ## E6 Later
 
 ### WEB-12 Automatic uploader
-- A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route). Language and packaging decided in the story.
+- A small program on an uploader's PC that watches the SavedVariables file and uploads it after the game writes it, with an upload-scoped API token (new API route).
+- **Built as a .NET app** (decided by Nico, 2026-10-27). The exact .NET version, UI framework, packaging and where it lives in the repo are decided in the story; it is a second stack next to the site, so its toolchain and dependencies get listed in `docs/ARCHITECTURE.md` with Nico's OK (CLAUDE.md rule 9).
+- **Blocked on design:** Nico makes the uploader's design first and supplies it (like the Claude Design boards for the site). No building before that design is in the repo.
+- Open questions for the story (with the design): who gets tokens and how they are created and revoked (admin page or per user), how the program finds the WoW folder, debounce after the game writes the file, offline retry, auto-start with Windows, updates.
 
 ### WEB-32 Known bugs
 One story for the known bugs, fixed together (Nico, 2026-10-27). Add each one here with where it shows; each fix gets a test.
