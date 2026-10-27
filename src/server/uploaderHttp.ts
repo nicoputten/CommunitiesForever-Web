@@ -45,3 +45,15 @@ export async function readCapped(req: Request, max: number): Promise<Uint8Array 
   }
   return body;
 }
+
+/** An OAuth request's form parameters (`application/x-www-form-urlencoded`), as text; undefined when not a form. */
+export async function formParams(req: Request): Promise<Map<string, string> | undefined> {
+  try {
+    const form = await req.formData();
+    const params = new Map<string, string>();
+    for (const [key, value] of form) if (typeof value === "string") params.set(key, value);
+    return params;
+  } catch {
+    return undefined;
+  }
+}

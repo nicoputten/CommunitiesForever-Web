@@ -55,9 +55,14 @@ export async function guard(req: Request, need: Need = "member"): Promise<Caller
 
 // --- the uploader app (WEB-33, docs/UPLOADER-API.md) --------------------------------------------------------------
 
-/** An uploader API error: `{ error: <code>, message: <text for logs> }`. */
-export function apiError(status: number, error: string, message: string, headers?: HeadersInit): Response {
-  return Response.json({ error, message }, { status, headers });
+/**
+ * An uploader API error, OAuth style (RFC 6749 §5.2): `{ error: <code>, error_description: <text for logs> }`, never
+ * cached.
+ */
+export function apiError(status: number, error: string, description: string, headers?: HeadersInit): Response {
+  const h = new Headers(headers);
+  h.set("Cache-Control", "no-store");
+  return Response.json({ error, error_description: description }, { status, headers: h });
 }
 
 export interface TokenCaller extends Caller {
@@ -65,15 +70,26 @@ export interface TokenCaller extends Caller {
 }
 
 /**
- * The caller of an uploader API route, by `Authorization: Bearer cfu_…`, or the response to send instead: 401
- * `token_revoked` for a missing, unknown or revoked token, 403 `may_not_upload` for someone who may not upload (the
- * same check as guard(req, "upload"), per request). Session cookies are not accepted here, and tokens nowhere else.
+ * The caller of an uploader API route by its Bearer token (RFC 6750), or the response to send instead: 401 with a
+ * `WWW-Authenticate` challenge without a token, and `invalid_token` for an unknown or revoked one; 403
+ * `may_not_upload` for someone who may not upload (the same check as guard(req, "upload"), per request). Session
+ * cookies are not accepted here, and tokens nowhere else.
  */
 export function tokenGuard(req: Request): TokenCaller | Response {
-  const token = bearerToken(req.headers.get("authorization"));
+  const header = req.headers.get("authorization");
+  if (header === null || !/^Bearer\s/i.test(header)) {
+    return apiError(401, "invalid_request", "A Bearer token is required.", {
+      "WWW-Authenticate": 'Bearer realm="uploader"',
+    });
+  }
+  const token = bearerToken(header);
   const db = getDb();
   const device = token === undefined ? undefined : tokenDevice(db, token);
-  if (device === undefined) return apiError(401, "token_revoked", "Unknown or revoked token.");
+  if (device === undefined) {
+    return apiError(401, "invalid_token", "Unknown or revoked token.", {
+      "WWW-Authenticate": 'Bearer realm="uploader", error="invalid_token"',
+    });
+  }
   const list = loadAccessList(db, adminBattleTag());
   const role = roleOf(device.battleTag, list);
   if (role === undefined || !mayUpload(device.battleTag, list)) {

@@ -3,11 +3,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DELETE as disconnectRoute, GET as meRoute } from "@/app/api/uploader/v1/me/route";
-import { GET as pollRoute } from "@/app/api/uploader/v1/pairings/[id]/route";
-import { POST as startRoute } from "@/app/api/uploader/v1/pairings/route";
+import { POST as startRoute } from "@/app/api/uploader/v1/device_authorization/route";
+import { GET as meRoute } from "@/app/api/uploader/v1/me/route";
+import { POST as revokeRoute } from "@/app/api/uploader/v1/revoke/route";
+import { POST as tokenRoute } from "@/app/api/uploader/v1/token/route";
 import { POST as uploadRoute } from "@/app/api/uploader/v1/uploads/route";
-import { RateLimiter } from "@/core/uploader";
+import { CLIENT_ID, DEVICE_CODE_GRANT, RateLimiter } from "@/core/uploader";
 import { isPublic } from "@/proxy";
 import { block, putGuest } from "@/server/access";
 import { getDb } from "@/server/db";
@@ -40,21 +41,33 @@ afterAll(() => {
 });
 
 const now = () => Math.floor(Date.now() / 1000);
+/** A well-formed token that was never issued. */
+const UNKNOWN = `cfu_${"x".repeat(43)}`;
 
-function req(pathname: string, init: { method?: string; body?: BodyInit; json?: unknown; token?: string } = {}) {
+function req(
+  pathname: string,
+  init: { method?: string; body?: BodyInit; form?: Record<string, string>; token?: string } = {},
+) {
   const headers = new Headers({ "x-forwarded-for": `10.0.0.${++ip}` });
   if (init.token !== undefined) headers.set("authorization", `Bearer ${init.token}`);
   let body = init.body;
-  if (init.json !== undefined) {
-    headers.set("content-type", "application/json");
-    body = JSON.stringify(init.json);
+  if (init.form !== undefined) {
+    headers.set("content-type", "application/x-www-form-urlencoded");
+    body = new URLSearchParams(init.form).toString();
   }
   return new NextRequest(new URL(pathname, BASE), { method: init.method ?? "GET", headers, body });
 }
 
-const start = (json: unknown = { deviceName: "DESKTOP-NICO", appVersion: "1.0.0" }) =>
-  startRoute(req("/api/uploader/v1/pairings", { method: "POST", json }));
-const poll = (id: string) => pollRoute(req(`/api/uploader/v1/pairings/${id}`), { params: Promise.resolve({ id }) });
+const start = (
+  form: Record<string, string> = { client_id: CLIENT_ID, device_name: "DESKTOP-NICO", app_version: "1.0.0" },
+) => startRoute(req("/api/uploader/v1/device_authorization", { method: "POST", form }));
+const poll = (deviceCode: string, form: Record<string, string> = {}) =>
+  tokenRoute(
+    req("/api/uploader/v1/token", {
+      method: "POST",
+      form: { grant_type: DEVICE_CODE_GRANT, device_code: deviceCode, client_id: CLIENT_ID, ...form },
+    }),
+  );
 const send = (token: string | undefined, body: BodyInit) =>
   uploadRoute(req("/api/uploader/v1/uploads", { method: "POST", body, token }));
 
@@ -62,15 +75,18 @@ const lua = (tag: string, level: number, at: number, club = 7) =>
   `return { schemaVersion = 1, settings = { clubId = ${club}, clubName = "Doombringers" },
     self = { battleTag = "${tag}", version = ${at}, chars = { V = { name = "Ves Doombringer", level = ${level}, updatedAt = ${at} } } } }`;
 
-/** Pairs a device for a user through the routes; returns the token. */
+interface Started {
+  device_code: string;
+  user_code: string;
+  verification_uri_complete: string;
+}
+
+/** Connects a device for a user through the routes; returns the access token. */
 async function pair(as: string, deviceName = "DESKTOP-NICO"): Promise<string> {
-  const started = (await (await start({ deviceName, appVersion: "1.0.0" })).json()) as {
-    pairingId: string;
-    userCode: string;
-  };
-  expect(decidePairing(getDb(), started.userCode, as, true, now())).toBe(true);
-  const body = (await (await poll(started.pairingId)).json()) as { token: string };
-  return body.token;
+  const started = (await (await start({ client_id: CLIENT_ID, device_name: deviceName })).json()) as Started;
+  expect(decidePairing(getDb(), started.user_code, as, true, now())).toBe(true);
+  const body = (await (await poll(started.device_code)).json()) as { access_token: string };
+  return body.access_token;
 }
 
 // --- the contract -------------------------------------------------------------------------------------------------
@@ -99,24 +115,26 @@ function sameShape(actual: unknown, expected: unknown, at = "$"): void {
 
 describe("contract", () => {
   it("documents every example", () => {
-    for (const name of ["error", "pairing-start", "pairing-approved", "upload-ok", "upload-rejected", "me"]) {
+    for (const name of ["error", "device-authorization", "token", "upload-ok", "upload-rejected", "me"]) {
       expect(() => example(name)).not.toThrow();
     }
   });
 
   it("answers in the documented shapes", async () => {
     const started = await start();
-    expect(started.status).toBe(201);
-    const startBody = (await started.json()) as { pairingId: string; userCode: string; verifyUrl: string };
-    sameShape(startBody, example("pairing-start"));
-    expect(startBody.userCode).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
-    expect(startBody.verifyUrl).toBe(`https://wow.example/uploader?code=${startBody.userCode}`);
+    expect(started.status).toBe(200);
+    expect(started.headers.get("cache-control")).toBe("no-store");
+    const startBody = (await started.json()) as Started;
+    sameShape(startBody, example("device-authorization"));
+    expect(startBody.user_code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    expect(startBody.verification_uri_complete).toBe(`https://wow.example/uploader?code=${startBody.user_code}`);
 
-    decidePairing(getDb(), startBody.userCode, ADMIN, true, now());
-    const approved = await poll(startBody.pairingId);
+    decidePairing(getDb(), startBody.user_code, ADMIN, true, now());
+    const approved = await poll(startBody.device_code);
     expect(approved.status).toBe(200);
-    const { token } = (await approved.clone().json()) as { token: string };
-    sameShape(await approved.json(), example("pairing-approved"));
+    expect(approved.headers.get("cache-control")).toBe("no-store");
+    const { access_token: token } = (await approved.clone().json()) as { access_token: string };
+    sameShape(await approved.json(), example("token"));
 
     const me = await meRoute(req("/api/uploader/v1/me", { token }));
     sameShape(await me.json(), example("me"));
@@ -134,11 +152,13 @@ describe("contract", () => {
     expect(rejectedBody).toMatchObject({ status: "rejected", rejection: "newer_format", schemaVersion: 99 });
     sameShape(rejectedBody, example("upload-rejected"));
 
-    sameShape(await (await send("cfu_nope", "x")).json(), example("error"));
+    sameShape(await (await send(UNKNOWN, "x")).json(), example("error"));
   });
 });
 
 // --- every status code --------------------------------------------------------------------------------------------
+
+const errorOf = async (r: Response) => ((await r.json()) as { error: string }).error;
 
 describe("routes", () => {
   it("lets the uploader API past the session proxy, and nothing else", () => {
@@ -147,53 +167,71 @@ describe("routes", () => {
     expect(isPublic("/uploader")).toBe(false);
   });
 
-  it("pairs: pending, approved once, then expired; denied; unknown", async () => {
-    expect((await start({ appVersion: "1.0.0" })).status).toBe(400);
-    const a = (await (await start()).json()) as { pairingId: string; userCode: string };
-    expect(await (await poll(a.pairingId)).json()).toEqual({ status: "pending" });
-    expect((await poll(a.pairingId)).status).toBe(202);
-    expect(findPairing(getDb(), a.userCode.toLowerCase().replace("-", " "), now())?.deviceName).toBe("DESKTOP-NICO");
-    expect(decidePairing(getDb(), a.userCode, "Gwen#4004", true, now())).toBe(true);
-    expect((await poll(a.pairingId)).status).toBe(200);
-    expect(await (await poll(a.pairingId)).json()).toEqual({ status: "expired" });
+  it("checks the device authorization request", async () => {
+    const noName = await start({ client_id: CLIENT_ID });
+    expect([noName.status, await errorOf(noName)]).toEqual([400, "invalid_request"]);
+    const client = await start({ client_id: "other", device_name: "PC" });
+    expect([client.status, await errorOf(client)]).toEqual([401, "invalid_client"]);
+    const json = await startRoute(
+      new NextRequest(new URL("/api/uploader/v1/device_authorization", BASE), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      }),
+    );
+    expect([json.status, await errorOf(json)]).toEqual([400, "invalid_request"]);
+  });
 
-    const b = (await (await start()).json()) as { pairingId: string; userCode: string };
-    expect(decidePairing(getDb(), b.userCode, ADMIN, false, now())).toBe(true);
-    const denied = await poll(b.pairingId);
-    expect(denied.status).toBe(403);
-    expect(await denied.json()).toEqual({ status: "denied" });
-    expect(decidePairing(getDb(), b.userCode, ADMIN, true, now())).toBe(false);
+  it("polls: pending, the token once, then expired; denied; unknown; wrong grant or client", async () => {
+    const a = (await (await start()).json()) as Started;
+    const pending = await poll(a.device_code);
+    expect([pending.status, await errorOf(pending)]).toEqual([400, "authorization_pending"]);
+    expect(findPairing(getDb(), a.user_code.toLowerCase().replace("-", " "), now())?.deviceName).toBe("DESKTOP-NICO");
+    expect(decidePairing(getDb(), a.user_code, "Gwen#4004", true, now())).toBe(true);
+    const ok = await poll(a.device_code);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ token_type: "Bearer" });
+    expect(await errorOf(await poll(a.device_code))).toBe("expired_token");
 
-    expect((await poll("unknown")).status).toBe(410);
+    const b = (await (await start()).json()) as Started;
+    expect(decidePairing(getDb(), b.user_code, ADMIN, false, now())).toBe(true);
+    const denied = await poll(b.device_code);
+    expect([denied.status, await errorOf(denied)]).toEqual([400, "access_denied"]);
+    expect(decidePairing(getDb(), b.user_code, ADMIN, true, now())).toBe(false);
+
+    expect(await errorOf(await poll("unknown"))).toBe("expired_token");
+    expect(await errorOf(await poll(b.device_code, { grant_type: "password" }))).toBe("unsupported_grant_type");
+    const client = await poll(b.device_code, { client_id: "other" });
+    expect([client.status, await errorOf(client)]).toEqual([401, "invalid_client"]);
   });
 
   it("expires codes after 10 minutes", async () => {
-    const a = (await (await start()).json()) as { userCode: string };
-    expect(findPairing(getDb(), a.userCode, now() + 601)).toBeUndefined();
-    expect(decidePairing(getDb(), a.userCode, ADMIN, true, now() + 601)).toBe(false);
+    const a = (await (await start()).json()) as Started;
+    expect(findPairing(getDb(), a.user_code, now() + 601)).toBeUndefined();
+    expect(decidePairing(getDb(), a.user_code, ADMIN, true, now() + 601)).toBe(false);
   });
 
   it("lets only someone who may upload allow, up to 5 uploaders", async () => {
-    const a = (await (await start()).json()) as { userCode: string };
-    expect(() => decidePairing(getDb(), a.userCode, "Gus#3003", true, now())).toThrow(UploadForbiddenError);
+    const a = (await (await start()).json()) as Started;
+    expect(() => decidePairing(getDb(), a.user_code, "Gus#3003", true, now())).toThrow(UploadForbiddenError);
     for (let i = 0; i < 5; i++) createToken(getDb(), "Max#5005", `PC-${i}`, null, "manual", now());
     putGuest(getDb(), "Max#5005", true, ADMIN);
-    expect(() => decidePairing(getDb(), a.userCode, "Max#5005", true, now())).toThrow(TooManyTokensError);
+    expect(() => decidePairing(getDb(), a.user_code, "Max#5005", true, now())).toThrow(TooManyTokensError);
     // Pairing a device again replaces its token and is not counted.
     createToken(getDb(), "Max#5005", "PC-0", null, "manual", now());
     expect(activeTokens(getDb(), "Max#5005")).toHaveLength(5);
   });
 
-  it("rate-limits pairing starts per IP and polls per pairing", async () => {
+  it("rate-limits device authorization per IP, and polls with slow_down", async () => {
     const same = () =>
       startRoute(
-        new NextRequest(new URL("/api/uploader/v1/pairings", BASE), {
+        new NextRequest(new URL("/api/uploader/v1/device_authorization", BASE), {
           method: "POST",
-          headers: { "x-forwarded-for": "203.0.113.9, 10.9.9.9", "content-type": "application/json" },
-          body: JSON.stringify({ deviceName: "PC" }),
+          headers: { "x-forwarded-for": "203.0.113.9, 10.9.9.9", "content-type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ client_id: CLIENT_ID, device_name: "PC" }).toString(),
         }),
       );
-    for (let i = 0; i < 10; i++) expect((await same()).status).toBe(201);
+    for (let i = 0; i < 10; i++) expect((await same()).status).toBe(200);
     const limited = await same();
     expect(limited.status).toBe(429);
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
@@ -202,8 +240,9 @@ describe("routes", () => {
     const saved = limits.poll;
     limits.poll = new RateLimiter(1, 1);
     try {
-      expect((await poll("x")).status).toBe(410);
-      expect((await poll("x")).status).toBe(429);
+      expect(await errorOf(await poll("x"))).toBe("expired_token");
+      const slow = await poll("x");
+      expect([slow.status, await errorOf(slow)]).toEqual([400, "slow_down"]);
     } finally {
       limits.poll = saved;
     }
@@ -211,8 +250,11 @@ describe("routes", () => {
 
   it("uploads with a token: 401, 400, 413, nothing_new, other community, 403, 429", async () => {
     const token = await pair("Gwen#4004", "GWEN-PC");
-    expect((await send(undefined, "x")).status).toBe(401);
-    expect(await (await send("cfu_nope", "x")).json()).toMatchObject({ error: "token_revoked" });
+    const none = await send(undefined, "x");
+    expect([none.status, none.headers.get("www-authenticate")]).toEqual([401, 'Bearer realm="uploader"']);
+    const unknown = await send(UNKNOWN, "x");
+    expect([unknown.status, await errorOf(unknown)]).toEqual([401, "invalid_token"]);
+    expect(unknown.headers.get("www-authenticate")).toBe('Bearer realm="uploader", error="invalid_token"');
     expect(await (await send(token, "")).json()).toMatchObject({ error: "empty_file" });
     const big = await send(token, new Uint8Array(MAX_UPLOAD_BYTES + 1));
     expect(big.status).toBe(413);
@@ -257,7 +299,12 @@ describe("routes", () => {
   it("revokes a token on disconnect and on a block", async () => {
     const token = await pair("Gwen#4004", "GWEN-LAPTOP");
     expect((await meRoute(req("/api/uploader/v1/me", { token }))).status).toBe(200);
-    expect((await disconnectRoute(req("/api/uploader/v1/me", { method: "DELETE", token }))).status).toBe(204);
+    const revoke = (form: Record<string, string>) =>
+      revokeRoute(req("/api/uploader/v1/revoke", { method: "POST", form }));
+    expect((await revoke({ token, token_type_hint: "access_token", client_id: "other" })).status).toBe(401);
+    expect((await revoke({ client_id: CLIENT_ID })).status).toBe(400);
+    expect((await revoke({ token, token_type_hint: "access_token", client_id: CLIENT_ID })).status).toBe(200);
+    expect((await revoke({ token, client_id: CLIENT_ID })).status).toBe(200);
     expect((await meRoute(req("/api/uploader/v1/me", { token }))).status).toBe(401);
 
     const other = await pair("Gwen#4004", "GWEN-DESK");
