@@ -31,10 +31,62 @@ const TABS = [
   { name: "ladder-all", url: "/doomsday/ladder?scope=all" },
   { name: "pvp", url: "/doomsday/pvp" },
   { name: "feats", url: "/doomsday/feats" },
+  // WEB-61: the phone ladder's PvP track and the states (board doomsday-phone) on /dev/doomsday.
+  { name: "ladder-pvp", url: "/doomsday/ladder?track=pvp" },
+  { name: "state-first-day", url: "/dev/doomsday?state=first-day" },
+  { name: "state-only-you", url: "/dev/doomsday?state=only-you" },
+  { name: "state-loading", url: "/dev/doomsday?state=loading" },
+  { name: "state-error", url: "/dev/doomsday?state=error" },
 ];
 
-test("doomsday ladder: design values", async ({ page }) => {
+test("doomsday phone: design values", async ({ page }) => {
+  test.skip(!isPhone(page), "the phone layout");
+  await openScreen(page, "/doomsday");
+  // The day's points and the reset under the tabs; the header's stat cards are desktop only.
+  await expect(page.getByText("This week", { exact: true }).first()).toBeHidden();
+  await expectStyles(page.getByText(/^resets in /).first(), { color: "var(--streak-text)" });
+  await expectStyles(page.getByTestId("goal").first(), { "min-height": "var(--size-goal-row)" });
+  // The board as one card per friend, with a mark per goal.
+  await expect(page.getByRole("region", { name: "The board", exact: true })).toBeHidden();
+  const card = page.getByTestId("board-card").first();
+  await expectStyles(card, { "background-color": "var(--surface-goal)", "border-radius": "var(--r-card)" });
+  const done = card.getByRole("img", { name: /: done \d\d:\d\d/ }).first();
+  await expectStyles(done, {
+    "min-width": "var(--size-mark)",
+    height: "var(--size-mark)",
+    "background-color": "var(--mark-pve)",
+    color: "var(--pve-text)",
+  });
+  // The ladder: one track at a time with a PvE | PvP switch.
   await openScreen(page, "/doomsday/ladder");
+  await expect(page.getByRole("region", { name: /^PvE · this week/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: /^PvP · this week/ })).toBeHidden();
+  await expectStyles(page.getByRole("navigation", { name: "Track" }).getByRole("link", { name: "PvE" }), {
+    "background-color": "var(--tint-selected)",
+    "min-height": "var(--size-touch)",
+  });
+});
+
+test("doomsday states: design values", async ({ page }) => {
+  await openScreen(page, "/dev/doomsday?state=first-day");
+  await expectStyles(page.getByRole("heading", { name: "Day one of Doomsday" }), {
+    "font-family": "var(--font-name)",
+    "font-size": "var(--fs-title-lg)",
+    color: "var(--text-strong)",
+  });
+  await expect(page.getByText("Nobody has done anything yet.")).toBeVisible();
+  await openScreen(page, "/dev/doomsday?state=error");
+  await expectStyles(page.getByRole("button", { name: "Try again" }), {
+    color: "var(--stale-text)",
+    "min-height": "var(--size-touch)",
+  });
+  await openScreen(page, "/dev/doomsday?state=loading");
+  await expect(page.getByText("Loading today’s goals…")).toBeVisible();
+});
+
+test("doomsday ladder: design values", async ({ page }) => {
+  // The PvP track, so the phone (one track at a time) shows it too.
+  await openScreen(page, "/doomsday/ladder?track=pvp");
   await expectStyles(page.getByRole("navigation", { name: "Ladder period" }).getByRole("link", { name: "This week" }), {
     "border-color": "var(--gold)",
     "background-color": "var(--tint-pressed)",
@@ -99,7 +151,7 @@ test("doomsday: design values", async ({ page }) => {
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
   await expectStyles(goal.getByText("Finish 10 quests"), {
     "font-family": "var(--font-name)",
-    "font-size": "var(--fs-section)",
+    "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
   const open = page.getByTestId("goal").filter({ hasText: "Lone wolf" });
@@ -107,6 +159,8 @@ test("doomsday: design values", async ({ page }) => {
   await expectStyles(open.getByText("2 / 3"), { ...DATA, color: "var(--text)" });
   await expectStyles(page.getByText(/^resets in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
+  // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
+  if (isPhone(page)) return;
   const board = page.getByRole("table");
   await expectStyles(board.getByRole("columnheader", { name: "Friend" }), {
     ...TYPE.overline,
@@ -158,3 +212,16 @@ for (const tab of TABS) {
     await expectScreenshot(page, `doomsday-${tab.name}`);
   });
 }
+
+test("doomsday roster chips: design values", async ({ page }) => {
+  await openScreen(page, "/roster");
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 85 PvP 240/ });
+  await expectStyles(chip, {
+    "background-color": "var(--surface-dd-chip)",
+    "border-color": "var(--line-control)",
+    "font-size": "var(--fs-meta)",
+  });
+  await expectStyles(chip.getByText("PvE 85"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
+  await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
+});

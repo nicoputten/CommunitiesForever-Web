@@ -861,4 +861,11 @@
   --feat-icon-bg: radial-gradient(circle at 40% 35%, #1e2e48, #0a1322); /* doomsday-feats: the icon box */
   --line-feat-own: rgba(212, 175, 106, 0.45); /* doomsday-feats: a feat you have */
   --line-feat-locked: rgba(174, 182, 195, 0.1); /* doomsday-feats: a feat not reached yet */
+  /* Doomsday on the phone (WEB-61, board doomsday-phone) */
+  --size-goal-row: 52px; /* doomsday-phone: a goal row */
+  --size-mark: 30px; /* doomsday-phone: a goal's mark on a friend's board card */
+  --mark-pve: rgba(127, 217, 154, 0.16); /* doomsday-phone: a PvE goal done */
+  --mark-pvp: rgba(240, 138, 128, 0.14); /* doomsday-phone: a PvP goal done */
+  --surface-dd-chip: rgba(12, 18, 30, 0.9); /* roster-cards-doomsday: the Doomsday chip */
+  --size-emblem-day-one: 40px; /* doomsday-phone: the emblem on "Day one of Doomsday" and the phone title */
 }

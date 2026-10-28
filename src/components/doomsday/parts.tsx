@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type {
   BoardView,
@@ -10,7 +9,7 @@ import type {
   SoFarView,
   StreakView,
 } from "@/core/views/doomsday";
-import { DOOMSDAY_TABS } from "@/core/views/doomsday";
+import { DoomsdayTabs } from "./DoomsdayTabs";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { CrownIcon, DoomsdayEmblem, FlameIcon, SwapIcon } from "@/components/ui/icons";
 import styles from "./Doomsday.module.css";
@@ -74,13 +73,13 @@ export function DoomsdayFrame({
           </div>
         )}
       </div>
-      <nav aria-label="Doomsday" className={styles.tabs}>
-        {DOOMSDAY_TABS.map((t) => (
-          <Link key={t.tab} href={t.href} className={styles.tab} aria-current={t.tab === tab ? "page" : undefined}>
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <DoomsdayTabs tab={tab} />
+      {header.today !== undefined && (
+        <div className={`${styles.phoneLine} ${styles.phoneOnly}`}>
+          <Points points={header.today} />
+          <span className={styles.resets}>{header.resets}</span>
+        </div>
+      )}
       {children}
     </div>
   );
@@ -229,7 +228,7 @@ export function Board({ view }: { view: BoardView }) {
           </tbody>
         </table>
       </div>
-      <div className={styles.legend}>
+      <div className={`${styles.legend} ${styles.legendDesktop}`}>
         <span>
           <CrownIcon className={styles.crown} /> first to finish all dailies
         </span>
@@ -241,7 +240,71 @@ export function Board({ view }: { view: BoardView }) {
           <FlameIcon className={styles.flame} /> streak
         </span>
       </div>
+      <BoardCards view={view} />
     </>
+  );
+}
+
+/** The board on the phone: one card per friend with a mark per goal (board doomsday-phone "Board"). */
+function BoardCards({ view }: { view: BoardView }) {
+  const pve = view.columns.filter((c) => c.track === "pve").length;
+  const pvpTitles = view.columns
+    .filter((c) => c.track === "pvp")
+    .map((c) => (c.title.startsWith("Hunt") ? "Hunt" : "Skirmish"));
+  return (
+    <div className={styles.cards}>
+      <p className={styles.note}>
+        Columns: {pve} PvE {pve === 1 ? "daily" : "dailies"}
+        {pvpTitles.map((t) => ` · ${t}`).join("")}
+      </p>
+      {view.rows.map((r) => (
+        <div key={r.key} className={styles.friendCard} data-dim={r.dim} data-testid="board-card">
+          <div className={styles.cardTop}>
+            <span className={styles.avatar} aria-hidden="true">
+              {r.initials}
+            </span>
+            <span className={styles.friendName} data-crossed={r.crossedOut}>
+              {r.name}
+            </span>
+            {r.crossedOut && <span className="visually-hidden">(all PvE dailies done)</span>}
+            {r.crown !== undefined ? (
+              <span className={`${styles.pill} ${styles.pillFirst}`}>
+                <CrownIcon className={styles.pillIcon} /> {r.crown}
+                <span className="visually-hidden"> first to finish</span>
+              </span>
+            ) : r.you ? (
+              <span className={styles.youTag}>you</span>
+            ) : r.pvpVirgin ? (
+              <span className={`${styles.pill} ${styles.pillVirgin}`}>PvP Virgin</span>
+            ) : null}
+          </div>
+          {r.cells !== undefined && (
+            <div className={styles.marks}>
+              {r.cells.map((c, i) => {
+                const column = view.columns[i]!;
+                const text = c.kind === "done" ? "✓" : c.kind === "progress" ? c.text : "–";
+                const label = `${column.title}: ${c.kind === "done" ? `done ${c.time}` : c.kind === "progress" ? c.text : "not done"}${c.swap === undefined ? "" : ` (${c.swap})`}`;
+                return (
+                  <span
+                    key={column.id}
+                    className={styles.mark}
+                    data-state={c.kind}
+                    data-track={column.track}
+                    role="img"
+                    aria-label={label}
+                    title={label}
+                  >
+                    {text}
+                    {c.swap !== undefined && <SwapIcon className={styles.markSwap} />}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {r.note !== undefined && <span className={styles.meta}>{r.note}</span>}
+        </div>
+      ))}
+    </div>
   );
 }
 
