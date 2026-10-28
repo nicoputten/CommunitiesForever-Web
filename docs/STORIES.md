@@ -266,15 +266,15 @@ Boards `doomsday-phone` and `roster-cards-doomsday`.
 Decided with Nico (2026-10-28). At launch (2026-11-04) every beta character is gone from the game. The beta and Forever are different clients, so every friend's SavedVariables start empty, and the addon needs no change. The site must forget the beta **without deleting anything**: uploads stay the single source of truth (Nico rejected a delete-style reset earlier for that reason). After the web engine's WEB-58; ready before launch, so Nico can press it on launch day.
 - **The setting:** a **Danger zone** box at the bottom of the admin page, "Start fresh from launch".
   - It shows the cut-off moment, plus what's kept and what's hidden.
-  - Typing `LAUNCH` confirms it; Undo removes the cut-off.
+  - No board (Nico, 2026-10-29): built from the design system. The button opens a confirmation dialog, "Are you sure? This is destructive", with what gets hidden and what's kept; the admin types `delete all` and the confirm button stays disabled until it matches. Undo removes the cut-off.
   - It's stored in one settings row (the moment in UTC, who set it, when).
 - **Rebuild from the cut-off:** the rebuild ignores uploads received before the cut-off. Characters, people, members, locations, sightings, presence, the activity feed, Doomsday goals and points are derived only from uploads after it. Raw uploads are never deleted or changed.
 - **No beta characters sneaking back:** a character whose `lastPlayed` (and `updatedAt`) is before the cut-off is ignored, even when a newer upload carries it. Belt and braces: the launch client's files are empty anyway.
 - **Kept untouched:** accounts and sign-in access, guests and blocks, Discord links, time zones, bot settings and token, uploader devices and tokens, last-seen times.
   - Members are derived from uploads, so anyone allowed to sign in before the cut-off stays allowed until their first launch upload.
 - **Hidden, not deleted** (shown nowhere, kept in the database):
-  - planned runs and their answers
-  - asks and game items
+  - runs and asks that start before the cut-off, with their answers (a run planned before it for after it stays: Nico, 2026-10-29)
+  - game items
   - recaps
   - feats and Doomsday history from before the cut-off
 - **Restarted:**
