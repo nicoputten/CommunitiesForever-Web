@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.4.1 (2026-10-28)
 - Roster: a narrow dungeon band keeps its name ("Ragef… 13–18 · 2") instead of showing only the levels and count.
 - Asks from the game reach the site and Discord sooner: any friend's upload carries a friend's ask (once, as the asker's ask), and answers given to an ask in game show up too.
