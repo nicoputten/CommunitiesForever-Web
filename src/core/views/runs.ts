@@ -1,5 +1,5 @@
 import { sameBattleTag } from "../access";
-import { RUNNABLE_DUNGEONS, classInfo, type LevelRange } from "../gamedata";
+import { RUNNABLE_DUNGEONS, classInfo, rolesFor, type LevelRange } from "../gamedata";
 import {
   counts,
   group,
@@ -14,12 +14,13 @@ import {
   type RunPhase,
   type RunRecord,
   type RunSource,
+  type MoveTo,
   type SlotRole,
 } from "../runs";
 import { localTime, nextDays, runWhen, untilStart, weekEnd, type DayOption } from "../runTime";
 import { byLevel, compareText, type CharacterView, type PersonView } from "./characters";
 import { levelFit, type FitKind } from "../levelFit";
-import { joinNames } from "./text";
+import { initials, joinNames } from "./text";
 
 // The Runs pages (WEB-40, boards `runs`, `run-detail`, `run-create`, `runs-phone`): the list by This week, Later and
 // Past with its filters, a run's page, and Plan a run. Times in the viewer's own zone; names only.
@@ -468,13 +469,87 @@ export interface SlotView {
     character: string;
     level?: number;
     className?: string;
+    classFile?: string;
     colorToken?: string;
     friend: string;
     /** "organiser", "from talents", "set by player", "moved up". */
     note?: string;
+    /** WEB-49: the disc's letters and the fit tag. */
+    initials: string;
+    fit?: { kind: FitKind; label: string };
+    guid?: string;
+    /** The viewer's own sign-up. */
+    yours: boolean;
   };
-  /** For an open slot: "Nobody in range yet" or "Grom Ashfeller could". */
+  /** For an open slot, one fact (WEB-49, finding 1): "1 left", "No healer in range · Kaz Coldbrew is 4 below". */
   open?: string;
+  /** The organiser's (or admin's) ⋯ menu for this sign-up (WEB-49). */
+  menu?: MoveOption[];
+}
+
+/** One entry of a slot's ⋯ menu (WEB-49). */
+export interface MoveOption {
+  label: string;
+  to: MoveTo;
+  /** The character that trades places (a taken role). */
+  swapWith?: string;
+  /** "open", "current", "Healer"; or why it can't ("not for mages"). */
+  detail?: string;
+  disabled?: boolean;
+  danger?: boolean;
+}
+
+/** The answer picker (WEB-49, board `runs-v2-picker`): every character, the roles, the answer. */
+export interface PickerView {
+  runId: number;
+  /** "Join Scarlet Monastery: Graveyard". */
+  title: string;
+  /** "Fri 30 Oct 20:30 · levels 26–36". */
+  sub: string;
+  characters: PickerCharacter[];
+  /** Per role: "open", "3 open", "full → reserve" (counting without the viewer's own answer). */
+  roles: Record<SlotRole, { state: string; full: boolean }>;
+  current?: { guid?: string; role: SlotRole; answer: Answer };
+}
+
+export interface PickerCharacter {
+  guid: string;
+  name: string;
+  initials: string;
+  level?: number;
+  classFile?: string;
+  colorToken?: string;
+  /** "22 Priest · Holy". */
+  line: string;
+  fit: { kind: FitKind; label: string };
+  /** The roles its class can play, and the one the addon reports. */
+  roles: SlotRole[];
+  defaultRole: SlotRole;
+  /** "not for priests": why the other roles are off. */
+  notFor: string;
+  /** 6+ below: only Maybe (levelFit). */
+  onlyMaybe: boolean;
+  /** "4 levels below: tough, but the group can carry you." */
+  note?: string;
+}
+
+/** The viewer's answer, collapsed (WEB-49): "You're in as Kaz Coldbrew · Healer". */
+export interface AnswerSummary {
+  lead: string;
+  character?: string;
+  role?: string;
+  detail?: string;
+}
+
+/** The organiser's bar (WEB-49): "You lead as Vesgar Bloodhoof · Tank". */
+export interface LeadBar {
+  state: "playing" | "benched" | "out";
+  character?: string;
+  role?: string;
+  /** "27 Warrior · Protection talents". */
+  line?: string;
+  initials?: string;
+  colorToken?: string;
 }
 
 export interface AnswerRowView {
@@ -483,9 +558,13 @@ export interface AnswerRowView {
   colorToken?: string;
   friend: string;
   role: string;
+  /** "(usually tank)" when the role differs from the character's own (WEB-49). */
+  usualRole?: string;
+  /** The fit label ("fits", "carry · +21"); undefined without a character. */
+  fit?: string;
   answer: string;
   answerTone: "in" | "maybe" | "cant" | "reserve" | "organiser";
-  /** "Discord · 17:40" in the viewer's zone. */
+  /** "Wed 09:12 · Discord" in the viewer's zone (WEB-49: with the day). */
   where: string;
 }
 
@@ -517,6 +596,20 @@ export interface RunDetail {
   slots: SlotView[];
   answers: AnswerRowView[];
   couldJoin: CouldJoinView[];
+  /** WEB-49: the big time, the countdown, the picker, your answer, the organiser's bar, Could fill, Maybe, Reserve. */
+  when: string;
+  countdown?: string;
+  picker: PickerView;
+  summary?: AnswerSummary;
+  /** "Answered Tue 21:40". */
+  answeredAt?: string;
+  leadBar?: LeadBar;
+  couldFill: string[];
+  maybes: string[];
+  reserves: string[];
+  /** The organiser or the admin: the slots have a ⋯ menu. */
+  mayMove: boolean;
+  isOrganiser: boolean;
   mayEdit: boolean;
   mayDelete: boolean;
   /** The admin deleting someone else's run. */
@@ -554,25 +647,40 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
           Number(levelFit(a.level, r.min, r.max).kind === "fits") || byLevel(a, b),
     );
 
+  const closed = run.cancelledAt !== undefined || now >= run.startsAt;
+  const isOrganiser = isViewer(ctx, run.organiser);
+  const mayMove = isOrganiser || viewer.isAdmin;
   const slots: SlotView[] = [];
   for (const role of SLOT_ROLES) {
     const size = role === "damage" ? 3 : 1;
     for (let i = 0; i < size; i++) {
       const a = g[role][i];
       if (a === undefined) {
-        const could = candidates.find((ch) => slotRole(ch.role) === role);
-        slots.push({ role, open: could === undefined ? "Nobody in range yet" : `${could.name ?? could.guid} could` });
+        slots.push({ role, open: openFact(ctx, run, role, open[role]) });
         continue;
       }
       const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
       const info = classInfo(ch?.classFile);
-      const who: NonNullable<SlotView["who"]> = { character: charName(ctx, a), friend: friendName(ctx, a.battleTag) };
+      const who: NonNullable<SlotView["who"]> = {
+        character: charName(ctx, a),
+        friend: friendName(ctx, a.battleTag),
+        initials: initials(charName(ctx, a)),
+        yours: isViewer(ctx, a.battleTag),
+      };
       if (ch?.level !== undefined) who.level = ch.level;
       if (ch?.className !== undefined) who.className = ch.className;
+      if (ch?.classFile !== undefined) who.classFile = ch.classFile;
       if (info !== undefined) who.colorToken = info.textToken;
+      if (a.guid !== undefined) who.guid = a.guid;
+      if (ch !== undefined) {
+        const fit = levelFit(ch.level, r.min, r.max);
+        who.fit = { kind: fit.kind, label: fit.label };
+      }
       if (a === lead) who.note = "organiser";
       else if (a.movedUp) who.note = "moved up";
-      slots.push({ role, who });
+      const slot: SlotView = { role, who };
+      if (mayMove && a.guid !== undefined && !closed) slot.menu = moveMenu(ctx, run, a);
+      slots.push(slot);
     }
   }
 
@@ -589,14 +697,31 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
         role: a.answer === "cant" ? "—" : ROLE_LABEL[a.role],
         answer: organiser ? "Organiser" : ANSWER_LABEL[a.answer],
         answerTone: organiser ? "organiser" : a.answer,
-        where: `${SOURCE_LABEL[a.source]} · ${localTime(a.answeredAt, viewer.timeZone)}`,
+        where: `${dayTime(a.answeredAt, viewer.timeZone)} · ${SOURCE_LABEL[a.source]}`,
       };
       if (ch?.level !== undefined) row.level = ch.level;
       if (info !== undefined) row.colorToken = info.textToken;
+      if (ch !== undefined) {
+        row.fit = levelFit(ch.level, r.min, r.max).label;
+        const usual = slotRole(ch.role);
+        if (a.answer !== "cant" && ch.role !== undefined && usual !== a.role) row.usualRole = `(usually ${usual})`;
+      }
       return row;
     });
 
   const choice = answerChoice(ctx, run);
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const nameOf = (a: RunAnswer) => (a.guid === undefined ? undefined : charName(ctx, a));
+  const listed = (kind: Answer) =>
+    run.answers
+      .filter((a) => a.answer === kind)
+      .sort((x, y) => x.answeredAt - y.answeredAt)
+      .map((a) => {
+        const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+        return [nameOf(a) ?? friendName(ctx, a.battleTag), ch?.level, "·", a.role]
+          .filter((x) => x !== undefined)
+          .join(" ");
+      });
   const detail: RunDetail = {
     card: c,
     plannedBy: `Planned by ${isViewer(ctx, run.organiser) ? "you" : friendName(ctx, run.organiser)} ${PLANNED_ON[run.source]}`,
@@ -633,11 +758,53 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       if (off !== undefined) v.off = off;
       return v;
     }),
+    when: runWhen(run.startsAt, viewer.timeZone, now),
+    picker: picker(ctx, run),
+    couldFill: candidates
+      .slice(0, 3)
+      .map((ch) => [ch.name ?? ch.guid, ch.level].filter((x) => x !== undefined).join(" ")),
+    maybes: listed("maybe"),
+    reserves: listed("reserve"),
+    mayMove: mayMove && !closed,
+    isOrganiser,
     mayEdit: isViewer(ctx, run.organiser) && c.phase !== "past" && c.phase !== "cancelled" && now < run.startsAt,
     mayDelete: (isViewer(ctx, run.organiser) || viewer.isAdmin) && run.cancelledAt === undefined,
     adminDelete: viewer.isAdmin && !isViewer(ctx, run.organiser),
   };
   if (run.note !== undefined) detail.note = run.note;
+  if (c.phase !== "past" && c.phase !== "cancelled") detail.countdown = untilStart(run.startsAt, now);
+  if (mine !== undefined) detail.answeredAt = `Answered ${dayTime(mine.answeredAt, viewer.timeZone)}`;
+  if (isOrganiser) {
+    const ch = mine?.guid === undefined ? undefined : ctx.byGuid.get(mine.guid);
+    const bar: LeadBar = {
+      state: mine?.answer === "in" ? "playing" : mine === undefined || mine.answer === "cant" ? "out" : "benched",
+    };
+    if (mine !== undefined && mine.answer !== "cant" && ch !== undefined) {
+      bar.character = charName(ctx, mine);
+      bar.role = ROLE_LABEL[mine.role];
+      bar.initials = initials(bar.character);
+      const info = classInfo(ch.classFile);
+      if (info !== undefined) bar.colorToken = info.textToken;
+      const talents = ch.mainTreeName === undefined ? undefined : `${ch.mainTreeName} talents`;
+      bar.line = [[ch.level, ch.className].filter((x) => x !== undefined).join(" "), talents]
+        .filter((x) => x !== undefined && x !== "")
+        .join(" · ");
+    }
+    detail.leadBar = bar;
+  } else if (mine !== undefined) {
+    const character = nameOf(mine);
+    const role = ROLE_LABEL[mine.role];
+    const summary: AnswerSummary =
+      mine.answer === "in"
+        ? { lead: "You're in as", role }
+        : mine.answer === "reserve"
+          ? { lead: `${role} is full · you're reserve as`, detail: "You move up when someone drops out." }
+          : mine.answer === "maybe"
+            ? { lead: "Maybe as", role }
+            : { lead: "You can't make it" };
+    if (character !== undefined && mine.answer !== "cant") summary.character = character;
+    detail.summary = summary;
+  }
   const ended = run.cancelledAt === undefined ? pastResult(run).detail : undefined;
   if (ended !== undefined) detail.outcome = ended;
   if (run.cancelledAt !== undefined) {
@@ -664,6 +831,136 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
   return detail;
 }
 
+// --- WEB-49: the picker, the organiser's moves, the run page v2 -------------------------------------------------
+
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** "Wed 09:12" in a zone. */
+function dayTime(at: number, timeZone: string): string {
+  const weekday = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short" }).format(new Date(at * 1000));
+  return `${WEEKDAY_SHORT.find((d) => weekday.startsWith(d)) ?? weekday} ${localTime(at, timeZone)}`;
+}
+
+/** "priests", "mages". */
+function classPlural(className: string | undefined): string {
+  return className === undefined ? "this class" : `${className.toLowerCase()}s`;
+}
+
+function fitNote(kind: FitKind, label: string): string | undefined {
+  const n = label.match(/\d+/)?.[0];
+  switch (kind) {
+    case "low":
+      return `${n} levels below: tough, but the group can carry you.`;
+    case "tooLow":
+      return `${n} levels below: you can only answer Maybe.`;
+    case "carry":
+      return `${n} levels over. The others get less XP from kills, but runs go fast.`;
+    default:
+      return undefined;
+  }
+}
+
+function pickerCharacter(c: CharacterView, r: LevelRange): PickerCharacter {
+  const fit = levelFit(c.level, r.min, r.max);
+  const info = classInfo(c.classFile);
+  const roles = [...rolesFor(c.classFile)] as SlotRole[];
+  const own = slotRole(c.role);
+  const v: PickerCharacter = {
+    guid: c.guid,
+    name: c.name ?? c.guid,
+    initials: initials(c.name),
+    line: [[c.level, c.className].filter((x) => x !== undefined).join(" "), c.mainTreeName]
+      .filter((x) => x !== undefined && x !== "")
+      .join(" · "),
+    fit: { kind: fit.kind, label: fit.label },
+    roles,
+    defaultRole: roles.includes(own) ? own : roles[0]!,
+    notFor: `not for ${classPlural(c.className)}`,
+    onlyMaybe: !fit.canPick,
+  };
+  if (c.level !== undefined) v.level = c.level;
+  if (c.classFile !== undefined) v.classFile = c.classFile;
+  if (info !== undefined) v.colorToken = info.textToken;
+  const note = fitNote(fit.kind, fit.label);
+  if (note !== undefined) v.note = note;
+  return v;
+}
+
+/** The picker for the viewer: all their characters, the roles' states without their own answer. */
+function picker(ctx: Ctx, run: RunRecord): PickerView {
+  const r = rangeOf(run);
+  const dungeon = runDungeon(run.dungeonId);
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const open = openSlots(run.answers.filter((a) => a !== mine));
+  const roles = {} as PickerView["roles"];
+  for (const role of SLOT_ROLES) {
+    const n = open[role];
+    roles[role] = { state: n <= 0 ? "full → reserve" : role === "damage" ? `${n} open` : "open", full: n <= 0 };
+  }
+  const view: PickerView = {
+    runId: run.id,
+    title: `Join ${dungeon?.name ?? "the run"}`,
+    sub: `${runWhen(run.startsAt, ctx.input.viewer.timeZone, ctx.input.now)} · levels ${rangeText(r)}`,
+    characters: ctx.input.characters
+      .filter((c) => {
+        const tag = ownerTag(ctx, c);
+        return tag !== undefined && isViewer(ctx, tag);
+      })
+      .sort(byLevel)
+      .map((c) => pickerCharacter(c, r)),
+    roles,
+  };
+  if (mine !== undefined) {
+    view.current = { role: mine.role, answer: mine.answer };
+    if (mine.guid !== undefined) view.current.guid = mine.guid;
+  }
+  return view;
+}
+
+/** The ⋯ menu for a sign-up in a slot: other roles (open, or a swap), reserve, off the run (WEB-49). */
+function moveMenu(ctx: Ctx, run: RunRecord, a: RunAnswer): MoveOption[] {
+  const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+  const own = isViewer(ctx, a.battleTag);
+  const can = rolesFor(ch?.classFile);
+  const open = openSlots(run.answers);
+  const g = group(run.answers);
+  const menu: MoveOption[] = SLOT_ROLES.map((role): MoveOption => {
+    const label = ROLE_LABEL[role];
+    if (role === a.role) return { label, to: role, detail: "current", disabled: true };
+    if (!can.includes(role))
+      return { label, to: role, detail: `not for ${classPlural(ch?.className)}`, disabled: true };
+    if (open[role] > 0) return { label: `Move to ${label}`, to: role, detail: "open" };
+    // Full: trade places with someone there whose class can play this sign-up's role.
+    const partner = g[role].find((p) => {
+      const pc = p.guid === undefined ? undefined : ctx.byGuid.get(p.guid);
+      return p.guid !== undefined && rolesFor(pc?.classFile).includes(a.role);
+    });
+    if (partner === undefined) return { label, to: role, detail: "taken", disabled: true };
+    return { label: `Swap with ${charName(ctx, partner)}`, to: role, swapWith: partner.guid!, detail: label };
+  });
+  menu.push({ label: own ? "Bench yourself" : "Move to reserve", to: "reserve" });
+  menu.push({ label: own ? "Leave the group" : "Remove from run", to: "remove", danger: true });
+  return menu;
+}
+
+/** One fact for an open slot (finding 1): how many are left, or that nobody is in range and who is closest. */
+function openFact(ctx: Ctx, run: RunRecord, role: SlotRole, left: number): string {
+  const r = rangeOf(run);
+  const answered = new Set(run.answers.map((a) => a.battleTag.toLowerCase()));
+  const free = ctx.input.characters.filter((c) => {
+    const tag = ownerTag(ctx, c);
+    return tag !== undefined && !answered.has(tag.toLowerCase()) && rolesFor(c.classFile).includes(role);
+  });
+  if (free.some((c) => levelFit(c.level, r.min, r.max).suggested)) return `${left} left`;
+  const below = free
+    .filter((c) => c.level !== undefined && c.level < r.min)
+    .sort((x, y) => (y.level ?? 0) - (x.level ?? 0))[0];
+  const nobody = `No ${role} in range`;
+  return below === undefined
+    ? nobody
+    : `${nobody} · ${below.name ?? below.guid} is ${levelFit(below.level, r.min, r.max).label}`;
+}
+
 // --- Plan a run -------------------------------------------------------------------------------------------------------
 
 export interface DungeonOption {
@@ -685,6 +982,8 @@ export interface PlanPage {
   dungeons: DungeonOption[];
   dungeonId: string;
   leads: Record<string, LeadOption[]>;
+  /** Lead as through the picker (WEB-49): the viewer's characters per dungeon, with fit, roles and notes. */
+  leadPicker: Record<string, PickerCharacter[]>;
   days: DayOption[];
   timeZone: string;
   /** Friends in another zone, for "Bob and Jorrit see 19:30". */
@@ -711,7 +1010,15 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
     return { id: d.id, name: d.name, label: `${d.name} · ${rangeText(d.typicalLevels)}`, fits, range: d.typicalLevels };
   });
   const leads: Record<string, LeadOption[]> = {};
+  const leadPicker: Record<string, PickerCharacter[]> = {};
+  const mine = input.characters
+    .filter((c) => {
+      const tag = ownerTag(ctx, c);
+      return tag !== undefined && isViewer(ctx, tag);
+    })
+    .sort(byLevel);
   for (const d of dungeons) {
+    leadPicker[d.id] = mine.map((c) => pickerCharacter(c, d.range));
     leads[d.id] = viewerCharacters(ctx, d.range).map((c) => {
       // One wording everywhere (WEB-47 levelFit): "damage", "+3 over", "carry · +12", "4 below".
       const why = c.fit === "fits" ? c.role : (c.off ?? "");
@@ -731,6 +1038,7 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
     dungeons,
     dungeonId: best.id,
     leads,
+    leadPicker,
     days: nextDays(input.now, tz),
     timeZone: tz,
     otherZones: [...others].map(([name, timeZone]) => ({ name, timeZone })).sort((a, b) => compareText(a.name, b.name)),

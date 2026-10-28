@@ -3,7 +3,6 @@ import { E2E } from "../../playwright.config";
 import { isPhone } from "../design/checks";
 import { planRun } from "./runs";
 import { signInAs } from "./session";
-import { pick } from "./dropdown";
 
 // WEB-40: plan a run, friends answer from the list and the run's page (an answer that didn't go through is kept and
 // retried), the organiser edits and deletes, someone else can't. On the e2e sample (seed.setup.ts): the admin plays
@@ -41,26 +40,48 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await card.getByRole("button", { name: "I'm in" }).click();
   await expect(card.getByText(/^You answered I'm in with Bob Example/)).toBeVisible();
 
-  // Femke answers on the run's page; the healer slot takes Lia. Her first try doesn't go through: it is kept.
+  // Femke answers on the run's page through the picker (WEB-49); the healer slot takes Lia. A try that doesn't go
+  // through stays in the picker with what she chose.
   await as(context, baseURL!, "Femke#3307");
   await page.goto(`/runs/${runId}`);
   const answer = page.getByRole("region", { name: "Your answer" });
-  await pick(page, answer.getByLabel("Answer with"), "Lia Thornwhisper 37 · healer");
+  await answer.getByRole("button", { name: "Answer" }).click();
+  const picker = page.getByRole("dialog", { name: `Join ${name}` });
+  await picker.getByRole("option", { name: /Lia Thornwhisper/ }).click();
+  await expect(picker.getByRole("radio", { name: /^Healer/ })).toHaveAttribute("aria-checked", "true");
+  await expect(picker.getByRole("radio", { name: /^Tank/ })).toHaveAttribute("aria-disabled", "true");
   await page.route("**/api/runs/*/answer", (route) => route.abort());
-  await answer.getByRole("button", { name: "I'm in" }).click();
-  await expect(answer.getByText(/Answer didn.t go through/)).toBeVisible();
+  await picker.getByRole("button", { name: "Save answer" }).click();
+  await expect(picker.getByRole("alert")).toHaveText(/No connection/);
   await page.unroute("**/api/runs/*/answer");
-  await answer.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByRole("region", { name: "Group" }).getByText("Lia Thornwhisper")).toBeVisible();
+  await picker.getByRole("button", { name: "Save answer" }).click();
+  await expect(picker).toBeHidden();
+  const group = page.getByRole("region", { name: "Group" });
+  await expect(group.getByText("Lia Thornwhisper")).toBeVisible();
+  await expect(answer.getByText(/You're in as/)).toBeVisible();
   if (isPhone(page)) {
     // In thumb reach: the answer stays at the bottom of the screen, above the tab bar.
     const box = (await answer.boundingBox())!;
     expect(box.y + box.height).toBeGreaterThan(812 - 200);
   }
 
-  // Only the organiser edits.
   expect((await page.request.get(`/runs/${runId}/edit`)).status()).toBe(404);
+
+  // The organiser moves Lia to reserve and benches himself, from the slots' ⋯ menus (WEB-49).
   await as(context, baseURL!, E2E.admin);
+  await page.goto(`/runs/${runId}`);
+  await page.getByRole("button", { name: "Move Lia Thornwhisper" }).click();
+  await page.getByRole("menuitem", { name: /^Move to reserve/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Lia Thornwhisper moved to reserve" })).toBeVisible();
+  await expect(page.getByRole("definition").filter({ hasText: "Lia Thornwhisper" })).toBeVisible();
+  await page.getByRole("button", { name: "Change your place" }).click();
+  await page.getByRole("menuitem", { name: "Bench yourself" }).click();
+  await expect(page.getByText(/You're on the bench as Ves Doombringer/)).toBeVisible();
+  await page.getByRole("button", { name: "Join again" }).click();
+  await page.getByRole("dialog", { name: "Lead as" }).getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText(/^You lead as/)).toBeVisible();
+
+  // Only the organiser edits.
   await page.goto(`/runs/${runId}`);
   await page.getByRole("link", { name: "Edit run" }).click();
   await page.getByLabel("Note (optional)").fill("Bring water and food");

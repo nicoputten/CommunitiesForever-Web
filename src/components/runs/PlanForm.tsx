@@ -6,6 +6,7 @@ import type { FormState } from "@/app/(site)/runs/actions";
 import { DateField } from "@/components/ui/DateField";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { TimeField } from "@/components/ui/TimeField";
+import { PickerFields, initialPick, type PickerValue } from "./Picker";
 import { localTime, runWhen, zonedToUtc } from "@/core/runTime";
 import type { PlanPage } from "@/core/views/runs";
 import { joinNames } from "@/core/views/text";
@@ -20,6 +21,13 @@ export interface PlanFormProps {
   postsTo: string;
 }
 
+/** Plan has no slots yet: the roles show no counts, only "your talents" and what the class can't play. */
+const NO_COUNTS = {
+  tank: { state: "", full: false },
+  healer: { state: "", full: false },
+  damage: { state: "", full: false },
+};
+
 /** The board's evening time, the form's default. */
 const DEFAULT_TIME = "20:30";
 
@@ -27,8 +35,10 @@ const DEFAULT_TIME = "20:30";
 export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
   const [state, submit, pending] = useActionState(action, {});
   const [dungeonId, setDungeonId] = useState(edit?.dungeonId ?? page.dungeonId);
-  const leads = page.leads[dungeonId] ?? [];
-  const [lead, setLead] = useState(edit?.lead ?? leads.find((l) => l.fits)?.guid ?? "");
+  // Lead as (WEB-49): the picker with character and role, no answer step.
+  const leadsFor = (id: string) => page.leadPicker[id] ?? [];
+  const firstLead = (id: string): PickerValue | undefined => initialPick({ characters: leadsFor(id) });
+  const [lead, setLead] = useState<PickerValue | undefined>(() => firstLead(dungeonId));
   // 20:30 today, or tomorrow once that has passed.
   const evening = zonedToUtc(page.days[0]!.date, DEFAULT_TIME, page.timeZone);
   const firstDay = page.days[evening !== undefined && evening <= page.now ? 1 : 0]!.date;
@@ -45,8 +55,11 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
   const date = day === "other" ? otherDay : day;
   const startsAt = zonedToUtc(date, time, page.timeZone);
   const passed = startsAt !== undefined && startsAt <= now;
-  const noneFits = leads.every((l) => !l.fits);
-  const chosenLead = leads.find((l) => l.guid === lead && l.fits);
+  const leadChars = leadsFor(dungeonId);
+  const noneFits = leadChars.every((c) => c.onlyMaybe);
+  const chosen = leadChars.find((c) => c.guid === lead?.guid);
+  // A character too low to lead leaves the organiser without a slot (the server refuses it as lead).
+  const chosenLead = chosen !== undefined && !chosen.onlyMaybe ? chosen : undefined;
   const zones = new Map<string, string[]>();
   if (startsAt !== undefined) {
     for (const z of page.otherZones) {
@@ -71,38 +84,32 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
             options={page.dungeons.map((d) => ({ value: d.id, label: d.name, meta: `${d.range.min}–${d.range.max}` }))}
             onChange={(id) => {
               setDungeonId(id);
-              setLead(page.leads[id]?.find((l) => l.fits)?.guid ?? "");
+              setLead(firstLead(id));
             }}
           />
           <p className={styles.small}>{dungeon.fits}</p>
         </div>
 
         {edit === undefined && (
-          <div className={styles.field}>
-            <label htmlFor="lead" className={styles.label}>
-              Lead as
-            </label>
-            <Dropdown
-              id="lead"
-              name="lead"
-              value={lead}
-              onChange={setLead}
-              options={[
-                ...leads.map((l) => ({
-                  value: l.fits ? l.guid : `out:${l.guid}`,
-                  label: l.label,
-                  disabled: l.fits ? undefined : "Doesn't fit this dungeon",
-                })),
-                ...(noneFits ? [{ value: "", label: "Organiser without a slot" }] : []),
-              ]}
-            />
+          <fieldset className={styles.field}>
+            <legend className={styles.label}>Lead as</legend>
+            {lead !== undefined && leadChars.length > 0 && (
+              <PickerFields
+                view={{ characters: leadChars, roles: NO_COUNTS }}
+                value={lead}
+                onChange={setLead}
+                withAnswer={false}
+              />
+            )}
+            <input type="hidden" name="lead" value={chosenLead?.guid ?? ""} />
+            <input type="hidden" name="leadRole" value={chosenLead === undefined ? "" : (lead?.role ?? "")} />
             {noneFits && (
               <p className={styles.warn}>
                 None of your characters fit {dungeon.name} ({range}). You can still plan it; you&apos;re listed as
                 organiser without a slot.
               </p>
             )}
-          </div>
+          </fieldset>
         )}
 
         <fieldset className={styles.field}>
@@ -196,7 +203,9 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
         <div className={styles.preview}>
           <span>
             {page.organiser.name}
-            {chosenLead === undefined ? "" : ` on ${chosenLead.label.split(" · ")[0]}`}
+            {chosenLead === undefined
+              ? ""
+              : ` on ${chosenLead.name}${chosenLead.level === undefined ? "" : ` ${chosenLead.level}`}`}
           </span>
           <b>{dungeon.name}</b>
           <span>

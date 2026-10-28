@@ -65,9 +65,8 @@
   color: var(--gold-bright);
 }
 
-.slotGrid,
+.slotList,
 .yourAnswers,
-.couldJoin,
 .past {
   margin: 0;
   padding: 0;
@@ -548,24 +547,77 @@
   color: var(--text);
 }
 
-.slotGrid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--s-2-5);
+/* WEB-49 (board runs-v2-run-detail): the hero, the organiser's bar, the slots as rows with a fit tag and ⋯. */
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
 }
 
-@media (max-width: 1279px) {
-  .slotGrid {
-    grid-template-columns: repeat(auto-fill, minmax(var(--size-search-min), 1fr));
-  }
+.whenBig {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-3);
+}
+
+.countdown {
+  font-size: var(--fs-section);
+  color: var(--fresh-text);
+}
+
+.leadBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.leadText {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-1-5);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.leadName {
+  font-family: var(--font-name);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+}
+
+.leadLine {
+  flex-basis: 100%;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.summaryRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.slotList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
 }
 
 .slot {
   display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
+  align-items: center;
+  gap: var(--s-3);
   min-width: 0;
-  padding: var(--s-3);
+  min-height: var(--size-touch);
+  padding: var(--s-2) var(--s-3);
   border-radius: var(--r-btn);
   background: var(--surface-slot);
   border: var(--border) solid var(--line-slot);
@@ -579,10 +631,19 @@
 }
 
 .slotRole {
+  flex: none;
+  width: var(--size-slot-role);
   font-size: var(--fs-meta-sm);
   letter-spacing: var(--ls-overline);
   text-transform: uppercase;
   color: var(--text-faint);
+}
+
+.slotBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .slotName {
@@ -591,6 +652,62 @@
   font-size: var(--fs-section);
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.slotOpen {
+  font-size: var(--fs-body);
+  color: var(--stale-text);
+}
+
+.fitTag {
+  flex: none;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.fitTag[data-fit="fits"],
+.fitTag[data-fit="over"] {
+  color: var(--fresh-text);
+}
+
+.fitTag[data-fit="low"],
+.fitTag[data-fit="carry"] {
+  color: var(--stale-text);
+}
+
+.groupRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  margin: 0;
+  font-size: var(--fs-body-sm);
+}
+
+.groupRows > div {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.groupRows dt {
+  flex: none;
+  width: var(--size-slot-role);
+  font-size: var(--fs-meta-sm);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.groupRows dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.usual {
+  color: var(--text-dim);
+}
+
+.tableScroll {
+  overflow-x: auto;
 }
 
 .table {
@@ -627,15 +744,6 @@
 .table td[data-answer="cant"],
 .table td[data-dim] {
   color: var(--text-dim);
-}
-
-.couldJoin {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1-5);
-  font-size: var(--fs-body-sm);
-  color: var(--text-dim);
-  list-style: none;
 }
 
 /* --- Plan a run ---------------------------------------------------------------------------------------------------- */
@@ -835,10 +943,13 @@
     min-height: var(--size-touch);
   }
 
-  .table th:nth-child(3),
-  .table td:nth-child(3),
-  .table th:nth-child(5),
-  .table td:nth-child(5) {
+  /* Phone: character, role and answer (WEB-49 added Fit and the day; friend, fit and when · where stay on desktop). */
+  .table th:nth-child(2),
+  .table td:nth-child(2),
+  .table th:nth-child(4),
+  .table td:nth-child(4),
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
     display: none;
   }
 

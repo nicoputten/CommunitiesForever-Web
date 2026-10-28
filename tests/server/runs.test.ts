@@ -15,7 +15,7 @@ import { createBotToken, pendingEvents } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { runAnswers } from "@/server/db/schema";
 import { linkDiscord, setTimeZone, updateBotSettings } from "@/server/discord";
-import { answerRunFor, cancelRun, editRun, getRun, planRunFor, writeDueRunEvents } from "@/server/runs";
+import { answerRunFor, cancelRun, editRun, getRun, moveRunSignUp, planRunFor, writeDueRunEvents } from "@/server/runs";
 import { upload } from "@/server/uploads";
 import { ADMIN, NOW, sampleSavedVariables } from "../design/sample";
 
@@ -274,6 +274,44 @@ describe("the organiser's moves (WEB-47)", () => {
     ).toMatchObject({
       stored: { answer: "maybe" },
     });
+  });
+
+  it("swaps two people, and the organiser benches themselves without a notice to themselves (WEB-49)", () => {
+    const db = getDb();
+    const id = (
+      planRunFor(
+        db,
+        { dungeonId: "sm-library", startsAt: NOW + 5 * HOUR, organiser: "Bob#2002", source: "website", leadGuid: TOK },
+        NOW,
+      ) as { id: number }
+    ).id;
+    answerRunFor(
+      db,
+      id,
+      { battleTag: "Femke#3307", answer: "in", source: "website", guid: LIA, role: "damage" },
+      NOW + 1,
+    );
+    const before = pendingEvents(db, 0, NOW).at(-1)?.id ?? 0;
+    const notices = () =>
+      pendingEvents(db, before, NOW)
+        .filter((e) => e.type === "runMoved")
+        .map((e) => [(e.data as { who: { name: string } }).who.name, (e.data as { to: string }).to]);
+
+    // Bob (organiser, healer) puts Femke in the healer slot and takes her damage slot: only Femke hears of it.
+    const swapped = moveRunSignUp(db, id, "Bob#2002", false, LIA, "healer", NOW + 2, TOK);
+    expect(typeof swapped).not.toBe("string");
+    const answers = getRun(db, id)!.answers;
+    expect(answers.find((a) => a.guid === LIA)).toMatchObject({ answer: "in", role: "healer" });
+    expect(answers.find((a) => a.guid === TOK)).toMatchObject({ answer: "in", role: "damage" });
+    expect(notices()).toEqual([["Femke", "healer"]]);
+    expect(moveRunSignUp(db, id, "Bob#2002", false, LIA, "tank", NOW + 3, TOK)).toBe("not_in_role");
+
+    // Bob benches himself: he stays the organiser, on reserve, and gets no notice.
+    expect(typeof moveRunSignUp(db, id, "Bob#2002", false, TOK, "reserve", NOW + 4)).not.toBe("string");
+    const run = getRun(db, id)!;
+    expect(run.organiser).toBe("Bob#2002");
+    expect(run.answers.find((a) => a.guid === TOK)).toMatchObject({ answer: "reserve" });
+    expect(notices()).toEqual([["Femke", "healer"]]);
   });
 
   it("turns WEB-40's 'Maybe, first in line' into reserve (migration 0011)", () => {

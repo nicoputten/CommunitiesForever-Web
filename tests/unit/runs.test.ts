@@ -250,6 +250,34 @@ describe("roles and the organiser's moves (WEB-47)", () => {
     expect(removed.answers.some((x) => x.guid === "BOB")).toBe(false);
     expect(moveSignUp({ ...run, cancelledAt: NOW }, a, "BOB", "remove", NOW, levelOf, classOf)).toBe("closed");
   });
+
+  it("swaps two sign-ups into each other's places, and benches the organiser like anyone (WEB-49)", () => {
+    let a = withClass("Nico#2201", "VES", "in")([]).answers;
+    a = withClass("Bob#2002", "BOB", "in")(a).answers;
+    a = withClass("Femke#3307", "LIA", "in", "damage")(a).answers;
+    a = withClass("Mira#1188", "KEL", "in", "damage")(a).answers; // a reserve: damage is full
+    const swap = (answers: RunAnswer[], guid: string, to: Parameters<typeof moveSignUp>[3], withGuid: string) =>
+      moveSignUp(run, answers, guid, to, NOW, levelOf, classOf, withGuid);
+
+    // Kel (reserve) takes Bob's damage slot; Bob becomes the reserve. No slot frees, nobody moves up.
+    const traded = swap(a, "KEL", "damage", "BOB");
+    if (typeof traded === "string") throw new Error(traded);
+    expect(traded.moved).toMatchObject({ guid: "KEL", answer: "in", role: "damage" });
+    expect(traded.swapped).toMatchObject({ guid: "BOB", answer: "reserve", role: "damage" });
+    expect(traded.movedUp).toBeUndefined();
+    expect(traded.answers).toHaveLength(4);
+
+    // A swap partner must hold a slot of the role asked for.
+    expect(swap(a, "LIA", "healer", "KEL")).toBe("not_in_role");
+    expect(swap(a, "LIA", "damage", "NOPE")).toBe("unknown_sign_up");
+    expect(swap(a, "VES", "tank", "BOB")).toBe("not_in_role");
+
+    // The organiser benches themselves: their damage slot frees and the oldest reserve (Kel) moves up.
+    const bench = moveSignUp(run, a, "VES", "reserve", NOW, levelOf, classOf);
+    if (typeof bench === "string") throw new Error(bench);
+    expect(bench.moved).toMatchObject({ guid: "VES", battleTag: "Nico#2201", answer: "reserve" });
+    expect(bench.movedUp).toMatchObject({ guid: "KEL", answer: "in" });
+  });
 });
 
 describe("level fit and class roles (WEB-47)", () => {
