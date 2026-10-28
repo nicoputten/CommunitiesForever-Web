@@ -76,10 +76,10 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await expect(page.getByRole("definition").filter({ hasText: "Lia Thornwhisper" })).toBeVisible();
   await page.getByRole("button", { name: "Change your place" }).click();
   await page.getByRole("menuitem", { name: "Bench yourself" }).click();
-  await expect(page.getByText(/You're on the bench as Ves Doombringer/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "You lead" }).getByText(/You're on the bench as/)).toBeVisible();
   await page.getByRole("button", { name: "Join again" }).click();
   await page.getByRole("dialog", { name: "Lead as" }).getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText(/^You lead as/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "You lead" }).getByText(/^You lead as/)).toBeVisible();
 
   // Only the organiser edits.
   await page.goto(`/runs/${runId}`);
