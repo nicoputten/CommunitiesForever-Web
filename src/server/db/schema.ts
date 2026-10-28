@@ -1,5 +1,6 @@
 import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
+import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
@@ -373,10 +374,36 @@ export const feedDays = sqliteTable(
   (t) => [uniqueIndex("feed_days_day_guid_unique").on(t.day, t.guid)],
 );
 
-/** Whether each person shares their activity ("Share my activity", CF-22), from their newest record seen. */
-export const feedSharing = sqliteTable("feed_sharing", {
+/**
+ * Doomsday goals as each friend's addon recorded them (addon CF-56, WEB-55): per person, Doomsday day or week; the
+ * copy with the newer `at` wins, an equal one from a later upload too.
+ */
+export const doomsdayGoals = sqliteTable(
+  "doomsday_goals",
+  {
+    /** Person key of the goals' owner. */
+    owner: text("owner").notNull(),
+    /** `day` or `week`. */
+    period: text("period").$type<"day" | "week">().notNull(),
+    /** Doomsday day or week number (docs/DOOMSDAY.md "Schedule"). */
+    n: integer("n").notNull(),
+    /** When the addon last changed it, when known. */
+    at: integer("at"),
+    sourceUpload: integer("source_upload").notNull(),
+    data: text("data", { mode: "json" }).$type<GoalRecord>().notNull(),
+  },
+  (t) => [uniqueIndex("doomsday_goals_owner_period_n_unique").on(t.owner, t.period, t.n)],
+);
+
+/** Per person: the streak, best, pool version and reset from the goals with the newest `at` seen (WEB-55). */
+export const doomsdayStatus = sqliteTable("doomsday_status", {
   owner: text("owner").primaryKey(),
-  shared: integer("shared", { mode: "boolean" }).notNull(),
+  streak: integer("streak"),
+  best: integer("best"),
+  pool: integer("pool"),
+  reset: integer("reset"),
+  /** The newest `at` of the goals it came with. */
+  at: integer("at"),
   sourceUpload: integer("source_upload").notNull(),
 });
 

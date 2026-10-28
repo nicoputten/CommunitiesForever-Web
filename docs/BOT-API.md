@@ -143,7 +143,7 @@ With a linked `discordUserId`, every answer has `asker`: the asker's display nam
 | `whocancraft` | `profession` | `{ profession, crafters: [character + { rank, max?, best }] }`: best first, `best` for the highest rank |
 | `character` | `name` (GUID or full name) | `{ character }` |
 | `alts` | `friend` (display name) | `{ friend, characters }`: highest level first |
-| `me` | | `{ friend, characters, week? }`: the asker's characters; `week: { levels, quests, runs }` from the activity feed of the last 7 days, only when they share their activity |
+| `me` | | `{ friend, characters, week? }`: the asker's characters; `week: { levels, quests, runs }` from the activity feed of the last 7 days, only when they ever sent one |
 
 Optional within v1: an older site answers 404 and the bot says the look-up isn't available.
 

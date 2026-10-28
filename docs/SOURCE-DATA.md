@@ -34,10 +34,11 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `self.battleTag`, `self.displayName` | the uploader (Nico) | person row |
 | `self.chars[guid]` | own characters (`Char`) | alts |
 | `people[battleTag]` | each friend: `displayName`, `chars[guid]`, `receivedAt`, `via` (relayed by), `removed[guid]` | alts, data age |
-| `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; later `recipes` (addon CF-38) | alts, professions |
+| `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; `pvp = { hk, rank, rankName, weekKills, weekHonor, deaths, duelsWon, duelsLost }` (CF-52: lifetime honorable kills, PvP rank 0 to 14 and the game's name for it, this week's kills and honor, lifetime deaths and duels); `riding` (CF-53: 0, 75 or 150); later `recipes` (addon CF-38) | alts, professions, Doomsday feats (WEB-56) |
 | `locations[guid]` | `{ zone, seenAt }`: last zone seen in the community while Nico was online. Zone name text, can be a dungeon. | map |
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
-| `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`; `false` when "Share my activity" is off; the last 7 realm days only | weekly recap history (WEB-41) |
+| `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`. Since CF-52: `kills[zone]`, `deaths = { { t, zone, cause } }` (cause `fall`, `fire`, `lava`, `drown`, `fatigue`, `player`, `creature` or `other`; anything else is read as `other`), `duels = { { t, won, vs } }` (`vs` the opponent's full name). CF-53: `loot = { rare, epic = { { id, name, slot, level } } }` (`slot` an `INVTYPE_*` token), `notable[itemID]`, `gold = { gained, spent }` (copper, never shown as an amount), `sessions = { { from, to } }`, `groups[guid] = true`. CF-55: `pvpKills = { { t, zone, name, lvl, myLvl, class, race, rank, solo, bg } }` (`lvl` -1 is a skull; each victim field only when readable). Capped as the addon caps them (50 deaths, duels, epics and sessions, 40 groups, 100 kills per day and character). `false` from addons that had "Share my activity" (gone, Nico 2026-10-28): read as nothing sent. The last 7 realm days only | weekly recap history (WEB-41), Doomsday (E8) |
+| `self.goals`, `people[bt].goals` | Doomsday goals (CF-56): `days[n]` and `weeks[w]` each `{ set, swapped[id] = originalId, done[id] = time, at }`, plus `streak`, `best`, `pool` (the pool version), `reset` (seconds after midnight realm time). Ids at most 24 characters, at most 5 per day and 4 per week; numbers 0 or more. `false` is read as nothing sent. The last 7 days and 2 weeks only | Doomsday (WEB-55, WEB-58) |
 | `runs` | Nico's runs in progress | later (backlog) |
 | `settings` | `clubName` only | page title / group name |
 
@@ -50,7 +51,7 @@ Times are Unix seconds. Any field can be missing in older releases.
 - `locations[guid] = { zone, seenAt }`, `presence[guid] = { battleTag, lastSeen }`.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
 - `uploader` (person key of `self`) and `version` (`self.version`).
-- The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state.
+- The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state. So are the Doomsday goals (`readAllGoals`, `src/core/doomsday/record.ts`, WEB-55).
 - Not read yet: `runs`, `invite`, other `settings`.
 
 ## The game's items (`pending`, WEB-43)

@@ -133,7 +133,6 @@ exports[`every fixture normalizes > addon/v0.3/savedvariables.lua: its feeds 1`]
       },
     },
     "owner": "Ada#1001",
-    "shared": true,
   },
 ]
 `;
@@ -271,7 +270,6 @@ exports[`every fixture normalizes > addon/v0.4/savedvariables.lua: its feeds 1`]
       },
     },
     "owner": "Ada#1001",
-    "shared": true,
   },
 ]
 `;
@@ -563,7 +561,6 @@ exports[`every fixture normalizes > real/beta-2026-10.lua: its feeds 1`] = `
       },
     },
     "owner": "Ada#1001",
-    "shared": true,
   },
 ]
 `;
