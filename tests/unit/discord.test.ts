@@ -95,8 +95,21 @@ describe("linked friends", () => {
 });
 
 describe("bot settings", () => {
-  it("defaults to everything on, the recap on Sunday 13:00 and reminders 30 minutes before", () => {
+  it("defaults to every post on but Doomsday's, the recap on Sunday 13:00 and reminders 30 minutes before", () => {
     expect(botSettingsFrom(undefined)).toEqual(DEFAULT_BOT_SETTINGS);
+    // Doomsday's posts are off until the admin turns them on (Nico, 2026-10-28): without a row, and in a row from
+    // before WEB-58 that has no such keys; the other posts stay on.
+    expect(botSettingsFrom(undefined)).toMatchObject({
+      doomsdayBoard: false,
+      doomsdayLadder: false,
+      milestones: true,
+      runs: true,
+      recap: true,
+    });
+    expect(botSettingsFrom({ milestones: true, runs: true, recap: true })).toMatchObject({
+      doomsdayBoard: false,
+      doomsdayLadder: false,
+    });
     expect(DEFAULT_BOT_SETTINGS).toMatchObject({ recapDay: 0, recapTime: "13:00", reminderMinutes: 30, recap: true });
   });
 

@@ -263,8 +263,8 @@ export const botSettings = sqliteTable("bot_settings", {
   askNow: integer("ask_now", { mode: "boolean" }).notNull(),
   markDone: integer("mark_done", { mode: "boolean" }).notNull(),
   /** Doomsday (WEB-58); defaults for rows from before it. */
-  doomsdayBoard: integer("doomsday_board", { mode: "boolean" }).notNull().default(true),
-  doomsdayLadder: integer("doomsday_ladder", { mode: "boolean" }).notNull().default(true),
+  doomsdayBoard: integer("doomsday_board", { mode: "boolean" }).notNull().default(false),
+  doomsdayLadder: integer("doomsday_ladder", { mode: "boolean" }).notNull().default(false),
   doomsdayChannel: text("doomsday_channel"),
   /** Seconds after realm midnight. */
   doomsdayReset: integer("doomsday_reset").notNull().default(68400),

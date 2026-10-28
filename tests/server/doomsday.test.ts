@@ -175,6 +175,7 @@ describe("Doomsday's bot events", () => {
       .map((e) => ({ id: e.id, postedAt: e.postedAt, data: e.data as Record<string, unknown> }));
 
   it("posts the board at the reset, updates the latest only, closes the day and posts the ladder on Sunday", () => {
+    updateBotSettings(db, { doomsdayBoard: true, doomsdayLadder: true }, ADMIN, T);
     const [d1, d2, d3] = dailies(DAY);
     upload(db, file(100, { nico: dayLua(DAY, {}), ada: dayLua(DAY, {}) }), ADMIN, T + 30, ADMIN);
     runDueDoomsday(db, T + 60);
@@ -238,8 +239,7 @@ describe("Doomsday's bot events", () => {
     expect((ladder!.data.pve as { name: string; points: number }[])[0]).toMatchObject({ name: "Nico", points: 15 });
   });
 
-  it("posts nothing with the switches off", () => {
-    updateBotSettings(db, { doomsdayBoard: false, doomsdayLadder: false }, ADMIN, T);
+  it("posts nothing with the switches off, as they are until the admin turns them on", () => {
     upload(db, file(100, { nico: dayLua(DAY, {}) }), ADMIN, T + 30, ADMIN);
     runDueDoomsday(db, T + 60);
     expect(
