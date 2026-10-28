@@ -20,13 +20,28 @@ Use the existing design system everywhere (Night over Azeroth: tokens, Marcellus
 
 ## 1. New milestone posts (Discord; copy "Discord bot · milestones & group asks")
 
-Milestones from one upload are grouped into one post, as now. Add these kinds:
-- **Honorable kills:** the first honorable kill, then 100, 1,000 and 5,000. ("Ves Doombringer reached 1,000 honorable kills")
-- **PvP rank:** a new rank, with the Vanilla rank title and its insignia per faction (Horde: Scout … High Warlord; Alliance: Private … Grand Marshal). ("Ves Doombringer is now a Stone Guard")
-- **First epic item:** a character's first purple item, with the item name in epic purple. ("Lia Thornwhisper looted a first epic: Bonereaver's Edge")
-- **Mount:** riding at 75 ("Tok Ironhide no longer walks"), and the **epic mount** at riding 150.
+Milestones from one upload are grouped into one post, as now. No pings. Add these kinds:
 
-Card images, 800 × 400 like the existing `level-60` and `profession-300`, for: **new PvP rank** (insignia, character, class colour), **first epic item** (item name in purple, a subtle glow) and **epic mount**. Show one mixed post with 4 milestones too.
+**PvP and danger**
+- **Honorable kills:** the first, then 100, 1,000, 5,000 and 10,000. The first one is playful ("First blood: Ves Doombringer"). ("Ves Doombringer reached 1,000 honorable kills")
+- **PvP rank:** a character's new highest rank (1 to 14), with the Vanilla rank title and its insignia per faction (Horde: Scout … High Warlord; Alliance: Private … Grand Marshal), followed by our own title, the same for both factions. ("Ves Doombringer is now a Stone Guard, a.k.a. Mailbox Menace"). Our titles: 1 Fresh Meat, 2 Accidental Flagger, 3 Lowbie Botherer, 4 Corpse Camper, 5 Spirit Healer's Pen Pal, 6 Mailbox Menace, 7 Flag Hugger, 8 Honor Goblin, 9 Queue Dweller, 10 Crossroads Landlord, 11 Hillsbrad Housing Crisis, 12 Last Seen Questing at Launch, 13 Sleep Is for the Dishonorable, 14 Grass: Untouched. Several rank posts can arrive together after the weekly honor reset: show one.
+- **Duels:** 10, 50 and 100 duel wins. ("Ada's Ana Brightwater won a 50th duel")
+- **First battleground win**, once per battleground. ("Tok Ironhide won a first Warsong Gulch")
+- **100 deaths:** "A spirit healer's best friend: Lia Thornwhisper"
+
+**Loot and mounts**
+- **First epic item** (only the first per character): the item name in epic purple, its slot and the level it was looted at. No Wowhead link. ("Lia Thornwhisper looted a first epic at level 52: Bonereaver's Edge, two-hand")
+- **Mount** at riding 75 and **epic mount** at riding 150, with the level and the place in the group. ("Tok Ironhide no longer walks: level 40, the 3rd mount in the group")
+
+**Professions and fishing**
+- The existing Profession cap post at 300 gets a flavour title for Cooking ("Head Chef"), First Aid ("Field Medic") and Fishing ("Fish Whisperer").
+- **First catch:** "Ves Doombringer caught a first fish. Probably a boot."
+- **Jack of all trades:** two primary professions plus Cooking, First Aid and Fishing all at 300.
+- **Iconic items**, each once per character: Arcanite Reaper made, the first Arcanite transmute, the first Mooncloth, Devilsaur gear made, joined the Stranglethorn Fishing Extravaganza, won the Extravaganza.
+
+**"First in the group" badge** on a post when nobody in the group reached it before: first honorable kill, first rank 6, first epic, first mount, first epic mount, first to 60, each iconic item and Jack of all trades. Design it as a small gold-trimmed tag on the embed and on the card image.
+
+Card images, 800 × 400 like the existing `level-60` and `profession-300`, for: **10,000 honorable kills**, **new PvP rank** from rank 6 (insignia, character, class colour) with a **special one for rank 14**, **first epic item** (item name in purple, a subtle glow), **epic mount**, **Jack of all trades** and **each iconic item** (Arcanite Reaper, Arcanite transmute, Mooncloth, Devilsaur gear, Extravaganza joined, Extravaganza won). Show one mixed post with 4 milestones, one of them with the "First in the group" badge.
 
 ## 2. New weekly recap cards (Discord; copy "Discord bot · weekly recap")
 

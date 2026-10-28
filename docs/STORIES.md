@@ -56,19 +56,65 @@ New milestones, awards, cards, headlines and challenges from the data the addon 
 Compatibility: uploads from addons without CF-52 or CF-53 have none of the new fields. Each field is optional everywhere, and a card or milestone whose data is missing never shows (it never shows a zero as if it were known).
 
 ### WEB-55 Store PvP, danger and loot data from uploads
-- Read the new character fields (`pvp`, `riding`) and the new feed fields (`kills`, `deaths`, `duels`, `loot`, `gold`, `sessions`, `groups`) from uploads into the derived data, kept per realm day like the activity feed. A rebuild gives the same result.
+- Read the new character fields (`pvp`, `riding`) and the new feed fields (`kills`, `deaths`, `duels`, `loot` with the epic details, `notable`, `gold`, `sessions`, `groups`) from uploads into the derived data, kept per realm day like the activity feed. A rebuild gives the same result.
 - Validate and cap them as the addon does; unknown causes become `other`.
 - `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated; tests on a fixture with every new field and on one without them.
 
 ### WEB-56 New milestones
-- New `milestones` kinds in the bot API (`docs/BOT-API.md`):
-  - `honorKills`: first honorable kill, then 100, 1,000 and 5,000
-  - `pvpRank`: a new PvP rank reached, with the rank's title
-  - `firstEpic`: a character's first epic item, with the item id
-  - `mount`: riding 75
-  - `epicMount`: riding 150
+Agreed with Nico, 2026-10-28. New `milestones` kinds in the bot API (`docs/BOT-API.md`). Each fires once per character (counts and "first" are per character unless said otherwise).
+
+**PvP and danger**
+- `honorKills`: the first honorable kill, then 100, 1,000, 5,000 and 10,000 (lifetime kills from `pvp`). The first one has a playful text ("First blood: Ves Doombringer"). 10,000 gets a card image.
+- `pvpRank`: a character's **new highest rank ever**, every rank 1 to 14. No post on decay or on regaining a rank held before (the site keeps the highest rank per character). Several characters ranking up after the weekly honor reset arrive together; that is fine. The post gives the official rank (per faction) followed by "a.k.a." our title, the same for both factions:
+
+  | Rank | Horde / Alliance | Our title |
+  |---|---|---|
+  | 0 | none | Conscientious Objector (not posted; for the ladder and the rank race) |
+  | 1 | Scout / Private | Fresh Meat |
+  | 2 | Grunt / Corporal | Accidental Flagger |
+  | 3 | Sergeant / Sergeant | Lowbie Botherer |
+  | 4 | Senior Sergeant / Master Sergeant | Corpse Camper |
+  | 5 | First Sergeant / Sergeant Major | Spirit Healer's Pen Pal |
+  | 6 | Stone Guard / Knight | Mailbox Menace |
+  | 7 | Blood Guard / Knight-Lieutenant | Flag Hugger |
+  | 8 | Legionnaire / Knight-Captain | Honor Goblin |
+  | 9 | Centurion / Knight-Champion | Queue Dweller |
+  | 10 | Champion / Lieutenant Commander | Crossroads Landlord |
+  | 11 | Lieutenant General / Commander | Hillsbrad Housing Crisis |
+  | 12 | General / Marshal | Last Seen Questing at Launch |
+  | 13 | Warlord / Field Marshal | Sleep Is for the Dishonorable |
+  | 14 | High Warlord / Grand Marshal | Grass: Untouched |
+
+  Card images from rank 6; rank 14 gets a special image.
+- `duelWins`: 10, 50 and 100 duel wins (counted from the feed's `duels`, so from the day the character runs CF-52).
+- `bgFirstWin`: the first win in each battleground (Warsong Gulch, Arathi Basin, Alterac Valley), from `runs`.
+- `deaths100`: 100 deaths, "A spirit healer's best friend" (counted from the feed's `deaths`), once per character.
+
+**Loot and mounts**
+- `firstEpic`: only a character's first epic item; later epics go into the recap. The post shows the item name in epic purple, its slot and the level it was looted at (from CF-53's `loot.epic` entries). No Wowhead link. Card image.
+- `mount`: riding 75, with the level and the place in the group ("the 3rd mount in the group").
+- `epicMount`: riding 150, the same, with a card image.
+
+**Professions and fishing** (no new kind for the caps: the existing Profession cap milestone already covers Fishing, Cooking and First Aid at 75/150/225/300)
+- At 300, the existing Profession cap post gets a flavour title: Cooking "Head Chef", First Aid "Field Medic", Fishing "Fish Whisperer".
+- `firstCatch`: the Fishing rank goes above 1 (from `professions`/the feed's `ranks`).
+- `jackOfAllTrades`: two primary professions plus Cooking, First Aid and Fishing all at 300. Card image.
+- `notableItem`: the first time a character gets an item from the addon's watch list (CF-53's `notable`), each with its own text and card image:
+  - Arcanite Reaper created
+  - the first Arcanite transmute (Arcanite Bar created)
+  - the first Mooncloth
+  - Devilsaur Gauntlets or Leggings created (one milestone for the set)
+  - joined the Stranglethorn Fishing Extravaganza (Speckled Tastyfish looted)
+  - won the Extravaganza (Arcanite Fishing Pole or Hook of the Master Angler received)
+
+**First in the group**
+- A "First in the group" badge on the post when no character in the group reached it before: the first honorable kill, the first rank 6, the first epic, the first mount, the first epic mount, the first to 60 (the existing Max level milestone), every `notableItem` and Jack of all trades.
+
+**Rules**
+- No Discord pings. Reputation comes later.
 - Same rules as now: the site's first upload makes none, and a rebuild never makes events again. A bot without BOT-14 skips kinds it doesn't know.
-- Card images for `pvpRank`, `firstEpic` and `epicMount` once the designs are in (as WEB-41d).
+- Card images (as WEB-41d) once the designs are in: `honorKills` 10,000, `pvpRank` 6 to 13 and the special 14, `firstEpic`, `epicMount`, `jackOfAllTrades` and each `notableItem`.
+- `docs/RECAP.md` section 1 lists every new kind.
 
 ### WEB-57 New recap cards, awards, headlines and challenges
 Each card keeps the existing rules: a threshold, a score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend. IDs continue the catalogue.
