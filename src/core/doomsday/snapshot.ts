@@ -61,9 +61,7 @@ export type FriendStatus =
   /** Has the addon, but no `goals` yet (an addon before CF-56). */
   | "noDoomsday"
   /** Known only through presence. */
-  | "noAddon"
-  /** Shares no goals (`goals = false`). */
-  | "sharingOff";
+  | "noAddon";
 
 export interface FriendDoomsday {
   /** PersonView.key; never shown. */
@@ -81,6 +79,8 @@ export interface FriendDoomsday {
   /** 84 Doomsday days, oldest first, ending today: goals done that day (either track); null = no data that day. */
   heatmap?: (number | null)[];
   pvp?: PvpDetails;
+  /** The next step of the counted feats (honorKills, duelWins, deaths100, the next pvpRank; WEB-56). */
+  featProgress?: FeatProgress[];
 }
 
 export interface FriendDay {
@@ -99,7 +99,7 @@ export interface FriendWeek {
 export interface FriendGoal {
   /** The goal that counts for this friend (after a swap). */
   goal: GoalRef;
-  /** The board column it fills: the group's goal id (todayGoals, hunts or weekGoals). */
+  /** The board column it fills: the group's goal id (todayGoals or weekGoals), or "hunt:alliance" / "hunt:horde". */
   columnId: string;
   /** The group's goal it replaced, for this friend only. */
   swappedFrom?: GoalRef;
@@ -146,8 +146,9 @@ export interface PvpDetails {
     name: string;
     classFile?: string;
     faction?: "Horde" | "Alliance";
-    rank: number;
-    highestRank: number;
+    /** Undefined from an addon before CF-52 (no `pvp`). */
+    rank?: number;
+    highestRank?: number;
   }[];
   duels: {
     won: number;
@@ -175,4 +176,18 @@ export interface FeatRecord {
   /** The item name shown in epic purple. */
   epicItem?: string;
   firstInGroup: boolean;
+  /** The character had it when its fields first arrived: recorded silently, shown as "before tracking"; `at` is that
+   *  upload. Never First in the group. */
+  alreadyHad: boolean;
+  /** The card image id, when the feat has one. */
+  card?: string;
+}
+
+/** A feat not reached yet, with how far along (WEB-60 "Your feats"). */
+export interface FeatProgress {
+  kind: string;
+  /** "1,000 honorable kills". */
+  title: string;
+  character?: { guid: string; name: string; classFile?: string };
+  progress?: { value: number; target: number };
 }

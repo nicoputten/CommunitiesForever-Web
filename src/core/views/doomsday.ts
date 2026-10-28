@@ -263,11 +263,16 @@ function isPve(g: FriendGoal): boolean {
 
 /** The board's columns: the 3 PvE dailies, the Hunt (Alliance: the group plays Horde, Nico 2026-10-28), the Skirmish. */
 function boardColumns(s: DoomsdaySnapshot): BoardColumn[] {
-  const pve = s.todayGoals.filter((g) => g.slot === "pveDaily");
-  const rest = s.todayGoals.filter((g) => g.slot !== "pveDaily");
-  const hunt = s.hunts.alliance ?? s.hunts.horde;
-  const columns: GoalRef[] = [...pve, ...(hunt === undefined ? [] : [hunt]), ...rest];
-  return columns.map((g) => ({ id: g.id, track: g.track, title: g.title }));
+  const column = (g: GoalRef, id = g.id): BoardColumn => ({ id, track: g.track, title: g.title });
+  const pve = s.todayGoals.filter((g) => g.slot === "pveDaily").map((g) => column(g));
+  const rest = s.todayGoals.filter((g) => g.slot !== "pveDaily").map((g) => column(g));
+  const hunt =
+    s.hunts.alliance !== undefined
+      ? column(s.hunts.alliance, "hunt:alliance")
+      : s.hunts.horde !== undefined
+        ? column(s.hunts.horde, "hunt:horde")
+        : undefined;
+  return [...pve, ...(hunt === undefined ? [] : [hunt]), ...rest];
 }
 
 /** The friend's goal for a column: the one filling it, or for the Hunt column the friend's own Hunt. */
@@ -324,13 +329,11 @@ function doneCount(f: FriendDoomsday): number {
   return (f.today?.goals ?? []).filter((g) => g.doneAt !== undefined).length;
 }
 
-/** "No addon yet · …", "No Doomsday data yet · …", "Shares no goals". */
+/** "No addon yet · …", "No Doomsday data yet · …". */
 function withoutNote(f: FriendDoomsday): string {
   switch (f.status) {
     case "noAddon":
       return `No addon yet · goals start counting once ${f.name} installs CommunitiesForever`;
-    case "sharingOff":
-      return "Shares no goals";
     default:
       return "No Doomsday data yet · it starts with the next upload from a newer addon";
   }

@@ -49,7 +49,7 @@ function day(
     one(QUESTS10, QUESTS10.id, marks.q),
     one(DUNGEON_FRIEND, DUNGEON_FRIEND.id, marks.d),
     swapSecondary ? one(SKILL5, SECONDARY.id, marks.s, 5, SECONDARY) : one(SECONDARY, SECONDARY.id, marks.s),
-    one(HUNT, HUNT.id, marks.h),
+    one(HUNT, "hunt:alliance", marks.h),
     one(LONE_WOLF, LONE_WOLF.id, marks.l),
   ];
 }
