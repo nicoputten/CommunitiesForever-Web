@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Doomsday (`/doomsday`, or `/doom`), part 1: a new page after Runs with your points today and this week (PvE and PvP side by side, never added together) and your streak. Today shows your 3 PvE dailies, the Hunt and the Skirmish with a check and its time or the progress, the Duel slot, Today so far (who wore the crown, who finished, who hasn't started) and the board of every friend × today's goals. Week shows the 3 weeklies and the Weekly bounty; Board adds a 12-week heatmap of goals per friend. Goals are suggestions: skip any of them.
 - Asks from the game reach the site and Discord sooner: any friend's upload carries a friend's ask (once, as the asker's ask), and answers given to an ask in game show up too.
 - Runs: any character may say I'm in or lead, also one 6 or more levels below the dungeon. It shows how far below it is and that it will be tough, and it is never suggested ("recommend, never restrict").
 
