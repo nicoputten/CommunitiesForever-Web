@@ -1,5 +1,5 @@
 import type { LuaChunk, LuaTable, LuaValue } from "./lua";
-import type { Character, Dataset, Person, PresenceLink, Profession, Quest, Sighting, TalentTree } from "./model";
+import type { Character, Dataset, Person, PresenceLink, Profession, Pvp, Quest, Sighting, TalentTree } from "./model";
 import { cleanName, stripEscapes } from "./sanitize";
 
 // Reads CommunitiesForeverDB.global (docs/SOURCE-DATA.md) into the internal shape (model.ts). Every field may be
@@ -250,8 +250,35 @@ function readChar(guid: string, owner: string, c: Table): Character {
     autoRole: str(c, "autoRole"),
     roleOverride: str(c, "roleOverride"),
     quests,
+    pvp: readPvp(table(field(c, "pvp"))),
+    riding: count(c, "riding"),
     updatedAt: num(c, "updatedAt"),
     lastPlayed: num(c, "lastPlayed"),
+  });
+}
+
+/** A number the addon only writes as 0 or more (counts, ranks); anything else is left out. */
+function count(t: Table | undefined, key: string): number | undefined {
+  const v = num(t, key);
+  return v !== undefined && v >= 0 ? v : undefined;
+}
+
+/** Highest PvP rank (DOOMSDAY.md "PvP rank titles"). */
+const MAX_PVP_RANK = 14;
+
+/** `chars.*.pvp` (CF-52), cleaned as the addon's Pvp.clean: only the expected fields, counts 0 or more. */
+function readPvp(t: Table | undefined): Pvp | undefined {
+  if (t === undefined) return undefined;
+  const rank = count(t, "rank");
+  return compact({
+    hk: count(t, "hk"),
+    rank: rank !== undefined && rank <= MAX_PVP_RANK ? rank : undefined,
+    rankName: str(t, "rankName")?.slice(0, 40),
+    weekKills: count(t, "weekKills"),
+    weekHonor: count(t, "weekHonor"),
+    deaths: count(t, "deaths"),
+    duelsWon: count(t, "duelsWon"),
+    duelsLost: count(t, "duelsLost"),
   });
 }
 

@@ -32,8 +32,6 @@ export interface RecapFriend {
   key: string;
   /** Display name (never a BattleTag). */
   name: string;
-  /** "Share my activity" on (CF-22): only then does the feed tell what they did. */
-  shares: boolean;
 }
 
 export interface WeekSighting {

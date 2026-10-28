@@ -14,6 +14,7 @@ import {
 import { diff, type UploadSummary } from "@/core/diff";
 import { readGameItems, type GameItem } from "@/core/gameItems";
 import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
+import { readAllGoals, type PersonGoals } from "@/core/doomsday/record";
 import { readFeeds, type PersonFeed } from "@/core/feed";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
@@ -21,9 +22,10 @@ import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
 import { notifyBotEvents, recordMilestones } from "./bot";
+import { recordFeats } from "./feats";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
-import { clearHistory, recordFeeds, recordSightings } from "./history";
+import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
@@ -70,7 +72,7 @@ export interface UploadResult {
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Read =
-  | { ok: true; data: Dataset; feeds: PersonFeed[]; gameItems: GameItem[] }
+  | { ok: true; data: Dataset; feeds: PersonFeed[]; goals: PersonGoals[]; gameItems: GameItem[] }
   | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
 
 function read(bytes: Uint8Array): Read {
@@ -78,7 +80,13 @@ function read(bytes: Uint8Array): Read {
     const chunk = parseLua(new TextDecoder().decode(bytes));
     // The feed (WEB-41) is read apart from the dataset: it is history, not part of the merged state.
     // So are the game's plans and answers (WEB-43): applied once, after the upload's transaction.
-    return { ok: true, data: normalize(chunk), feeds: readFeeds(chunk), gameItems: readGameItems(chunk) };
+    return {
+      ok: true,
+      data: normalize(chunk),
+      feeds: readFeeds(chunk),
+      goals: readAllGoals(chunk),
+      gameItems: readGameItems(chunk),
+    };
   } catch (e) {
     if (e instanceof LuaParseError) return { ok: false, reason: e.message, unreadable: "damaged" };
     if (e instanceof NormalizeError) {
@@ -169,10 +177,13 @@ export function upload(
     writeState(tx, after, sourcesFor(before, after, id));
     addMembers(tx, result.data, id);
     recordFeeds(tx, result.feeds, id);
+    recordGoals(tx, result.goals, id);
     recordSightings(tx, result.data.locations, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
-    // The Discord bot's milestones (WEB-38): not for the site's first upload, where everything is new.
-    events = recordMilestones(tx, { id, uploadedAt: now }, summary, after, before === undefined);
+    // Feats (WEB-56) and the Discord bot's milestones (WEB-38): none posted for the site's first upload, where
+    // everything is new.
+    const reached = recordFeats(tx, { id, uploadedAt: now }, before?.data, after, summary, result.feeds);
+    events = recordMilestones(tx, { id, uploadedAt: now }, reached, before === undefined);
     const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
@@ -383,7 +394,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     clearHistory(tx);
     for (const { id } of ids) {
       const row = tx
-        .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy })
+        .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy, uploadedAt: uploads.uploadedAt })
         .from(uploads)
         .where(eq(uploads.id, id))
         .get();
@@ -429,10 +440,14 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       // The game's answers aren't applied again; the report keeps their count (WEB-43).
       const runAnswers = runAnswersOf(tx as unknown as Db, id);
       const summary: UploadSummary = { ...diff(state?.data, after), ...(runAnswers > 0 ? { runAnswers } : {}) };
+      const previous = state?.data;
       state = { data: after, ...sourcesFor(state, after, id) };
       addMembers(tx, result.data, id);
       recordFeeds(tx, result.feeds, id);
+      recordGoals(tx, result.goals, id);
       recordSightings(tx, result.data.locations, id);
+      // The same feats again, never their events (WEB-56).
+      recordFeats(tx, { id, uploadedAt: row.uploadedAt }, previous, after, diff(previous, after), result.feeds);
       tx.update(uploads)
         .set({
           status: "ok",

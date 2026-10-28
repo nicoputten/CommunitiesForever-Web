@@ -776,6 +776,26 @@
   --card-land-line: rgba(126, 136, 152, 0.45);
   --card-zone: #6b634f; /* cards: the highlighted zone (the references' olive gold) */
   --card-label-bg: rgba(7, 12, 21, 0.75); /* cards: "2 h ago" pills on the map */
+  /* feat cards (WEB-56): board doomsday-feat-cards */
+  --fs-card-feat-title: 58px; /* feat cards: "Stone Guard" (Marcellus SC; long titles use --fs-card-award) */
+  --fs-card-feat-name: 30px; /* feat cards: the character (Marcellus) */
+  --fs-card-feat-line: 24px; /* feat cards: "a.k.a. Mailbox Menace" */
+  --fs-card-feat-meta: 22px; /* feat cards: the flavour line */
+  --fs-card-pill: 15px; /* feat cards: FIRST IN THE GROUP */
+  --size-card-icon: 190px; /* feat cards: the drawn icon or rank badge */
+  --size-card-icon-box: 330px; /* feat cards: the glow panel left of the text */
+  --card-feat-glow: rgba(240, 208, 142, 0.35); /* feat cards: halo behind the icon, title shadow */
+  --card-frame: rgba(212, 175, 106, 0.45); /* feat cards: 2 px inner frame */
+  --card-frame-special: rgba(240, 208, 142, 0.25); /* feat cards: rank 14's second, 6 px frame */
+  --card-pill-bg: rgba(212, 175, 106, 0.2); /* feat cards: First in the group */
+  --epic: #c27bff; /* feat cards: epic item purple (title, icon line) */
+  --epic-deep: #2a1438; /* feat cards: epic icon fill */
+  --card-epic-glow: rgba(194, 123, 255, 0.35); /* feat cards: halo behind the first epic */
+  --card-icon-fill: #121b2a; /* feat cards: icon body */
+  --card-badge-line: #7a5a22; /* feat cards: rank badge outline */
+  --card-steel: #2e3a55; /* feat cards: Arcanite blade body */
+  --card-arcanite: #9fd3ff; /* feat cards: Arcanite blade edge */
+  --card-blood: #f08a80; /* feat cards: crossed swords on 10,000 kills */
 
   /* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live cards in the fresh green. */
   --size-ask-edge: 3px; /* the live left edge of an ask */

@@ -80,8 +80,8 @@ The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
   - `streak`, `best`, `pool`, `reset`
   - kept per friend for as long as the activity feed (not only the 7 days an upload holds)
   - the newer `at` wins, as the addon merges
-  - `goals = false` (sharing off): their stored goals stop showing, as with the feed
-- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 3 per set, numbers ≥ 0.
+  - no sharing switch (Nico, 2026-10-28: who doesn't want to share uninstalls the addon): `goals = false` or `feed = false` from older addons means nothing was sent, and stored data stays; `feed_sharing` goes
+- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 5 per day and 4 per week (the slots), numbers ≥ 0.
 - `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated. Tests on a fixture with every new field, one without them, and one with `goals = false`.
 
 ### WEB-58 The Doomsday engine and its API
@@ -97,6 +97,7 @@ After WEB-55 and the addon's CF-55 (its golden file).
   
   Where a victim field was unknown or guessed, the view model marks it so that screens can show "≈".
 - Tests: the addon's `tests/fixtures/doomsday-cases.json`, copied with the addon commit it came from, passes unchanged. Plus all-time totals and Elo over more than 7 days, a reset setting change (from the next reset only), and friends without data.
+- **The Discord page, reorganised** as the boards `discord-page`, `discord-page-map`, `discord-page-friend`, `discord-page-states` and `discord-page-phone` show (designed 2026-10-28): one box per kind of post, each with its own switch, channel picker and test button; Runs moves entirely into its box; "Milestones" becomes "Feats"; section shortcuts. `discord-page-map` lists where each of the 20 existing settings went; none may be lost.
 - **Settings** on the Discord page (admin), as the other bot settings:
   - **Doomsday reset** (realm time, default 19:00)
   - **realm time zone** (default `Europe/Paris`)

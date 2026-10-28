@@ -2,6 +2,8 @@
 
 ## Unreleased
 - Doomsday (`/doomsday`, or `/doom`), part 1: a new page after Runs with your points today and this week (PvE and PvP side by side, never added together) and your streak. Today shows your 3 PvE dailies, the Hunt and the Skirmish with a check and its time or the progress, the Duel slot, Today so far (who wore the crown, who finished, who hasn't started) and the board of every friend × today's goals. Week shows the 3 weeklies and the Weekly bounty; Board adds a 12-week heatmap of goals per friend. Goals are suggestions: skip any of them.
+- Feats: every milestone is now a feat, and new ones join them: honorable kills, a new highest PvP rank with our title, duel wins, a first battleground win, 100 deaths, the first epic, mounts, the first catch, Jack of all trades and the profession watch list (Arcanite Reaper, Mooncloth, the Fishing Extravaganza and more). The site keeps every character's feats, marks "First in the group", and draws a card image for the special ones.
+- The site keeps the coming addon's Doomsday data from uploads: PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's daily and weekly goals. There is no "Share my activity" any more: activity a friend's older addon stopped sharing shows again in the recap and `/me`.
 
 ## v0.4.1 (2026-10-28)
 - Roster: a narrow dungeon band keeps its name ("Ragef… 13–18 · 2") instead of showing only the levels and count.
