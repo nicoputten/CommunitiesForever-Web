@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  bandRows,
+  BAND_ROWS,
+  bandLayout,
   joinNames,
   levelPosition,
   MERGE_LEVELS_PHONE,
@@ -52,18 +53,38 @@ describe("level spread layout", () => {
     expect(dots.map((d) => d.level)).toEqual([15, 25.5, 37, 60]);
   });
 
-  it("stacks bands without overlap, the best band first", () => {
+  it("stacks bands without overlap, most fits first, at most 4 rows with the rest hidden (WEB-45)", () => {
     const { spread } = roster(sample(), NOW);
-    const placed = bandRows(spread);
-    expect(placed).toHaveLength(spread.bands.length);
-    expect(placed.find((p) => p.best)).toMatchObject({ row: 0, band: spread.best });
-    for (const a of placed) {
-      for (const b of placed) {
+    const all = bandLayout(spread);
+    expect(all.shown).toHaveLength(spread.bands.length);
+    expect(all.hidden).toBe(0);
+    expect(all.shown.find((p) => p.best)).toMatchObject({ row: 0, band: spread.best });
+    for (const a of all.shown) {
+      for (const b of all.shown) {
         if (a === b || a.row !== b.row) continue;
         const [x, y] = [a.band.dungeon.typicalLevels, b.band.dungeon.typicalLevels];
         expect(x.max < y.min || x.min > y.max).toBe(true);
       }
     }
+    // Row 0 holds the most fits; a band never has more fits than the band that took its place earlier.
+    const firstRow = all.shown.filter((p) => p.row === 0).map((p) => p.band.fits.length);
+    expect(Math.max(...firstRow)).toBe(Math.max(...spread.bands.map((b) => b.fits.length)));
+
+    // Five overlapping bands: four rows shown, one hidden behind "Show all".
+    const band = (id: string, fits: number) =>
+      ({
+        dungeon: { id, name: id, shortName: id, typicalLevels: { min: 30, max: 40 } },
+        fits: Array.from({ length: fits }, (_, i) => ({ guid: `${id}${i}` })),
+      }) as unknown as (typeof spread.bands)[number];
+    const five = [band("a", 2), band("b", 6), band("c", 3), band("d", 5), band("e", 4)];
+    const limited = bandLayout({ bands: five }, BAND_ROWS);
+    expect(limited.shown.map((p) => [p.band.dungeon.id, p.row])).toEqual([
+      ["b", 0],
+      ["d", 1],
+      ["e", 2],
+      ["c", 3],
+    ]);
+    expect(limited.hidden).toBe(1);
   });
 
   it("joins names", () => {

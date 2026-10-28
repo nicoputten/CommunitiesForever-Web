@@ -63,9 +63,21 @@ test("roster: design values", async ({ page }) => {
     "border-color": "var(--line-tooltip)",
     "box-shadow": "var(--shadow-tooltip)",
   });
-  await expectStyles(spread.getByText("SM Armory 32–42 · 4 fit"), {
+  await page.keyboard.press("Escape");
+  // The bands (WEB-45): the best band in gold; a click opens its popover (board roster-cards-runs).
+  const armory = spread.locator('button[data-band="sm-armory"]');
+  await expectStyles(armory, {
     "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-tiny)",
     color: "var(--gold-pale)",
+  });
+  await armory.click();
+  const pop = page.getByRole("dialog", { name: "Scarlet Monastery: Armory" });
+  await expectStyles(pop, {
+    "background-color": "var(--surface-menu)",
+  });
+  await expectStyles(pop.getByRole("link", { name: "Plan a run" }), {
+    "background-color": "var(--gold)",
+    "min-height": "var(--size-touch)",
   });
   await page.keyboard.press("Escape");
 

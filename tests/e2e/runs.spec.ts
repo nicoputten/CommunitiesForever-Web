@@ -102,6 +102,31 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await expect(page.getByRole("link", { name: `Tomorrow ${name} · Nico Cancelled` })).toBeVisible();
 });
 
+test("the roster shows the next run and a band's planned runs (WEB-45)", async ({ page, context, baseURL }) => {
+  await as(context, baseURL!, E2E.admin);
+  const dungeon = isPhone(page) ? "sm-library" : "sm-graveyard";
+  const runId = await planRun(page, { dungeon, day: 2, time: "21:00", lead: "Ves Doombringer" });
+  await page.goto("/roster");
+  const next = page.getByRole("region", { name: "Next run" });
+  await expect(next).toBeVisible();
+  await expect(next.getByRole("link", { name: "All runs →" })).toHaveAttribute("href", "/runs");
+  // The run's band may be beyond the 4 rows.
+  const showAll = page.getByRole("button", { name: /^Show all \d+$/ });
+  if (await showAll.isVisible()) await showAll.click();
+  const band = page
+    .getByRole("list", { name: "Dungeon bands" })
+    .getByRole("button", { name: /· \d+ runs?/ })
+    .first();
+  await band.click();
+  const pop = page.getByRole("dialog").filter({ hasText: "Plan a run" });
+  await expect(pop.getByRole("link", { name: /View run|· 1 in/ }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  // Clean up: the run is cancelled, so the other tests see the roster as before.
+  await page.goto(`/runs/${runId}`);
+  await page.getByRole("button", { name: "Delete run" }).click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+});
+
 test("Plan a run says when the time has passed, and when none of your characters fit", async ({
   page,
   context,

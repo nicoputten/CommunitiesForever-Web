@@ -1126,6 +1126,74 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
   };
 }
 
+// --- runs on the roster (WEB-45, board `roster-cards-runs`) ----------------------------------------------------------
+
+export interface NextRunView {
+  href: string;
+  dungeon: string;
+  /** "Today 20:30" in the viewer's zone. */
+  when: string;
+  /** "Nico on Ves Doombringer · 3 in · 1 maybe · tank open". */
+  line: string;
+}
+
+export interface BandRunView {
+  href: string;
+  /** "Fri 20:30 · 3 in". */
+  label: string;
+}
+
+export interface RosterRuns {
+  /** The next upcoming run, whoever can join it (Nico, 2026-10-28); none when nothing is planned. */
+  next?: NextRunView;
+  /** Per dungeon id: its upcoming runs for the band popover, at most 3, and how many more. */
+  byDungeon: Record<string, { runs: BandRunView[]; more: number }>;
+}
+
+/** The runs per dungeon a band popover lists (Nico, 2026-10-28: up to three, each a link). */
+export const BAND_RUNS = 3;
+
+export function rosterRuns(input: RunsInput): RosterRuns {
+  const ctx = context(input);
+  const upcoming = input.runs
+    .filter((r) => isUpcoming(r, input.now))
+    .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
+  const out: RosterRuns = { byDungeon: {} };
+  const first = upcoming[0];
+  if (first !== undefined) {
+    const c = card(ctx, first);
+    const lead = first.answers.find((a) => sameBattleTag(a.battleTag, first.organiser) && a.answer === "in");
+    const who = isViewer(ctx, first.organiser)
+      ? lead === undefined
+        ? "You organise"
+        : `You lead as ${charName(ctx, lead)}`
+      : lead === undefined
+        ? `${friendName(ctx, first.organiser)} organises`
+        : `${friendName(ctx, first.organiser)} on ${charName(ctx, lead)}`;
+    const open = openSlots(first.answers);
+    const tallied = counts(first.answers);
+    const gaps = SLOT_ROLES.filter((r) => open[r] > 0).map((r) =>
+      r === "damage" && open[r] > 1 ? `${open[r]} damage open` : `${r} open`,
+    );
+    out.next = {
+      href: c.href,
+      dungeon: c.dungeon,
+      when: c.when,
+      line: [who, `${tallied.in} in`, ...(tallied.maybe > 0 ? [`${tallied.maybe} maybe`] : []), ...gaps].join(" · "),
+    };
+  }
+  for (const run of upcoming) {
+    const entry = (out.byDungeon[run.dungeonId] ??= { runs: [], more: 0 });
+    if (entry.runs.length >= BAND_RUNS) {
+      entry.more++;
+      continue;
+    }
+    const c = card(ctx, run);
+    entry.runs.push({ href: c.href, label: `${c.when} · ${counts(run.answers).in} in` });
+  }
+  return out;
+}
+
 // --- Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states) ---------------------------------------------
 
 const ASKED_FROM: Record<RunSource, string> = {
