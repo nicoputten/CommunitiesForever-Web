@@ -6,6 +6,8 @@ import { nextRecapMoment, recapMomentAtOrBefore, type RecapSchedule } from "@/co
 import { adminBattleTag } from "./access";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
+import { recapSection } from "@/core/doomsday/posts";
+import { doomsdayInput } from "./doomsdayEngine";
 import { feedDays, recaps, recapStart, sightings } from "./db/schema";
 import { effectiveTimeZone, getBotSettings } from "./discord";
 import { loadState } from "./uploads";
@@ -146,6 +148,10 @@ export function runDueRecap(db: Db, now: number, siteName: string): Recap | unde
   const number = (latest?.week ?? 0) + 1;
   const week = assembleWeek(db, number, start, moment, latest?.snapshot ?? {}, siteName);
   const recap = buildRecap(week, historyOf(storedRecaps(db)));
+  // WEB-58: the Doomsday section, from the same week.
+  const input = doomsdayInput(db, moment);
+  const doomsday = input !== undefined ? recapSection(input, start, moment) : undefined;
+  if (doomsday !== undefined) recap.doomsday = doomsday;
   db.insert(recaps)
     .values({ week: number, start, end: moment, computedAt: now, data: recap, snapshot: week.after })
     .onConflictDoNothing()

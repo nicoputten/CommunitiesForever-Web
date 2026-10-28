@@ -158,6 +158,17 @@ export interface BotSettings {
   reminderMinutes: ReminderMinutes;
   askNow: boolean;
   markDone: boolean;
+  /** Doomsday (WEB-58): the daily board and the weekly ladder posts, and their channel (null: the posts channel). */
+  doomsdayBoard: boolean;
+  doomsdayLadder: boolean;
+  doomsdayChannel: string | null;
+  /** The Doomsday reset in seconds after realm midnight (19:00 = 68400). */
+  doomsdayReset: number;
+  /** The reset before the last change and when it was changed: a change applies from the next reset. */
+  doomsdayResetPrevious: number | null;
+  doomsdayResetChangedAt: number | null;
+  /** The realm's IANA time zone. */
+  realmTimeZone: string;
 }
 
 /** Before the admin changed anything: everything on, recap Sunday 13:00 (WEB-41), reminders 30 minutes before. */
@@ -175,12 +186,28 @@ export const DEFAULT_BOT_SETTINGS: BotSettings = {
   reminderMinutes: 30,
   askNow: true,
   markDone: true,
+  doomsdayBoard: true,
+  doomsdayLadder: true,
+  doomsdayChannel: null,
+  doomsdayReset: 68400,
+  doomsdayResetPrevious: null,
+  doomsdayResetChangedAt: null,
+  realmTimeZone: "Europe/Paris",
 };
 
-export const SWITCHES = ["milestones", "runs", "recap", "reminders", "askNow", "markDone"] as const;
+export const SWITCHES = [
+  "milestones",
+  "runs",
+  "recap",
+  "reminders",
+  "askNow",
+  "markDone",
+  "doomsdayBoard",
+  "doomsdayLadder",
+] as const;
 export type SwitchName = (typeof SWITCHES)[number];
 
-export const PICKS = ["postsChannel", "recapChannel", "runsChannel", "mentionRole"] as const;
+export const PICKS = ["postsChannel", "recapChannel", "runsChannel", "mentionRole", "doomsdayChannel"] as const;
 export type PickName = (typeof PICKS)[number];
 
 /** Recap times: every full hour. */
@@ -195,11 +222,22 @@ export function reminderLabel(minutes: number): string {
   return minutes < 60 ? `${minutes} minutes before` : `${minutes / 60} hour${minutes === 60 ? "" : "s"} before`;
 }
 
+/** "19:00" for a reset in seconds after midnight. */
+export function resetLabel(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
 /**
  * One field from the settings form as a change to the settings; undefined for anything that isn't a valid value
- * (the form is untrusted input). Switches take "true"/"false", picks a snowflake or "" (none), the recap "day|HH:MM".
+ * (the form is untrusted input). Switches take "true"/"false", picks a snowflake or "" (none), the recap "day|HH:MM",
+ * the Doomsday reset "HH:MM", the realm time zone one of `zones`.
  */
-export function settingChange(field: string, value: string): Partial<BotSettings> | undefined {
+export function settingChange(
+  field: string,
+  value: string,
+  zones: ReadonlySet<string> = new Set(),
+): Partial<BotSettings> | undefined {
   if ((SWITCHES as readonly string[]).includes(field)) {
     if (value !== "true" && value !== "false") return undefined;
     return { [field]: value === "true" } as Partial<BotSettings>;
@@ -214,6 +252,11 @@ export function settingChange(field: string, value: string): Partial<BotSettings
       ? { reminderMinutes: minutes as ReminderMinutes }
       : undefined;
   }
+  if (field === "doomsdayReset") {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+    return match ? { doomsdayReset: Number(match[1]) * 3600 + Number(match[2]) * 60 } : undefined;
+  }
+  if (field === "realmTimeZone") return isTimeZone(value, zones) ? { realmTimeZone: value } : undefined;
   if (field === "recapAt") {
     const match = /^([0-6])\|(\d\d:00)$/.exec(value);
     if (!match || !RECAP_TIMES.includes(match[2]!)) return undefined;
@@ -235,6 +278,11 @@ export function botSettingsFrom(row: Partial<Record<keyof BotSettings, unknown>>
   if ((REMINDER_MINUTES as readonly unknown[]).includes(row.reminderMinutes)) {
     s.reminderMinutes = row.reminderMinutes as ReminderMinutes;
   }
+  const seconds = (v: unknown) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v < 86400;
+  if (seconds(row.doomsdayReset)) s.doomsdayReset = row.doomsdayReset as number;
+  if (seconds(row.doomsdayResetPrevious)) s.doomsdayResetPrevious = row.doomsdayResetPrevious as number;
+  if (typeof row.doomsdayResetChangedAt === "number") s.doomsdayResetChangedAt = row.doomsdayResetChangedAt;
+  if (typeof row.realmTimeZone === "string" && row.realmTimeZone !== "") s.realmTimeZone = row.realmTimeZone;
   return s;
 }
 

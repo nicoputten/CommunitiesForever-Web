@@ -10,7 +10,9 @@ import {
   discordRedirectUri,
   discordUser,
   isTimeZone,
+  resetLabel,
 } from "@/core/discord";
+import { effectiveFrom, effectiveReset, type ResetSetting } from "@/core/doomsday/engine";
 import { adminBattleTag, listGuests, listMembers } from "./access";
 import type { Db } from "./db";
 import { botSettings, discordLinks, userPrefs } from "./db/schema";
@@ -227,6 +229,26 @@ export function setTimeZone(db: Db, battleTag: string, timeZone: string, from: "
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** What the bot posts and where; the defaults until the admin changes something. */
+/** The Doomsday reset setting of the bot settings, for the engine. */
+export function doomsdayResetSetting(s: BotSettings): ResetSetting {
+  return {
+    reset: s.doomsdayReset,
+    ...(s.doomsdayResetPrevious !== null && s.doomsdayResetChangedAt !== null
+      ? { previous: s.doomsdayResetPrevious, changedAt: s.doomsdayResetChangedAt }
+      : {}),
+  };
+}
+
+/**
+ * The Doomsday reset in force at `now` for the uploader's runs (docs/UPLOADER-API.md "Runs"): a new one only from the
+ * reset it takes effect at, with that moment as `changedAt` (0 while it was never changed).
+ */
+export function doomsdayResetNow(s: BotSettings, now: number): { reset: number; changedAt: number } {
+  const setting = doomsdayResetSetting(s);
+  const from = effectiveFrom(setting, s.realmTimeZone);
+  return { reset: effectiveReset(setting, now, s.realmTimeZone), changedAt: from !== 0 && now >= from ? from : 0 };
+}
+
 export function getBotSettings(db: Db | Tx): BotSettings {
   return botSettingsFrom(db.select().from(botSettings).where(eq(botSettings.id, 1)).get());
 }
@@ -238,8 +260,14 @@ export function getBotSettings(db: Db | Tx): BotSettings {
 export function botApiSettings(db: Db, admin = adminBattleTag()) {
   const s = getBotSettings(db);
   return {
-    posts: { milestones: s.milestones, runs: s.runs, recap: s.recap },
-    channels: { posts: s.postsChannel, recap: s.recapChannel, runs: s.runsChannel },
+    posts: {
+      milestones: s.milestones,
+      runs: s.runs,
+      recap: s.recap,
+      doomsdayBoard: s.doomsdayBoard,
+      doomsdayLadder: s.doomsdayLadder,
+    },
+    channels: { posts: s.postsChannel, recap: s.recapChannel, runs: s.runsChannel, doomsday: s.doomsdayChannel },
     mentionRole: s.mentionRole,
     recap: { day: s.recapDay, time: s.recapTime, timeZone: effectiveTimeZone(db, admin, admin) },
     runs: {
@@ -249,12 +277,20 @@ export function botApiSettings(db: Db, admin = adminBattleTag()) {
       askNow: s.askNow,
       markDone: s.markDone,
     },
+    // WEB-58: the reset as "HH:MM" realm time and the realm's zone; `url` is added by the route (the site's origin).
+    doomsday: { reset: resetLabel(s.doomsdayReset), timeZone: s.realmTimeZone },
   };
 }
 
 export function updateBotSettings(db: Db, change: Partial<BotSettings>, by: string, now: number): BotSettings {
   return db.transaction((tx) => {
-    const next = { ...botSettingsFrom(tx.select().from(botSettings).where(eq(botSettings.id, 1)).get()), ...change };
+    const before = botSettingsFrom(tx.select().from(botSettings).where(eq(botSettings.id, 1)).get());
+    const next = { ...before, ...change };
+    // A new Doomsday reset applies from the next reset (WEB-58): keep the one in force now until then.
+    if (change.doomsdayReset !== undefined && change.doomsdayReset !== before.doomsdayReset) {
+      next.doomsdayResetPrevious = effectiveReset(doomsdayResetSetting(before), now, before.realmTimeZone);
+      next.doomsdayResetChangedAt = now;
+    }
     const row = { ...next, updatedAt: now, updatedBy: by };
     tx.insert(botSettings)
       .values({ id: 1, ...row })

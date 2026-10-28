@@ -11,6 +11,8 @@ import {
   whereisFriend,
 } from "@/core/lookup";
 import { battleTagName } from "@/core/access";
+import { lookupData } from "@/core/doomsday/posts";
+import { doomsdayFor } from "@/server/doomsdayEngine";
 import { botFriend } from "@/server/botRuns";
 import { personKeyOf, weekOf } from "@/server/lookup";
 import { apiError, botGuard } from "@/server/session";
@@ -18,7 +20,8 @@ import { loadState } from "@/server/uploads";
 
 // GET lookup/<what>: the data of the bot's look-up commands (WEB-39b, docs/BOT-API.md "Look-ups"). Answered for anyone
 // in the bot's server: only friends are in it (Nico, 2026-10-28, as for /recap). Only `me` needs the asker's Discord
-// account linked to someone on the list (`discordUserId`, else 403 `not_linked`), to know whose characters to show.
+// account linked to someone on the list (`discordUserId`, else 403 `not_linked`), to know whose characters to show;
+// so does `doomsday` without a `friend` (WEB-58).
 // The bot formats it; texts are names only, never BattleTags.
 
 export const dynamic = "force-dynamic";
@@ -105,6 +108,25 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
         characters: key !== undefined ? alts(d, key, now) : [],
         ...(week !== undefined ? { week } : {}),
       });
+    }
+    case "doomsday": {
+      // WEB-58: a friend's Doomsday day (`friend`, a display name), else the asker's (who must be linked).
+      const snap = doomsdayFor(db, now);
+      if (snap === undefined) return apiError(404, "no_data", "No Doomsday data yet.");
+      let key: string | undefined;
+      if (text("friend") !== "") {
+        key = friendByName(d, text("friend"), now)?.key;
+        if (key === undefined) return apiError(404, "not_found", "No such friend.");
+      } else {
+        if (linked === undefined || linked instanceof Response) {
+          return linked ?? apiError(400, "invalid_request", "Send the Discord user id as discordUserId.");
+        }
+        key = askerKey;
+        if (key === undefined) return apiError(404, "not_found", "No such friend.");
+      }
+      const answer = lookupData(snap, key);
+      if (answer === undefined) return apiError(404, "not_found", "No such friend.");
+      return json(answer);
     }
     default:
       return apiError(404, "not_found", "No such look-up.");
