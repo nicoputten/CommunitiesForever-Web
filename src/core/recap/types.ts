@@ -25,6 +25,10 @@ export interface RecapChar {
   role?: string;
   /** Quest IDs in the quest log. */
   quests: string[];
+  /** WEB-57: the PvP rank (1 to 14), the game's name for it, and this week's honor (addon CF-52). */
+  pvpRank?: number;
+  pvpRankName?: string;
+  weekHonor?: number;
 }
 
 export interface RecapFriend {
@@ -32,6 +36,8 @@ export interface RecapFriend {
   key: string;
   /** Display name (never a BattleTag). */
   name: string;
+  /** WEB-57: the friend's own time zone (else the admin's), for Night owl, Early bird and Marathon. */
+  timeZone?: string;
 }
 
 export interface WeekSighting {

@@ -54,6 +54,11 @@ Rules:
 | A8 | The Comeback | days away before this week | 14 days | "Look who's back: {friend}" |
 | A9 | Most improved | best item-level gain on one character | 5 item levels | "{friend} geared up by 8 item levels" |
 | A10 | Hall of fame | levels over the 10-week season | every 10th week | "{friend} tops the season with 112 levels" |
+| A11 | Warmonger | honorable kills (feed `kills`) | 25 | "Ves Doombringer took 142 honorable kills" |
+| A12 | Battlemaster | battleground wins (feed `runs`, `kind` pvp) | 3 | "6 battleground wins for Ada" |
+| A13 | Loot goblin | rare and epic items (feed `loot`) | 4 | "Bob looted 9 blues and 1 purple" |
+| A14 | Duelist | duels won (feed `duels`) | 5 | "Ada won 11 duels" |
+| A7 | Social butterfly | different friends grouped with (feed `groups`; redefined, Nico 2026-10-29) | 3 | "Bob grouped with 6 friends" |
 
 The award line also names a runner-up when there is one.
 
@@ -73,6 +78,10 @@ The award line also names a runner-up when there is one.
 | S9 | Healer / tank census | at least 1 tank or healer (weighs more when the count changed) | "Role call: 2 tanks and 3 healers" |
 | S10 | Quest log hoarder | one character with at least 15 quests in its log | "Quest log hoarder: {character}" |
 | S12 | Season stats | every 10th week (always shown) | "112 levels in 10 weeks" |
+| S13 | Bloodbath zone | a zone with at least 20 honorable kills | "Stranglethorn Vale: 87 honorable kills" |
+| S14 | Battleground of the week | at least 3 games in one battleground, with wins and losses | "Warsong Gulch, 7 games: 4 won, 3 lost" |
+| S15 | Deadliest zone | at least 5 deaths in one zone | "Badlands claimed 9 lives" |
+| S11 | Biggest group night | the realm day with the most friends in groups together, at least 4 | "Friday: 7 friends grouped up" |
 
 ### Progress
 | ID | Name | When | Example |
@@ -90,6 +99,7 @@ The award line also names a runner-up when there is one.
 | P11 | Gear jump | a character gained at least 5 item levels | "Gear jump: {character}" |
 | P12 | Then vs now | from week 5 (weighs much more in a finale) | "Since week 1: from 40 to 312 levels" |
 | P13 | On this week last month | at least 2 characters in another zone than a month ago | "{character} moved on from Westfall" |
+| P14 | Rank race | two friends' characters at the same PvP rank, this week's honor within 10% (Nico, 2026-10-29) | "Stone Guard vs Stone Guard: Ves Doombringer leads" |
 
 ### Social
 | ID | Name | When | Example |
@@ -98,6 +108,8 @@ The award line also names a runner-up when there is one.
 | F2 | Shared quest jackpot | two friends with at least 5 quests in common | "A & B share 7 quests" |
 | F3 | Ghost town | a character not seen for at least 14 days | "Ghost town: Darkshore" |
 | F13 | Group suggestion | a dungeon at least 3 friends have a character in range for | "Group idea: Shadowfang Keep" |
+| F14 | Revenge | a character with at least 3 deaths to players and at least 10 honorable kills | "Lia Thornwhisper died to players 6 times, then took 31 kills" |
+| F15 | Duel rivals | a pair of friends dueled at least 4 times (each side's records counted once), with the score | "Ada vs Bob: 5–3 in duels" |
 
 ### Fun
 | ID | Name | When | Example |
@@ -108,9 +120,20 @@ The award line also names a runner-up when there is one.
 | F10 | Longest streak | a friend played at least 3 days in a row | "Longest streak: {friend}" |
 | F11 | Fresh face | a new character | "Fresh face: {character}" |
 | F12 | Who am I? | at least 3 characters with known race and class | a riddle (race and class, level band, best profession, last zone) with the answer as a spoiler |
+| F16 | Most deaths | at least 6 deaths for one character, with the runner-up | "A spirit healer knows Tok Ironhide by name: 12 deaths" |
+| F17 | Fell to their death | at least 1 falling death | "Lia Thornwhisper trusted the cliff. The cliff said no." |
+| F18 | Died by fire | at least 1 death by fire or lava | "The campfire won." |
+| F19 | Untouchable | at least 5 levels and 0 deaths, only for characters whose deaths are known every day | "9 levels and not a single death for Ana Brightwater" |
+| F20 | Big spender | at least 50 gold spent in one realm day (Nico, 2026-10-29); never an amount | "Bob's purse got a lot lighter. Something shiny was bought." |
+| F21 | Purple rain | at least 1 epic item, with the items and characters | "2 epic items this week" |
+| F22 | Marathon | a play session of at least 5 hours | "Tok Ironhide played 7 hours straight on Saturday" |
+| F7 | Night owl | played after 01:00 (until 05:00) in the friend's own time zone, the most nights | "Ves Doombringer was still out at 03:12" |
+| F8 | Early bird | logged in before 07:00 (from 05:00) in the friend's own time zone, on the most days | "Ada logged in at 06:40. Coffee first?" |
 
 ### Not built yet (need data the addon doesn't record)
-A7 Social butterfly, S11 Biggest group night, F5 Road trip, F7 Night owl, F8 Early bird.
+F5 Road trip.
+
+Recap v2 cards (recap v2, WEB-57; the boards `bot-recap-v2*` in the bot repo, thresholds as their "Shows when", Nico 2026-10-29) show only with the addon's new feed fields (CF-52, CF-53): a week without them shows none of them.
 
 ## 5. Headlines (one per week, picked by what the week was about)
 
@@ -126,6 +149,10 @@ A7 Social butterfly, S11 Biggest group night, F5 Road trip, F7 Night owl, F8 Ear
 | crafters | "The crafters' week" |
 | tourists | "{zones} zones in seven days" |
 | season | "{weeks} weeks of {site}" |
+| pvp | "Blood in {zone}": at least 200 honorable kills, one zone with at least 40% of them (WEB-57) |
+| danger | "A week of spirit healers": at least 25 deaths and at least 1.5 times the average of the last 4 weeks (WEB-57) |
+
+The PvP and danger headlines come after the first week and a new 60, before a quiet week.
 
 ## 6. Challenges for the coming week
 
@@ -143,6 +170,11 @@ A7 Social butterfly, S11 Biggest group night, F5 Road trip, F7 Night owl, F8 Ear
 | nextSeason | "Pick next season's goal" |
 | nextTen | "Get {character} to level {target}" |
 | questZone | "Finish 10 quests in {zone}" |
+| bgGroup | "Win 3 battlegrounds as a group": after a week with at least 3 battleground games (WEB-57) |
+| kills25 | "Each of you gets 25 honorable kills": after a PvP headline week |
+| tarrenMill | "Take back Tarren Mill": Hillsbrad Foothills in the week's top 3 zones by honorable kills (kills are per zone; Nico, 2026-10-29) |
+| duelEveryone | "Duel every friend once": after a Duel rivals card |
+| noDeaths | "A week without dying": after a danger headline week |
 
 ## 7. Closing lines
 "See you next week." · "Until next Sunday." · "Have a good week in Azeroth." · "Same time next week."

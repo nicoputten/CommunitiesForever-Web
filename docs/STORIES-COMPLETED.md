@@ -589,3 +589,42 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Cause: a dungeon without a short name (Ragefire Chasm, The Drowned City) rendered no short-name span, so the "short" step showed only the range and count.
 - Agreed with Nico (2026-10-28): once the range has gone, the name gets the freed room back (whole short name, else the longest cut that fits), so "Rag… · 2" is the narrowest label; " · 1 run" stays with the count.
 - Done (PR #94): `DungeonBands` (`fitLabel`: full, short, cut, bare; each band observed for its own width), `nameCuts` in `src/core/views/text.ts`, `LevelSpread.module.css`; tests: `tests/unit/text.test.ts`, design check "band names on narrow bands" with the `roster-bands-narrow` baseline, e2e roster.
+
+### WEB-57 New recap cards, awards, headlines and challenges
+After WEB-55. The dailies' A15 and F23 are not built: the Doomsday section (WEB-58) covers them.
+Each card keeps the existing rules: a threshold, a score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend. IDs continue the catalogue.
+- Awards:
+  - A11 Warmonger: most honorable kills, at least 10
+  - A12 Battlemaster: most battleground wins, at least 2
+  - A13 Loot goblin: most rare and epic items, at least 5
+  - A14 Duelist: most duel wins, at least 3
+  - A7 Social butterfly: in a group with the most different friends, at least 3
+- Stat cards:
+  - S13 Bloodbath zone: the zone with the most honorable kills, at least 10
+  - S14 Battleground of the week: the most played battleground, with wins and losses, at least 2 games
+  - S15 Deadliest zone: the zone with the most deaths, at least 3
+  - S11 Biggest group night: the evening with the most friends in groups together, at least 3
+- Progress cards: P14 Rank race, two friends' characters one PvP rank apart, or the same rank with honor within 10 %.
+- Social cards:
+  - F14 Revenge: died to players most, then got the most kills, at least 3 of each
+  - F15 Duel rivals: the pair that duelled each other most, with the score, at least 3 duels
+- Fun cards:
+  - F16 Most deaths: at least 5
+  - F17 Fell to their death: a `fall` death
+  - F18 Died by fire: a `fire` death ("the campfire won")
+  - F19 Untouchable: the most levels gained with 0 deaths, at least 3 levels
+  - F20 Big spender: the biggest gold spent; text without amounts ("someone bought something shiny")
+  - F21 Purple rain: epic items received, at least 1
+  - F22 Marathon: the longest session, at least 3 hours
+  - F7 Night owl: played after 01:00 the most
+  - F8 Early bird: played before 08:00 the most (both in each friend's own saved time zone; without one, the site's)
+- Headlines: `pvp` (a week with many kills), `danger` (a week with many deaths).
+- Challenges:
+  - "Win 3 battlegrounds as a group"
+  - "Each of you gets 25 honorable kills"
+  - "Take back Tarren Mill" (kills in Hillsbrad Foothills)
+  - "Duel every friend once"
+  - "A week without dying"
+- `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
+- Decided with Nico (2026-10-29): the thresholds are the boards' "Shows when" (`bot-recap-v2-cards`), not the ones above: awards Warmonger 25, Battlemaster 3, Loot goblin 4, Duelist 5, Social butterfly 3 (redefined: grouped with the most different friends); Bloodbath zone 20, Battleground of the week 3 games, Deadliest zone 5, Biggest group night 4 friends; Rank race same rank with this week's honor within 10%; Revenge 3 deaths to players then 10 kills; Duel rivals 4 duels; Most deaths 6; Untouchable 5 levels; Big spender 50 gold in one day ("Hooves were heard", no amount); Marathon 5 hours; Night owl after 01:00; Early bird before 07:00; headlines PvP (200 kills, one zone at least 40%) and danger (25 deaths, at least 1.5 times the 4-week average); "Take back Tarren Mill" when Hillsbrad Foothills is in the top 3 kill zones.
+- Done (PR to come): `src/core/recap/cardsV2.ts` (the 21 cards), headlines and challenges in `recap.ts`, texts in `texts.ts` (3 phrasings each), each friend's time zone and the PvP rank in the recap's input; `docs/RECAP.md`; tests `tests/unit/recap/v2.test.ts`.
