@@ -26,7 +26,57 @@ const TABS = [
   { name: "today", url: "/doomsday" },
   { name: "week", url: "/doomsday/week" },
   { name: "board", url: "/doomsday/board" },
+  // WEB-60: boards doomsday-ladder and doomsday-feats.
+  { name: "ladder", url: "/doomsday/ladder" },
+  { name: "ladder-all", url: "/doomsday/ladder?scope=all" },
+  { name: "pvp", url: "/doomsday/pvp" },
+  { name: "feats", url: "/doomsday/feats" },
 ];
+
+test("doomsday ladder: design values", async ({ page }) => {
+  await openScreen(page, "/doomsday/ladder");
+  await expectStyles(page.getByRole("navigation", { name: "Ladder period" }).getByRole("link", { name: "This week" }), {
+    "border-color": "var(--gold)",
+    "background-color": "var(--tint-pressed)",
+  });
+  const pvp = page.getByRole("region", { name: /^PvP · this week/ });
+  await expectStyles(pvp.locator("summary").first().locator("span").first(), {
+    "font-family": "var(--font-name)",
+    "font-size": "var(--fs-ladder-place)",
+    color: "var(--gold-pale)",
+  });
+  await expectStyles(pvp.getByText("▲ 1"), { color: "var(--pve-text)" });
+  await expectStyles(pvp.getByText("▼ 1"), { color: "var(--pvp-text)" });
+  await expectStyles(pvp.getByText("new"), { color: "var(--swap-text)" });
+  await expectStyles(pvp.getByText("PvP Virgin"), { color: "var(--swap-text)", "background-color": "var(--virgin-tint)" });
+});
+
+test("doomsday pvp: design values", async ({ page }) => {
+  await openScreen(page, "/doomsday/pvp");
+  await expectStyles(page.getByRole("heading", { name: /^PvP details · / }), { ...TYPE.title, color: "var(--gold-bright)" });
+  await expectStyles(page.getByText("Stone Guard · rank 6"), {
+    "font-family": "var(--font-name)",
+    "font-size": "var(--fs-name)",
+  });
+  await expectStyles(page.getByText("Mailbox Menace"), { color: "var(--gold-pale)" });
+  const grid = page.getByRole("table");
+  await expectStyles(grid.getByRole("cell", { name: "4–2" }), { color: "var(--pve-text)" });
+  await expectStyles(grid.getByRole("cell", { name: "1–3" }), { color: "var(--pvp-text)" });
+  await expectStyles(page.getByText("1,084"), { "font-family": "var(--font-name)", color: "var(--gold-pale)" });
+  await expectStyles(page.getByRole("region", { name: "Battlegrounds" }), { "border-style": "dashed" });
+});
+
+test("doomsday feats: design values", async ({ page }) => {
+  await openScreen(page, "/doomsday/feats");
+  const feat = page.getByTestId("feat").filter({ hasText: "First epic" });
+  await expectStyles(feat, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal)" });
+  await expectStyles(feat.getByText("Robes of the Exalted"), { color: "var(--epic)" });
+  await expectStyles(feat.getByText("First in the group"), {
+    color: "var(--gold-pale)",
+    "background-color": "var(--first-tint)",
+  });
+  await expectStyles(page.getByText("412 / 1,000"), { ...TYPE.meta, color: "var(--text-dim)" });
+});
 
 test("doomsday: design values", async ({ page }) => {
   await openScreen(page, "/doomsday");

@@ -19,6 +19,9 @@ export const DOOMSDAY_TABS = [
   { tab: "today", label: "Today", href: "/doomsday" },
   { tab: "week", label: "Week", href: "/doomsday/week" },
   { tab: "board", label: "Board", href: "/doomsday/board" },
+  { tab: "ladder", label: "Ladder", href: "/doomsday/ladder" },
+  { tab: "feats", label: "Feats", href: "/doomsday/feats" },
+  { tab: "pvp", label: "PvP", href: "/doomsday/pvp" },
 ] as const;
 
 export type DoomsdayTab = (typeof DOOMSDAY_TABS)[number]["tab"];

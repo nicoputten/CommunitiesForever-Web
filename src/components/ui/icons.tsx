@@ -340,3 +340,90 @@ export function DoomsdayEmblem(props: IconProps) {
     </svg>
   );
 }
+
+/** doomsday-feats: a sword (first epic, watch-list items, PvP feats). */
+export function SwordIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M14 4h6v6L9 21l-6-6z" />
+      <path d="M5 13l6 6" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a mount. */
+export function MountIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M4 18c2-6 6-8 10-8l3-4 2 2-1 3c2 1 3 3 3 7" />
+      <path d="M8 18v3M17 18v3" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a fish (Fishing). */
+export function FishIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M3 12c4-6 12-6 16 0-4 6-12 6-16 0z" />
+      <path d="M19 12l3-3v6z" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a skull (deaths). */
+export function SkullIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <circle cx="12" cy="10" r="7" />
+      <path d="M9 21v-4M15 21v-4" />
+      <circle cx="9.5" cy="10" r="1.5" fill="currentColor" />
+      <circle cx="14.5" cy="10" r="1.5" fill="currentColor" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a cooking pot (profession caps). */
+export function PotIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M5 10h14l-1 9H6z" />
+      <path d="M8 10V7M12 10V5M16 10V7" />
+    </Icon>
+  );
+}
+
+/**
+ * doomsday-ladder: a PvP rank insignia, a gold shield: ranks 1 to 5 as that many chevrons, from rank 6 a dot over
+ * the rank's number (the board shows rank 2 and rank 6 only). None at rank 0.
+ */
+export function RankInsignia({ rank, ...props }: IconProps & { rank: number }) {
+  const chevrons = rank >= 1 && rank <= 5 ? rank : 0;
+  return (
+    <svg viewBox="0 0 26 26" aria-hidden="true" focusable="false" {...props}>
+      <path
+        d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"
+        fill="var(--gold)"
+        stroke="var(--card-badge-line)"
+        strokeWidth=".8"
+      />
+      {Array.from({ length: chevrons }, (_, i) => (
+        <path
+          key={i}
+          d={`M7 ${(9.3 - (chevrons - 1) * 1.3 + i * 2.6).toFixed(1)}l6 3 6-3`}
+          fill="none"
+          stroke="var(--on-gold)"
+          strokeWidth="1.4"
+        />
+      ))}
+      {rank >= 6 && (
+        <>
+          <circle cx="13" cy="8.5" r="1.4" fill="var(--on-gold)" />
+          <text x="13" y="17.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="var(--on-gold)">
+            {rank}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
