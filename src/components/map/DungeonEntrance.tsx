@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import type { MapDungeon } from "@/core/views/dungeon";
 import { DungeonIcon } from "@/components/ui/icons";
 import sheetStyles from "./CharacterSheet.module.css";
@@ -32,7 +32,7 @@ export function DungeonEntrance({
   const button = useRef<HTMLButtonElement>(null);
   const anchor = useRef<HTMLSpanElement>(null);
   /** Opened from the keyboard (Enter or Space): focus moves into the popover; a click leaves it on the entrance. */
-  const byKeyboard = useRef(false);
+  const [byKeyboard, setByKeyboard] = useState(false);
   // Away from the map frame's edges it is near, as the hover card (MapStage placeCard): the map may be zoomed and
   // panned, so measured.
   useLayoutEffect(() => {
@@ -91,7 +91,7 @@ export function DungeonEntrance({
         aria-expanded={open}
         aria-label={d.planned > 0 ? `${d.name}, ${planned(d.planned)}` : d.name}
         onClick={(e) => {
-          byKeyboard.current = e.detail === 0;
+          setByKeyboard(e.detail === 0);
           onToggle(open ? undefined : d.name);
         }}
         onKeyDown={(e) => {
@@ -108,7 +108,7 @@ export function DungeonEntrance({
       </span>
       {open && !inSheet && (
         <span ref={anchor} className={styles.anchor}>
-          <DungeonPopover dungeon={d} onClose={close} focusFirst={byKeyboard.current} />
+          <DungeonPopover dungeon={d} onClose={close} focusFirst={byKeyboard} />
         </span>
       )}
     </span>
