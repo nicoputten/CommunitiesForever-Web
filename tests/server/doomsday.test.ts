@@ -152,10 +152,16 @@ describe("the Doomsday engine", () => {
       resetSeconds: 68400,
       nextReset: T + 86400,
     });
-    expect(doomsdayResetNow(s, T + 3 * 3600)).toEqual({ reset: 68400, changedAt: 0 });
+    expect(doomsdayResetNow(s, T + 3 * 3600)).toMatchObject({ reset: 68400, changedAt: 0 });
     // From that reset on, days run from 09:00.
     expect(doomsdayFor(db, T + 86400 + 60)!.schedule.resetSeconds).toBe(32400);
-    expect(doomsdayResetNow(s, T + 86400 + 60)).toEqual({ reset: 32400, changedAt: T + 86400 });
+    expect(doomsdayResetNow(s, T + 86400 + 60)).toMatchObject({ reset: 32400, changedAt: T + 86400 });
+    // The realm's clock for the addon: CET now, CEST from the last Sunday of March 2027 at 01:00 UTC.
+    expect(doomsdayResetNow(s, T)).toMatchObject({
+      offset: 3600,
+      offsetUntil: Date.UTC(2027, 2, 28, 1) / 1000,
+      offsetAfter: 7200,
+    });
   });
 });
 
