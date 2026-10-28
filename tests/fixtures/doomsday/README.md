@@ -11,3 +11,9 @@ and the tests switch to it; this file can then go.
 - `savedvariables.lua`: every new field, for the uploader (Ada) and a friend (Bob); Cid on an older addon has none.
 - `goals-false.lua`: the same friends, with `feed = false` and `goals = false` from an addon that still had
   "Share my activity" (now gone: false means nothing was sent).
+
+## `doomsday-cases.json`
+The addon's golden cases (`tests/fixtures/doomsday-cases.json` in the addon repo), copied byte for byte from addon
+commit `2ea28e17fbdf877eac3ef7ec613f4df4d26e9f1b` (CF-55a, addon PR #97). Never edited here: a rule change updates
+the addon's `docs/DOOMSDAY.md`, this file and both copies in the same release. `tests/unit/doomsday.golden.test.ts`
+checks `src/core/doomsday/rules.ts` against it; cases marked `addonOnly` (goal progress) are skipped.
