@@ -1,10 +1,26 @@
 import type { CSSProperties } from "react";
 import { classInfo } from "@/core/gamedata";
 import type { CharacterView } from "@/core/views/characters";
-import type { LevelSpread as Spread } from "@/core/views/roster";
-import { bandLayout, levelPosition, MERGE_LEVELS, MERGE_LEVELS_PHONE, spreadDots } from "@/core/views/spreadLayout";
+import type { DungeonBand, LevelSpread as Spread } from "@/core/views/roster";
+import type { RosterRuns } from "@/core/views/runs";
+import { joinNames } from "@/core/views/text";
+import {
+  BAND_ROWS,
+  bandLayout,
+  levelPosition,
+  MERGE_LEVELS,
+  MERGE_LEVELS_PHONE,
+  spreadDots,
+  type BandLayout,
+} from "@/core/views/spreadLayout";
 import styles from "./LevelSpread.module.css";
+import { DungeonBands, type BandView } from "./DungeonBands";
 import { SpreadTrack, type TrackDot } from "./SpreadTrack";
+
+/** WEB-42's dungeon pages (`/dungeons/<id>`): the band popover links to them once that story is merged. */
+const DUNGEON_PAGES = false;
+
+const rowsOf = (placed: readonly { row: number }[]) => Math.max(0, ...placed.map((p) => p.row + 1));
 
 const TICKS = [1, 10, 20, 30, 40, 50, 60];
 
@@ -28,7 +44,16 @@ function slices(characters: readonly CharacterView[]): string {
  * Then the dungeon
  * bands, which count who fits and never name them. `own`: the viewer's person key (the gold ring).
  */
-export function LevelSpread({ spread, own }: { spread: Spread; own?: string | undefined }) {
+export function LevelSpread({
+  spread,
+  own,
+  runs = {},
+}: {
+  spread: Spread;
+  own?: string | undefined;
+  /** WEB-45: each dungeon's upcoming runs, for its band. */
+  runs?: RosterRuns["byDungeon"];
+}) {
   const dots = (merge: number): TrackDot[] =>
     spreadDots(spread.characters, own, merge).map((d) => {
       const one = d.characters.length === 1 ? d.characters[0] : undefined;
@@ -55,8 +80,34 @@ export function LevelSpread({ spread, own }: { spread: Spread; own?: string | un
       if (one === undefined) dot.count = d.characters.length;
       return dot;
     });
-  const bands = bandLayout(spread).shown;
-  const bandRowCount = Math.max(0, ...bands.map((b) => b.row + 1));
+  // At most 4 rows, the rest after "Show all" (WEB-45); both layouts so the switch needs no server.
+  const limited = bandLayout(spread, BAND_ROWS);
+  const all = bandLayout(spread);
+  const rowIn = (layout: BandLayout, band: DungeonBand) => layout.shown.find((p) => p.band === band)?.row;
+  const bands: BandView[] = all.shown.map((placed) => {
+    const b = placed.band;
+    const { min, max } = b.dungeon.typicalLevels;
+    const planned = runs[b.dungeon.id] ?? { runs: [], more: 0 };
+    const row = rowIn(limited, b);
+    return {
+      id: b.dungeon.id,
+      name: b.dungeon.name,
+      shortName: b.dungeon.shortName,
+      range: `${min}–${max}`,
+      fits: b.fits.length,
+      ...(b.missing.length === 0 ? {} : { missing: `no ${joinNames([...b.missing])} in range` }),
+      runs: planned.runs,
+      moreRuns: planned.more,
+      best: placed.best,
+      from: pct(placed.from),
+      to: pct(placed.to),
+      row: row ?? 0,
+      rowAll: placed.row,
+      extra: row === undefined,
+      order: b === spread.best ? -1 : spread.bands.indexOf(b),
+      right: placed.from > 0.5,
+    };
+  });
 
   return (
     <section className={styles.spread} aria-labelledby="level-spread">
@@ -65,7 +116,7 @@ export function LevelSpread({ spread, own }: { spread: Spread; own?: string | un
           Who is around which level
         </h2>
         <span className={styles.hint}>
-          Hover or tap a dot for names · gold ring: your characters · bands show typical levels
+          Hover or tap a dot for names · gold ring: your characters · click a dungeon to plan a run
         </span>
       </div>
 
@@ -82,33 +133,12 @@ export function LevelSpread({ spread, own }: { spread: Spread; own?: string | un
       </div>
 
       {bands.length > 0 && (
-        <ul
-          className={styles.bands}
-          aria-label="Dungeon bands"
-          style={{ "--band-rows": bandRowCount } as CSSProperties}
-        >
-          {bands.map((b) => {
-            const { min, max } = b.band.dungeon.typicalLevels;
-            return (
-              <li
-                key={b.band.dungeon.id}
-                className={styles.band}
-                title={b.band.dungeon.shortName === b.band.dungeon.name ? undefined : b.band.dungeon.name}
-                data-best={b.best || undefined}
-                style={
-                  {
-                    "--from": pct(b.from),
-                    "--to": pct(b.to),
-                    "--row": b.row,
-                    "--order": b.best ? -1 : spread.bands.indexOf(b.band),
-                  } as CSSProperties
-                }
-              >
-                {b.band.dungeon.shortName} {min}–{max} · {b.band.fits.length} fit
-              </li>
-            );
-          })}
-        </ul>
+        <DungeonBands
+          bands={bands}
+          rows={rowsOf(limited.shown)}
+          rowsAll={rowsOf(all.shown)}
+          dungeonPages={DUNGEON_PAGES}
+        />
       )}
     </section>
   );

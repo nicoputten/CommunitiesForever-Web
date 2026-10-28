@@ -79,7 +79,9 @@ export interface BandLayout {
 
 const fitsFirst = (a: DungeonBand, b: DungeonBand) =>
   b.fits.length - a.fits.length ||
-  a.dungeon.typicalLevels.max - a.dungeon.typicalLevels.min - (b.dungeon.typicalLevels.max - b.dungeon.typicalLevels.min) ||
+  a.dungeon.typicalLevels.max -
+    a.dungeon.typicalLevels.min -
+    (b.dungeon.typicalLevels.max - b.dungeon.typicalLevels.min) ||
   a.dungeon.typicalLevels.min - b.dungeon.typicalLevels.min;
 
 /**

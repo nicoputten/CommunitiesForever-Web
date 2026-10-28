@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Roster: a "Next run" card above the level spread; the dungeon bands sit in at most four rows (most fits first, "Show all" for the rest), say how many fit and how many runs are planned, and open a popover with who's missing, the planned runs and Plan a run (a sheet on a phone). The dot tooltip no longer gets cut off at the top and keeps each character on one line.
 - Asks ("who's up right now") are kept on the site: from the game, also when they aren't posted on Discord, and from Discord's `/ask` once the bot has it. Friends can answer them in Discord for 10 minutes, and open asks go to the game through the uploader.
 - Runs v2, part 1: answer a run with any of your characters and pick the role apart from it (roles your class can't play are off, a full role makes you reserve), in a panel that opens from Answer (a sheet on a phone). The run page shows the time large with a countdown, each slot with the character's fit, and Could fill, Maybe and Reserve. The organiser (and the admin) move people from a slot's ⋯ menu, also swapping two people; organisers can bench themselves or leave the group and stay organiser. Plan a run picks Lead as the same way, with the role.
 - Every dropdown on the site is now the site's own (Plan a run, your answer's character, the Discord page): a search from 8 options, groups, and on a phone a sheet from the bottom. The date and time fields are the site's own too, without the browser's icons, and pages no longer jump sideways when the scrollbar appears.

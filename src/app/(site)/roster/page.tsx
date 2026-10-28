@@ -20,11 +20,15 @@ import {
 } from "@/core/views";
 import { FriendPanel } from "@/components/roster/FriendPanel";
 import { LevelSpread } from "@/components/roster/LevelSpread";
+import { NextRun } from "@/components/roster/NextRun";
 import { QuickAnswers } from "@/components/roster/QuickAnswers";
 import { RosterToolbar } from "@/components/roster/RosterToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { SegmentedNav } from "@/components/ui/SegmentedNav";
+import { rosterRuns } from "@/core/views/runs";
+import { getDb } from "@/server/db";
+import { runsInput } from "@/server/runsInput";
 import { RosterEmpty } from "./empty";
 import styles from "./roster.module.css";
 
@@ -46,6 +50,8 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
 
   const r = roster(data, now, { filter: rosterFilter(query), sort: query.sort, dir: query.dir });
   const viewer = await getViewer();
+  // Runs on the roster (WEB-45): the Next run card and each band's planned runs.
+  const runs = viewer === undefined ? undefined : rosterRuns(runsInput(getDb(), viewer.battleTag, now));
   const own = peopleViews(data, now).find((p) => sameBattleTag(p.battleTag, viewer?.battleTag))?.key;
   const filtered = isFiltered(query);
   const noAddon = r.noAddon.map((p) => p.displayName);
@@ -77,7 +83,9 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
         shown={filtered ? { count: r.characters.length, of: r.counts.characters } : undefined}
       />
 
-      <LevelSpread spread={r.spread} own={own} />
+      {runs?.next !== undefined && <NextRun run={runs.next} />}
+
+      <LevelSpread spread={r.spread} own={own} {...(runs === undefined ? {} : { runs: runs.byDungeon })} />
       <QuickAnswers answers={r.quickAnswers} />
 
       {r.characters.length === 0 ? (

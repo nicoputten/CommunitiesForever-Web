@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { RunAnswer, RunRecord } from "@/core/runs";
 import { peopleViews, recordCharacters } from "@/core/views/characters";
-import { joinableUnanswered, planPage, runDetail, runsPage, type RunsInput } from "@/core/views/runs";
+import {
+  BAND_RUNS,
+  joinableUnanswered,
+  planPage,
+  rosterRuns,
+  runDetail,
+  runsPage,
+  type RunsInput,
+} from "@/core/views/runs";
 import { NOW, sample } from "./sample";
 
 // WEB-40: the Runs pages' view model on the design prompt's group (sample.ts: Nico plays Ves 39, Grom 24, Sela 12;
@@ -230,5 +238,26 @@ describe("Plan a run", () => {
     ]);
     expect(p.otherZones).toEqual([{ name: "Bob", timeZone: "Europe/London" }]);
     expect(planPage(input(NICO), "nope").dungeonId).toBe("sm-armory");
+  });
+});
+
+describe("runs on the roster (WEB-45)", () => {
+  it("the next upcoming run, as the board's card says it, and each dungeon's runs for its band", () => {
+    const r = rosterRuns(input(BOB));
+    // Run 1 starts first (in 3 hours); the past and the cancelled run are left out.
+    expect(r.next).toMatchObject({ href: "/runs/1", dungeon: "Scarlet Monastery: Armory" });
+    expect(r.next!.line).toBe("Nico on Ves Doombringer · 2 in · 1 maybe · tank open · 2 damage open");
+    expect(r.byDungeon["sm-armory"]!.runs).toEqual([{ href: "/runs/1", label: `${r.next!.when} · 2 in` }]);
+    expect(Object.keys(r.byDungeon).sort()).toEqual(["sm-armory", "sm-cathedral", "sm-library", "zf"]);
+    // The organiser reads "You lead as".
+    expect(rosterRuns(input(NICO)).next!.line).toMatch(/^You lead as Ves Doombringer · /);
+  });
+
+  it("no card without an upcoming run; at most three runs per band, then a count", () => {
+    expect(rosterRuns(input(BOB, { runs: [] })).next).toBeUndefined();
+    const many = [1, 2, 3, 4, 5].map((i) => run(10 + i, { startsAt: NOW + i * HOUR }));
+    const band = rosterRuns(input(BOB, { runs: many })).byDungeon["sm-armory"]!;
+    expect(band.runs).toHaveLength(BAND_RUNS);
+    expect(band.more).toBe(2);
   });
 });
