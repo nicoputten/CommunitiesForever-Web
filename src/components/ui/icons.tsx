@@ -268,3 +268,75 @@ export function DeviceIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Doomsday (E8, board doomsday-names): the sun rising over a shield, in the tab bar's line style. */
+export function DoomsdayIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 28 28" strokeWidth={1.8} {...props}>
+      <path d="M14 15V5 M14 15l7-6 M14 15L7 9 M3 15h22 M7 15c2 8 12 8 14 0 M12 19h4 M14 17v4" />
+    </Icon>
+  );
+}
+
+/** doomsday-today: the crown of the first to finish, filled gold. */
+export function CrownIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" {...props}>
+      <path
+        d="M2 12h12l1-8-4 3-3-5-3 5-4-3z"
+        fill="var(--gold-bright)"
+        stroke="var(--crown-line)"
+        strokeWidth=".8"
+        strokeLinejoin="round"
+      />
+      <rect x="2" y="12.5" width="12" height="2" rx="1" fill="var(--gold)" />
+    </svg>
+  );
+}
+
+/** doomsday-today: the streak's flame. */
+export function FlameIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 14 14" aria-hidden="true" focusable="false" {...props}>
+      <path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="var(--streak-flame)" />
+    </svg>
+  );
+}
+
+/** doomsday-today: a goal swapped for one friend. */
+export function SwapIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 14 14" strokeWidth={1.4} {...props}>
+      <path d="M2 5h9l-2-2M12 9H3l2 2" />
+    </Icon>
+  );
+}
+
+/** doomsday-today: the big emblem next to the page title (sun over the shield-shaped bowl). */
+export function DoomsdayEmblem(props: IconProps) {
+  const rays = [
+    [52.8, 22],
+    [44, 13.2],
+    [32, 10],
+    [20, 13.2],
+    [11.2, 22],
+  ];
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" {...props}>
+      {rays.map(([x, y]) => (
+        <path
+          key={`${x}`}
+          d={`M32 34 L${x} ${y}`}
+          stroke="var(--gold)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          opacity=".8"
+        />
+      ))}
+      <circle cx="32" cy="34" r="14" fill="var(--gold-bright)" />
+      <path d="M6 40h52" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M14 40c4 14 32 14 36 0z" fill="var(--surface-raised)" stroke="var(--gold-bright)" strokeWidth="2.4" />
+      <path d="M27 46h10M32 41v10" stroke="var(--gold-bright)" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}

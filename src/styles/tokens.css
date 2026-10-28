@@ -810,4 +810,40 @@
   --retry-line: rgba(240, 167, 116, 0.4);
   --retry-text: #f6d6bd;
   --size-ask-note: 300px; /* "None of your characters fit …" */
+
+  /* Doomsday (WEB-59, boards doomsday-today, doomsday-feats, doomsday-phone): PvE in the fresh green, PvP in the
+     Horde red, never added together. */
+  --pve-text: #9be3b0; /* the PvE track */
+  --pvp-text: #f08a80; /* the PvP track */
+  --size-emblem-dd: 56px; /* doomsday-today: the sun over the shield next to the title */
+  --size-goals-aside: 340px; /* doomsday-today: Today so far */
+  --surface-goal: #0e1626; /* doomsday-today: a goal */
+  --line-goal: rgba(174, 182, 195, 0.14);
+  --line-goal-done: rgba(127, 217, 154, 0.35);
+  --strike-done: rgba(155, 227, 176, 0.7); /* doomsday-today: the line through a done goal */
+  --size-goal-bar: 6px; /* doomsday-today: progress bar */
+  --streak-text: #f6c29c; /* doomsday-today: streak and the reset countdown */
+  --streak-flame: #f0a774;
+  --swap-text: #afc6ff; /* doomsday-today: the swap mark; doomsday-ladder: "new", PvP Virgin */
+  --virgin-tint: rgba(141, 176, 255, 0.12);
+  --virgin-line: rgba(141, 176, 255, 0.35);
+  --first-tint: rgba(212, 175, 106, 0.2); /* doomsday-today: the crown pill, "First in the group" */
+  --first-line: rgba(212, 175, 106, 0.5);
+  --crown-line: #b88a3a; /* doomsday-today: the crown's outline */
+  --row-you: rgba(212, 175, 106, 0.05); /* doomsday-today: the viewer's board row */
+  --size-board-goal: 108px; /* doomsday-today: a goal column of the board */
+  --size-board-friend: 190px;
+  --size-avatar-board: 28px; /* doomsday-today: friend avatar on the board */
+  --size-avatar-mini: 22px; /* doomsday-today: friend avatar in Today so far */
+  --fs-avatar-mini: 9px;
+  --size-heat: 13px; /* doomsday-feats: a heatmap day */
+  --r-heat: 3px;
+  --size-heat-name: 80px;
+  --size-heat-best: 90px;
+  --heat-0: #1a2333; /* doomsday-feats: no goal that day */
+  --heat-1: rgba(212, 175, 106, 0.34);
+  --heat-2: rgba(212, 175, 106, 0.5);
+  --heat-3: rgba(212, 175, 106, 0.66);
+  --heat-4: rgba(212, 175, 106, 0.82);
+  --heat-5: rgba(212, 175, 106, 0.98);
 }
