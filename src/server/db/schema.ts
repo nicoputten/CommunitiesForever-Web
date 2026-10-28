@@ -291,6 +291,14 @@ export const runs = sqliteTable("runs", {
   /** Ran it: signed-up characters seen in the run, of those who said I'm in. */
   came: integer("came"),
   signedUp: integer("signed_up"),
+  /** WEB-51: an ask ("who's up right now") is a run that starts when it is made and is open for 10 minutes. */
+  kind: text("kind", { enum: ["run", "ask"] })
+    .notNull()
+    .default("run"),
+  /** WEB-51: when an ask stops taking answers (made at + 10 minutes). */
+  expiresAt: integer("expires_at"),
+  /** WEB-51: when the bot's `askExpired` event was written, so it is written once. */
+  expiredAt: integer("expired_at"),
 });
 
 /** One answer per friend per run; replaced when they answer again. */
