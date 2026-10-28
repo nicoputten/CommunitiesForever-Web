@@ -154,8 +154,11 @@ test("Plan v2: an empty dungeon, its groups and wings, day and time chips", asyn
 
 test("the runs list: a summary and the slot bar's tooltip", async ({ page, context, baseURL }) => {
   await as(context, baseURL!, E2E.admin);
+  // Its own run (the seed has none): each size plans a different dungeon.
+  const [dungeon, name] = isPhone(page) ? ["rfk", "Razorfen Kraul"] : ["sfk", "Shadowfang Keep"];
+  await planRun(page, { dungeon, day: 2, time: "19:00" });
   await page.goto("/runs?show=all");
-  const bar = page.getByRole("img", { name: /^Group: Tank · / }).first();
+  const bar = page.getByRole("article", { name }).getByRole("img", { name: /^Group: Tank · / });
   await expect(bar).toBeVisible();
   await expect(page.getByText(/^\d+ in( · \d+ maybe)? · (\d+ open|full)/).first()).toBeVisible();
   await bar.focus();

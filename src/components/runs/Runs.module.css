@@ -1050,3 +1050,13 @@
     padding: var(--s-4);
   }
 }
+
+/* On a phone the slot bar is tapped for its tooltip: a 44 px target around it. */
+@media (max-width: 767px) {
+  .slotBar {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+    min-width: var(--size-touch);
+  }
+}
