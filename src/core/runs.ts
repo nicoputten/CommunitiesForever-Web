@@ -238,7 +238,9 @@ export type MoveRefusal =
   | "role_full"
   | "role_not_for_class"
   /** It already is there. */
-  | "same";
+  | "same"
+  /** The swap partner isn't in that role (WEB-49). */
+  | "not_in_role";
 
 export interface MoveOutcome {
   answers: RunAnswer[];
@@ -246,12 +248,18 @@ export interface MoveOutcome {
   moved?: RunAnswer;
   /** Who moved up into a slot the move freed. */
   movedUp?: RunAnswer;
+  /** The other sign-up of a swap, as it is now (WEB-49). */
+  swapped?: RunAnswer;
 }
 
 /**
  * Moves the sign-up with character `guid`: into another role's open slot (as I'm in), to reserve, or off the run (its
  * answer removed; they may answer again, decided with Nico 2026-10-27). A slot it frees pulls up the oldest reserve,
- * else the first Maybe. Rights are the caller's (mayEdit, or the admin).
+ * else the first Maybe. Rights are the caller's (mayEdit, or the admin). The organiser's own sign-up moves like any other
+ * (WEB-49): to reserve is benching themselves, remove is leaving the group; they stay the organiser.
+ *
+ * `swapWith` (WEB-49): the character holding a slot of the full role `to`; the two trade places, each taking the other's
+ * answer and role (a reserve swaps in, the other goes to reserve). Both classes must play their new role.
  */
 export function moveSignUp(
   run: RunCore & { range: LevelRange },
@@ -261,10 +269,26 @@ export function moveSignUp(
   now: number,
   levelOf: LevelOf,
   classOf: (guid: string) => string | undefined,
+  swapWith?: string,
 ): MoveOutcome | MoveRefusal {
   if (run.cancelledAt !== undefined || now >= run.startsAt) return "closed";
   const target = answers.find((a) => a.guid === guid);
   if (target === undefined) return "unknown_sign_up";
+  if (swapWith !== undefined && to !== "reserve" && to !== "remove") {
+    const other = answers.find((a) => a.guid === swapWith);
+    if (other === undefined || other === target) return "unknown_sign_up";
+    if (other.answer !== "in" || other.role !== to) return "not_in_role";
+    // In or reserve only, so each side ends up in or reserve (what runMoved can say).
+    if (target.answer !== "in" && target.answer !== "reserve") return "role_full";
+    if (!rolesFor(classOf(guid)).includes(to) || !rolesFor(classOf(swapWith)).includes(target.role)) {
+      return "role_not_for_class";
+    }
+    const moved: RunAnswer = { ...target, answer: "in", role: to };
+    const swapped: RunAnswer = { ...other, answer: target.answer, role: target.role };
+    delete moved.movedUp;
+    delete swapped.movedUp;
+    return { answers: answers.map((a) => (a === target ? moved : a === other ? swapped : a)), moved, swapped };
+  }
   const others = answers.filter((a) => a !== target);
   let moved: RunAnswer | undefined;
   if (to === "reserve") {

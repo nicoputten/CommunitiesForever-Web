@@ -563,6 +563,7 @@ export function moveRunSignUp(
   guid: string,
   to: MoveTo,
   now: number,
+  swapWith?: string,
 ): StoredRun | MoveRefusalOrRights {
   const run = getRun(db, runId);
   if (run === undefined) return "unknown_run";
@@ -578,6 +579,7 @@ export function moveRunSignUp(
     now,
     (g) => runCharacter(data, g)?.level,
     (g) => runCharacter(data, g)?.classFile,
+    swapWith,
   );
   if (typeof outcome === "string") return outcome;
   db.transaction((tx) => {
@@ -591,12 +593,14 @@ export function moveRunSignUp(
     const id = ids.get(battleTagKey(battleTag));
     return { name: displayName(data, battleTag), ...(id === undefined ? {} : { discordId: id }) };
   };
-  if (target !== undefined) {
-    runEvent(db, "runMoved", after, now, {
-      who: who(target.battleTag),
-      to: to === "remove" ? "removed" : to,
-      by: displayName(data, by),
-    });
+  // The quiet notice goes to whoever was moved by someone else; the organiser moving themselves gets none (WEB-49).
+  const notify = (moved: { battleTag: string }, place: string) => {
+    if (battleTagKey(moved.battleTag) === battleTagKey(by)) return;
+    runEvent(db, "runMoved", after, now, { who: who(moved.battleTag), to: place, by: displayName(data, by) });
+  };
+  if (target !== undefined) notify(target, to === "remove" ? "removed" : to);
+  if (outcome.swapped !== undefined) {
+    notify(outcome.swapped, outcome.swapped.answer === "in" ? outcome.swapped.role : outcome.swapped.answer);
   }
   if (outcome.movedUp !== undefined) runEvent(db, "runMovedUp", after, now, { who: who(outcome.movedUp.battleTag) });
   return after;

@@ -130,6 +130,7 @@ const REFUSALS: Record<string, [number, string]> = {
   role_full: [409, "That role has no open slot."],
   unknown_sign_up: [404, "No sign-up with that character."],
   same: [409, "The sign-up already is there."],
+  not_in_role: [409, "That character doesn't hold a slot of that role."],
   not_organiser: [403, "Only the organiser can edit a run."],
   not_allowed: [403, "Only the organiser or the admin can delete a run."],
   already_cancelled: [409, "The run was already cancelled."],

@@ -44,6 +44,7 @@ export async function planAction(_: FormState, form: FormData): Promise<FormStat
   const startsAt = startFrom(form, timeZone);
   if (startsAt === undefined) return { error: "Pick a day and a time." };
   const lead = text(form, "lead");
+  const leadRole = text(form, "leadRole");
   const planned = planRunFor(
     db,
     {
@@ -53,6 +54,7 @@ export async function planAction(_: FormState, form: FormData): Promise<FormStat
       organiser: battleTag,
       source: "website",
       ...(lead === undefined || lead === "" ? {} : { leadGuid: lead }),
+      ...(leadRole === "tank" || leadRole === "healer" || leadRole === "damage" ? { leadRole } : {}),
     },
     nowSeconds(),
   );

@@ -1,0 +1,236 @@
+/* The character and role picker (WEB-49, board runs-v2-picker): WEB-48's menu look. */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.step {
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.character {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--size-touch);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--input-bg);
+  cursor: pointer;
+}
+
+.character[aria-selected="true"] {
+  border-color: var(--gold);
+  background: var(--tint-option);
+}
+
+.character:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.charText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.charName {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-sm);
+}
+
+.charLine {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.fit {
+  flex: none;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.fit[data-fit="fits"],
+.fit[data-fit="over"] {
+  color: var(--fresh-text);
+}
+
+.fit[data-fit="low"],
+.fit[data-fit="carry"] {
+  color: var(--stale-text);
+}
+
+.fit[data-fit="tooLow"] {
+  color: var(--text-dim);
+}
+
+.hint,
+.note {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.segments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-0-5);
+  min-height: var(--size-touch);
+  padding: var(--s-1-5) var(--s-2);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--input-bg);
+  color: var(--text-muted);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.segment[aria-checked="true"] {
+  border-color: var(--gold);
+  background: var(--tint-pressed);
+  color: var(--text-strong);
+}
+
+.segment[aria-disabled="true"] {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.segmentDetail {
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-dim);
+}
+
+.segment[aria-disabled="true"] .segmentDetail {
+  color: var(--text-disabled);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-top: var(--s-3);
+  border-top: var(--border) solid var(--line);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+/* --- the popover (desktop) and the sheet (under 640 px) ---------------------------------------------------------- */
+
+.dialog {
+  position: fixed;
+  width: min(var(--size-picker), calc(100vw - 2 * var(--s-4)));
+  max-height: calc(100dvh - 2 * var(--s-4));
+  margin: 0;
+  padding: 0;
+  border-radius: var(--r-menu);
+  background: var(--surface-menu);
+  border: var(--border) solid var(--line-menu);
+  box-shadow: var(--shadow-menu);
+  color: var(--text);
+  overflow-y: auto;
+}
+
+.dialog::backdrop {
+  background: var(--sheet-backdrop);
+}
+
+@media (max-width: 639px) {
+  .dialog {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 90dvh;
+    border: 0;
+    border-top: var(--border) solid var(--line-menu);
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    box-shadow: var(--shadow-sheet);
+    animation: rise var(--dur-sheet) var(--ease-out);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-4);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.sub {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.close {
+  flex: none;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  margin: calc(-1 * var(--s-2)) calc(-1 * var(--s-2)) 0 0;
+  border: 0;
+  border-radius: var(--r-nav);
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--fs-section);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.error {
+  font-size: var(--fs-meta);
+  color: var(--stale-text);
+}
