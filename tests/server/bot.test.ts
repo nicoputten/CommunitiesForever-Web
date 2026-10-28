@@ -143,7 +143,7 @@ describe("bot API", () => {
       longPollSeconds: 30,
       eventTtlSeconds: EVENT_TTL_SECONDS,
       // WEB-39: the admin's settings on the Discord page (defaults here).
-      posts: { milestones: true, runs: true, recap: true, doomsdayBoard: true, doomsdayLadder: true },
+      posts: { milestones: true, runs: true, recap: true, doomsdayBoard: false, doomsdayLadder: false },
       channels: { posts: null, recap: null, runs: null, doomsday: null },
       mentionRole: null,
       recap: { day: 0, time: "13:00", timeZone: "UTC" },

@@ -171,7 +171,10 @@ export interface BotSettings {
   realmTimeZone: string;
 }
 
-/** Before the admin changed anything: everything on, recap Sunday 13:00 (WEB-41), reminders 30 minutes before. */
+/**
+ * Before the admin changed anything: every post on but Doomsday's board and ladder, recap Sunday 13:00 (WEB-41),
+ * reminders 30 minutes before.
+ */
 export const DEFAULT_BOT_SETTINGS: BotSettings = {
   milestones: true,
   runs: true,
@@ -186,8 +189,9 @@ export const DEFAULT_BOT_SETTINGS: BotSettings = {
   reminderMinutes: 30,
   askNow: true,
   markDone: true,
-  doomsdayBoard: true,
-  doomsdayLadder: true,
+  // Off until the admin turns them on at launch (Nico, 2026-10-28): deploying never posts a board by itself.
+  doomsdayBoard: false,
+  doomsdayLadder: false,
   doomsdayChannel: null,
   doomsdayReset: 68400,
   doomsdayResetPrevious: null,
