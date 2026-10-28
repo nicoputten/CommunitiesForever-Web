@@ -70,6 +70,12 @@ export interface RunCore {
   /** The organiser's BattleTag. */
   organiser: string;
   cancelledAt?: number;
+  /**
+   * WEB-51: an ask ("who's up right now") is a run that starts when it is made: no slots and no reserve (Nico,
+   * 2026-10-28), answers until `expiresAt`.
+   */
+  kind?: "ask";
+  expiresAt?: number;
 }
 
 /** A stored run with its answers. */
@@ -143,6 +149,8 @@ export interface AnswerInput {
 export type AnswerRefusal =
   /** The run is cancelled or already started. */
   | "closed"
+  /** WEB-51: the ask is past its 10 minutes. */
+  | "expired"
   /** I'm in needs a character. */
   | "no_character"
   /** I'm in needs a character that may join (levelFit: not 6+ below); Maybe and Can't always go. */
@@ -197,7 +205,10 @@ export function giveAnswer(
   now: number,
   levelOf: LevelOf,
 ): AnswerOutcome | AnswerRefusal {
-  if (run.cancelledAt !== undefined || now >= run.startsAt) return "closed";
+  if (run.cancelledAt !== undefined) return "closed";
+  const ask = run.kind === "ask";
+  if (ask && now >= (run.expiresAt ?? run.startsAt)) return "expired";
+  if (!ask && now >= run.startsAt) return "closed";
   const role = input.role ?? slotRole(input.character?.role);
   if (input.character !== undefined && !rolesFor(input.character.classFile).includes(role)) {
     return "role_not_for_class";
@@ -217,9 +228,10 @@ export function giveAnswer(
     answeredAt: now,
   };
   if (input.character !== undefined) stored.guid = input.character.guid;
-  if (stored.answer === "in" && openSlots(others)[role] <= 0) stored.answer = "reserve";
+  // An ask has no slots: everyone who says I'm in is in (WEB-51).
+  if (!ask && stored.answer === "in" && openSlots(others)[role] <= 0) stored.answer = "reserve";
   const next = [...others, stored];
-  if (before?.answer === "in" && !(stored.answer === "in" && stored.role === before.role)) {
+  if (!ask && before?.answer === "in" && !(stored.answer === "in" && stored.role === before.role)) {
     return { ...moveUp(run, answers, next, before.role, levelOf, stored), stored };
   }
   return { answers: next, stored };
@@ -323,6 +335,8 @@ export interface PlanInput {
   note?: string;
   organiser: string;
   source: RunSource;
+  /** WEB-51: an ask, which starts now. */
+  ask?: boolean;
   /** The organiser's character, when one may join ("organiser without a slot" otherwise), and its role. */
   lead?: { guid: string; level?: number; role?: Role; classFile?: string; owner: string; slot?: SlotRole };
 }
@@ -334,7 +348,7 @@ export interface PlanInput {
 export function planRun(input: PlanInput, now: number): { answers: RunAnswer[] } | PlanRefusal {
   const dungeon = runDungeon(input.dungeonId);
   if (dungeon === undefined) return "unknown_dungeon";
-  if (input.startsAt <= now) return "time_passed";
+  if (input.ask !== true && input.startsAt <= now) return "time_passed";
   if ((input.note ?? "").length > MAX_NOTE) return "note_too_long";
   if (input.lead === undefined) return { answers: [] };
   if (battleTagKey(input.lead.owner) !== battleTagKey(input.organiser)) return "lead_not_yours";

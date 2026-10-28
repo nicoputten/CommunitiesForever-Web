@@ -56,6 +56,23 @@ export interface GameRun {
   answers: GameAnswer[];
 }
 
+/** WEB-51: an open ask ("who's up right now"), for a friend whose game reloads within its 10 minutes. */
+export interface GameAsk {
+  /** "a-12". */
+  id: string;
+  dungeon: string;
+  dungeonName: string;
+  /** When it was made, and until when it takes answers. */
+  at: number;
+  expiresAt: number;
+  source: GameSource;
+  note?: string;
+  url: string;
+  /** The asker, on their character when they have one that may join. */
+  from: GamePerson & { role?: GameRole };
+  answers: GameAnswer[];
+}
+
 export interface UploaderRuns {
   v: number;
   /** When the list last changed (UTC): unchanged lists keep it, so the uploader writes nothing and sync stays calm. */
@@ -64,6 +81,8 @@ export interface UploaderRuns {
   /** WEB-43 (addon CF-47): ids of the token owner's game items the site has; the game then forgets them. */
   received: string[];
   runs: GameRun[];
+  /** WEB-51 (optional): the open asks; addons from before it ignore them. */
+  asks: GameAsk[];
 }
 
 const SOURCE: Record<RunSource, GameSource> = { website: "site", discord: "discord", game: "game" };
@@ -71,6 +90,8 @@ const ROLE: Record<SlotRole, GameRole> = { tank: "tank", healer: "heal", damage:
 
 export interface UploaderRunsInput {
   runs: readonly RunRecord[];
+  /** WEB-51: the asks; those still open go to the game. */
+  asks?: readonly RunRecord[];
   /** A character's name by GUID. */
   characterName: (guid: string) => string | undefined;
   /** A character's level by GUID, for its fit (WEB-47). */
@@ -99,11 +120,15 @@ function shown(run: RunRecord, now: number): boolean {
  * The newest moment the list changed: a run's own change, a run coming into the 14 days, starting, or leaving the
  * list. The same runs give the same `updatedAt`, whenever they are asked for.
  */
-function changedAt(runs: readonly RunRecord[], now: number): number {
+function changedAt(runs: readonly RunRecord[], asks: readonly RunRecord[], now: number): number {
   let at = 0;
   for (const r of runs) {
     const moments = [r.updatedAt, r.startsAt - UPLOADER_RUNS_DAYS * DAY, r.startsAt, r.startsAt + PAST_AFTER_SECONDS];
     for (const m of moments) if (m <= now && m > at) at = m;
+  }
+  // An ask joins the list when made and leaves it when it expires.
+  for (const a of asks) {
+    for (const m of [a.updatedAt, a.expiresAt ?? a.startsAt]) if (m <= now && m > at) at = m;
   }
   return at;
 }
@@ -140,35 +165,60 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
           ...person(r.organiser, lead?.guid),
           utcOffset: offsetSeconds(input.timeZoneOf(r.organiser), r.startsAt),
         },
-        answers: [...r.answers]
-          .sort(
-            (a, b) => a.answeredAt - b.answeredAt || battleTagKey(a.battleTag).localeCompare(battleTagKey(b.battleTag)),
-          )
-          .slice(0, UPLOADER_MAX_ANSWERS)
-          .map((a) => {
-            const game: GameAnswer = {
-              ...person(a.battleTag, a.guid),
-              answer: a.answer === "reserve" ? "maybe" : a.answer,
-              role: ROLE[a.role],
-              source: SOURCE[a.source],
-              at: a.answeredAt,
-            };
-            if (a.answer === "reserve") game.reserve = true;
-            if (a.guid !== undefined && dungeon !== undefined && input.characterLevel !== undefined) {
-              const { min, max } = dungeon.typicalLevels;
-              game.fit = levelFit(input.characterLevel(a.guid), min, max).label;
-            }
-            return game;
-          }),
+        answers: answersOf(r),
       };
       if (r.note !== undefined) run.note = r.note;
       return run;
     });
+  const asks = (input.asks ?? [])
+    .filter((a) => a.cancelledAt === undefined && now < (a.expiresAt ?? a.startsAt))
+    .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id)
+    .slice(0, UPLOADER_MAX_RUNS)
+    .map((a): GameAsk => {
+      const dungeon = runDungeon(a.dungeonId);
+      const lead = a.answers.find((x) => sameBattleTag(x.battleTag, a.organiser) && x.answer === "in");
+      const ask: GameAsk = {
+        id: `a-${a.id}`,
+        dungeon: dungeon?.addonId ?? a.dungeonId,
+        dungeonName: dungeon?.name ?? a.dungeonId,
+        at: a.startsAt,
+        expiresAt: a.expiresAt ?? a.startsAt,
+        source: SOURCE[a.source],
+        url: `${base}/runs`,
+        from: { ...person(a.organiser, lead?.guid), ...(lead === undefined ? {} : { role: ROLE[lead.role] }) },
+        answers: answersOf(a),
+      };
+      if (a.note !== undefined) ask.note = a.note;
+      return ask;
+    });
   return {
     v: UPLOADER_RUNS_VERSION,
-    updatedAt: changedAt(input.runs, now),
+    updatedAt: changedAt(input.runs, input.asks ?? [], now),
     reminderMinutes: input.reminderMinutes,
     received: [...(input.received ?? [])],
     runs,
+    asks,
   };
+
+  function answersOf(r: RunRecord): GameAnswer[] {
+    const dungeon = runDungeon(r.dungeonId);
+    return [...r.answers]
+      .sort((a, b) => a.answeredAt - b.answeredAt || battleTagKey(a.battleTag).localeCompare(battleTagKey(b.battleTag)))
+      .slice(0, UPLOADER_MAX_ANSWERS)
+      .map((a) => {
+        const game: GameAnswer = {
+          ...person(a.battleTag, a.guid),
+          answer: a.answer === "reserve" ? "maybe" : a.answer,
+          role: ROLE[a.role],
+          source: SOURCE[a.source],
+          at: a.answeredAt,
+        };
+        if (a.answer === "reserve") game.reserve = true;
+        if (a.guid !== undefined && dungeon !== undefined && input.characterLevel !== undefined) {
+          const { min, max } = dungeon.typicalLevels;
+          game.fit = levelFit(input.characterLevel(a.guid), min, max).label;
+        }
+        return game;
+      });
+  }
 }

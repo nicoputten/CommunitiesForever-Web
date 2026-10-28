@@ -10,6 +10,7 @@ import { feedDays, gameItems, runs } from "./db/schema";
 import { getBotSettings } from "./discord";
 import {
   answerRunFor,
+  askFor,
   discordIds,
   displayName,
   getRun,
@@ -116,36 +117,33 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
       return typeof answered === "string" ? { outcome: answered, runId } : { outcome: "applied", runId };
     }
     case "ask": {
-      // An ask is posted only within 10 minutes of being made in game (story WEB-43).
+      // An ask lasts 10 minutes from when it was made in game (story WEB-43); stored as an ask (WEB-51) whatever the
+      // admin's "Ask now from the game" says, which only decides whether Discord gets it.
       if (now - item.at > ASK_EXPIRE_SECONDS) return { outcome: "expired" };
-      const settings = getBotSettings(db);
-      if (!settings.askNow) return { outcome: "off" };
       const dungeon = runDungeonByAddonId(item.dungeon) ?? runDungeon(item.dungeon);
-      const data = loadState(db)?.data;
-      const id = discordIds(db).get(battleTagKey(battleTag));
-      const character = item.guid === undefined ? undefined : runCharacter(data, item.guid);
-      enqueueBotEvent(
+      if (dungeon === undefined) return { outcome: "unknown_dungeon" };
+      const role = slotFromGame(item.role);
+      const request = {
+        dungeonId: dungeon.id,
+        organiser: battleTag,
+        source: "game" as const,
+        at: item.at,
+        ...(item.note === undefined ? {} : { note: item.note }),
+      };
+      let asked = askFor(
         db,
-        "askNow",
         {
-          ask: {
-            id: item.id,
-            dungeon: dungeon
-              ? { id: dungeon.id, name: dungeon.name, typicalLevels: dungeon.typicalLevels }
-              : { id: item.dungeon, name: item.dungeon },
-            from: { name: displayName(data, battleTag), ...(id === undefined ? {} : { discordId: id }) },
-            ...(item.guid === undefined && item.name === undefined
-              ? {}
-              : { character: character?.name ?? item.name ?? item.guid }),
-            ...(item.role === undefined ? {} : { role: item.role }),
-            ...(item.note === undefined ? {} : { note: item.note }),
-            at: item.at,
-            expiresAt: item.at + ASK_EXPIRE_SECONDS,
-          },
+          ...request,
+          ...(item.guid === undefined ? {} : { leadGuid: item.guid }),
+          ...(role === undefined ? {} : { leadRole: role }),
         },
         now,
       );
-      return { outcome: "applied" };
+      // A character the site can't use as the asker's: the ask still goes out, without one.
+      if (asked === "lead_out_of_range" || asked === "lead_not_yours" || asked === "role_not_for_class") {
+        asked = askFor(db, request, now);
+      }
+      return typeof asked === "string" ? { outcome: asked } : { outcome: "applied", runId: asked.id };
     }
     case "ping": {
       const runId = siteRunId(item.run);
@@ -208,6 +206,7 @@ export function markRanIt(db: Db, now: number): number {
     .from(runs)
     .where(
       and(
+        eq(runs.kind, "run"),
         isNull(runs.cancelledAt),
         isNull(runs.outcome),
         lte(runs.startsAt, now),

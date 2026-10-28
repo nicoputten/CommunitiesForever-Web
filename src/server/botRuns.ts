@@ -126,6 +126,7 @@ const REFUSALS: Record<string, [number, string]> = {
   no_character: [400, "I'm in needs a character."],
   out_of_range: [400, "That character is not in the level range."],
   closed: [409, "The run has started or was cancelled."],
+  expired: [409, "This ask has expired."],
   role_not_for_class: [400, "That character's class can't play that role."],
   role_full: [409, "That role has no open slot."],
   unknown_sign_up: [404, "No sign-up with that character."],
