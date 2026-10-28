@@ -134,7 +134,7 @@ test("Plan a run says when the time has passed, and when none of your characters
 }) => {
   await as(context, baseURL!, E2E.admin);
   await page.goto("/runs/new?dungeon=scholo");
-  // Ves (39) is 19 below Scholomance: too low to lead (WEB-47 levelFit; 5 below Zul'Farrak he may).
+  // Ves (39) is 19 below Scholomance: advice that none fit, though he may still lead (WEB-52).
   await expect(page.getByText(/None of your characters fit Scholomance \(58–60\)/)).toBeVisible();
   await page.getByRole("group", { name: "Day" }).getByRole("radio").first().check();
   await page.getByRole("group", { name: "Time" }).getByRole("radio", { name: "Other…" }).check();

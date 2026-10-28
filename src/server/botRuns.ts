@@ -87,21 +87,24 @@ export function upcomingRuns(db: Db, now: number) {
     .map((r) => runPayload(db, r, now, data));
 }
 
-/** "Pick my character": the friend's characters in the run's range, highest first. */
+/** "Pick my character": all the friend's characters, the best fit first (WEB-52). */
 export function pickableCharacters(db: Db, run: StoredRun, battleTag: string) {
   const range = runDungeon(run.dungeonId)?.typicalLevels;
+  if (range === undefined) return [];
   return (
     charactersOf(loadState(db)?.data, battleTag)
-      // Every character that may say I'm in (WEB-47 levelFit), with how it fits.
-      .filter((c) => range !== undefined && levelFit(c.level, range.min, range.max).canPick)
-      .map((c) => ({
+      // Every character may say I'm in (WEB-52); the best fit first (the bot preselects it), then the highest level.
+      .map((c) => ({ c, fit: levelFit(c.level, range.min, range.max) }))
+      .sort((a, b) => LEAD_ORDER[a.fit.kind] - LEAD_ORDER[b.fit.kind])
+      .map(({ c, fit }) => ({
         guid: c.guid,
         name: c.name ?? c.guid,
         level: c.level ?? null,
         classFile: c.classFile ?? null,
         role: c.role ?? null,
         roles: rolesFor(c.classFile),
-        fit: range === undefined ? null : levelFit(c.level, range.min, range.max).label,
+        fit: fit.label,
+        fitKind: fit.kind,
       }))
   );
 }

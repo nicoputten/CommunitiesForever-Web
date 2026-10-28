@@ -199,7 +199,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 
 ## 8. Decisions and rules
 
-- **Recommend, never restrict** (Nico, 2026-10-28, WEB-45): show what we recommend, so a page doesn't get crowded, but never stop people from doing what they want. A level 60 can still sign up for a level 12 dungeon; we just don't show it as recommended. So bands, "could fill" and suggestions count only characters that fit (`levelFit` kind `fits`, or `suggested` where a story says so), while the answer and plan forms keep every character that may join.
+- **Recommend, never restrict** (Nico, 2026-10-28, WEB-45): show what we recommend, so a page doesn't get crowded, but never stop people from doing what they want. A level 60 can still sign up for a level 12 dungeon; we just don't show it as recommended. So bands, "could fill" and suggestions count only characters that fit (`levelFit` kind `fits`, or `suggested` where a story says so), while the answer and plan forms keep every character, and each may answer I'm in or lead, also 6+ below the range with "N below" and a "tough" note (WEB-52; before, those could only answer Maybe).
 - Covered / thin / gap professions: covered ≥ 225, thin 175–224, gap < 175 (to refine during implementation).
 - WoW: Forever has no realms: show the **ruleset** (PvP or PvE) instead, through the rulesets table (WEB-13).
 - Character names always contain a space; never split.

@@ -153,7 +153,7 @@ export type AnswerRefusal =
   | "expired"
   /** I'm in needs a character. */
   | "no_character"
-  /** I'm in needs a character that may join (levelFit: not 6+ below); Maybe and Can't always go. */
+  /** I'm in needs a character that may join (levelFit; since WEB-52 every character may, so no longer given). */
   | "out_of_range"
   /** The character's class can't play that role (rolesFor). */
   | "role_not_for_class";
