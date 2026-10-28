@@ -18,11 +18,14 @@ export function AnswerPicker({
   mode,
   label,
   className,
+  endpoint,
 }: {
   view: PickerView;
   mode: "answer" | "lead";
   label: string;
   className?: string;
+  /** Where the answer goes; an ask's (WEB-51) instead of the run's. */
+  endpoint?: string;
 }) {
   const router = useRouter();
   const own = useId();
@@ -63,7 +66,7 @@ export function AnswerPicker({
     setBusy(true);
     setError(undefined);
     try {
-      const res = await fetch(`/api/runs/${view.runId}/answer`, {
+      const res = await fetch(endpoint ?? `/api/runs/${view.runId}/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

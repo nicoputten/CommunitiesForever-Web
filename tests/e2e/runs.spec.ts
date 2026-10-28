@@ -79,7 +79,13 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await expect(page.getByRole("region", { name: "You lead" }).getByText(/You're on the bench as/)).toBeVisible();
   await page.getByRole("button", { name: "Join again" }).click();
   await page.getByRole("dialog", { name: "Lead as" }).getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("region", { name: "You lead" }).getByText(/^You lead as/)).toBeVisible();
+  // The bar's own line, not the closed Lead as picker's summary in the same region (strict on phone).
+  await expect(
+    page
+      .getByRole("region", { name: "You lead" })
+      .locator(":scope > p")
+      .filter({ hasText: /^You lead as/ }),
+  ).toBeVisible();
 
   // Only the organiser edits.
   await page.goto(`/runs/${runId}`);

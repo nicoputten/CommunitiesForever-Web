@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { RunAnswer, RunRecord } from "@/core/runs";
 import { peopleViews, recordCharacters } from "@/core/views/characters";
 import {
+  askCountdown,
   BAND_RUNS,
   joinableUnanswered,
   planPage,
@@ -293,5 +294,92 @@ describe("runs on the roster (WEB-45)", () => {
     const band = rosterRuns(input(BOB, { runs: many })).byDungeon["sm-armory"]!;
     expect(band.runs).toHaveLength(BAND_RUNS);
     expect(band.more).toBe(2);
+  });
+});
+
+// WEB-51 (boards asks-now, asks-now-states): Asking now on the Runs page.
+describe("asking now", () => {
+  const MIRA = tag("Mira");
+  const MIN = 60;
+  const ASKS: RunRecord[] = [
+    run(10, {
+      dungeonId: "dm",
+      startsAt: NOW - 3 * MIN,
+      expiresAt: NOW + 7 * MIN,
+      kind: "ask",
+      source: "game",
+      note: "Quick run for the Defias quests",
+      answers: [
+        answer(NICO, "in", "Player-1-GROM", "tank", NOW - 3 * MIN),
+        answer(MIRA, "in", "Player-1-KEL", "healer", NOW - 2 * MIN),
+        answer(JORRIT, "maybe", "Player-1-RUK", "damage", NOW - MIN),
+        answer(BOB, "cant", undefined, "damage", NOW - MIN),
+      ],
+    }),
+    run(11, {
+      dungeonId: "zf",
+      organiser: MIRA,
+      startsAt: NOW - MIN,
+      expiresAt: NOW + 9 * MIN,
+      kind: "ask",
+      source: "discord",
+      answers: [answer(MIRA, "in", "Player-1-MIRA", "damage", NOW - MIN)],
+    }),
+    run(12, { dungeonId: "rfc", startsAt: NOW - 11 * MIN, expiresAt: NOW - MIN, kind: "ask", source: "game" }),
+  ];
+  const asks = (viewer: string) => runsPage(input(viewer, { asks: ASKS }), "join").asks;
+
+  it("shows the open asks newest first, with the asker, the answers and their time", () => {
+    const [zf, dm] = asks(FEMKE);
+    expect(asks(FEMKE).map((a) => a.id)).toEqual([11, 10]);
+    expect(dm).toMatchObject({
+      dungeon: "The Deadmines",
+      range: "17–26",
+      expiresAt: NOW + 7 * MIN,
+      asker: "Nico",
+      askerCharacter: { name: "Grom Ashfeller", role: "tank" },
+      from: "from the game",
+      note: "Quick run for the Defias quests",
+      maybe: 1,
+      cant: 1,
+      yours: false,
+    });
+    expect(dm!.ins.map((p) => `${p.name} ${p.level} ${p.className}`)).toEqual([
+      "Grom Ashfeller 24 Warrior",
+      "Kel Dawnhammer 18 Paladin",
+    ]);
+    expect(zf!.from).toBe("from Discord");
+    expect(runsPage(input(FEMKE), "join").asks).toEqual([]);
+  });
+
+  it("answers with the best character by the level-fit rule; none fit only when all are too low", () => {
+    const [zf, dm] = asks(FEMKE);
+    // Femke's Zul Kazrek 15 is 2 below the Deadmines and beats Lia 37, a carry (never the default when another goes).
+    expect(dm!.pick).toEqual({ guid: "Player-1-ZUL", role: "damage" });
+    expect(dm!.noneFit).toBeUndefined();
+    // Lia is 7 below Zul'Farrak and Zul far more: only Maybe or Can't.
+    expect(zf!.noneFit).toBe("None of your characters fit Zul'Farrak (44–54).");
+    // Nico's Ves 39 is 5 below: I'm in still goes, with Ves.
+    const nico = asks(NICO);
+    expect(nico[0]!.noneFit).toBeUndefined();
+    expect(nico[0]!.pick?.guid).toBe("Player-1-VES");
+  });
+
+  it("marks your own ask and your answer", () => {
+    const dm = asks(NICO)[1]!;
+    expect(dm).toMatchObject({ yours: true, asker: "You" });
+    expect(dm.answered).toBeUndefined();
+    const kel = asks(MIRA)[1]!;
+    expect(kel.answered).toMatchObject({ answer: "I'm in", character: "Kel Dawnhammer" });
+    expect(kel.picker.current).toEqual({ guid: "Player-1-KEL", role: "healer", answer: "in" });
+  });
+
+  it("counts down in whole minutes, then seconds in the last minute", () => {
+    expect(askCountdown(7 * MIN)).toBe("7 min");
+    expect(askCountdown(6 * MIN + 1)).toBe("7 min");
+    expect(askCountdown(61)).toBe("2 min");
+    expect(askCountdown(60)).toBe("60 s");
+    expect(askCountdown(39.2)).toBe("40 s");
+    expect(askCountdown(-3)).toBe("0 s");
   });
 });
