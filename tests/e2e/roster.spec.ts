@@ -104,6 +104,8 @@ test("a band opens its popover: who fits, missing roles, Plan a run (WEB-45)", a
   await expect(pop).toContainText("4 characters fit");
   await expect(pop.getByRole("link", { name: "Plan a run" })).toHaveAttribute("href", "/runs/new?dungeon=sm-armory");
   await expect(pop.getByRole("link", { name: "View run" })).toHaveCount(0);
+  // WEB-42: the dungeon's page.
+  await expect(pop.getByRole("link", { name: "Dungeon page" })).toHaveAttribute("href", "/dungeons/sm-armory");
   await page.keyboard.press("Escape");
   await expect(pop).toBeHidden();
   if (!isPhone(page)) await expect(armory).toBeFocused();

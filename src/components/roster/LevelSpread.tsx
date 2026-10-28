@@ -17,9 +17,6 @@ import styles from "./LevelSpread.module.css";
 import { DungeonBands, type BandView } from "./DungeonBands";
 import { SpreadTrack, type TrackDot } from "./SpreadTrack";
 
-/** WEB-42's dungeon pages (`/dungeons/<id>`): the band popover links to them once that story is merged. */
-const DUNGEON_PAGES = false;
-
 const rowsOf = (placed: readonly { row: number }[]) => Math.max(0, ...placed.map((p) => p.row + 1));
 
 const TICKS = [1, 10, 20, 30, 40, 50, 60];
@@ -132,14 +129,7 @@ export function LevelSpread({
         ))}
       </div>
 
-      {bands.length > 0 && (
-        <DungeonBands
-          bands={bands}
-          rows={rowsOf(limited.shown)}
-          rowsAll={rowsOf(all.shown)}
-          dungeonPages={DUNGEON_PAGES}
-        />
-      )}
+      {bands.length > 0 && <DungeonBands bands={bands} rows={rowsOf(limited.shown)} rowsAll={rowsOf(all.shown)} />}
     </section>
   );
 }

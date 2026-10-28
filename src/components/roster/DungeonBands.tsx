@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { dungeonHref, planHref } from "@/core/views/dungeon";
 import styles from "./LevelSpread.module.css";
 
 export interface BandView {
@@ -40,18 +41,7 @@ const LABELS = ["full", "short", "count"] as const;
  * cut mid-word; a click opens the popover (who fits, missing roles, planned runs, Plan a run, View run, Dungeon page),
  * on a phone as a bottom sheet.
  */
-export function DungeonBands({
-  bands,
-  rows,
-  rowsAll,
-  dungeonPages,
-}: {
-  bands: BandView[];
-  rows: number;
-  rowsAll: number;
-  /** WEB-42's dungeon pages exist: the popover links to them. */
-  dungeonPages: boolean;
-}) {
+export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows: number; rowsAll: number }) {
   const [all, setAll] = useState(false);
   const [open, setOpen] = useState<string>();
   const [asSheet, setAsSheet] = useState(false);
@@ -137,7 +127,7 @@ export function DungeonBands({
         </ul>
       )}
       <div className={styles.popButtons}>
-        <Link href={`/runs/new?dungeon=${b.id}`} className={styles.popPrimary}>
+        <Link href={planHref(b.id)} className={styles.popPrimary}>
           Plan a run
         </Link>
         {b.runs.length === 1 && (
@@ -145,11 +135,9 @@ export function DungeonBands({
             View run
           </Link>
         )}
-        {dungeonPages && (
-          <Link href={`/dungeons/${b.id}`} className={styles.popSecondary}>
-            Dungeon page
-          </Link>
-        )}
+        <Link href={dungeonHref(b.id)} className={styles.popSecondary}>
+          Dungeon page
+        </Link>
       </div>
     </>
   );
