@@ -80,8 +80,8 @@ The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
   - `streak`, `best`, `pool`, `reset`
   - kept per friend for as long as the activity feed (not only the 7 days an upload holds)
   - the newer `at` wins, as the addon merges
-  - `goals = false` (sharing off): their stored goals stop showing, as with the feed
-- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 3 per set, numbers ≥ 0.
+  - no sharing switch (Nico, 2026-10-28: who doesn't want to share uninstalls the addon): `goals = false` or `feed = false` from older addons means nothing was sent, and stored data stays; `feed_sharing` goes
+- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 5 per day and 4 per week (the slots), numbers ≥ 0.
 - `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated. Tests on a fixture with every new field, one without them, and one with `goals = false`.
 
 ### WEB-58 The Doomsday engine and its API

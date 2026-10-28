@@ -1,4 +1,5 @@
 import type { Milestone } from "../bot";
+import { type FeatFields, featText, hasCard, MAX_PVP_RANK, type Notable } from "../doomsday/feats";
 import { initials } from "../views/text";
 import { timeAgo } from "../views/age";
 import { cropAround, type Crop, inCrop, zoneByName } from "./mapCrop";
@@ -54,6 +55,7 @@ export type CardSpec =
       stat: string;
       host: string;
     }
+  | FeatCardSpec
   | {
       /** /whereis: where a character was last seen, with earlier sightings (800 × 400). */
       kind: "whereis";
@@ -65,6 +67,32 @@ export type CardSpec =
       markers: { x: number; y: number; label: string; age: "now" | "recent" | "old" }[];
       host: string;
     };
+
+/** The drawn icons of the feat cards (board doomsday-feat-cards; the ones it lacks drawn in its style, Nico 2026-10-28). */
+export type FeatIcon =
+  "rank" | "epic" | "mount" | "jack" | "reaper" | "kills" | "bar" | "cloth" | "leather" | "fish" | "pole";
+
+/** A feat card (WEB-56, 800 × 400): the icon or rank badge left in its glow, the texts right. */
+export interface FeatCardSpec {
+  kind: "feat";
+  icon: FeatIcon;
+  /** The rank on a rank badge. */
+  rank?: number;
+  title: string;
+  /** Epic purple for the first epic's item name, else pale gold. */
+  titleColour: CardToken;
+  /** Long titles use the smaller size. */
+  longTitle: boolean;
+  name: string;
+  nameColour: CardToken;
+  line: string;
+  meta?: string;
+  firstInGroup: boolean;
+  /** Rank 14: a second, wider frame. */
+  special: boolean;
+  glow: CardToken;
+  host: string;
+}
 
 export function cardSize(spec: CardSpec): { width: number; height: number } {
   return spec.kind === "award" || spec.kind === "zoneHeader" || spec.kind === "headline"
@@ -220,4 +248,74 @@ export function whereisCard(
     markers,
     host,
   };
+}
+
+const NOTABLE_ICONS: Readonly<Record<Notable, FeatIcon>> = {
+  arcaniteReaper: "reaper",
+  arcaniteTransmute: "bar",
+  mooncloth: "cloth",
+  devilsaur: "leather",
+  extravaganzaJoined: "fish",
+  extravaganzaWon: "pole",
+};
+
+/** Titles longer than this use the smaller title size (the board's 46 px ones). */
+const LONG_TITLE = 14;
+
+/**
+ * The card of a feat of WEB-56 (the kinds of WEB-38 keep milestoneCard), as the board doomsday-feat-cards draws it.
+ * Undefined for a feat without an image.
+ */
+export function featCard(m: Milestone, c: CharacterFacts, host: string): CardSpec | undefined {
+  const fields = m as FeatFields;
+  if (m.kind === "level" || m.kind === "maxLevel" || m.kind === "professionCap" || m.kind === "newCharacter") {
+    return undefined;
+  }
+  if (!hasCard({ kind: m.kind, fields })) return undefined;
+  const t = featText({ kind: m.kind, fields }, c.name);
+  const who = lineage(c);
+  let icon: FeatIcon;
+  let meta = t.flavour;
+  switch (m.kind) {
+    case "pvpRank":
+      icon = "rank";
+      meta = [who, fields.rank === MAX_PVP_RANK ? "the summit. Please go outside." : undefined]
+        .filter(Boolean)
+        .join(" · ");
+      break;
+    case "firstEpic":
+      icon = "epic";
+      break;
+    case "epicMount":
+      icon = "mount";
+      break;
+    case "jackOfAllTrades":
+      icon = "jack";
+      break;
+    case "honorKills":
+      icon = "kills";
+      break;
+    case "notableItem":
+      icon = NOTABLE_ICONS[fields.notable ?? "arcaniteReaper"];
+      break;
+    default:
+      return undefined;
+  }
+  const spec: FeatCardSpec = {
+    kind: "feat",
+    icon,
+    title: t.title,
+    titleColour: m.kind === "firstEpic" ? "--epic" : "--gold-pale",
+    longTitle: t.title.length > LONG_TITLE,
+    name: c.name,
+    nameColour: classColours(c.classFile).text,
+    line: t.line,
+    firstInGroup: m.firstInGroup === true,
+    special: m.kind === "pvpRank" && fields.rank === MAX_PVP_RANK,
+    glow: m.kind === "firstEpic" ? "--card-epic-glow" : "--card-feat-glow",
+    host,
+  };
+  if (fields.rank !== undefined && m.kind === "pvpRank") spec.rank = fields.rank;
+  if (meta !== undefined && meta !== "") spec.meta = meta;
+  return spec;
 }

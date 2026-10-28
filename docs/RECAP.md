@@ -2,16 +2,33 @@
 
 The full catalogue, for review. The source of truth is the code: milestones in `docs/BOT-API.md` and `src/core/milestones`, the recap in `src/core/recap/cards.ts` (when a card shows) and `texts.ts` (its phrasings). Change this file together with them. Each card has 3 phrasings; one example is shown per card.
 
-## 1. Milestones (posted by DoomBot after an upload)
+## 1. Feats (posted by DoomBot after an upload, "Feat unlocked")
+Every milestone is a feat (WEB-56, Doomsday). The site keeps every character's feats (`feats` table) with the upload that brought them; the code is `src/core/doomsday/feats.ts` (kinds, thresholds, texts) and `src/core/bot.ts` (the four kinds of WEB-38). The bot API event type stays `milestones`. No points. Texts written by Claude with Nico's go-ahead (2026-10-28), for Nico to edit.
 
-| Kind | When | Card image |
-|---|---|---|
-| Level | A level up crosses 10, 20, 30, 40 or 50. Only the highest one counts (18 → 31 gives 30). | no |
-| Max level | Reaching 60 (never also a Level milestone) | yes |
-| Profession cap | A profession reaches the cap of its training rank: 75/75, 150/150, 225/225 or 300/300. Training a higher cap doesn't count. | at 300 only |
-| New character | A character the group didn't know yet | at level 60 only |
+| Kind | When | Text (title · line · flavour) | Card image | First in the group |
+|---|---|---|---|---|
+| `level` | A level up crosses 10 … 50; only the highest one counts (18 → 31 gives 30) | Level 30 · Reached level 30 | no | no |
+| `maxLevel` | Reaching 60 (never also `level`) | Level 60 · Reached the level cap · The real game starts now. | yes | yes |
+| `professionCap` | A profession reaches the cap of its training rank (75/75 … 300/300); training a higher cap doesn't count. At 300 Cooking, First Aid and Fishing get a title: Head Chef, Field Medic, Fish Whisperer | Cooking 300 · Cooking at its cap · Head Chef | at 300 | no |
+| `newCharacter` | A character the group didn't know yet | New character · Joined the group | at level 60 | no |
+| `honorKills` | Lifetime honorable kills (`pvp.hk`) cross 1, 100, 1,000, 5,000, 10,000; one feat for the highest crossed | First blood: Ves Doombringer · The first honorable kill · It begins. / 1,000 honorable kills / 10,000 kills · Ten thousand. Honorably. · Hillsbrad will never be the same | at 10,000 | the first kill |
+| `pvpRank` | A new highest rank ever (1 to 14), never on decay or regaining a rank | Stone Guard (the official rank for the faction) · a.k.a. Mailbox Menace (rank titles: `DOOMSDAY.md`); 14: "the summit. Please go outside." | from rank 6; 14 its own | rank 6 or higher |
+| `duelWins` | Duel wins (`pvp.duelsWon`, else the feed's duels) cross 10, 50, 100 | 10 duel wins · Slapping friends, professionally. / Nobody asked for a rematch. / Unbothered. | no | no |
+| `bgFirstWin` | The first win in Warsong Gulch, Arathi Basin or Alterac Valley (feed `runs`) | First win · First win in Warsong Gulch | no | no |
+| `deaths100` | 100 deaths (`pvp.deaths`, else the feed's deaths), once | A spirit healer's best friend · 100 deaths · Same time next week? | no | no |
+| `firstEpic` | A character's first epic item (feed `loot.epic`); later epics go into the recap | the item's name in epic purple · First epic · Two-Hand · looted at level 42 | yes | yes |
+| `mount` | Riding 75 | First mount · The 3rd mount in the group · Walking is for lowbies. | no | yes |
+| `epicMount` | Riding 150 (a jump straight to 150 holds the mount silently) | Epic mount · The 1st epic mount in the group · Gold spent: none of your business | yes | yes |
+| `firstCatch` | Fishing above rank 1 | First catch · Fishing past rank 1 · It was a boot. Probably. | no | no |
+| `jackOfAllTrades` | Two primary professions plus Cooking, First Aid and Fishing, all at 300 | Jack of all trades · Cooking, First Aid, Fishing at 300 · plus Mining and Blacksmithing | yes | yes |
+| `notableItem` | The first item of the addon's watch list (feed `notable`, CF-53) | Arcanite Reaper · Crafted at last · Somebody pay a visit. / Arcanite Bar · The first Arcanite transmute / Mooncloth · The first Mooncloth / Devilsaur leather · Devilsaur gear crafted / Fishing Extravaganza · Joined the Fishing Extravaganza / Extravaganza winner · Won the Fishing Extravaganza | yes, each | yes, each |
 
-The site's first upload makes no milestones. Milestones from uploads a few minutes apart are grouped into one Discord message.
+Rules:
+- The site's first upload makes no posts, and a rebuild never makes events again.
+- What a character already had when its data first arrives (a friend updated the addon, a new character, the site's first upload) is held as "already had": shown on the feats page as before tracking, never posted, never First in the group (Nico, 2026-10-28).
+- First in the group: no character in the group held that feat before (already-had ones included). One per feat per upload.
+- A post of several feats gets one card image, the most special one's: rank 14, 10,000 kills, Jack of all trades, the Extravaganza won, other watch-list items, epic mount, first epic, ranks 13 to 6, level 60, profession 300 (Nico, 2026-10-28).
+- Feats from uploads a few minutes apart are grouped into one Discord message (the bot). No pings.
 
 ## 2. Weekly recap: how a week is built
 
