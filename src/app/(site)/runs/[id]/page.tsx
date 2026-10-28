@@ -67,7 +67,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
             <span className={styles.runTitle}>{run.when}</span>
             {run.countdown !== undefined && <span className={styles.countdown}>{run.countdown}</span>}
           </p>
-          <p className={styles.meta}>{run.time}</p>
+          {c.organiserTime !== undefined && <p className={styles.meta}>{c.organiserTime}</p>}
           <p className={styles.meta}>{run.levels}</p>
           {run.note !== undefined && <p className={styles.quote}>“{run.note}”</p>}
         </div>
@@ -87,6 +87,9 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         <div className={styles.main}>
           {open && bar !== undefined && (
             <section className={`${styles.box} ${styles.leadBar}`} aria-label="You lead">
+              {bar.character !== undefined && (
+                <ClassDisc name={bar.character} classFile={bar.classFile as ClassFile | undefined} />
+              )}
               {bar.state === "playing" ? (
                 <p className={styles.leadText}>
                   You lead as{" "}

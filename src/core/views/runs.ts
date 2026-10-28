@@ -549,6 +549,7 @@ export interface LeadBar {
   /** "27 Warrior · Protection talents". */
   line?: string;
   initials?: string;
+  classFile?: string;
   colorToken?: string;
 }
 
@@ -783,6 +784,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       bar.character = charName(ctx, mine);
       bar.role = ROLE_LABEL[mine.role];
       bar.initials = initials(bar.character);
+      if (ch.classFile !== undefined) bar.classFile = ch.classFile;
       const info = classInfo(ch.classFile);
       if (info !== undefined) bar.colorToken = info.textToken;
       const talents = ch.mainTreeName === undefined ? undefined : `${ch.mainTreeName} talents`;
