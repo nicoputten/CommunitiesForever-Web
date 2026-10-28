@@ -20,7 +20,7 @@ import { adminBattleTag, loadAccessList } from "@/server/access";
 import { auth } from "@/server/auth";
 import { getDb, type Db } from "@/server/db";
 import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
-import { discordApp, setTimeZone, unlinkDiscord, updateBotSettings } from "@/server/discord";
+import { discordApp, setTimeZone, TIME_ZONES, unlinkDiscord, updateBotSettings } from "@/server/discord";
 import { LINK_COOKIE } from "@/server/discordLink";
 import { sendTestRunPost } from "@/server/runs";
 
@@ -82,9 +82,12 @@ export async function browserTimeZoneAction(timeZone: string): Promise<void> {
   setTimeZone(db, battleTag, String(timeZone), "browser", nowSeconds());
 }
 
-/** One setting of the bot (a switch, a pick, the recap time or the reminder time); invalid values change nothing. */
+/**
+ * One setting of the bot (a switch, a pick, the recap time, the reminder time, the Doomsday reset or the realm time
+ * zone); invalid values change nothing.
+ */
 export async function botSettingAction(form: FormData): Promise<void> {
-  const change = settingChange(String(form.get("field") ?? ""), String(form.get("value") ?? ""));
+  const change = settingChange(String(form.get("field") ?? ""), String(form.get("value") ?? ""), new Set(TIME_ZONES));
   await as("admin", (db, by) => {
     if (change !== undefined) updateBotSettings(db, change, by, nowSeconds());
   });

@@ -127,6 +127,20 @@
       "when": 1793224542898,
       "tag": "0017_feats",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1793225816078,
+      "tag": "0018_doomsday_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1793226016311,
+      "tag": "0019_doomsday_posts",
+      "breakpoints": true
     }
   ]
 }

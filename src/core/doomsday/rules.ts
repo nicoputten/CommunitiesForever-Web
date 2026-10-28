@@ -27,12 +27,17 @@ export interface Schedule {
 
 /** pick(n, salt, count) of DOOMSDAY.md "The draw": an index 1..count, exact in JavaScript numbers. */
 export function pick(n: number, salt: number, count: number): number {
-  return (((n * 2654435761 + salt) % 4294967296) % count) + 1;
+  return mod(mod(n * 2654435761 + salt, 4294967296), count) + 1;
+}
+
+/** Lua's `%`: the floored modulo, never negative for a positive divisor (JavaScript's `%` keeps the sign). */
+function mod(a: number, b: number): number {
+  return ((a % b) + b) % b;
 }
 
 /** The realm's offset from UTC in seconds, rounded to 15 minutes, from the game clock and the server time. */
 export function realmOffset(hour: number, minute: number, serverTime: number): number {
-  let diff = hour * 60 + minute - (Math.floor(serverTime / 60) % 1440);
+  let diff = hour * 60 + minute - mod(Math.floor(serverTime / 60), 1440);
   if (diff > 720) diff -= 1440;
   else if (diff <= -720) diff += 1440;
   return Math.floor(diff / 15 + 0.5) * 15 * 60;
