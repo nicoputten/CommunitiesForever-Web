@@ -173,6 +173,8 @@ export interface FeatRecord {
   title: string;
   /** "chest · item level 66", "Fishing 300". */
   detail?: string;
+  /** A rank feat's rank, for its insignia. */
+  rank?: number;
   /** The item name shown in epic purple. */
   epicItem?: string;
   firstInGroup: boolean;

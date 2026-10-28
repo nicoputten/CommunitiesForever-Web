@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51).
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51); feats on `milestones` (WEB-56); Doomsday: the board and ladder events, the `doomsday` look-up, the recap's `doomsday` and the settings (WEB-58).
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -170,6 +170,8 @@ Decided with Nico (2026-10-27): the site's first accepted upload makes no milest
 ### `test` (built, WEB-39)
 The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
+Planned (WEB-58 part 2, the reorganised Discord page; Nico, 2026-10-28): a test button per box, so `kind` may also be `feats`, `recap` or `doomsday`. The bot posts a sample of that kind (a made-up feat, a short recap, a board) in that kind's channel, marked as a test. A bot that doesn't know a kind posts the plain test message in the posts channel.
+
 ### `recap` (built, WEB-41c)
 The weekly recap, once per week at the recap moment (the Discord page's day and time in the admin's time zone; default Sunday 13:00), when the page's Weekly recap is on. `data` is the recap as it is to be posted:
 
@@ -297,7 +299,7 @@ An ask ("who's up right now") is a run that starts when it is made and takes ans
 
 Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range` and `out_of_range` (no longer given since WEB-52: every character may lead and answer I'm in), `not_your_character`, `no_character`; `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`, `expired` (an ask past its 10 minutes, WEB-51).
 
-## Doomsday (planned, WEB-56 and WEB-58)
+## Doomsday (built, WEB-56 and WEB-58)
 The contract for the bot's Doomsday stories (BOT-14 to BOT-16), agreed before the site builds it (2026-10-28), so the bot can build its formatting against it. The rules are in the addon repo's `docs/DOOMSDAY.md`. Everything here is optional within v1: an older site has none of it, and a bot that doesn't know an event type skips and acknowledges it.
 
 Common rules:
@@ -319,6 +321,7 @@ Common rules:
 
 - `posts.doomsdayBoard`, `posts.doomsdayLadder`: the admin's switches on the Discord page. Off means no such events are made.
 - `channels.doomsday`: the Doomsday channel; `null` means the posts channel (`channels.posts`).
+- Planned (WEB-58 part 2): `channels.feats`, the channel for feats (the `milestones` event); `null` means the posts channel. On the reorganised Discord page `channels.posts` is "Default channel".
 - `doomsday.reset`: the reset in realm time (`HH:MM`); `timeZone`: the realm's IANA time zone. A change takes effect from the next reset. `url`: the site's Doomsday page, for "Open the board ↗" and the ladder's link.
 
 ### Goals

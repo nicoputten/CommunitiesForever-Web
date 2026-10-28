@@ -146,3 +146,13 @@ A7 Social butterfly, S11 Biggest group night, F5 Road trip, F7 Night owl, F8 Ear
 
 ## 7. Closing lines
 "See you next week." · "Until next Sunday." · "Have a good week in Azeroth." · "Same time next week."
+
+## 8. Doomsday (WEB-58)
+The recap's Doomsday section (the bot's `recap.doomsday`, docs/BOT-API.md), computed from the stored goals over the recap's week (`recapSection`, `src/core/doomsday/posts.ts`). Left out when nobody has Doomsday data. It replaces the dailies workshop's A15 and F23 and the ladder workshop's "Ladder of the week" line.
+
+| Part | What |
+|---|---|
+| Most devoted | The friend with goals done on the most Doomsday days of the week |
+| Perfect week | Friends who did every PvE daily on every day they played, on at least 4 days |
+| Points | The top 3 per track (PvE and PvP, never summed); a PvP Virgin isn't in the PvP list |
+| Crowns | The crowns per friend that week, most first |

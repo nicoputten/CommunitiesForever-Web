@@ -126,6 +126,13 @@ export interface RecapCard {
   friends: string[];
 }
 
+export interface RecapDoomsday {
+  mostDevoted: { name: string; days: number } | null;
+  perfectWeek: string[];
+  points: { pve: { name: string; points: number }[]; pvp: { name: string; points: number }[] };
+  crowns: { name: string; count: number }[];
+}
+
 export interface Recap {
   week: number;
   start: number;
@@ -137,6 +144,8 @@ export interface Recap {
   cards: RecapCard[];
   challenge: { id: string; text: string };
   closing: string;
+  /** The Doomsday section (WEB-58, docs/BOT-API.md "Recap: doomsday"); left out when nobody has Doomsday data. */
+  doomsday?: RecapDoomsday;
   /** What the next recaps need from this one; stored with it (WEB-41c). */
   past: PastWeek;
   cycles: Cycles;
