@@ -46,6 +46,14 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Tests: the dungeon dropdown's groups and search, the day and time chips, no native select, date or time input left on the Runs pages (a test that fails on one).
 
 
+### WEB-51 Asks on the site and from Discord
+Decided with Nico (2026-10-28): BOT-04 found that `/ask` and answering an ask in Discord need asks to exist on the site; today an "Ask now" from the game is only passed through as an `askNow` event (WEB-43).
+- **Model** (forward-only migration): an ask is a short group call: dungeon, the asker and their character and role, note, made at, expires at (10 minutes after it was made), where it came from (game or Discord), and its answers (I'm in, Maybe, Can't, with character and role, as for runs since WEB-47, and where each came from). An ask from an upload (WEB-43) is stored as one; the same id twice changes nothing.
+- **Bot API** (optional additions within v1, `docs/BOT-API.md`): create an ask for a Discord user (`/ask`: dungeon and note; the asker's character and role as for `/plan`), answer an ask (the post's buttons, Pick my character), and events `askNow` (now with the stored ask's id), `askChanged` (answers) and `askExpired`. An answer after `expiresAt` is refused ("This ask has expired"). The admin's "Ask now from the game" setting keeps covering asks from the game only.
+- **On the site:** open asks show on the Runs page above the runs, with their answers and a countdown; an expired ask disappears. No separate page.
+- **To the game:** open asks go into the uploader's runs feed (WEB-44, an optional `asks` list), so a friend whose game reloads within the 10 minutes sees it; the addon side is a later addon story.
+- Tests: an ask from an upload and from the bot, answers before and after expiry, the same upload twice, the events.
+
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
 - The map's dungeon markers get a badge with the number of planned runs; their popover has Plan a run and Dungeon page.
