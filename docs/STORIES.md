@@ -33,6 +33,13 @@ Order (2026-10-27; WEB-32, WEB-38, WEB-40 and WEB-46 are done): WEB-44, Runs v2 
 Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Runs v2" (Nico, 2026-10-27): any character can join, the role is picked apart from the character, the organiser can move people, and styled dropdowns replace every native one. Boards: `runs-v2-findings` (the 15 issues, each with what was seen and the fix), `runs-v2-picker`, `runs-v2-run-detail`, `runs-v2-plan`. They are newer than `runs`, `run-detail` and `run-create` where they overlap. Done for all four when none of the 15 findings can be reproduced, at 1440 and 375 px. Decided with Nico: four stories, right after WEB-44 and before WEB-43; the dropdown is built in house (ARIA listbox and combobox, no new dependency); account names on the boards were replaced with made-up ones (characters are fine).
 
 
+### WEB-54 Band names on narrow roster bands (bug)
+Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a narrow band such as Ragefire Chasm shows only "13–18 · 2". The name is dropped (`data-fit="count"`), so you can't tell which dungeon it is. The name always comes first.
+- The label never drops the name. Order of fallback: full name, then short name, then the short name cut with an ellipsis ("Ragef… 13–18 · 2"), keeping at least 3 letters before the "…".
+- The range and count stay whole. Only when 3 letters + "…" and the rest still don't fit, the range goes before the name is cut further ("Rag… · 2"); the count always stays.
+- Cuts happen on the name text only, never in the middle of the range or count; the `title` and `aria-label` keep the full name and range.
+- Test: a band narrow enough to hit each fallback (full, short, cut name, cut name without range) at 1440 px, with a screenshot baseline; the phone list is unchanged (always the full name).
+
 ### Backlog (unordered, not yet stories)
 - Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version), then `notesUrl` in `GET updates/status` points to it (UP-10 proposal; left out of WEB-35b).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
