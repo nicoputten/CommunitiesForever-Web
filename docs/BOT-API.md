@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43).
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51).
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -229,7 +229,9 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 | `runMovedUp` | `who` (`name`, `discordId`) | A reserve (or a Maybe) moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
 | `runMoved` | `who` (`name`, `discordId`), `to` (`tank`, `healer`, `damage`, `reserve` or `removed`), `by` (a name) | WEB-47: the organiser or the admin moved their sign-up: a quiet notice to them, not a channel post |
 | `runEnded` | `outcome`: `done` (with `came` and `signedUp`) or `didntHappen` | An upload's run log showed it ("Ran it · 3 of 5 signed-up came"), or none did within 4 hours of the start. Only with the admin's "Mark runs done from uploads"; not posted for a run that ended more than a day ago |
-| `askNow` | `ask`: `id`, `dungeon` (`id`, `name`, `typicalLevels`), `from` (`name`, `discordId`), `character`, `role` (`tank` / `heal` / `dps`), `note`, `at`, `expiresAt` (no `run`) | An "Ask now" from the game with "Also post on Discord" (addon CF-47), only within 10 minutes of being made (`expiresAt`) and with the admin's "Ask now from the game" on |
+| `askNow` | `ask` (see "Asks"; no `run`) | A new ask: an "Ask now" from the game with "Also post on Discord" (addon CF-47), only within 10 minutes of being made and with the admin's "Ask now from the game" on; or `/ask` (WEB-51) with the Runs switch on |
+| `askChanged` | `ask` | WEB-51: someone answered the ask (on Discord, the site or in game) |
+| `askExpired` | `ask` | WEB-51: its 10 minutes are over (written when the bot polls, once): end the post, remove its buttons |
 | `ping` | `from` (`name`, `discordId`), `to` (`name`, `character`, `discordId`) | Someone pinged a friend on Discord from the game's start panel (addon CF-48); `run` is the run it's about |
 
 `mention`: Discord user ids of linked friends who answered I'm in or Maybe (decided with Nico: reminders mention only them).
@@ -259,4 +261,38 @@ For the bot's run post (BOT-04; optional fields within v1):
 
 WEB-47 (optional fields within v1): each answer in a run carries `guid`, `fit` (`kind`: `fits`, `over`, `carry`, `low` or `tooLow`; `label`: "fits", "+3 over", "carry · +12", "4 below"), and for a reserve `reserve: true`. A reserve is sent as `"answer": "maybe"` and keeps `waitlisted: true`, for bots from before WEB-47. "Runs I can join" and suggestions use `fits` and `over`; `tooLow` (6 or more below) can only answer Maybe. Errors for `answers` and `move`: `400 role_not_for_class`, `404 unknown_sign_up`, `409 role_full`, `409 same`.
 
-Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`.
+### Asks (built, WEB-51)
+An ask ("who's up right now") is a run that starts when it is made and takes answers for 10 minutes (`expiresAt`), from the game (WEB-43) or Discord's `/ask`. It has no slots: I'm in is in, there is no reserve (decided with Nico, 2026-10-28). It is stored even when the admin's "Ask now from the game" is off; that setting only decides whether an ask from the game reaches Discord (asks from Discord follow the Runs switch). Asks are not in `GET runs`, and the run endpoints answer `404 unknown_run` for them.
+
+```json
+{
+  "ask": {
+    "id": 12,
+    "dungeon": { "id": "dm", "name": "The Deadmines", "typicalLevels": { "min": 17, "max": 26 } },
+    "from": { "name": "Nico", "discordId": "100000000000000001" },
+    "character": "Grom Ashfeller",
+    "role": "tank",
+    "note": "Quick one",
+    "source": "game",
+    "at": 1793119800,
+    "expiresAt": 1793120400,
+    "state": "open",
+    "counts": { "in": 2, "maybe": 0, "cant": 1 },
+    "answers": [
+      { "name": "Nico", "character": "Grom Ashfeller", "discordId": "100000000000000001", "answer": "in", "role": "tank", "source": "game", "guid": "Player-1-0000A003", "fit": { "kind": "fits", "label": "fits" }, "level": 24, "classFile": "WARRIOR" }
+    ]
+  }
+}
+```
+
+- `id`: the stored ask's id since WEB-51 (before, the game item's id). `role`: the asker's, as the addon names it (`tank` / `heal` / `dps`), as in WEB-43; each answer's `role` is `tank`, `healer` or `damage` as in runs. `character` and `role` are missing when the asker has no character that may join. `state`: `open`, `expired` or `cancelled`. `source`: `game` or `discord`. `answers` as a run's (oldest first, `fit`, `level`, `classFile`), never `reserve`.
+
+| Request | Body / query | Answer |
+|---|---|---|
+| `GET /api/bot/v1/asks` | | `{ asks: [ask] }`: the open asks, oldest first |
+| `GET /api/bot/v1/asks/<id>` | | `{ ask }` (also an expired one) |
+| `POST /api/bot/v1/asks` | `discordUserId`, `dungeonId`, `note` (optional, ≤ 200), `leadGuid` (optional: the asker's character, as `/plan`'s `lead`), `role` (optional: its role, one the class can play) | `201 { ask }`: `/ask`, starting now, open for 10 minutes |
+| `POST /api/bot/v1/asks/<id>/answers` | as a run's answers | `{ stored: { answer, role }, ask }`. After `expiresAt`: `409 expired` ("This ask has expired") |
+| `GET /api/bot/v1/asks/<id>/characters?discordUserId=` | | as a run's (Pick my character) |
+
+Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`, `expired` (an ask past its 10 minutes, WEB-51).

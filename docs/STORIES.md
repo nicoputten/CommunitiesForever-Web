@@ -53,6 +53,8 @@ Decided with Nico (2026-10-28): BOT-04 found that `/ask` and answering an ask in
 - **On the site:** open asks show on the Runs page above the runs, with their answers and a countdown; an expired ask disappears. No separate page.
 - **To the game:** open asks go into the uploader's runs feed (WEB-44, an optional `asks` list), so a friend whose game reloads within the 10 minutes sees it; the addon side is a later addon story.
 - Tests: an ask from an upload and from the bot, answers before and after expiry, the same upload twice, the events.
+- Decided with Nico (2026-10-28): an ask is stored as a run with `kind` ask (migration `0013_asks`), without slots or reserve; an ask from the game is stored even with "Ask now from the game" off (the setting only decides whether Discord gets it); the "Asking now" block on the Runs page waits for its board (prompt: `docs/DESIGN-PROMPT-ASKS.md`).
+- Done so far (PR #TBD): the model, `askFor` / `answerAskFor` / `openAsks` and the ask events in `src/server/runs.ts`, asks from uploads, the bot API (`asks`, `asks/<id>`, `asks/<id>/answers`, `asks/<id>/characters`; `askNow`, `askChanged`, `askExpired`), and the uploader feed's `asks`. Left: the Runs page block, once the board is there.
 
 ### WEB-42 Dungeon page
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
@@ -69,3 +71,4 @@ Decided with Nico (2026-10-28): BOT-04 found that `/ask` and answering an ask in
 - Activity feed (level ups, profession gains, dungeon runs per day).
 - Dungeons: who has which dungeon quests.
 - Final emblem and logo for the site.
+- The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).

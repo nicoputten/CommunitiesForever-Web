@@ -30,6 +30,7 @@ import { rolesFor } from "@/core/gamedata";
 import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
 import { OUTCOME_SECONDS } from "@/core/runOutcome";
+import { ASK_EXPIRE_SECONDS } from "@/core/gameItems";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
 import { discordLinks, runAnswers, runs } from "./db/schema";
@@ -71,6 +72,10 @@ function runFrom(row: RunRow, answers: RunAnswer[]): StoredRun {
     answers,
   };
   if (row.note !== null) r.note = row.note;
+  if (row.kind === "ask") {
+    r.kind = "ask";
+    if (row.expiresAt !== null) r.expiresAt = row.expiresAt;
+  }
   if (row.cancelledAt !== null) r.cancelledAt = row.cancelledAt;
   if (row.cancelledBy !== null) r.cancelledBy = row.cancelledBy;
   if (row.outcome === "done" && row.outcomeAt !== null) {
@@ -81,15 +86,24 @@ function runFrom(row: RunRow, answers: RunAnswer[]): StoredRun {
   return r;
 }
 
-/** Every run with its answers, by start. */
+/** Every run with its answers, by start; asks (WEB-51) are left out. */
 export function listRuns(db: Db): StoredRun[] {
-  const rows = db.select().from(runs).orderBy(asc(runs.startsAt), asc(runs.id)).all();
+  return listKind(db, "run");
+}
+
+function listKind(db: Db, kind: "run" | "ask"): StoredRun[] {
+  const rows = db.select().from(runs).where(eq(runs.kind, kind)).orderBy(asc(runs.startsAt), asc(runs.id)).all();
   const answers = db.select().from(runAnswers).all();
   return rows.map((row) => runFrom(row, answers.filter((a) => a.runId === row.id).map(answerFrom)));
 }
 
-export function getRun(db: Db, id: number): StoredRun | undefined {
-  const row = db.select().from(runs).where(eq(runs.id, id)).get();
+/** A run by id; an ask (WEB-51) only when asked for with `kind` "ask". */
+export function getRun(db: Db, id: number, kind: "run" | "ask" = "run"): StoredRun | undefined {
+  const row = db
+    .select()
+    .from(runs)
+    .where(and(eq(runs.id, id), eq(runs.kind, kind)))
+    .get();
   if (row === undefined) return undefined;
   return runFrom(row, db.select().from(runAnswers).where(eq(runAnswers.runId, id)).all().map(answerFrom));
 }
@@ -203,22 +217,31 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
     counts: counts(run.answers),
     ...(run.outcome === undefined ? {} : { outcome: run.outcome }),
     couldFill: couldFill(data, run, open),
-    answers: [...run.answers]
-      .sort((a, b) => a.answeredAt - b.answeredAt)
-      .map((a) => ({
-        ...person(a.battleTag),
-        ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
-        // A reserve stays "maybe" with `reserve` for bots from before WEB-47 (optional fields within v1).
-        answer: a.answer === "reserve" ? "maybe" : a.answer,
-        role: a.role,
-        source: a.source,
-        ...(a.guid === undefined
-          ? {}
-          : { guid: a.guid, fit: fitOf(data, run, a.guid), ...characterFacts(data, a.guid) }),
-        ...(a.movedUp ? { movedUp: true } : {}),
-        ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
-      })),
+    answers: answersPayload(data, run, ids),
   };
+}
+
+/** A run's (or ask's) answers as the bot gets them, oldest first: names, never BattleTags. */
+function answersPayload(data: Dataset | undefined, run: StoredRun, ids: Map<string, string>) {
+  const person = (battleTag: string) => {
+    const p: { name: string; discordId?: string } = { name: displayName(data, battleTag) };
+    const id = ids.get(battleTagKey(battleTag));
+    if (id !== undefined) p.discordId = id;
+    return p;
+  };
+  return [...run.answers]
+    .sort((a, b) => a.answeredAt - b.answeredAt)
+    .map((a) => ({
+      ...person(a.battleTag),
+      ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
+      // A reserve stays "maybe" with `reserve` for bots from before WEB-47 (optional fields within v1).
+      answer: a.answer === "reserve" ? "maybe" : a.answer,
+      role: a.role,
+      source: a.source,
+      ...(a.guid === undefined ? {} : { guid: a.guid, fit: fitOf(data, run, a.guid), ...characterFacts(data, a.guid) }),
+      ...(a.movedUp ? { movedUp: true } : {}),
+      ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
+    }));
 }
 
 export type RunEventType =
@@ -256,7 +279,7 @@ export function writeDueRunEvents(db: Db, now: number): number {
   const due = db
     .select()
     .from(runs)
-    .where(and(isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60)))
+    .where(and(eq(runs.kind, "run"), isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60)))
     .all()
     .filter((r) => r.remindedAt === null || (r.startingAt === null && r.startsAt <= now));
   for (const row of due) {
@@ -277,7 +300,7 @@ export function writeDueRunEvents(db: Db, now: number): number {
       }
     }
   }
-  return written;
+  return written + writeExpiredAsks(db, now);
 }
 
 // --- actions --------------------------------------------------------------------------------------------------------
@@ -362,7 +385,17 @@ export function answerRunFor(
   req: AnswerRequest,
   now: number,
 ): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
-  const run = getRun(db, runId);
+  return answerFor(db, runId, "run", req, now);
+}
+
+function answerFor(
+  db: Db,
+  runId: number,
+  kind: "run" | "ask",
+  req: AnswerRequest,
+  now: number,
+): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
+  const run = getRun(db, runId, kind);
   if (run === undefined) return "unknown_run";
   const data = loadState(db)?.data;
   const character = req.guid === undefined ? undefined : runCharacter(data, req.guid);
@@ -397,7 +430,11 @@ export function answerRunFor(
     writeAnswers(tx as unknown as Db, runId, outcome.answers);
     tx.update(runs).set({ updatedAt: now }).where(eq(runs.id, runId)).run();
   });
-  const after = getRun(db, runId)!;
+  const after = getRun(db, runId, kind)!;
+  if (kind === "ask") {
+    askEvent(db, "askChanged", after, now);
+    return outcome;
+  }
   runEvent(db, "runChanged", after, now, { changed: ["answers"] });
   if (outcome.movedUp !== undefined) {
     const id = discordIds(db).get(battleTagKey(outcome.movedUp.battleTag));
@@ -531,7 +568,14 @@ export function markDidntHappen(db: Db, now: number): number {
   const due = db
     .select({ id: runs.id, startsAt: runs.startsAt })
     .from(runs)
-    .where(and(isNull(runs.cancelledAt), isNull(runs.outcome), lte(runs.startsAt, now - OUTCOME_SECONDS)))
+    .where(
+      and(
+        eq(runs.kind, "run"),
+        isNull(runs.cancelledAt),
+        isNull(runs.outcome),
+        lte(runs.startsAt, now - OUTCOME_SECONDS),
+      ),
+    )
     .all();
   let marked = 0;
   for (const r of due) {
@@ -652,4 +696,145 @@ export function couldFill(data: Dataset | undefined, run: StoredRun, open: Recor
       ...(fitting.length === 0 && close.length > 0 ? { close: close.slice(0, COULD_FILL_MAX).map(show) } : {}),
     };
   });
+}
+
+// --- asks (WEB-51) --------------------------------------------------------------------------------------------------
+
+export interface AskRequest {
+  dungeonId: string;
+  note?: unknown;
+  organiser: string;
+  source: RunSource;
+  /** The asker's character and its role (as for a run's lead); none when none of theirs may join. */
+  leadGuid?: string;
+  leadRole?: SlotRole;
+  /** When it was made: in game for an ask from an upload (WEB-43), else now. */
+  at?: number;
+}
+
+/** An ask: a run that starts when it is made and takes answers for 10 minutes, without slots (Nico, 2026-10-28). */
+export function askFor(db: Db, req: AskRequest, now: number): { id: number } | PlanRefusal {
+  const data = loadState(db)?.data;
+  const at = req.at ?? now;
+  const note = cleanNote(req.note);
+  if (typeof req.note === "string" && req.note.trim().length > MAX_NOTE) return "note_too_long";
+  const lead = req.leadGuid === undefined ? undefined : runCharacter(data, req.leadGuid);
+  if (req.leadGuid !== undefined && lead === undefined) return "lead_not_yours";
+  const checked = planRun(
+    {
+      dungeonId: req.dungeonId,
+      startsAt: at,
+      organiser: req.organiser,
+      source: req.source,
+      ask: true,
+      ...(note === undefined ? {} : { note }),
+      ...(lead === undefined
+        ? {}
+        : {
+            lead: {
+              guid: lead.guid,
+              owner: lead.owner ?? "",
+              ...(lead.level === undefined ? {} : { level: lead.level }),
+              ...(lead.role === undefined ? {} : { role: lead.role }),
+              ...(lead.classFile === undefined ? {} : { classFile: lead.classFile }),
+              ...(req.leadRole === undefined ? {} : { slot: req.leadRole }),
+            },
+          }),
+    },
+    at,
+  );
+  if (typeof checked === "string") return checked;
+  const id = db.transaction((tx) => {
+    const { id } = tx
+      .insert(runs)
+      .values({
+        dungeonId: req.dungeonId,
+        startsAt: at,
+        note: note ?? null,
+        organiser: req.organiser,
+        source: req.source,
+        createdAt: now,
+        updatedAt: now,
+        kind: "ask",
+        expiresAt: at + ASK_EXPIRE_SECONDS,
+      })
+      .returning({ id: runs.id })
+      .get();
+    writeAnswers(tx as unknown as Db, id, checked.answers);
+    return id;
+  });
+  askEvent(db, "askNow", getRun(db, id, "ask")!, now);
+  return { id };
+}
+
+export function answerAskFor(
+  db: Db,
+  askId: number,
+  req: AnswerRequest,
+  now: number,
+): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
+  return answerFor(db, askId, "ask", req, now);
+}
+
+/** Asks still taking answers, oldest first. */
+export function openAsks(db: Db, now: number): StoredRun[] {
+  return listKind(db, "ask").filter((a) => a.cancelledAt === undefined && (a.expiresAt ?? a.startsAt) > now);
+}
+
+export type AskEventType = "askNow" | "askChanged" | "askExpired";
+
+/**
+ * An ask's bot event: an ask from the game only with the admin's "Ask now from the game", one from Discord with the
+ * Runs switch (story WEB-51). Stored either way.
+ */
+export function askEvent(db: Db, type: AskEventType, ask: StoredRun, now: number): void {
+  const settings = getBotSettings(db);
+  if (ask.source === "game" ? !settings.askNow : !settings.runs) return;
+  enqueueBotEvent(db, type, { ask: askPayload(db, ask, now) }, now);
+}
+
+/** Asks past their 10 minutes: `askExpired` once each, so the bot ends the post (written when the bot polls). */
+function writeExpiredAsks(db: Db, now: number): number {
+  const due = db
+    .select({ id: runs.id })
+    .from(runs)
+    .where(and(eq(runs.kind, "ask"), isNull(runs.expiredAt), lte(runs.expiresAt, now)))
+    .all();
+  for (const { id } of due) {
+    db.update(runs).set({ expiredAt: now }).where(eq(runs.id, id)).run();
+    askEvent(db, "askExpired", getRun(db, id, "ask")!, now);
+  }
+  return due.length;
+}
+
+const GAME_ROLE: Record<SlotRole, "tank" | "heal" | "dps"> = { tank: "tank", healer: "heal", damage: "dps" };
+
+/**
+ * An ask as the bot gets it (docs/BOT-API.md `askNow`): the WEB-43 fields (`role` the addon's tank / heal / dps), now
+ * with the stored ask's id, `state` and its answers as a run's.
+ */
+export function askPayload(db: Db, ask: StoredRun, now: number, data = loadState(db)?.data) {
+  const dungeon = runDungeon(ask.dungeonId);
+  const ids = discordIds(db);
+  const lead = ask.answers.find((a) => sameBattleTag(a.battleTag, ask.organiser) && a.answer === "in");
+  const fromId = ids.get(battleTagKey(ask.organiser));
+  const expiresAt = ask.expiresAt ?? ask.startsAt;
+  return {
+    id: ask.id,
+    dungeon: {
+      id: ask.dungeonId,
+      name: dungeon?.name ?? ask.dungeonId,
+      typicalLevels: dungeon?.typicalLevels ?? { min: 1, max: 60 },
+    },
+    from: { name: displayName(data, ask.organiser), ...(fromId === undefined ? {} : { discordId: fromId }) },
+    ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+    ...(lead === undefined ? {} : { role: GAME_ROLE[lead.role] }),
+    ...(ask.note === undefined ? {} : { note: ask.note }),
+    source: ask.source,
+    at: ask.startsAt,
+    expiresAt,
+    state: ask.cancelledAt !== undefined ? "cancelled" : now >= expiresAt ? "expired" : "open",
+    counts: counts(ask.answers),
+    answers: answersPayload(data, ask, ids),
+  };
 }
