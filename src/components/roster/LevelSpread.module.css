@@ -104,15 +104,24 @@
   text-align: center;
 }
 
-/* Above the track, centred on the dot and kept inside the track at its ends. */
+/*
+ * Above the track, centred on the dot and kept inside the track at its ends; below it when there is no room above
+ * (WEB-45, finding 14). As wide as its longest line, one line per character: `--tip-width` is measured when shown.
+ */
 .tip {
   position: absolute;
   z-index: 2;
   bottom: calc(100% - var(--spread-line-top) + var(--size-dot-group) / 2 + var(--s-1));
-  left: clamp(0px, calc(var(--pos) - var(--size-tooltip) / 2), calc(100% - var(--size-tooltip)));
+  left: clamp(
+    0px,
+    calc(var(--pos) - var(--tip-width, var(--size-tooltip)) / 2),
+    calc(100% - var(--tip-width, var(--size-tooltip)))
+  );
   display: flex;
   flex-direction: column;
-  width: min(var(--size-tooltip), 100%);
+  width: max-content;
+  min-width: min(var(--size-tooltip), 100%);
+  max-width: 100%;
   padding: var(--s-2-5) var(--s-3);
   border-radius: var(--r-btn);
   background: var(--surface-tooltip);
@@ -126,6 +135,15 @@
 
 .tip[hidden] {
   display: none;
+}
+
+.tip[data-below] {
+  top: calc(var(--spread-line-top) + var(--size-dot-group) / 2 + var(--s-1));
+  bottom: auto;
+}
+
+.tipLine {
+  white-space: nowrap;
 }
 
 .owner {
@@ -159,29 +177,218 @@
   list-style: none;
 }
 
-.band {
+/* A band's place on the track (WEB-45: rows from bandLayout, at most 4 until "Show all"). */
+.bandItem {
   position: absolute;
   left: var(--from);
   width: calc(var(--to) - var(--from));
   top: calc(var(--row) * var(--size-band-row));
+}
+
+.band {
+  display: block;
+  width: 100%;
   height: var(--size-band);
   padding: 0 var(--s-1-5);
   border-radius: var(--r-band);
   background: var(--surface-row);
   border: var(--border) solid var(--line-neutral);
   color: var(--text-muted);
+  font: inherit;
   font-size: var(--fs-tiny);
   line-height: calc(var(--size-band) - 2 * var(--border));
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.band:hover,
+.band[aria-expanded="true"] {
+  border-color: var(--gold);
+  color: var(--gold-pale);
+}
+
+.band:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
 }
 
 .band[data-best] {
-  z-index: 1;
   background: var(--tint-selected);
   border-color: var(--gold);
   color: var(--gold-pale);
+}
+
+/* The label that fits (measured in the browser, DungeonBands): the full name, the short name, or neither. */
+.bandShort,
+.band[data-fit="short"] .bandFull,
+.band[data-fit="count"] .bandFull,
+.band[data-fit="count"] .bandShort {
+  display: none;
+}
+
+.band[data-fit="short"] .bandShort {
+  display: inline;
+}
+
+/* The band popover (board `roster-cards-runs`), under its band and kept inside the track. */
+.pop {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--size-band) + var(--s-1));
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: var(--size-band-pop);
+  max-width: calc(100vw - 2 * var(--s-4));
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-menu);
+  background: var(--surface-menu);
+  border: var(--border) solid var(--line-band-pop);
+  box-shadow: var(--shadow-menu);
+}
+
+.bandItem:has(.pop) {
+  z-index: 3;
+}
+
+/* A band in the right half opens its popover towards the left. */
+.bandItem[data-right] .pop {
+  left: auto;
+  right: 0;
+}
+
+.popHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.popName {
+  font-family: var(--font-name);
+  font-size: var(--fs-section);
+  color: var(--text-strong);
+}
+
+.popRange {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.popFits {
+  font-size: var(--fs-meta);
+  line-height: var(--lh-relaxed);
+  color: var(--text-muted);
+}
+
+.popRuns,
+.popRunList {
+  font-size: var(--fs-meta);
+  color: var(--gold-pale);
+}
+
+.popRunList {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  list-style: none;
+}
+
+.popRunList a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  color: var(--gold-pale);
+}
+
+.popButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.popPrimary,
+.popSecondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-control);
+  font-size: var(--fs-body-sm);
+  text-decoration: none;
+}
+
+.popPrimary {
+  background: var(--gold);
+  color: var(--on-gold);
+  font-weight: var(--fw-semibold);
+}
+
+.popPrimary:hover {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+.popSecondary {
+  border: var(--border) solid var(--line-chip-on);
+  color: var(--gold-bright);
+}
+
+.popSecondary:hover {
+  border-color: var(--gold);
+}
+
+.bandsFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-2) var(--s-2-5) 0;
+}
+
+.showAll {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gold);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  cursor: pointer;
+}
+
+.showAll:hover {
+  color: var(--gold-bright);
+}
+
+/* On a phone the popover is a bottom sheet (Nico, 2026-10-28), like the site's Dropdown. */
+.sheet {
+  width: 100%;
+  max-width: none;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  background: var(--surface-menu);
+  box-shadow: var(--shadow-sheet);
+  color: var(--text);
+}
+
+.sheet::backdrop {
+  background: var(--sheet-backdrop);
+}
+
+.sheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-5) var(--s-4) var(--s-6);
 }
 
 /* Phone (no board): the bands as a list (decided with Nico for WEB-21); the dots as on desktop, names on tap (WEB-32). */
@@ -207,14 +414,31 @@
   }
 
   /* By level on phone, the best band first (the track's rows order them top to bottom). */
-  .band {
+  .bandItem {
     order: var(--order);
     position: static;
     width: auto;
+  }
+
+  .band {
     height: auto;
+    min-height: var(--size-touch);
     padding: var(--s-1) var(--s-2);
     font-size: var(--fs-meta-sm);
     line-height: var(--lh-body);
     white-space: normal;
+  }
+
+  /* A list item is wide enough: always the full name. */
+  .band .bandFull {
+    display: inline;
+  }
+
+  .band .bandShort {
+    display: none;
+  }
+
+  .bandsFoot {
+    margin: var(--s-2) 0 0;
   }
 }

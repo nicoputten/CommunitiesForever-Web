@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import styles from "./LevelSpread.module.css";
 
 export interface TrackLine {
@@ -34,6 +34,20 @@ export function SpreadTrack({ dots, layout }: { dots: TrackDot[]; layout: "wide"
   const [shown, setShown] = useState<string>();
   const [pinned, setPinned] = useState<string>();
   const track = useRef<HTMLDivElement>(null);
+  // WEB-45 (finding 14): the shown tooltip's width, and whether it goes below the dot for lack of room above.
+  const [fit, setFit] = useState<{ key: string; width: number; below: boolean }>();
+
+  useLayoutEffect(() => {
+    if (shown === undefined) return;
+    const tip = document.getElementById(`spread-tip-${layout}-${shown}`);
+    const panel = track.current?.closest("section") ?? track.current;
+    if (tip === null || panel == null) return;
+    const room = tip.getBoundingClientRect().top - Math.max(0, panel.getBoundingClientRect().top);
+    setFit((f) => {
+      const below = f?.key === shown && f.below ? true : room < 0;
+      return { key: shown, width: tip.offsetWidth, below };
+    });
+  }, [shown, layout]);
 
   useEffect(() => {
     if (shown === undefined) return;
@@ -95,7 +109,14 @@ export function SpreadTrack({ dots, layout }: { dots: TrackDot[]; layout: "wide"
                 {d.count !== undefined && <span className={styles.count}>{d.count}</span>}
               </span>
             </button>
-            <span id={tip} role="tooltip" className={styles.tip} hidden={shown !== d.key}>
+            <span
+              id={tip}
+              role="tooltip"
+              className={styles.tip}
+              hidden={shown !== d.key}
+              data-below={(fit?.key === d.key && fit.below) || undefined}
+              style={fit?.key === d.key ? ({ "--tip-width": `${fit.width}px` } as CSSProperties) : undefined}
+            >
               {d.lines.map((l, i) => (
                 <span key={i} className={styles.tipLine}>
                   <span style={{ color: l.color }}>{l.name}</span> {l.level}

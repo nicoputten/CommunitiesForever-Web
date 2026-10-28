@@ -36,11 +36,6 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
 - The map's dungeon markers get a badge with the number of planned runs; their popover has Plan a run and Dungeon page.
 
-### WEB-45 Runs on the roster and the map
-- Board: `roster-cards-runs`. The "Next run" card on the roster; a dungeon band opens a popover with who fits, planned runs, Plan a run and Dungeon page; the Role filter.
-- After WEB-32, which builds the level spread itself.
-- Runs v2 (board `runs-v2-plan`, "Roster bands v2"; findings 13 and 14): at most 4 rows of bands, sorted by how many fit and packed without overlap, with "Show all N"; the full name where the band is wide enough, otherwise a short one ("SM Graveyard") with the full name on hover, never cut mid-word; a click opens the popover (name, range, how many fit, missing roles, planned runs, Plan a run and View run). The dot tooltip flips below the dot when there is no room above, one row per character without wrapping. Fit from WEB-47's `levelFit`.
-
 ### Backlog (unordered, not yet stories)
 - Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version), then `notesUrl` in `GET updates/status` points to it (UP-10 proposal; left out of WEB-35b).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
