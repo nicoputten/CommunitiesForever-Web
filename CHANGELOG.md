@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.4.0 (2026-10-28)
 - Roster: a "Next run" card above the level spread; the dungeon bands sit in at most four rows (most fits first, "Show all" for the rest), say how many fit and how many runs are planned, and open a popover with who's missing, the planned runs and Plan a run (a sheet on a phone). The dot tooltip no longer gets cut off at the top and keeps each character on one line.
 - Asking now on the Runs page: open asks from the game and Discord show above the runs with who's in, a countdown (amber in the last minute) and I'm in, Maybe or Can't, with your best character for it (change it and the role in the picker). An ask disappears when its 10 minutes are up; your own ask says to form the group in game.
