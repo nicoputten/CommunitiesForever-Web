@@ -46,4 +46,62 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Activity feed (level ups, profession gains, dungeon runs per day).
 - Dungeons: who has which dungeon quests.
 - Final emblem and logo for the site.
+- Dungeon catalogue: every dungeon with who cleared it, the group's first clear as an achievement (Nico, 2026-10-28: brainstorm after E8, then designs).
+- PvP ladder: a competitive ranking on the site and in the addon (Nico, 2026-10-28: new stories after the E8 designs).
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).
+
+## E8 Recap v2: PvP, danger, loot (decided with Nico, 2026-10-28)
+New milestones, awards, cards, headlines and challenges from the data the addon starts sending in CF-52 and CF-53. The full current list is `docs/RECAP.md`. Update it in each story. Nico plays only on the PvP ruleset, so there are no Hardcore stories. Gold is **never** shown as an amount (not on the site, not in Discord, not in card facts the bot gets), only relatively. The designs come from Nico (prompt: `docs/DESIGN-PROMPT-RECAP-V2.md`). Texts and logic can be built before them; card images wait for the designs. Order: WEB-55, then WEB-56 and WEB-57; the bot's BOT-14 after WEB-56.
+
+Compatibility: uploads from addons without CF-52 or CF-53 have none of the new fields. Each field is optional everywhere, and a card or milestone whose data is missing never shows (it never shows a zero as if it were known).
+
+### WEB-55 Store PvP, danger and loot data from uploads
+- Read the new character fields (`pvp`, `riding`) and the new feed fields (`kills`, `deaths`, `duels`, `loot`, `gold`, `sessions`, `groups`) from uploads into the derived data, kept per realm day like the activity feed. A rebuild gives the same result.
+- Validate and cap them as the addon does; unknown causes become `other`.
+- `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated; tests on a fixture with every new field and on one without them.
+
+### WEB-56 New milestones
+- New `milestones` kinds in the bot API (`docs/BOT-API.md`):
+  - `honorKills`: first honorable kill, then 100, 1,000 and 5,000
+  - `pvpRank`: a new PvP rank reached, with the rank's title
+  - `firstEpic`: a character's first epic item, with the item id
+  - `mount`: riding 75
+  - `epicMount`: riding 150
+- Same rules as now: the site's first upload makes none, and a rebuild never makes events again. A bot without BOT-14 skips kinds it doesn't know.
+- Card images for `pvpRank`, `firstEpic` and `epicMount` once the designs are in (as WEB-41d).
+
+### WEB-57 New recap cards, awards, headlines and challenges
+Each card keeps the existing rules: a threshold, a score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend. IDs continue the catalogue.
+- Awards:
+  - A11 Warmonger: most honorable kills, at least 10
+  - A12 Battlemaster: most battleground wins, at least 2
+  - A13 Loot goblin: most rare and epic items, at least 5
+  - A14 Duelist: most duel wins, at least 3
+  - A7 Social butterfly: in a group with the most different friends, at least 3
+- Stat cards:
+  - S13 Bloodbath zone: the zone with the most honorable kills, at least 10
+  - S14 Battleground of the week: the most played battleground, with wins and losses, at least 2 games
+  - S15 Deadliest zone: the zone with the most deaths, at least 3
+  - S11 Biggest group night: the evening with the most friends in groups together, at least 3
+- Progress cards: P14 Rank race, two friends' characters one PvP rank apart, or the same rank with honor within 10 %.
+- Social cards:
+  - F14 Revenge: died to players most, then got the most kills, at least 3 of each
+  - F15 Duel rivals: the pair that duelled each other most, with the score, at least 3 duels
+- Fun cards:
+  - F16 Most deaths: at least 5
+  - F17 Fell to their death: a `fall` death
+  - F18 Died by fire: a `fire` death ("the campfire won")
+  - F19 Untouchable: the most levels gained with 0 deaths, at least 3 levels
+  - F20 Big spender: the biggest gold spent; text without amounts ("someone bought something shiny")
+  - F21 Purple rain: epic items received, at least 1
+  - F22 Marathon: the longest session, at least 3 hours
+  - F7 Night owl: played after 01:00 the most
+  - F8 Early bird: played before 08:00 the most (both in each friend's own saved time zone; without one, the site's)
+- Headlines: `pvp` (a week with many kills), `danger` (a week with many deaths).
+- Challenges:
+  - "Win 3 battlegrounds as a group"
+  - "Each of you gets 25 honorable kills"
+  - "Take back Tarren Mill" (kills in Hillsbrad Foothills)
+  - "Duel every friend once"
+  - "A week without dying"
+- `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
