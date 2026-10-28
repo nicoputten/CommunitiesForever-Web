@@ -22,6 +22,7 @@ import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
 import { notifyBotEvents, recordMilestones } from "./bot";
+import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
@@ -194,6 +195,8 @@ export function upload(
   if (stored.status === "ok" && !stored.duplicate && result.ok) {
     const game = applyGameItems(db, stored.id, user, result.gameItems, now);
     markRanIt(db, now);
+    // WEB-58: the day's Doomsday board again when the upload changed it.
+    updateDoomsdayBoard(db, now);
     if (game.runAnswers > 0 && stored.summary !== undefined) {
       stored.summary = { ...stored.summary, runAnswers: game.runAnswers };
       db.update(uploads).set({ summary: stored.summary }).where(eq(uploads.id, stored.id)).run();

@@ -143,11 +143,13 @@ describe("bot API", () => {
       longPollSeconds: 30,
       eventTtlSeconds: EVENT_TTL_SECONDS,
       // WEB-39: the admin's settings on the Discord page (defaults here).
-      posts: { milestones: true, runs: true, recap: true },
-      channels: { posts: null, recap: null, runs: null },
+      posts: { milestones: true, runs: true, recap: true, doomsdayBoard: true, doomsdayLadder: true },
+      channels: { posts: null, recap: null, runs: null, doomsday: null },
       mentionRole: null,
       recap: { day: 0, time: "13:00", timeZone: "UTC" },
       runs: { reminders: true, reminderMinutes: 30, startingNow: true, askNow: true, markDone: true },
+      // WEB-58: Doomsday's reset in realm time, the realm's zone and the page.
+      doomsday: { reset: "19:00", timeZone: "Europe/Paris", url: expect.stringMatching(/\/doomsday$/) },
     });
   });
 

@@ -1,11 +1,12 @@
 import type { DoomsdaySnapshot } from "@/core/doomsday/snapshot";
 import { peopleViews } from "@/core/views/characters";
 import type { Db } from "./db";
+import { doomsdayFor } from "./doomsdayEngine";
 import { doomsdaySample } from "./doomsdaySample";
 import { loadState } from "./uploads";
 
-// Doomsday for the pages (WEB-59..61). The engine (WEB-58) computes it from the stored uploads; until it lands there is
-// no Doomsday data, except the made-up sample on the test servers (DOOMSDAY_SAMPLE=1).
+// Doomsday for the pages (WEB-59..61): the engine's snapshot from the stored uploads (WEB-58). The test servers set
+// DOOMSDAY_SAMPLE=1 for the made-up sample until the design sample uploads `goals`.
 
 /** Undefined before any Doomsday data. */
 export function loadDoomsday(
@@ -13,8 +14,9 @@ export function loadDoomsday(
   now: number,
   env: Record<string, string | undefined> = process.env,
 ): DoomsdaySnapshot | undefined {
-  const data = loadState(db)?.data;
-  if (data === undefined) return undefined;
-  if (env.DOOMSDAY_SAMPLE === "1") return doomsdaySample(peopleViews(data, now), now);
-  return undefined;
+  if (env.DOOMSDAY_SAMPLE === "1") {
+    const data = loadState(db)?.data;
+    return data === undefined ? undefined : doomsdaySample(peopleViews(data, now), now);
+  }
+  return doomsdayFor(db, now);
 }

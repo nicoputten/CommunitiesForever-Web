@@ -262,6 +262,15 @@ export const botSettings = sqliteTable("bot_settings", {
   reminderMinutes: integer("reminder_minutes").notNull(),
   askNow: integer("ask_now", { mode: "boolean" }).notNull(),
   markDone: integer("mark_done", { mode: "boolean" }).notNull(),
+  /** Doomsday (WEB-58); defaults for rows from before it. */
+  doomsdayBoard: integer("doomsday_board", { mode: "boolean" }).notNull().default(true),
+  doomsdayLadder: integer("doomsday_ladder", { mode: "boolean" }).notNull().default(true),
+  doomsdayChannel: text("doomsday_channel"),
+  /** Seconds after realm midnight. */
+  doomsdayReset: integer("doomsday_reset").notNull().default(68400),
+  doomsdayResetPrevious: integer("doomsday_reset_previous"),
+  doomsdayResetChangedAt: integer("doomsday_reset_changed_at"),
+  realmTimeZone: text("realm_time_zone").notNull().default("Europe/Paris"),
   /** Unix seconds and the admin's BattleTag. */
   updatedAt: integer("updated_at").notNull(),
   updatedBy: text("updated_by").notNull(),
@@ -428,6 +437,27 @@ export const feats = sqliteTable(
     fields: text("fields", { mode: "json" }).$type<FeatFields>().notNull(),
   },
   (t) => [uniqueIndex("feats_guid_key_unique").on(t.guid, t.key)],
+);
+
+/**
+ * Doomsday's bot posts (WEB-58, src/server/doomsdayPosts.ts): the board of each Doomsday day and the ladder of each
+ * week, once. Not derived: a rebuild never posts again.
+ */
+export const doomsdayPosts = sqliteTable(
+  "doomsday_posts",
+  {
+    kind: text("kind").$type<"board" | "ladder">().notNull(),
+    /** The Doomsday day (board) or week (ladder). */
+    n: integer("n").notNull(),
+    /** The doomsdayBoard or doomsdayLadder event. */
+    eventId: integer("event_id").notNull(),
+    /** The board as last sent (canonical JSON), so an upload that changes nothing sends no update. */
+    lastData: text("last_data"),
+    createdAt: integer("created_at").notNull(),
+    /** When the final update went out. */
+    finalAt: integer("final_at"),
+  },
+  (t) => [primaryKey({ columns: [t.kind, t.n] })],
 );
 
 /** Every sighting of every upload (the `locations` table keeps only the newest per character). */
