@@ -104,6 +104,9 @@ test("the roster shows the next run and a band's planned runs (WEB-45)", async (
   const next = page.getByRole("region", { name: "Next run" });
   await expect(next).toBeVisible();
   await expect(next.getByRole("link", { name: "All runs →" })).toHaveAttribute("href", "/runs");
+  // The run's band may be beyond the 4 rows.
+  const showAll = page.getByRole("button", { name: /^Show all \d+$/ });
+  if (await showAll.isVisible()) await showAll.click();
   const band = page
     .getByRole("list", { name: "Dungeon bands" })
     .getByRole("button", { name: /· \d+ runs?/ })

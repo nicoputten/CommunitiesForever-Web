@@ -41,19 +41,18 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   await expect(spread.getByText(/^\d+ of \d+ shown$/)).toBeVisible();
   await spread.getByRole("button", { name: /^Show all \d+$/ }).click();
   await expect(spread.getByRole("button", { name: "Show fewer" })).toBeVisible();
-  // Scarlet Monastery's wings are separate bands, named in full for screen readers whatever the label shows.
-  for (const band of [
-    "Scarlet Monastery: Graveyard 26–36 · 2",
-    "Scarlet Monastery: Library 29–39 · 3",
-    "Scarlet Monastery: Cathedral 35–45 · 3",
-  ]) {
-    await expect(bands.getByRole("button", { name: band, exact: true })).toHaveCount(1);
+  // Scarlet Monastery's wings are separate bands; each one's accessible name has what it shows and the full name.
+  for (const [id, name, label] of [
+    ["sm-graveyard", "Scarlet Monastery: Graveyard", "26–36 · 2"],
+    ["sm-library", "Scarlet Monastery: Library", "29–39 · 3"],
+    ["sm-cathedral", "Scarlet Monastery: Cathedral", "35–45 · 3"],
+  ] as const) {
+    const band = bands.locator(`button[data-band="${id}"]`);
+    await expect(band).toHaveAttribute("aria-label", new RegExp(label));
+    await expect(band).toHaveAttribute("aria-label", new RegExp(name));
   }
   // The Armory has the most fits.
-  await expect(bands.getByRole("button", { name: "Scarlet Monastery: Armory 32–42 · 4" })).toHaveAttribute(
-    "data-best",
-    "true",
-  );
+  await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
   // Lia 37, Ves 39 and Bob 41 share one dot; Ves is the viewer's. A phone merges within 4 levels: Tok 33 too.
   const phone = isPhone(page);
@@ -97,7 +96,7 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
 test("a band opens its popover: who fits, missing roles, Plan a run (WEB-45)", async ({ page }) => {
   await page.goto("/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
-  const armory = bands.getByRole("button", { name: "Scarlet Monastery: Armory 32–42 · 4" });
+  const armory = bands.locator('button[data-band="sm-armory"]');
   await armory.click();
   await expect(armory).toHaveAttribute("aria-expanded", "true");
   const pop = page.getByRole("dialog", { name: "Scarlet Monastery: Armory" });

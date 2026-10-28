@@ -71,6 +71,13 @@ export function DungeonBands({
           button.dataset.fit = label;
           if (button.scrollWidth <= button.clientWidth) break;
         }
+        // The visible label first, then the full name: screen readers hear what is seen (WCAG 2.5.3).
+        const { name = "", short = name, rest = "" } = button.dataset;
+        const fit = button.dataset.fit;
+        button.setAttribute(
+          "aria-label",
+          fit === "full" ? `${name} ${rest}` : `${fit === "short" ? `${short} ` : ""}${rest}, ${name}`,
+        );
       }
     };
     fit();
@@ -149,8 +156,9 @@ export function DungeonBands({
 
   const runCount = (b: BandView) => b.runs.length + b.moreRuns;
   const runsText = (b: BandView) => (runCount(b) === 0 ? "" : ` · ${runCount(b)} run${runCount(b) === 1 ? "" : "s"}`);
-  // The full name whatever the label shows ("Scarlet Monastery: Graveyard 26–36 · 6 · 1 run").
-  const label = (b: BandView) => `${b.name} ${b.range} · ${b.fits}${runsText(b)}`;
+  const rest = (b: BandView) => `${b.range} · ${b.fits}${runsText(b)}`;
+  // Before the label is measured: the full name ("Scarlet Monastery: Graveyard 26–36 · 6 · 1 run").
+  const label = (b: BandView) => `${b.name} ${rest(b)}`;
 
   return (
     <>
@@ -181,6 +189,9 @@ export function DungeonBands({
               data-best={b.best || undefined}
               title={`${b.name} ${b.range}`}
               aria-label={label(b)}
+              data-name={b.name}
+              data-short={b.shortName}
+              data-rest={rest(b)}
               aria-expanded={open === b.id}
               aria-controls={open === b.id && !asSheet ? `band-pop-${b.id}` : undefined}
               onClick={() => {
