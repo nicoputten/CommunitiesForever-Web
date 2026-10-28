@@ -11,3 +11,5 @@ drizzle/
 design/
 src/core/map/zones.json
 .claude/
+# The addon's golden cases, copied byte for byte (tests/fixtures/doomsday/README.md)
+tests/fixtures/doomsday/doomsday-cases.json

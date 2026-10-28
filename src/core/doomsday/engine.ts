@@ -712,13 +712,20 @@ function featRecords(input: DoomsdayInput): FeatRecord[] {
         friendKey: f.owner,
         character: { guid: f.guid, name, ...(c?.classFile !== undefined ? { classFile: c.classFile } : {}) },
         at: f.at,
-        title: f.kind === "pvpRank" ? `${t.title}, ${t.line}` : t.title,
+        // Display-ready (WEB-60): "Stone Guard, a.k.a. Mailbox Menace", "First epic: <item>".
+        title:
+          f.kind === "pvpRank"
+            ? `${t.title}, ${t.line}`
+            : f.kind === "firstEpic" && f.fields.item?.name !== undefined
+              ? `First epic: ${f.fields.item.name}`
+              : t.title,
         firstInGroup: f.firstInGroup,
         alreadyHad: f.alreadyHad,
       };
       const detail = f.kind === "pvpRank" ? undefined : (t.flavour ?? t.line);
       if (detail !== undefined && detail !== record.title) record.detail = detail;
       if (f.kind === "firstEpic" && f.fields.item?.name !== undefined) record.epicItem = f.fields.item.name;
+      if (f.kind === "pvpRank" && f.fields.rank !== undefined) record.rank = f.fields.rank;
       return record;
     });
 }
