@@ -296,3 +296,223 @@ An ask ("who's up right now") is a run that starts when it is made and takes ans
 | `GET /api/bot/v1/asks/<id>/characters?discordUserId=` | | as a run's (Pick my character) |
 
 Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range` and `out_of_range` (no longer given since WEB-52: every character may lead and answer I'm in), `not_your_character`, `no_character`; `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`, `expired` (an ask past its 10 minutes, WEB-51).
+
+## Doomsday (planned, WEB-56 and WEB-58)
+The contract for the bot's Doomsday stories (BOT-14 to BOT-16), agreed before the site builds it (2026-10-28), so the bot can build its formatting against it. The rules are in the addon repo's `docs/DOOMSDAY.md`. Everything here is optional within v1: an older site has none of it, and a bot that doesn't know an event type skips and acknowledges it.
+
+Common rules:
+- **Two tracks, never summed.** Points always come as `{ "pve": n, "pvp": n }`. `pvp` is `null` for a **PvP Virgin** (no kill on any character, ever): shown, never ranked.
+- **No data is not 0.** A friend without Doomsday data (an older addon, or no addon) is never listed with 0 points: they are named in `withoutData` instead.
+- Names only: friends by display name, characters by full name. Never BattleTags or Discord ids, no pings. Gold never as an amount.
+- **Days and weeks.** A Doomsday day runs from the reset to the next one (default 19:00 realm time, a site setting) and is named after the date it starts on. `day` and `week` are the day and week numbers of `DOOMSDAY.md`. `start`, `end` and `resetAt` are Unix seconds (UTC); the bot shows them with Discord's timestamp markup (`<t:…:R>` for "resets in …").
+
+### Settings
+`GET settings` gains (optional):
+
+```json
+{
+  "posts": { "doomsdayBoard": true, "doomsdayLadder": true },
+  "channels": { "doomsday": null },
+  "doomsday": { "reset": "19:00", "timeZone": "Europe/Paris", "url": "https://wow.example.org/doomsday" }
+}
+```
+
+- `posts.doomsdayBoard`, `posts.doomsdayLadder`: the admin's switches on the Discord page. Off means no such events are made.
+- `channels.doomsday`: the Doomsday channel; `null` means the posts channel (`channels.posts`).
+- `doomsday.reset`: the reset in realm time (`HH:MM`); `timeZone`: the realm's IANA time zone. A change takes effect from the next reset. `url`: the site's Doomsday page, for "Open the board ↗" and the ladder's link.
+
+### Goals
+A goal on the board or in a look-up:
+
+```json
+{ "slot": "pve1", "id": "d.quests10", "title": "Finish 10 quests", "track": "pve", "points": 5 }
+```
+
+- `slot`: `pve1`, `pve2`, `pve3`, `hunt`, `skirmish` (daily); `week1`, `week2`, `week3`, `bounty` (weekly).
+- `id`: the goal id of `DOOMSDAY.md`. `title`: finished text ("Front line: 5 kills in Ashenvale"). An id the site doesn't know (from a newer addon) has `"unknown": true` and the title "A goal from a newer version"; it still counts.
+- The Hunt names a combination per enemy faction: the `hunt` slot carries `"hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" }` (keyed by the hunted faction), and its `title` names both.
+- `points`: 5 for a daily, 15 for a weekly.
+
+A friend's goal (in a board row or a look-up) adds:
+
+| Field | |
+|---|---|
+| `done` | `true` when the addon recorded it done |
+| `at` | when it was done (Unix seconds), with `done` |
+| `swappedFrom` | optional: `{ id, title }` of the goal it replaced for this friend ("Instead of: …") |
+| `progress` | optional: `{ have, need }` ("7 / 10"), only where the site can tell |
+
+### Event `doomsdayBoard`
+At each reset, with the Board switch on: the new day's board. The bot posts it in the Doomsday channel and acknowledges it with its message id.
+
+```json
+{
+  "id": 40,
+  "type": "doomsdayBoard",
+  "createdAt": 1793210400,
+  "data": {
+    "day": 20754,
+    "week": 2965,
+    "label": "Wed 28 Oct",
+    "start": 1793210400,
+    "end": 1793296800,
+    "goals": [
+      { "slot": "pve1", "id": "d.quests10", "title": "Finish 10 quests", "track": "pve", "points": 5 },
+      { "slot": "pve2", "id": "d.dungeon", "title": "Run a dungeon", "track": "pve", "points": 5 },
+      { "slot": "pve3", "id": "d.secondary", "title": "Raise Cooking, First Aid or Fishing", "track": "pve", "points": 5 },
+      { "slot": "hunt", "id": "hunt", "title": "The Hunt: Night Elf Druid or Troll Priest", "track": "pvp", "points": 5, "hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" } },
+      { "slot": "skirmish", "id": "p.loneWolf", "title": "Lone wolf: 3 solo kills", "track": "pvp", "points": 5 }
+    ],
+    "friends": [
+      {
+        "name": "Mira",
+        "goals": [
+          { "slot": "pve1", "id": "d.quests10", "done": true, "at": 1793217600 },
+          { "slot": "pve2", "id": "d.quests10", "done": false, "swappedFrom": { "id": "d.dungeon", "title": "Run a dungeon" } }
+        ],
+        "doneCount": 1,
+        "crossedOut": false,
+        "today": { "pve": 5, "pvp": 0 },
+        "week": { "pve": 35, "pvp": 12 },
+        "streak": 4,
+        "best": 9,
+        "pvpVirgin": false
+      }
+    ],
+    "withoutData": ["Sanne"],
+    "crown": null
+  }
+}
+```
+
+- `goals`: the day's draw, in slot order.
+- `friends`: every friend with Doomsday data, most goals done first, then by name. A row's `goals` lists only the slots that differ from the day's goal or are done (`slot`, `id`, `done`, `at`, `swappedFrom`, `progress`); a slot not listed is the day's goal, not done.
+- `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (struck through). `today`, `week`: points per track (`pvp` `null` for a PvP Virgin). `streak`, `best`: days.
+- `withoutData`: friends on the site without Doomsday data (no row).
+- `crown`: `{ "name", "at" }`, the first friend to finish the 3 PvE dailies, or `null`. No points.
+
+### Event `doomsdayBoardUpdate`
+After each accepted upload that changes the day's board, with the Board switch on: the whole board again, the same `data`, plus:
+
+| Field | |
+|---|---|
+| `boardEvent` | the id of that day's `doomsdayBoard` event |
+| `messageId` | the message the board (or a later update) was acknowledged with, `null` while none is |
+| `final` | `true` on the last update, made at the next reset |
+| `summary` | with `final`: `{ goalsDone, hunt: { name, at } or null, longestStreak: { name, days } or null }`: goals done by everyone that day, the first friend to finish the Hunt, the longest running streak |
+
+- **Latest only** (Nico, 2026-10-28): at most one unacknowledged update per day. A newer one replaces it (the older one is never handed out again), so the bot always gets the newest state.
+- The bot edits the message `messageId`. When it is `null` or the message is gone, it posts a new one and acknowledges the update with that id; later updates carry the new id.
+- After `final` no more updates come for that day.
+
+### Event `doomsdayLadder`
+On Sunday at the reset (the week turns), with the Ladder switch on: the week that just ended.
+
+```json
+{
+  "week": 2965,
+  "start": 1792951200,
+  "end": 1793556000,
+  "pve": [
+    { "place": 1, "name": "Mira", "points": 85, "goals": 15, "move": { "kind": "up", "by": 2 } }
+  ],
+  "pvp": [
+    { "place": 1, "name": "Nico", "points": 240, "goals": 6, "kills": 61, "move": { "kind": "new" } }
+  ],
+  "duelChampion": { "name": "Nico", "rating": 1064, "wins": 7, "losses": 2 },
+  "mostKillsInZone": { "name": "Nico", "zone": "Hillsbrad Foothills", "kills": 23 },
+  "battlegrounds": {
+    "friends": [{ "place": 1, "name": "Femke", "points": 31, "wins": 3, "losses": 1, "kills": 18 }],
+    "games": [{ "name": "Warsong Gulch", "wins": 3, "losses": 2 }]
+  },
+  "pvpVirgins": ["Bob"],
+  "withoutData": ["Sanne"]
+}
+```
+
+- `pve`, `pvp`: the top 5 of each ladder. Ties: more goals done first, then more counted kills (PvP). `move`: `{ "kind": "up" | "down", "by" }`, `{ "kind": "same" }` or `{ "kind": "new" }` (not on last week's ladder).
+- `duelChampion`: the best Elo rating among friends who duelled that week (start 1000, K = 32), or `null`. `mostKillsInZone`: the most counted kills by one friend in one zone, or `null`.
+- `battlegrounds`: kept apart from the kills above. `friends`: the top 5 by battleground points; `games`: the group's wins and losses per battleground. `null` without a battleground that week.
+- `pvpVirgins`: friends not ranked on the PvP ladder ("not ranked: no kills on any character, ever"); empty when none.
+
+### Look-up `doomsday`
+`GET lookup/doomsday?discordUserId=<id>&friend=<display name>`. `friend` is optional; without it, the asker (`403 not_linked` when not linked). `404 no_data` before any Doomsday data on the site, `404 not_found` for an unknown friend.
+
+```json
+{
+  "friend": "Mira",
+  "day": 20754,
+  "label": "Wed 28 Oct",
+  "resetAt": 1793296800,
+  "weekResetAt": 1793556000,
+  "goals": [
+    { "slot": "pve1", "id": "d.quests10", "title": "Finish 10 quests", "track": "pve", "points": 5, "done": true, "at": 1793217600 },
+    { "slot": "week1", "id": "w.dungeons3", "title": "Run 3 dungeons", "track": "pve", "points": 15, "done": false, "progress": { "have": 1, "need": 3 } }
+  ],
+  "duels": [{ "name": "Nico", "won": true, "points": 3 }],
+  "today": { "pve": 5, "pvp": 3 },
+  "week": { "pve": 35, "pvp": 12 },
+  "allTime": { "pve": 410, "pvp": 96 },
+  "place": { "pve": { "place": 2, "of": 5 }, "pvp": { "place": 3, "of": 4 } },
+  "streak": 4,
+  "best": 9,
+  "pvpVirgin": false,
+  "crossedOut": false
+}
+```
+
+- `goals`: today's 5 and this week's 4 (the friend's own set, swaps included) with their state.
+- `duels`: today's Duel slot, one per friend duelled (`won`, `points` 3 or 1). A disputed duel has `"disputed": true` and `points` 0.
+- `place`: on this week's ladders; `pvp` is `null` for a PvP Virgin.
+- A friend without Doomsday data: `{ "friend": "Sanne", "noData": true }` (the bot says "no Doomsday data yet").
+- With a linked asker, `asker` as in the other look-ups.
+
+### Recap: `doomsday`
+The `recap` event (and `recap/latest`) gains an optional `doomsday` field, the recap's Doomsday section (WEB-58):
+
+```json
+{
+  "doomsday": {
+    "mostDevoted": { "name": "Mira", "days": 6 },
+    "perfectWeek": ["Mira"],
+    "points": {
+      "pve": [{ "name": "Mira", "points": 85 }],
+      "pvp": [{ "name": "Nico", "points": 240 }]
+    }
+  }
+}
+```
+
+- `mostDevoted`: goals done on the most days, or `null` when nobody did one. `perfectWeek`: friends who did every PvE daily on every day they played, on at least 4 days (empty when none). `points`: the top 3 per track for the recap's week.
+- Left out when nobody has Doomsday data.
+
+### Feats (the `milestones` event, WEB-56)
+Every milestone becomes a feat. The event type stays `milestones`; the bot's post says "Feat unlocked". New optional fields on every milestone:
+
+| Field | |
+|---|---|
+| `text` | the feat's line, finished ("First blood: Ves Doombringer"); the bot may post it as is |
+| `firstInGroup` | `true` when no character in the group reached it before ("First in the group") |
+| `card` | the card image id (`milestone-<event>-<n>`), when the feat has one |
+
+The event's `data` gains `card`: the one card image for a post of several feats (the most special one's), left out when none has one.
+
+New kinds, sorted after the existing ones (then by name):
+
+| `kind` | Extra fields | When |
+|---|---|---|
+| `honorKills` | `kills` (1, 100, 1000, 5000, 10000) | Lifetime honorable kills crossed it; one feat for the highest crossed |
+| `pvpRank` | `rank` (1 to 14), `rankName` (the official rank for the character's faction), `title` (ours) | A new highest rank ever for the character; never on decay or on regaining a rank held before |
+| `duelWins` | `wins` (10, 50, 100) | Duel wins from the activity feed crossed it |
+| `bgFirstWin` | `battleground` | The character's first win in Warsong Gulch, Arathi Basin or Alterac Valley |
+| `deaths100` | `deaths` (100) | 100 deaths from the activity feed, once per character |
+| `firstEpic` | `item: { id, name, slot?, level? }` | The character's first epic item. `slot` as text ("Two-Hand"), `level` when it was looted |
+| `mount` | `riding` (75), `level`, `place` (1 for the first in the group) | Riding 75 |
+| `epicMount` | `riding` (150), `level`, `place` | Riding 150 |
+| `firstCatch` | | Fishing rose above 1 |
+| `jackOfAllTrades` | `professions` (names) | Two primary professions plus Cooking, First Aid and Fishing, all at 300 |
+| `notableItem` | `notable` (`arcaniteReaper`, `arcaniteTransmute`, `mooncloth`, `devilsaur`, `extravaganzaJoined`, `extravaganzaWon`), `item: { id, name }` | The first time the character got an item from the addon's watch list |
+
+`professionCap` at 300 gains `title` for Cooking ("Head Chef"), First Aid ("Field Medic") and Fishing ("Fish Whisperer").
+
+Card images (`cards/milestone-<event>-<n>.png`, 800 × 400) also for `honorKills` 10,000, `pvpRank` 6 to 14 (14 its own image), `firstEpic`, `epicMount`, `jackOfAllTrades` and every `notableItem`.
