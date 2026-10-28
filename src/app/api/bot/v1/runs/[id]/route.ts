@@ -29,7 +29,7 @@ export async function PATCH(req: Request, { params }: Params): Promise<Response>
   if (friend instanceof Response) return friend;
   const id = runIdParam((await params).id);
   if (id === undefined) return refusal("unknown_run");
-  const startsAt = startTime(body, friend.timeZone);
+  const startsAt = startTime(body, friend.timeZone, now);
   const change = {
     ...(startsAt === undefined ? {} : { startsAt }),
     ...("note" in body ? { note: body.note ?? "" } : {}),

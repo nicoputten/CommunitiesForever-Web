@@ -242,14 +242,20 @@ For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit,
 | Request | Body / query | Answer |
 |---|---|---|
 | `GET /api/bot/v1/dungeons` | | `{ dungeons: [{ id, name, shortName, typicalLevels }] }`: Scarlet Monastery as its four wings |
+| `GET /api/bot/v1/plan?discordUserId=` | | BOT-04, `/plan`: `{ timeZone, admin, days: [{ offset, label, date }], dungeons: [{ id, name, typicalLevels, lead }] }`. `admin`: whether they are the admin (`/run edit` and `/run cancel` list every run for them). `days`: today and the next six in the user's own calendar (`label` "Today · Thu 19", "Fri 20"; send `offset` as `dayOffset`). `lead`: the character they would lead as (`guid`, `name`, `level`, `classFile`, `role`, `fit`; the best fit first, then the highest level), `null` when none of theirs may say I'm in |
 | `GET /api/bot/v1/runs` | | `{ runs: [run] }`: upcoming (not cancelled, not past), by start |
 | `GET /api/bot/v1/runs/<id>` | | `{ run }` |
-| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt` or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
-| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt` or `date` and `time`, `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
+| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt`, or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, or `dayOffset` (`0` today … `6`, the user's own calendar; BOT-04) and `time`, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
+| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt`, or `date` and `time`, or `dayOffset` and `time`, and `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
 | `POST /api/bot/v1/runs/<id>/cancel` | `discordUserId` | `{ run }`. The organiser, or the admin any run |
 | `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `characterId` (or `guid`; required for `in`), `role` (optional, WEB-47: `tank`, `healer` or `damage`, one the class can play; default the character's role) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
 | `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role, roles, fit }] }`: the user's characters that may say I'm in (Pick my character); `roles` the roles their class can play, `fit` how their level fits (WEB-47) |
 | `POST /api/bot/v1/runs/<id>/move` | `discordUserId`, `characterId`, `to` (`tank`, `healer`, `damage`, `reserve` or `remove`) | `{ run }`. WEB-47: the organiser, or the admin any run, moves a sign-up to another role's open slot, to reserve, or off the run (the friend may answer again). The moved friend gets `runMoved` |
+
+For the bot's run post (BOT-04; optional fields within v1):
+- `organiser` and each answer with a character carry the character's `level` and `classFile` ("37 · Femke", "Ves Doombringer (39 Warlock)").
+- `outcome`: once known, `{ "kind": "done", "at", "came", "signedUp" }` ("Ran it · 3 of 5 signed-up came") or `{ "kind": "didntHappen", "at" }`.
+- `couldFill`: one entry per role with an open slot, `{ role, open, characters: [...], close?: [...] }`. `characters` lists up to three characters of friends who haven't answered that fit or are over and play that role (`name`, `character`, `level`, `classFile`, `fit`). Without one, `close` lists the closest below the range ("Close: Grom Ashfeller 24 (Nico), 8 below"). Names only, never BattleTags.
 
 WEB-47 (optional fields within v1): each answer in a run carries `guid`, `fit` (`kind`: `fits`, `over`, `carry`, `low` or `tooLow`; `label`: "fits", "+3 over", "carry · +12", "4 below"), and for a reserve `reserve: true`. A reserve is sent as `"answer": "maybe"` and keeps `waitlisted: true`, for bots from before WEB-47. "Runs I can join" and suggestions use `fits` and `over`; `tooLow` (6 or more below) can only answer Maybe. Errors for `answers` and `move`: `400 role_not_for_class`, `404 unknown_sign_up`, `409 role_full`, `409 same`.
 
