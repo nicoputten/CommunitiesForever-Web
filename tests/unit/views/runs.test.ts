@@ -127,11 +127,12 @@ describe("a run's page", () => {
     expect(d.plannedBy).toBe("Planned by Nico on the website");
     expect(d.levels).toBe("Levels 32–42 · organiser Ves Doombringer (39 Warlock)");
     expect(d.slots.map((s) => [s.role, s.who?.character ?? s.open])).toEqual([
-      ["tank", "Nobody in range yet"],
+      // One fact per open slot (WEB-49, finding 1): nobody in range, and who is closest below.
+      ["tank", "No tank in range · Kel Dawnhammer is 14 below"],
       ["healer", "Lia Thornwhisper"],
       ["damage", "Ves Doombringer"],
-      ["damage", "Nobody in range yet"],
-      ["damage", "Nobody in range yet"],
+      ["damage", "No damage in range · Ruk Bloodhoof is 5 below"],
+      ["damage", "No damage in range · Ruk Bloodhoof is 5 below"],
     ]);
     expect(d.answers.map((a) => [a.character, a.answer])).toEqual([
       ["Ves Doombringer", "Organiser"],
@@ -154,6 +155,61 @@ describe("a run's page", () => {
     expect(d.planOther).toEqual({
       label: "Plan the Graveyard for Ruk Bloodhoof",
       href: "/runs/new?dungeon=sm-graveyard",
+    });
+  });
+});
+
+describe("a run's page v2 (WEB-49)", () => {
+  it("gives the organiser their bar and a ⋯ menu on every filled slot, their own too", () => {
+    const d = runDetail(input(NICO), 1)!;
+    expect(d.isOrganiser).toBe(true);
+    expect(d.leadBar).toMatchObject({ state: "playing", character: "Ves Doombringer", role: "Damage" });
+    expect(d.summary).toBeUndefined();
+    const own = d.slots.find((s) => s.who?.character === "Ves Doombringer")!;
+    expect(own.who).toMatchObject({ yours: true, initials: "VD", fit: { kind: "fits", label: "fits" } });
+    expect(own.menu!.map((o) => [o.label, o.detail ?? "", Boolean(o.disabled)])).toEqual([
+      ["Tank", "not for warlocks", true],
+      ["Healer", "not for warlocks", true],
+      ["Damage", "current", true],
+      ["Bench yourself", "", false],
+      ["Leave the group", "", false],
+    ]);
+    const lia = d.slots.find((s) => s.who?.character === "Lia Thornwhisper")!;
+    expect(lia.menu!.map((o) => o.label)).toEqual([
+      "Tank",
+      "Healer",
+      "Move to Damage",
+      "Move to reserve",
+      "Remove from run",
+    ]);
+    expect(lia.menu!.at(-1)).toMatchObject({ to: "remove", danger: true });
+    expect(d.maybes).toEqual(["Tok Ironhide 33 · healer"]);
+    expect(d.reserves).toEqual([]);
+    expect(d.mayMove).toBe(true);
+  });
+
+  it("gives a friend the picker and their answer collapsed, and no menus", () => {
+    const d = runDetail(input(BOB), 1)!;
+    expect(d.leadBar).toBeUndefined();
+    expect(d.mayMove).toBe(false);
+    expect(d.slots.every((s) => s.menu === undefined)).toBe(true);
+    expect(d.picker.title).toBe("Join Scarlet Monastery: Armory");
+    expect(d.picker.roles.healer).toEqual({ state: "full → reserve", full: true });
+    expect(d.picker.roles.damage).toEqual({ state: "2 open", full: false });
+    const tok = runDetail(input(BOB), 1)!.answers.find((a) => a.character === "Tok Ironhide")!;
+    expect(tok.where).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d\d:\d\d · /);
+    expect(tok.fit).toBe("fits");
+  });
+
+  it("lists every character in the picker with its fit, roles and note", () => {
+    const d = runDetail(input(JORRIT), 4)!;
+    const ruk = d.picker.characters.find((c) => c.name === "Ruk Bloodhoof")!;
+    expect(ruk).toMatchObject({
+      fit: { kind: "tooLow", label: "8 below" },
+      onlyMaybe: true,
+      roles: ["damage"],
+      notFor: "not for hunters",
+      note: "8 levels below: you can only answer Maybe.",
     });
   });
 });

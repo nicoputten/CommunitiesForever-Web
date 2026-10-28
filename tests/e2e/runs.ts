@@ -18,7 +18,11 @@ export interface PlanInput {
 export async function planRun(page: Page, input: PlanInput): Promise<number> {
   await page.goto(`/runs/new?dungeon=${input.dungeon}`);
   if (input.lead !== undefined) {
-    await pick(page, page.getByLabel("Lead as"), new RegExp(`^${input.lead}`));
+    // Lead as is the picker (WEB-49): the character listbox.
+    await page
+      .getByRole("listbox", { name: "1 · Character" })
+      .getByRole("option", { name: new RegExp(input.lead) })
+      .click();
   }
   await page.getByRole("group", { name: "Day" }).getByRole("radio").nth(input.day).check();
   await page.getByLabel("Time").fill(input.time);
