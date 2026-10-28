@@ -1,5 +1,6 @@
 import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
+import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
 import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
@@ -406,6 +407,28 @@ export const doomsdayStatus = sqliteTable("doomsday_status", {
   at: integer("at"),
   sourceUpload: integer("source_upload").notNull(),
 });
+
+/**
+ * Every character's feats (WEB-56, src/server/feats.ts), derived from the uploads in order and rebuilt with them: one
+ * row per character and key ("honorKills:100"). `alreadyHad`: held from the data's first arrival, never posted.
+ */
+export const feats = sqliteTable(
+  "feats",
+  {
+    guid: text("guid").notNull(),
+    key: text("key").notNull(),
+    kind: text("kind").$type<FeatKind>().notNull(),
+    /** Person key of the character's owner at the time. */
+    owner: text("owner").notNull(),
+    /** The upload that brought it, and when it was accepted (Unix seconds). */
+    uploadId: integer("upload_id").notNull(),
+    at: integer("at").notNull(),
+    alreadyHad: integer("already_had", { mode: "boolean" }).notNull(),
+    firstInGroup: integer("first_in_group", { mode: "boolean" }).notNull(),
+    fields: text("fields", { mode: "json" }).$type<FeatFields>().notNull(),
+  },
+  (t) => [uniqueIndex("feats_guid_key_unique").on(t.guid, t.key)],
+);
 
 /** Every sighting of every upload (the `locations` table keeps only the newest per character). */
 export const sightings = sqliteTable(

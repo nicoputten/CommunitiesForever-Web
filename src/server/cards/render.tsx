@@ -3,7 +3,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import type { ReactElement, ReactNode } from "react";
 import { MAP_CREDIT, type Crop } from "@/core/cards/mapCrop";
-import { cardSize, type CardSpec, type Disc } from "@/core/cards/models";
+import { cardSize, type CardSpec, type Disc, type FeatCardSpec, type FeatIcon } from "@/core/cards/models";
 import { px, tok } from "@/core/cards/palette";
 
 // The card images (WEB-41d): CardSpecs (src/core/cards/models.ts) drawn with Next's built-in `next/og` (Satori and
@@ -150,9 +150,313 @@ function MapCrop({ crop, width, height }: { crop: Crop; width: number; height: n
   );
 }
 
+const SHIELD = "M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z";
+const STAR = "M13 10.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z";
+const STARS = [
+  [10.4, 7.6],
+  [15.6, 7.6],
+  [10.4, 12.8],
+  [15.6, 12.8],
+];
+
+/**
+ * The drawn icons of the feat cards: rank badges, the first epic, epic mount, Jack of all trades, Arcanite Reaper and
+ * 10,000 kills as the board doomsday-feat-cards draws them; the Arcanite Bar, Mooncloth, Devilsaur leather, the
+ * Extravaganza's fish and pole, and the numbered badges of ranks 7 to 13 in the same style (Nico, 2026-10-28).
+ */
+function FeatIconSvg({ icon, rank, size }: { icon: FeatIcon; rank?: number; size: number }) {
+  const line = tok("--gold-bright");
+  const fill = tok("--card-icon-fill");
+  if (icon === "rank") {
+    const top = (rank ?? 0) >= 14;
+    const numbered = !top && rank !== undefined && rank !== 6;
+    return (
+      <div style={{ display: "flex", position: "relative", width: size, height: size }}>
+        <svg width={size} height={size} viewBox="0 0 26 26">
+          <path
+            d={SHIELD}
+            fill={top ? tok("--gold-pale") : tok("--gold")}
+            stroke={tok("--card-badge-line")}
+            strokeWidth={0.8}
+          />
+          {top
+            ? STARS.map(([x, y], i) => (
+                <path
+                  key={i}
+                  transform={`translate(${x} ${y}) scale(.85) translate(-13 -10.5)`}
+                  d={STAR}
+                  fill={tok("--on-gold")}
+                />
+              ))
+            : null}
+          {rank === 6 ? <circle cx={13} cy={13} r={1.4} fill={tok("--on-gold")} /> : null}
+        </svg>
+        {numbered ? (
+          <div
+            style={{
+              display: "flex",
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: size,
+              height: size * 0.92,
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: SC,
+              fontSize: size * 0.3,
+              color: tok("--on-gold"),
+            }}
+          >
+            {rank}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+  const paths: Record<Exclude<FeatIcon, "rank">, ReactNode> = {
+    epic: (
+      <>
+        <path
+          d="M14 10h36l-4 14 6 30H12l6-30z"
+          fill={tok("--epic-deep")}
+          stroke={tok("--epic")}
+          strokeWidth={2.4}
+          strokeLinejoin="round"
+        />
+        <path d="M22 10l10 12 10-12" fill="none" stroke={tok("--epic")} strokeWidth={2.4} />
+        <path d="M32 22v32" stroke={tok("--epic")} strokeWidth={1.6} opacity={0.6} />
+      </>
+    ),
+    mount: (
+      <>
+        <path
+          d="M8 48c4-14 12-20 22-20l6-10 6 4-2 7c8 3 12 9 12 19"
+          fill={fill}
+          stroke={line}
+          strokeWidth={2.4}
+          strokeLinejoin="round"
+        />
+        <path d="M16 48v8M46 48v8M26 48v8" stroke={line} strokeWidth={2.4} strokeLinecap="round" />
+        <path d="M42 21l6-6" stroke={tok("--gold")} strokeWidth={2} />
+      </>
+    ),
+    jack: (
+      <>
+        <circle cx={32} cy={32} r={24} fill={fill} stroke={line} strokeWidth={2.2} />
+        <path
+          d="M20 26h12l-2 14h-8z M38 22c4 4 8 10 4 18M30 46c6 2 14 0 16-6"
+          fill="none"
+          stroke={line}
+          strokeWidth={2.2}
+          strokeLinecap="round"
+        />
+        <path d="M24 22v-6M28 22v-8" stroke={tok("--gold")} strokeWidth={2} strokeLinecap="round" />
+      </>
+    ),
+    reaper: (
+      <>
+        <path d="M14 56L44 10" stroke={line} strokeWidth={3} strokeLinecap="round" />
+        <path
+          d="M40 14c10 0 16 6 18 14-8-6-14-6-22-4z"
+          fill={tok("--card-steel")}
+          stroke={tok("--card-arcanite")}
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+        <circle cx={14} cy={56} r={3} fill={tok("--gold")} />
+      </>
+    ),
+    kills: (
+      <>
+        <path d="M32 6l22 9v16c0 15-10 22-22 27C20 53 10 46 10 31V15z" fill={fill} stroke={line} strokeWidth={2.2} />
+        <path d="M22 22l20 20M42 22L22 42" stroke={tok("--card-blood")} strokeWidth={3.2} strokeLinecap="round" />
+      </>
+    ),
+    bar: (
+      <>
+        <path
+          d="M10 42l8-16h28l8 16z"
+          fill={tok("--card-steel")}
+          stroke={tok("--card-arcanite")}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <path
+          d="M10 42h44v6H10z"
+          fill={fill}
+          stroke={tok("--card-arcanite")}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <path d="M24 32h10" stroke={line} strokeWidth={2} strokeLinecap="round" />
+      </>
+    ),
+    cloth: (
+      <>
+        <path
+          d="M12 18c8-4 32-4 40 0v28c-8 4-32 4-40 0z"
+          fill={fill}
+          stroke={line}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <path d="M12 28c8 4 32 4 40 0M12 38c8 4 32 4 40 0" fill="none" stroke={tok("--gold")} strokeWidth={1.6} />
+        <circle cx={44} cy={14} r={5} fill="none" stroke={line} strokeWidth={2} />
+      </>
+    ),
+    leather: (
+      <>
+        <path
+          d="M18 10l6 6h16l6-6 6 10-6 8 2 22-10 6H24l-10-6 2-22-6-8z"
+          fill={fill}
+          stroke={line}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <path d="M26 30l4 4M34 26l4 4M28 42l4 4" stroke={tok("--gold")} strokeWidth={2} strokeLinecap="round" />
+      </>
+    ),
+    fish: (
+      <>
+        <path
+          d="M8 32c8-12 26-14 38-4l10-8v24l-10-8c-12 10-30 8-38-4z"
+          fill={fill}
+          stroke={line}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <circle cx={18} cy={30} r={2} fill={tok("--gold")} />
+        <path d="M26 26c2 4 2 8 0 12" fill="none" stroke={tok("--gold")} strokeWidth={1.6} />
+      </>
+    ),
+    pole: (
+      <>
+        <path d="M10 56L50 8" stroke={line} strokeWidth={3} strokeLinecap="round" />
+        <path d="M50 8c4 10 4 22 0 34" fill="none" stroke={tok("--card-arcanite")} strokeWidth={1.6} />
+        <path
+          d="M50 42c-2 4-6 4-6 0"
+          fill="none"
+          stroke={tok("--card-arcanite")}
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+        <circle cx={16} cy={49} r={4} fill={fill} stroke={tok("--gold")} strokeWidth={2} />
+      </>
+    ),
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64">
+      {paths[icon]}
+    </svg>
+  );
+}
+
+/** A feat card (WEB-56) as the board doomsday-feat-cards lays it out. */
+function FeatCard({ spec, width, height }: { spec: FeatCardSpec; width: number; height: number }) {
+  const box = px("--size-card-icon-box");
+  const frame = spec.special
+    ? `inset 0 0 0 2px ${tok("--gold-bright")}, inset 0 0 0 6px ${tok("--card-frame-special")}`
+    : `inset 0 0 0 2px ${tok("--card-frame")}`;
+  return (
+    <Frame width={width} height={height}>
+      <div style={{ display: "flex", position: "absolute", left: 0, top: 0, width, height, boxShadow: frame }} />
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: box,
+          height,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingBottom: PAD / 2,
+          backgroundImage: `radial-gradient(circle at 50% 46%, ${tok(spec.glow)}, transparent 62%)`,
+        }}
+      >
+        <FeatIconSvg
+          icon={spec.icon}
+          {...(spec.rank !== undefined ? { rank: spec.rank } : {})}
+          size={px("--size-card-icon")}
+        />
+      </div>
+      {spec.firstInGroup ? (
+        <div
+          style={{
+            display: "flex",
+            position: "absolute",
+            right: PAD * 0.65,
+            top: PAD * 0.6,
+            padding: `${PAD / 5}px ${PAD * 0.3}px`,
+            borderRadius: PAD,
+            background: tok("--card-pill-bg"),
+            border: `1.5px solid ${tok("--gold")}`,
+            color: tok("--gold-pale"),
+            fontSize: px("--fs-card-pill"),
+            fontWeight: 600,
+            letterSpacing: px("--fs-card-pill") * 0.1,
+            textTransform: "uppercase",
+          }}
+        >
+          First in the group
+        </div>
+      ) : null}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          position: "absolute",
+          left: box - PAD / 4,
+          top: PAD * 1.75,
+          right: PAD * 0.75,
+          gap: PAD / 7,
+        }}
+      >
+        <Overline>Feat unlocked</Overline>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: SC,
+            fontSize: px(spec.longTitle ? "--fs-card-award" : "--fs-card-feat-title"),
+            lineHeight: 1.05,
+            color: tok(spec.titleColour),
+            textShadow: `0 0 ${PAD * 0.75}px ${tok(spec.glow)}`,
+          }}
+        >
+          {spec.title}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: NAME,
+            fontSize: px("--fs-card-feat-name"),
+            color: tok(spec.nameColour),
+            marginTop: PAD / 7,
+          }}
+        >
+          {spec.name}
+        </div>
+        <div
+          style={{ display: "flex", fontSize: px("--fs-card-feat-line"), color: tok("--text"), marginTop: PAD / 10 }}
+        >
+          {spec.line}
+        </div>
+        {spec.meta !== undefined ? (
+          <div style={{ display: "flex", fontSize: px("--fs-card-feat-meta"), color: tok("--text-muted") }}>
+            {spec.meta}
+          </div>
+        ) : null}
+      </div>
+      <Footer host={spec.host} />
+    </Frame>
+  );
+}
+
 function card(spec: CardSpec): ReactNode {
   const { width, height } = cardSize(spec);
   switch (spec.kind) {
+    case "feat":
+      return <FeatCard spec={spec} width={width} height={height} />;
     case "milestone":
     case "award": {
       const award = spec.kind === "award";

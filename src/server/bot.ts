@@ -6,11 +6,10 @@ import {
   EVENTS_PER_PAGE,
   formatBotToken,
   LONG_POLL_SECONDS,
-  milestones,
+  type Milestone,
   type MilestonesEvent,
 } from "@/core/bot";
-import type { UploadSummary } from "@/core/diff";
-import type { Dataset } from "@/core/model";
+import { cardRank, type FeatFields, hasCard } from "@/core/doomsday/feats";
 import type { Db } from "./db";
 import { botEvents, botTokens } from "./db/schema";
 import { getBotSettings } from "./discord";
@@ -88,22 +87,37 @@ export function enqueueBotEvent(db: Db, type: string, data: unknown, now: number
 }
 
 /**
- * Writes the `milestones` event of an accepted upload, in the upload's transaction; none when it reached nothing or
- * is the site's first upload (`first`: there was no data before it). Returns whether it wrote one.
+ * Writes the `milestones` event of an accepted upload, in the upload's transaction: the feats it brought
+ * (src/server/feats.ts). None when it reached nothing or is the site's first upload (`first`: there was no data before
+ * it). Feats with a card image get their card id, and the event the most special one's (WEB-56). Returns whether it
+ * wrote one.
  */
 export function recordMilestones(
   tx: Tx,
   upload: { id: number; uploadedAt: number },
-  summary: UploadSummary,
-  after: Dataset,
+  reached: Milestone[],
   first: boolean,
 ): boolean {
   // The admin's Milestones switch (WEB-39): off makes no events, so turning it on later posts nothing old.
   if (first || !getBotSettings(tx).milestones) return false;
-  const reached = milestones(summary, after);
   if (reached.length === 0) return false;
   const data: MilestonesEvent = { uploadId: upload.id, uploadedAt: upload.uploadedAt, milestones: reached };
-  tx.insert(botEvents).values({ type: "milestones", data, createdAt: upload.uploadedAt, uploadId: upload.id }).run();
+  const { id } = tx
+    .insert(botEvents)
+    .values({ type: "milestones", data, createdAt: upload.uploadedAt, uploadId: upload.id })
+    .returning({ id: botEvents.id })
+    .get();
+  let best: { card: string; rank: number } | undefined;
+  reached.forEach((m, n) => {
+    if (!hasCard({ kind: m.kind, fields: m as FeatFields, level: m.character.level })) return;
+    m.card = `milestone-${id}-${n}`;
+    const rank = cardRank({ kind: m.kind, fields: m as FeatFields });
+    if (best === undefined || rank > best.rank) best = { card: m.card, rank };
+  });
+  if (best !== undefined) {
+    data.card = best.card;
+    tx.update(botEvents).set({ data }).where(eq(botEvents.id, id)).run();
+  }
   return true;
 }
 

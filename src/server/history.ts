@@ -3,7 +3,7 @@ import type { GoalRecord, PersonGoals } from "@/core/doomsday/record";
 import type { PersonFeed } from "@/core/feed";
 import type { Sighting } from "@/core/model";
 import type { Db } from "./db";
-import { doomsdayGoals, doomsdayStatus, feedDays, sightings } from "./db/schema";
+import { doomsdayGoals, doomsdayStatus, feats, feedDays, sightings } from "./db/schema";
 
 // History for the weekly recap (WEB-41) and Doomsday (WEB-55): the addon's activity feed per realm day per character,
 // every sighting, and each friend's Doomsday goals. Written with every accepted upload (src/server/uploads.ts), in upload order, so a rebuild writes
@@ -102,5 +102,6 @@ export function clearHistory(tx: Tx): void {
   tx.delete(feedDays).run();
   tx.delete(doomsdayGoals).run();
   tx.delete(doomsdayStatus).run();
+  tx.delete(feats).run();
   tx.delete(sightings).run();
 }

@@ -22,6 +22,7 @@ import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
 import { notifyBotEvents, recordMilestones } from "./bot";
+import { recordFeats } from "./feats";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
@@ -179,8 +180,10 @@ export function upload(
     recordGoals(tx, result.goals, id);
     recordSightings(tx, result.data.locations, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
-    // The Discord bot's milestones (WEB-38): not for the site's first upload, where everything is new.
-    events = recordMilestones(tx, { id, uploadedAt: now }, summary, after, before === undefined);
+    // Feats (WEB-56) and the Discord bot's milestones (WEB-38): none posted for the site's first upload, where
+    // everything is new.
+    const reached = recordFeats(tx, { id, uploadedAt: now }, before?.data, after, summary, result.feeds);
+    events = recordMilestones(tx, { id, uploadedAt: now }, reached, before === undefined);
     const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
@@ -391,7 +394,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     clearHistory(tx);
     for (const { id } of ids) {
       const row = tx
-        .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy })
+        .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy, uploadedAt: uploads.uploadedAt })
         .from(uploads)
         .where(eq(uploads.id, id))
         .get();
@@ -437,11 +440,14 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       // The game's answers aren't applied again; the report keeps their count (WEB-43).
       const runAnswers = runAnswersOf(tx as unknown as Db, id);
       const summary: UploadSummary = { ...diff(state?.data, after), ...(runAnswers > 0 ? { runAnswers } : {}) };
+      const previous = state?.data;
       state = { data: after, ...sourcesFor(state, after, id) };
       addMembers(tx, result.data, id);
       recordFeeds(tx, result.feeds, id);
       recordGoals(tx, result.goals, id);
       recordSightings(tx, result.data.locations, id);
+      // The same feats again, never their events (WEB-56).
+      recordFeats(tx, { id, uploadedAt: row.uploadedAt }, previous, after, diff(previous, after), result.feeds);
       tx.update(uploads)
         .set({
           status: "ok",
