@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Doomsday · Roster — cards</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.panel{background:rgba(12,18,30,.75);border:1px solid rgba(212,175,106,.2);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.fh{display:flex;align-items:center;gap:10px;padding:0 2px 6px}
+.fav{width:34px;height:34px;border-radius:50%;background:#2A3446;color:#F0D08E;font:600 14px/34px Inter,sans-serif;text-align:center;flex:none}
+.fname{font:19px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3EBDA}
+.tag{font-size:11px;color:#8E98A8}
+.age{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid rgba(174,182,195,.25);color:#AEB6C3;white-space:nowrap}
+.char{display:grid;grid-template-columns:48px minmax(0,1fr) 168px 112px;gap:14px;align-items:center;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);text-decoration:none;color:#E6E1D6}
+.char:hover{background:rgba(212,175,106,.07);border-color:rgba(212,175,106,.3)}
+.disc{position:relative;width:44px;height:44px;border-radius:50%;font:600 13px/44px Inter,sans-serif;text-align:center;color:#0B0F14}
+.lvl{position:absolute;right:-6px;bottom:-4px;min-width:22px;height:18px;padding:0 3px;box-sizing:border-box;border-radius:9px;background:#0B0F14;border:1px solid #D4AF6A;color:#F0D08E;font:600 10px/16px Inter,sans-serif}
+.nm{font:17px/1.15 'Marcellus',serif}
+.sub{font-size:12px;color:#AEB6C3;margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.lb{height:3px;border-radius:2px;background:#1F2837;margin-top:7px;overflow:hidden}
+.pr{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#AEB6C3}
+.pr b{font-weight:500;color:#E6E1D6}
+.seen{text-align:right;font-size:12px;color:#E6E1D6}
+.seen span{display:block;font-size:11px;color:#8E98A8}
+.fac{font-size:10px;padding:1px 6px;border-radius:4px;letter-spacing:.04em}
+.h{background:rgba(181,48,42,.18);color:#F08A80}
+.al{background:rgba(58,107,214,.2);color:#8DB0FF}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:transparent;color:#C9CFD9;font:13px Inter,sans-serif;cursor:pointer}
+.qa{padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.75);border:1px solid rgba(212,175,106,.18);display:flex;flex-direction:column;gap:6px}
+.qa .q{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.qa .a{font-size:13px;color:#E6E1D6;line-height:1.6}
+.dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #070C15}
+.dn{position:absolute;transform:translateX(-50%);font-size:11px;white-space:nowrap}
+.band{position:absolute;height:20px;border-radius:5px;font-size:10px;line-height:20px;padding:0 6px;box-sizing:border-box;white-space:nowrap;overflow:hidden}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 1240px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+
+  <!-- TOP BAR -->
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px">
+      <a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a>
+      <a href="#" aria-current="page" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Roster</a>
+      <a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a>
+      <a href="DD03SiteToday.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Doomsday</a><a href="SiteRuns.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; display: inline-flex; align-items: center; gap: 6px">Runs <span style="font: 600 11px/1 Inter, sans-serif; padding: 3px 6px; border-radius: 999px; background: #D4AF6A; color: #0B0F14">3</span></a>
+    </nav>
+    <div style="flex: 1"></div>
+    <div style="font-size: 12px; color: #8E98A8">Data uploaded just now</div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">N</span>Nico</div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 22px">
+    <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 260px">
+        <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Roster</h1><div style="font-size: 12px; color: #8E98A8">Chips: Doomsday points this week (PvE · PvP) and the current streak</div>
+        <div style="font-size: 13px; color: #8E98A8; margin-top: 4px">6 friends · 10 characters · Sanne has no addon yet</div>
+      </div>
+      <div role="group" aria-label="View" style="display: flex; border: 1px solid rgba(212,175,106,0.3); border-radius: 9px; overflow: hidden">
+        <button aria-pressed="true" style="padding: 8px 14px; border: 0; background: rgba(212,175,106,0.2); color: #F3EBDA; font: 600 13px Inter, sans-serif; cursor: pointer">Cards</button>
+        <a href="RosterTable.dc.html" style="padding: 8px 14px; color: #AEB6C3; font-size: 13px; text-decoration: none">Table</a>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+      <label style="display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 36px; border-radius: 9px; background: rgba(12,18,30,0.8); border: 1px solid rgba(174,182,195,0.25); min-width: 240px; font-size: 13px; color: #8E98A8"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#8E98A8" stroke-width="1.5" aria-hidden="true"><circle cx="6" cy="6" r="4.5"></circle><path d="M9.5 9.5L13 13"></path></svg><input type="search" placeholder="Search characters" style="flex: 1; border: 0; background: transparent; color: #E6E1D6; font: 13px Inter, sans-serif; outline: none"></label>
+      <button class="chip">Class ▾</button>
+      <button class="chip">Role ▾</button>
+      <button class="chip">Level ▾</button>
+      <button class="chip">Profession ▾</button>
+      <span style="flex: 1"></span>
+      <span style="font-size: 12px; color: #8E98A8">Sort</span>
+      <button class="chip" style="border-color: rgba(212,175,106,0.4); color: #F3EBDA">Last played ▾</button>
+    </div>
+
+    <!-- NEXT RUN -->
+    <a href="SiteRunDetail.dc.html" style="display: flex; align-items: center; gap: 16px; padding: 12px 18px; border-radius: 12px; background: radial-gradient(circle at 0% 50%, rgba(212,175,106,0.14), rgba(12,18,30,0.8) 50%); border: 1px solid rgba(212,175,106,0.35); text-decoration: none; color: #E6E1D6">
+      <span style="font: 11px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .14em; color: #F0A774">Next run</span>
+      <span style="font: 17px 'Marcellus', serif; color: #F3EBDA">Scarlet Monastery: Armory · today 20:30</span>
+      <span style="font-size: 13px; color: #AEB6C3">Nico on Ves Doombringer · 3 in · 1 maybe · tank open</span>
+      <span style="flex: 1"></span>
+      <span style="font-size: 13px; color: #D4AF6A">All runs →</span>
+    </a>
+
+    <!-- LEVEL SPREAD -->
+    <section aria-label="Who is around which level" style="padding: 16px 20px 18px; border-radius: 14px; background: rgba(12,18,30,0.75); border: 1px solid rgba(212,175,106,0.2)">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px">
+        <h2 style="margin: 0; font: 16px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Who is around which level</h2>
+        <span style="font-size: 12px; color: #8E98A8">Hover or tap a dot for names · click a dungeon to plan a run</span>
+      </div>
+      <div style="position: relative; height: 52px; margin: 0 10px">
+        <div style="position: absolute; left: 0; right: 0; top: 28px; height: 2px; background: linear-gradient(90deg, #2A3446, #D4AF6A)"></div>
+        <button aria-label="Sela Moonbrook 12" style="position: absolute; left: calc(18.6% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #FF7C0A; box-shadow: 0 0 0 2px #070C15, 0 0 0 3.5px #D4AF6A; cursor: pointer"></button><button aria-label="Zul Kazrek 15" style="position: absolute; left: calc(23.7% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #8788EE; box-shadow: 0 0 0 2px #070C15; cursor: pointer"></button><button aria-label="Kel Dawnhammer 18" style="position: absolute; left: calc(28.8% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #F48CBA; box-shadow: 0 0 0 2px #070C15; cursor: pointer"></button><button aria-label="Grom Ashfeller 24" style="position: absolute; left: calc(39.0% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #C69B6D; box-shadow: 0 0 0 2px #070C15, 0 0 0 3.5px #D4AF6A; cursor: pointer"></button><button aria-label="Ruk Bloodhoof 27" style="position: absolute; left: calc(44.1% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #AAD372; box-shadow: 0 0 0 2px #070C15; cursor: pointer"></button><button aria-label="Tok Ironhide 33" style="position: absolute; left: calc(54.2% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #0070DD; box-shadow: 0 0 0 2px #070C15; cursor: pointer"></button><button aria-label="Mira Sunstrider 60" style="position: absolute; left: calc(100.0% - 7px); top: 22px; width: 14px; height: 14px; border-radius: 50%; border: 0; padding: 0; background: #3FC7EB; box-shadow: 0 0 0 2px #070C15; cursor: pointer"></button>
+        <button aria-label="3 characters around level 39" aria-expanded="true" style="position: absolute; left: calc(64.4% - 13px); top: 16px; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; background: conic-gradient(#FFFFFF 0 33%, #8788EE 0 66%, #FFF468 0); box-shadow: 0 0 0 2px #070C15, 0 0 0 3.5px #D4AF6A; cursor: pointer"><span style="display: block; margin: 4px; width: 18px; height: 18px; border-radius: 50%; background: #0B1220; color: #F3DFAE; font: 700 11px/18px Inter, sans-serif; text-align: center">3</span></button>
+        <div role="tooltip" style="position: absolute; left: calc(64.4% - 110px); top: -78px; width: 220px; z-index: 6; padding: 10px 12px; border-radius: 10px; background: #0E1626; border: 1px solid rgba(212,175,106,0.5); box-shadow: 0 12px 30px rgba(0,0,0,0.6); font-size: 12px; line-height: 1.6">
+          <div><span style="color: #FFFFFF">Lia Thornwhisper</span> 37 <span style="color: #8E98A8">· Femke</span></div>
+          <div><span style="color: #A9AAF5">Ves Doombringer</span> 39 <span style="color: #8E98A8">· you</span></div>
+          <div><span style="color: #FFF468">Bob Example</span> 41 <span style="color: #8E98A8">· Bob</span></div>
+        </div>
+      </div>
+      <div style="position: relative; height: 12px; margin: 0 10px; font-size: 10px; color: #7E8898">
+        <span style="position: absolute; left: 0">1</span><span style="position: absolute; left: 15.3%">10</span><span style="position: absolute; left: 32.2%">20</span><span style="position: absolute; left: 49.2%">30</span><span style="position: absolute; left: 66.1%">40</span><span style="position: absolute; left: 83%">50</span><span style="position: absolute; right: 0">60</span>
+      </div>
+      <div style="position: relative; height: 100px; margin: 10px 10px 0">
+        <span class="band" style="left: 27.1%; width: 15.3%; top: 0px; background: rgba(170,211,114,0.12); color: #C5DFA2; border: 1px solid rgba(170,211,114,0.3); cursor: pointer">Deadmines 17–26 · 2 fit</span><span class="band" style="left: 52.5%; width: 16.9%; top: 0px; background: rgba(212,175,106,0.22); color: #F3DFAE; border: 1px solid #D4AF6A; cursor: pointer">SM Armory 32–42 · 4 fit · 1 run</span><span class="band" style="left: 94.9%; width: 5.1%; top: 0px; background: rgba(63,199,235,0.12); color: #9FE3F5; border: 1px solid rgba(63,199,235,0.3); cursor: pointer">60</span><span class="band" style="left: 42.4%; width: 16.9%; top: 24px; background: rgba(212,175,106,0.10); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3); cursor: pointer">SM Graveyard 26–36 · 2 fit</span><span class="band" style="left: 72.9%; width: 16.9%; top: 24px; background: rgba(135,136,238,0.12); color: #C3C4F7; border: 1px solid rgba(135,136,238,0.3); cursor: pointer">Zul'Farrak 44–54</span><span class="band" style="left: 47.5%; width: 16.9%; top: 48px; background: rgba(212,175,106,0.10); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3); cursor: pointer">SM Library 29–39 · 3 fit</span><span class="band" style="left: 57.6%; width: 16.9%; top: 72px; background: rgba(212,175,106,0.10); color: #E6D3A6; border: 1px solid rgba(212,175,106,0.3); cursor: pointer">SM Cathedral 35–45 · 3 fit · 1 run</span>
+        <div role="dialog" aria-label="Scarlet Monastery: Armory" style="position: absolute; left: 52.5%; top: 24px; z-index: 5; width: 300px; padding: 14px 16px; border-radius: 12px; background: #0E1626; border: 1px solid rgba(212,175,106,0.55); box-shadow: 0 18px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><b style="font: 16px 'Marcellus', serif; color: #F3EBDA; font-weight: 400">Scarlet Monastery: Armory</b><span style="font-size: 12px; color: #8E98A8">32–42</span></div>
+          <div style="font-size: 12px; color: #AEB6C3; line-height: 1.5">4 characters fit · no tank in range</div>
+          <div style="font-size: 12px; color: #F3DFAE">1 run planned · today 20:30 · 3 in</div>
+          <div style="display: flex; gap: 8px"><a href="SiteRunCreate.dc.html" style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 9px; background: #D4AF6A; color: #0B0F14; font: 600 13px Inter, sans-serif; text-decoration: none">Plan a run</a><a href="SiteDungeon.dc.html" style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(212,175,106,0.4); color: #F0D08E; font-size: 13px; text-decoration: none">Dungeon page</a></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; color: #7E8898">
+        <span>Dots only, names on hover or tap</span><span>Characters within 2 levels merge into a number</span><span>Gold ring = your characters</span><span>Scarlet Monastery wings are separate dungeons, so separate bands</span><span>Bands only count who fits; names live on the dungeon page</span>
+      </div>
+    </section>
+
+    <!-- QUICK ANSWERS -->
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <div class="qa"><span class="q">Healers</span><span class="a"><span style="color: #FFFFFF">Lia</span> 37 Priest · <span style="color: #4DA3FF">Tok</span> 33 Shaman · <span style="color: #FF9A45">Sela</span> 12 Druid</span></div>
+      <div class="qa"><span class="q">Tanks</span><span class="a"><span style="color: #C69B6D">Grom</span> 24 Warrior · <span style="color: #F48CBA">Kel</span> 18 Paladin</span></div>
+      <div class="qa"><span class="q">Level 30 – 40</span><span class="a"><span style="color: #A9AAF5">Ves</span> 39 · <span style="color: #FFFFFF">Lia</span> 37 · <span style="color: #4DA3FF">Tok</span> 33</span></div>
+      <div class="qa"><span class="q">Level 60</span><span class="a"><span style="color: #3FC7EB">Mira</span> Frost Mage · ilvl 58</span></div>
+    </div>
+
+    <!-- FRIENDS -->
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start">
+
+      <section class="panel" aria-label="Nico">
+        <div class="fh"><span class="fav">N</span><div style="flex: 1"><div class="fname">Nico</div><div class="tag">Nico · 3 characters</div></div><span style="display: inline-flex; gap: 8px; align-items: center; font: 600 12px Inter, sans-serif; padding: 5px 10px; border-radius: 999px; background: rgba(12,18,30,.9); border: 1px solid rgba(212,175,106,.3); margin-right: 8px"><span style="color: #9BE3B0">PvE 85</span><span style="color: #F08A80">PvP 240</span><span style="color: #F6C29C"><svg width="11" height="11" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 6</span></span><span class="age" style="border-color: rgba(127,217,154,0.4); color: #9BE3B0">Data just now</span></div>
+        <a href="Character.dc.html" class="char"><span class="disc" style="background: #8788EE; box-shadow: 0 0 14px rgba(135,136,238,0.45)">VD<span class="lvl">39</span></span><div style="min-width: 0"><div class="nm" style="color: #A9AAF5">Ves Doombringer</div><div class="sub">Undead Warlock · Destruction · Damage <span class="fac h">Horde</span></div><div class="lb"><div style="width: 65%; height: 3px; background: #8788EE"></div></div></div><div class="pr"><span><b>Tailoring</b> 187</span><span><b>Enchanting</b> 160</span><span><b>Cooking</b> 75</span></div><div class="seen">2 h ago<span>Stranglethorn Vale</span><span>ilvl 34</span></div></a>
+        <a href="#" class="char"><span class="disc" style="background: #C69B6D">GA<span class="lvl">24</span></span><div style="min-width: 0"><div class="nm" style="color: #C69B6D">Grom Ashfeller</div><div class="sub">Orc Warrior · Protection · Tank <span class="fac h">Horde</span></div><div class="lb"><div style="width: 40%; height: 3px; background: #C69B6D"></div></div></div><div class="pr"><span><b>Mining</b> 142</span><span><b>Blacksmithing</b> 120</span></div><div class="seen">3 days ago<span>The Barrens</span><span>ilvl 21</span></div></a>
+        <a href="#" class="char"><span class="disc" style="background: #FF7C0A">SM<span class="lvl">12</span></span><div style="min-width: 0"><div class="nm" style="color: #FF9A45">Sela Moonbrook</div><div class="sub">Night Elf Druid · Restoration · Healer <span class="fac al">Alliance</span></div><div class="lb"><div style="width: 20%; height: 3px; background: #FF7C0A"></div></div></div><div class="pr"><span><b>Herbalism</b> 61</span></div><div class="seen">2 weeks ago<span>Location unknown</span><span>ilvl —</span></div></a>
+      </section>
+
+      <section class="panel" aria-label="Bob">
+        <div class="fh"><span class="fav">B</span><div style="flex: 1"><div class="fname">Bob</div><div class="tag">2 characters</div></div><span style="display: inline-flex; gap: 8px; align-items: center; font: 600 12px Inter, sans-serif; padding: 5px 10px; border-radius: 999px; background: rgba(12,18,30,.9); border: 1px solid rgba(212,175,106,.3); margin-right: 8px"><span style="color: #9BE3B0">PvE 60</span><span style="color: #F08A80">PvP 310</span><span style="color: #F6C29C"><svg width="11" height="11" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 3</span></span><span class="age">Data 5 h ago</span></div>
+        <a href="#" class="char"><span class="disc" style="background: #FFF468">BE<span class="lvl">41</span></span><div style="min-width: 0"><div class="nm" style="color: #FFF468">Bob Example</div><div class="sub">Troll Rogue · Combat · Damage <span class="fac h">Horde</span></div><div class="lb"><div style="width: 68%; height: 3px; background: #FFF468"></div></div></div><div class="pr"><span><b>Skinning</b> 210</span><span><b>Leatherworking</b> 201</span></div><div class="seen">5 h ago<span>The Deadmines</span><span>ilvl 36</span></div></a>
+        <a href="#" class="char"><span class="disc" style="background: #0070DD; color: #FFFFFF">TI<span class="lvl">33</span></span><div style="min-width: 0"><div class="nm" style="color: #4DA3FF">Tok Ironhide</div><div class="sub">Tauren Shaman · Restoration · Healer <span class="fac h">Horde</span></div><div class="lb"><div style="width: 55%; height: 3px; background: #0070DD"></div></div></div><div class="pr"><span><b>Alchemy</b> 160</span><span><b>Herbalism</b> 175</span><span><b>First Aid</b> 225</span></div><div class="seen">Yesterday<span>Hillsbrad Foothills</span><span>ilvl 29</span></div></a>
+      </section>
+
+      <section class="panel" aria-label="Femke">
+        <div class="fh"><span class="fav">F</span><div style="flex: 1"><div class="fname">Femke</div><div class="tag">2 characters</div></div><span style="display: inline-flex; gap: 8px; align-items: center; font: 600 12px Inter, sans-serif; padding: 5px 10px; border-radius: 999px; background: rgba(12,18,30,.9); border: 1px solid rgba(212,175,106,.3); margin-right: 8px"><span style="color: #9BE3B0">PvE 95</span><span style="color: #F08A80">PvP 0</span><span class="tagv" style="color: #AFC6FF">PvP Virgin</span><span style="color: #F6C29C"><svg width="11" height="11" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 8</span></span><span class="age" style="border-color: rgba(127,217,154,0.4); color: #9BE3B0">Data 1 h ago</span></div>
+        <a href="#" class="char"><span class="disc" style="background: #FFFFFF; box-shadow: 0 0 14px rgba(255,255,255,0.35)">LT<span class="lvl">37</span></span><div style="min-width: 0"><div class="nm" style="color: #FFFFFF">Lia Thornwhisper</div><div class="sub">Troll Priest · Discipline · Healer <span class="fac h">Horde</span></div><div class="lb"><div style="width: 62%; height: 3px; background: #FFFFFF"></div></div></div><div class="pr"><span><b>Tailoring</b> 205</span><span><b>Cooking</b> 150</span></div><div class="seen">1 h ago<span>Stranglethorn Vale</span><span>ilvl 32</span></div></a>
+        <a href="#" class="char"><span class="disc" style="background: #8788EE">ZK<span class="lvl">15</span></span><div style="min-width: 0"><div class="nm" style="color: #A9AAF5">Zul Kazrek</div><div class="sub">Orc Warlock · Affliction · Damage <span class="fac h">Horde</span></div><div class="lb"><div style="width: 25%; height: 3px; background: #8788EE"></div></div></div><div class="pr"><span style="color: #7E8898">No professions</span></div><div class="seen">4 days ago<span>Durotar</span><span>ilvl 12</span></div></a>
+      </section>
+
+      <section class="panel" aria-label="Mira">
+        <div class="fh"><span class="fav">M</span><div style="flex: 1"><div class="fname">Mira</div><div class="tag">2 characters</div></div><span style="display: inline-flex; gap: 8px; align-items: center; font: 600 12px Inter, sans-serif; padding: 5px 10px; border-radius: 999px; background: rgba(12,18,30,.9); border: 1px solid rgba(212,175,106,.3); margin-right: 8px"><span style="color: #9BE3B0">PvE 120</span><span style="color: #F08A80">PvP 96</span><span style="color: #F6C29C"><svg width="11" height="11" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 12</span></span><span class="age">Data 2 days ago · via Bob</span></div>
+        <a href="#" class="char"><span class="disc" style="background: #3FC7EB">MS<span class="lvl">60</span></span><div style="min-width: 0"><div class="nm" style="color: #3FC7EB">Mira Sunstrider</div><div class="sub">Undead Mage · Frost · Damage <span class="fac h">Horde</span></div><div class="lb"><div style="width: 100%; height: 3px; background: linear-gradient(90deg, #3FC7EB, #F0D08E)"></div></div></div><div class="pr"><span><b>Tailoring</b> 300</span><span><b>Enchanting</b> 285</span><span><b>Fishing</b> 240</span></div><div class="seen">2 days ago<span>Orgrimmar</span><span>ilvl 58</span></div></a>
+        <a href="#" class="char"><span class="disc" style="background: #F48CBA">KD<span class="lvl">18</span></span><div style="min-width: 0"><div class="nm" style="color: #F48CBA">Kel Dawnhammer</div><div class="sub">Human Paladin · Protection · Tank <span class="fac al">Alliance</span></div><div class="lb"><div style="width: 30%; height: 3px; background: #F48CBA"></div></div></div><div class="pr"><span><b>Mining</b> 88</span><span><b>Engineering</b> 70</span></div><div class="seen">A week ago<span>Westfall</span><span>ilvl 16</span></div></a>
+      </section>
+
+      <section class="panel" aria-label="Jorrit">
+        <div class="fh"><span class="fav">J</span><div style="flex: 1"><div class="fname">Jorrit</div><div class="tag">1 character</div></div><span style="display: inline-flex; gap: 8px; align-items: center; font: 600 12px Inter, sans-serif; padding: 5px 10px; border-radius: 999px; background: rgba(12,18,30,.9); border: 1px solid rgba(212,175,106,.3); margin-right: 8px"><span style="color: #9BE3B0">PvE 15</span><span style="color: #F08A80">PvP 4</span><span style="color: #F6C29C"><svg width="11" height="11" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 0</span></span><span class="age" style="border-color: rgba(224,138,74,0.5); color: #F0A774">Data 9 days old · via Mira</span></div>
+        <a href="#" class="char" style="opacity: .8"><span class="disc" style="background: #AAD372">RB<span class="lvl">27</span></span><div style="min-width: 0"><div class="nm" style="color: #AAD372">Ruk Bloodhoof</div><div class="sub">Tauren Hunter · Beast Mastery · Damage <span class="fac h">Horde</span></div><div class="lb"><div style="width: 45%; height: 3px; background: #AAD372"></div></div></div><div class="pr"><span><b>Skinning</b> 150</span><span><b>Mining</b> 131</span></div><div class="seen">9 days ago<span>Stonetalon Mts</span><span>ilvl 24</span></div></a>
+        <div style="font-size: 12px; color: #C08A5A; padding: 2px 4px">Jorrit's data reached us through Mira's addon. It updates when someone who runs the addon sees Jorrit online.</div>
+      </section>
+
+      <section class="panel" aria-label="Sanne">
+        <div class="fh"><span class="fav" style="background: #1C2433; color: #8E98A8">S</span><div style="flex: 1"><div class="fname" style="color: #AEB6C3">Sanne</div><div class="tag">in the group</div></div><span class="age">No addon</span></div>
+        <div style="padding: 18px; border-radius: 10px; border: 1px dashed rgba(174,182,195,0.25); text-align: center; font-size: 13px; color: #8E98A8; line-height: 1.6">We don't know Sanne's characters yet.<br>Once she installs <span style="color: #E6E1D6">CommunitiesForever</span>, they show up after the next upload.</div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Doomsday site today</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.card{padding:16px 18px;border-radius:14px;background:rgba(12,18,30,.85);border:1px solid rgba(212,175,106,.22)}
+.h2{margin:0;font:20px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.m{font-size:12px;color:#8E98A8}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid rgba(212,175,106,.18)}
+.tabs2 a{padding:10px 16px;font:15px 'Marcellus SC',serif;letter-spacing:.05em;color:#8E98A8;text-decoration:none}
+.tabs2 a.on{color:#F3DFAE;box-shadow:inset 0 -2px 0 #D4AF6A}
+.gl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:14px 16px;border-radius:12px;background:#0E1626;border:1px solid rgba(174,182,195,.14)}
+.gl.done{border-color:rgba(127,217,154,.35)}
+.gl .k{grid-column:1/-1;font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.gl .t{font:16px Marcellus,serif;color:#F3EBDA}
+.gl.done .t{text-decoration:line-through;text-decoration-color:rgba(155,227,176,.7);color:#AEB6C3}
+.bar{height:6px;border-radius:3px;background:#1F2837;overflow:hidden}
+.bar i{display:block;height:100%;background:#9BE3B0}
+.bar.pvp i{background:#F08A80}
+.pve{color:#9BE3B0}.pvp{color:#F08A80}
+.chk{color:#9BE3B0;font-weight:700}
+table.bd{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+table.bd th{font:600 11px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7E8898;text-align:left;padding:8px 8px;border-bottom:1px solid rgba(212,175,106,.3);vertical-align:bottom}
+table.bd td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;color:#C9CFD9}
+.cd{display:flex;flex-direction:column;gap:2px}
+.cd.done b{color:#9BE3B0;font-weight:700;font-size:15px}
+.cd small{font-size:11px;color:#7E8898}
+.lad{display:grid;grid-template-columns:28px 26px minmax(0,1fr) 70px 46px;gap:10px;align-items:center;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px}
+.mv{font:600 12px Inter,sans-serif}
+.up{color:#9BE3B0}.dn{color:#F08A80}.nw{color:#AFC6FF}.eq{color:#6E7888}
+.pill2{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.first{background:rgba(212,175,106,.2);color:#F3DFAE;border:1px solid rgba(212,175,106,.5)}
+.virgin{background:rgba(141,176,255,.12);color:#AFC6FF;border:1px solid rgba(141,176,255,.35)}
+.feat{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:#0E1626;border:1px solid rgba(174,182,195,.14)}
+.fi{width:44px;height:44px;border-radius:12px;background:radial-gradient(circle at 40% 35%,#1E2E48,#0A1322);border:1px solid rgba(212,175,106,.5);display:flex;align-items:center;justify-content:center}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+
+</style>
+</helmet>
+<div style="min-height: 1400px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6"><header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15)">
+    <div style="display: flex; align-items: center; gap: 10px"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span></div>
+    <nav style="display: flex; gap: 4px"><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; color: #AEB6C3">Map</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; color: #AEB6C3">Roster</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; color: #AEB6C3">Professions</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; color: #AEB6C3">Runs</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; font-weight: 600; color: #F3EBDA; background: rgba(212,175,106,0.14); box-shadow: inset 0 -2px 0 #D4AF6A">Doomsday</a></nav><div style="flex: 1"></div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 12px Inter, sans-serif; flex: none">A</span>Ada</div></header><main style="max-width: 1280px; margin: 0 auto; padding: 24px 24px 48px; display: flex; flex-direction: column; gap: 18px"><div style="display: flex; align-items: center; gap: 18px"><svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="34" r="14" fill="#F0D08E"></circle><path d="M32 34 L52.8 22.0" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round" opacity=".8"></path><path d="M32 34 L44.0 13.2" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round" opacity=".8"></path><path d="M32 34 L32.0 10.0" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round" opacity=".8"></path><path d="M32 34 L20.0 13.2" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round" opacity=".8"></path><path d="M32 34 L11.2 22.0" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round" opacity=".8"></path><circle cx="32" cy="34" r="14" fill="#F0D08E"></circle><path d="M6 40h52" stroke="#D4AF6A" stroke-width="3" stroke-linecap="round"></path><path d="M14 40c4 14 32 14 36 0z" fill="#121B2A" stroke="#F0D08E" stroke-width="2.4"></path><path d="M27 46h10M32 41v10" stroke="#F0D08E" stroke-width="2.4" stroke-linecap="round"></path></svg><div style="flex: 1"><h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Doomsday</h1><div class="m" style="font-size: 13px">Daily goals at 09:00, feats for bragging, and a ladder per track. Suggestions, never rules.</div></div>
+    <div style="display: flex; gap: 10px">
+      <div class="card" style="padding: 10px 14px"><div class="m">Today</div><span style="font: 600 15px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 10</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 9</span></span></div>
+      <div class="card" style="padding: 10px 14px"><div class="m">This week</div><span style="font: 600 15px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 85</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 240</span></span></div>
+      <div class="card" style="padding: 10px 14px"><div class="m">Streak</div><span style="font: 600 15px Inter, sans-serif; color: #F6C29C"><svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 6 days</span> <span class="m">best 11</span></div>
+    </div></div><nav class="tabs2"><a href="#" class="on">Today</a><a href="#" class="">Week</a><a href="#" class="">Board</a><a href="#" class="">Ladder</a><a href="#" class="">Feats</a><a href="#" class="">PvP</a></nav>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start">
+  <section class="card" style="display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: baseline; gap: 12px"><h2 class="h2">Your goals · Tue 28 Oct</h2><span class="m">3 of 5 done</span><span style="flex: 1"></span><span style="font: 600 13px Inter, sans-serif; color: #F6C29C">resets in 11 h 30 m</span></div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+      <div class="gl done"><span class="k" style="color: #9BE3B0">PvE daily</span><span class="t">Finish 10 quests </span><span class="chk">✓</span><span class="m" style="grid-column: 1/-1">done at 10:42</span></div>
+      <div class="gl done"><span class="k" style="color: #9BE3B0">PvE daily</span><span class="t">Run a dungeon with a friend </span><span class="chk">✓</span><span class="m" style="grid-column: 1/-1">done at 21:05</span></div>
+      <div class="gl"><span class="k" style="color: #9BE3B0">PvE daily</span><span class="t">Raise Cooking, First Aid or Fishing </span><span style="font: 600 14px Inter, sans-serif; color: #E6E1D6">3 / 5</span><div class="bar" style="grid-column: 1/-1; margin-top: 4px"><i style="width: 60%"></i></div><span class="m" style="grid-column: 1/-1">+5 PvE</span></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+      <div class="gl done"><span class="k" style="color: #F08A80">PvP · the Hunt</span><span class="t">Hunt: Night Elf Druids </span><span class="chk">✓</span><span class="m" style="grid-column: 1/-1">done at 20:12</span></div>
+      <div class="gl"><span class="k" style="color: #F08A80">PvP · Skirmish</span><span class="t">Lone wolf: 3 solo kills </span><span style="font: 600 14px Inter, sans-serif; color: #E6E1D6">2 / 3</span><div class="bar pvp" style="grid-column: 1/-1; margin-top: 4px"><i style="width: 66%"></i></div><span class="m" style="grid-column: 1/-1">+5 PvP</span></div>
+      <div class="gl" style="border-style: dashed"><span class="k" style="color: #F08A80">PvP · Duel slot</span><span class="t">First duel with each friend</span><span style="font: 600 14px Inter, sans-serif; color: #E6E1D6">1</span><span class="m" style="grid-column: 1/-1">Won vs Bob · Mira and Tok still open today</span></div>
+    </div>
+    <div class="m">Goals are suggestions with points. Skip any of them; nothing is locked.</div>
+  </section>
+  <aside class="card" style="display: flex; flex-direction: column; gap: 10px">
+    <h2 class="h2">Today so far</h2>
+    <div style="display: flex; gap: 10px; align-items: center; font-size: 14px"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="first to finish" style="flex: none; vertical-align: -2px"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#F0D08E" stroke="#B88A3A" stroke-width=".8" stroke-linejoin="round"></path><rect x="2" y="12.5" width="12" height="2" rx="1" fill="#D4AF6A"></rect></svg> <span><b style="color: #F3EBDA; font-weight: 500">Mira</b> finished all dailies first, 19:30</span></div>
+    <div style="display: flex; gap: 10px; align-items: center; font-size: 14px"><span style="width: 22px; height: 22px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 9px Inter, sans-serif; flex: none">T</span> <span>Tok finished all dailies, 22:40</span></div>
+    <div style="display: flex; gap: 10px; align-items: center; font-size: 14px"><span style="width: 22px; height: 22px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 9px Inter, sans-serif; flex: none">B</span> <span>Bob: Hunt + Skirmish done</span></div>
+    <div class="m">Jorrit hasn't started · Sanne has no addon</div>
+  </aside>
+</div>
+<section class="card" style="display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; align-items: baseline; gap: 12px"><h2 class="h2">The board · everyone, today</h2><span class="m">checks appear as uploads and addon sync come in · ✓ struck through with the time</span></div>
+  <table class="bd"><thead><tr><th style="width: 190px">Friend</th><th style="width: 108px"><span class="pve">PvE</span><br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">Finish 10 quests</span></th><th style="width: 108px"><span class="pve">PvE</span><br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">Run a dungeon with a friend</span></th><th style="width: 108px"><span class="pve">PvE</span><br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">Raise Cooking, First Aid or Fishing</span></th><th style="width: 108px"><span class="pvp">PvP</span><br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">Hunt: Night Elf Druids</span></th><th style="width: 108px"><span class="pvp">PvP</span><br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">Lone wolf: 3 solo kills</span></th><th>Duels<br><span style="text-transform: none; letter-spacing: 0; font: 500 12px Inter, sans-serif; color: #C9CFD9">first with each friend</span></th><th>Today</th><th>This week</th><th>Streak</th></tr></thead><tbody><tr style="background: rgba(212,175,106,.05)"><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">A</span> <span style="margin-left: 6px; color: #F3EBDA; font-weight: 500">Ada</span> <span class="m">(you)</span></td><td><div class="cd done"><b>✓</b><small>10:42</small></div></td><td><div class="cd done"><b>✓</b><small>21:05</small></div></td><td><div class="cd"><span style="color: #E6E1D6">3/5</span></div></td><td><div class="cd done"><b>✓</b><small>20:12</small></div></td><td><div class="cd"><span style="color: #E6E1D6">2/3</span></div></td>
+          <td class="m">1 won · vs Bob</td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 10</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 9</span></span></td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 85</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 240</span></span></td><td style="white-space: nowrap; color: #F6C29C"><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 6 <span class="m">best 11</span></td></tr><tr><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">M</span> <span style="margin-left: 6px; color: #F3EBDA; font-weight: 500">Mira</span><span class="pill2 first" style="margin-left: 8px"><svg width="13" height="13" viewBox="0 0 16 16" aria-label="first to finish" style="flex: none; vertical-align: -2px"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#F0D08E" stroke="#B88A3A" stroke-width=".8" stroke-linejoin="round"></path><rect x="2" y="12.5" width="12" height="2" rx="1" fill="#D4AF6A"></rect></svg> first · 19:30</span></td><td><div class="cd done"><b>✓</b><small>09:51</small></div></td><td><div class="cd done"><b>✓</b><small>19:30</small></div></td><td><div class="cd done" title="Swapped. Instead of: Raise Cooking, First Aid or Fishing (all at 300 for Mira)"><b>✓ <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#AFC6FF" stroke-width="1.4" style="vertical-align: -2px"><path d="M2 5h9l-2-2M12 9H3l2 2"></path></svg></b><small>12:02</small></div></td><td><span style="color: #4A5466">—</span></td><td><div class="cd done"><b>✓</b><small>19:55</small></div></td>
+          <td class="m">—</td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 15</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 11</span></span></td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 120</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 96</span></span></td><td style="white-space: nowrap; color: #F6C29C"><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 12 <span class="m">best 12</span></td></tr><tr><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">B</span> <span style="margin-left: 6px; color: #F3EBDA; font-weight: 500">Bob</span></td><td><div class="cd"><span style="color: #E6E1D6">6/10</span></div></td><td><div class="cd done"><b>✓</b><small>21:05</small></div></td><td><span style="color: #4A5466">—</span></td><td><div class="cd done"><b>✓</b><small>18:30</small></div></td><td><div class="cd done"><b>✓</b><small>22:14</small></div></td>
+          <td class="m">1 lost · vs Ada</td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 5</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 18</span></span></td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 60</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 310</span></span></td><td style="white-space: nowrap; color: #F6C29C"><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 3 <span class="m">best 9</span></td></tr><tr><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">T</span> <span style="margin-left: 6px; color: #F3EBDA; font-weight: 500">Tok</span></td><td><div class="cd done"><b>✓</b><small>11:20</small></div></td><td><div class="cd done"><b>✓</b><small>21:05</small></div></td><td><div class="cd done"><b>✓</b><small>22:40</small></div></td><td colspan="2"><span class="pill2 virgin">PvP Virgin</span></td>
+          <td class="m">—</td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 15</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 0</span></span></td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 95</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 0</span></span></td><td style="white-space: nowrap; color: #F6C29C"><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 8 <span class="m">best 8</span></td></tr><tr><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #2A3446; color: #F0D08E; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">J</span> <span style="margin-left: 6px; color: #F3EBDA; font-weight: 500">Jorrit</span></td><td><span style="color: #4A5466">—</span></td><td><span style="color: #4A5466">—</span></td><td><span style="color: #4A5466">—</span></td><td><span style="color: #4A5466">—</span></td><td><span style="color: #4A5466">—</span></td>
+          <td class="m">—</td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 0</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 0</span></span></td><td><span style="font: 600 13px Inter, sans-serif; white-space: nowrap"><span style="color: #9BE3B0">PvE 15</span> <span style="color: #6E7888">·</span> <span style="color: #F08A80">PvP 4</span></span></td><td style="white-space: nowrap; color: #F6C29C"><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> 0 <span class="m">best 2</span></td></tr><tr style="opacity: .55"><td style="white-space: nowrap"><span style="width: 28px; height: 28px; border-radius: 50%; background: #1C2433; color: #8E98A8; display: inline-flex; align-items: center; justify-content: center; font: 600 11px Inter, sans-serif; flex: none">S</span> <span style="margin-left: 6px">Sanne</span></td><td colspan="9" class="m">No addon yet · goals start counting once Sanne installs CommunitiesForever</td></tr></tbody></table>
+  <div style="display: flex; gap: 18px" class="m"><span><svg width="13" height="13" viewBox="0 0 16 16" aria-label="first to finish" style="flex: none; vertical-align: -2px"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#F0D08E" stroke="#B88A3A" stroke-width=".8" stroke-linejoin="round"></path><rect x="2" y="12.5" width="12" height="2" rx="1" fill="#D4AF6A"></rect></svg> first to finish all dailies</span><span><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#AFC6FF" stroke-width="1.4" style="vertical-align: -2px"><path d="M2 5h9l-2-2M12 9H3l2 2"></path></svg> swapped for that friend</span><span>— not done</span><span><svg width="12" height="12" viewBox="0 0 14 14" style="vertical-align: -2px"><path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="#F0A774"></path></svg> streak</span></div>
+</section></main></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Doomsday feat cards</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.chatd{background:#313338;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:16px;font-family:Inter,sans-serif;color:#DBDEE1}
+.ch{font-size:13px;font-weight:600;color:#949BA4;padding-bottom:10px;border-bottom:1px solid #3F4147}
+.msg{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px}
+.nm{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600;color:#F2F3F5}
+.app{font:700 10px/1 Inter,sans-serif;padding:3px 5px;border-radius:3px;background:#5865F2;color:#fff}
+.ts{font-size:12px;font-weight:400;color:#949BA4}
+.emb{margin-top:6px;background:#2B2D31;border-left:4px solid #D4AF6A;border-radius:4px;padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.et{font-size:16px;font-weight:700;color:#F2F3F5}
+.ed{font-size:14px;line-height:1.5;color:#DBDEE1}
+.fn{font-size:13px;font-weight:700;color:#F2F3F5}
+.ef{font-size:12px;color:#949BA4}
+.b{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border-radius:4px;font:500 14px Inter,sans-serif;color:#fff;background:#4E5058}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.fl{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:14px;line-height:1.3}
+.st{text-decoration:line-through;color:#949BA4}
+.eph{font-size:12px;color:#949BA4;display:flex;align-items:center;gap:6px;margin-top:6px}
+.lab2{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#B5BAC1}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.drc{color:#FF9A45}
+
+</style>
+</helmet>
+<div style="width: 1800px; box-sizing: border-box; padding: 44px 48px 56px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 22px">
+  <div><h1 style="margin: 0; font: 38px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">Feat cards · 800 × 400</h1><p style="margin: 6px 0 0; font-size: 14px; color: #8E98A8; max-width: 1300px; line-height: 1.5">Same family as the level-60 card: night background, large type for the 300 px phone view, character as the class-colour name, our own drawn icons and rank badges (no game art). Epic items get the epic purple; rank 14 gets rays and a double frame. Gold is never an amount.</p></div>
+  <div style="display: grid; grid-template-columns: repeat(2, 800px); gap: 28px 40px"><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">Rank 6 · from rank 6 every new rank gets a card</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="190" height="190" viewBox="0 0 26 26" aria-label="rank 6" style="flex: none; vertical-align: middle"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z" fill="#D4AF6A" stroke="#7A5A22" stroke-width=".8"></path><circle cx="13.0" cy="13" r="1.4" fill="#0B0F14"></circle></svg></div>
+      <span style="position: absolute; right: 26px; top: 24px; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px; border-radius: 999px; background: rgba(212,175,106,.2); color: #F3DFAE; border: 1.5px solid #D4AF6A">First in the group</span>
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 58px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">Stone Guard</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #A9AAF5; margin-top: 6px">Ada Nightshade</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">a.k.a. Mailbox Menace</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Undead Warlock · 412 honorable kills</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>PvP rank 6</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">Rank 14 · special card</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px #F0D08E, inset 0 0 0 6px rgba(240,208,142,.25); font-family: Inter, sans-serif"><svg style="position: absolute; left: -110px; top: -100px" width="600" height="600" viewBox="-300 -300 600 600" aria-hidden="true"><path d="M0 0L290 0" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L276 90" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L235 170" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L170 235" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L90 276" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L0 290" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-90 276" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-170 235" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-235 170" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-276 90" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-290 0" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-276 -90" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-235 -170" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-170 -235" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-90 -276" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L-0 -290" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L90 -276" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L170 -235" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L235 -170" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path><path d="M0 0L276 -90" stroke="#F0D08E" stroke-opacity=".14" stroke-width="16"></path></svg>
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="200" height="200" viewBox="0 0 26 26" aria-label="rank 14" style="flex: none; vertical-align: middle"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z" fill="#F3DFAE" stroke="#7A5A22" stroke-width=".8"></path><path transform="translate(10.4 7.6) scale(.85) translate(-13 -10.5)" d="M13 10.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#0B0F14"></path><path transform="translate(15.6 7.6) scale(.85) translate(-13 -10.5)" d="M13 10.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#0B0F14"></path><path transform="translate(10.4 12.8) scale(.85) translate(-13 -10.5)" d="M13 10.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#0B0F14"></path><path transform="translate(15.6 12.8) scale(.85) translate(-13 -10.5)" d="M13 10.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#0B0F14"></path></svg></div>
+      
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 58px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">High Warlord</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #FFF468; margin-top: 6px">Bob Example</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">a.k.a. Grass: Untouched</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Troll Rogue · the summit. Please go outside.</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>PvP rank 14</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">First epic item</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(194,123,255,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="170" height="170" viewBox="0 0 64 64"><path d="M14 10h36l-4 14 6 30H12l6-30z" fill="#2A1438" stroke="#C27BFF" stroke-width="2.4" stroke-linejoin="round"></path><path d="M22 10l10 12 10-12" fill="none" stroke="#C27BFF" stroke-width="2.4"></path><path d="M32 22v32" stroke="#C27BFF" stroke-width="1.6" opacity=".6"></path></svg></div>
+      <span style="position: absolute; right: 26px; top: 24px; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px; border-radius: 999px; background: rgba(212,175,106,.2); color: #F3DFAE; border: 1.5px solid #D4AF6A">First in the group</span>
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 46px/1.05 'Marcellus SC', serif; color: #C27BFF; text-shadow: 0 0 30px rgba(194,123,255,.35)">Robes of the Exalted</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #3FC7EB; margin-top: 6px">Mira Sunstrider</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">First epic of the Doombringers</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Undead Mage · level 60</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>chest · item level 66</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">Epic mount</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="180" height="180" viewBox="0 0 64 64"><path d="M8 48c4-14 12-20 22-20l6-10 6 4-2 7c8 3 12 9 12 19" fill="#121B2A" stroke="#F0D08E" stroke-width="2.4" stroke-linejoin="round"></path><path d="M16 48v8M46 48v8M26 48v8" stroke="#F0D08E" stroke-width="2.4" stroke-linecap="round"></path><path d="M42 21l6-6" stroke="#D4AF6A" stroke-width="2"></path></svg></div>
+      <span style="position: absolute; right: 26px; top: 24px; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px; border-radius: 999px; background: rgba(212,175,106,.2); color: #F3DFAE; border: 1.5px solid #D4AF6A">First in the group</span>
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 58px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">Epic mount</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #3FC7EB; margin-top: 6px">Mira Sunstrider</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">The 3rd mount in the group, the 1st epic</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Gold spent: none of your business</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>riding 150</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">Jack of all trades</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="180" height="180" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#121B2A" stroke="#F0D08E" stroke-width="2.2"></circle><path d="M20 26h12l-2 14h-8z M38 22c4 4 8 10 4 18M30 46c6 2 14 0 16-6" fill="none" stroke="#F0D08E" stroke-width="2.2" stroke-linecap="round"></path><path d="M24 22v-6M28 22v-8" stroke="#D4AF6A" stroke-width="2" stroke-linecap="round"></path></svg></div>
+      
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 46px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">Jack of all trades</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #4DA3FF; margin-top: 6px">Tok Ironhide</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">Cooking, First Aid, Fishing at 300</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">plus Mining and Blacksmithing</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>professions</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">Iconic · Arcanite Reaper</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="190" height="190" viewBox="0 0 64 64"><path d="M14 56L44 10" stroke="#F0D08E" stroke-width="3" stroke-linecap="round"></path><path d="M40 14c10 0 16 6 18 14-8-6-14-6-22-4z" fill="#2E3A55" stroke="#9FD3FF" stroke-width="2" stroke-linejoin="round"></path><circle cx="14" cy="56" r="3" fill="#D4AF6A"></circle></svg></div>
+      
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 46px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">Arcanite Reaper</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #FFF468; margin-top: 6px">Bob Example</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">Crafted at last</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Rogue with an axe. We don’t ask.</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>iconic item</span></div>
+    </div></div><div style="display: flex; flex-direction: column; gap: 8px"><div class="lab" style="font-size: 12px">10,000 honorable kills</div><div style="position: relative; width: 800px; height: 400px; overflow: hidden; border-radius: 6px; background: radial-gradient(900px 420px at 25% 20%, #16294A, rgba(7,12,21,0) 70%), #070C15; box-shadow: inset 0 0 0 2px rgba(212,175,106,.45); font-family: Inter, sans-serif">
+      <div style="position: absolute; left: 0; top: 0; width: 330px; height: 400px; background: radial-gradient(circle at 50% 46%, rgba(240,208,142,.35), rgba(0,0,0,0) 62%)"></div>
+      <div style="position: absolute; left: 70px; top: 80px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center"><svg width="180" height="180" viewBox="0 0 64 64"><path d="M32 6l22 9v16c0 15-10 22-22 27C20 53 10 46 10 31V15z" fill="#121B2A" stroke="#F0D08E" stroke-width="2.2"></path><path d="M22 22l20 20M42 22L22 42" stroke="#F08A80" stroke-width="3.2" stroke-linecap="round"></path></svg></div>
+      
+      <div style="position: absolute; left: 320px; top: 70px; right: 30px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font: 600 20px Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #D4AF6A">Feat unlocked</span>
+        <span style="font: 58px/1.05 'Marcellus SC', serif; color: #F3DFAE; text-shadow: 0 0 30px rgba(240,208,142,.35)">10,000 kills</span>
+        <span style="font: 30px/1.15 Marcellus, serif; color: #A9AAF5; margin-top: 6px">Ada Nightshade</span>
+        <span style="font: 500 24px/1.3 Inter, sans-serif; color: #E6E1D6; margin-top: 4px">Ten thousand. Honorably.</span>
+        <span style="font: 22px Inter, sans-serif; color: #AEB6C3">Hillsbrad will never be the same</span>
+      </div>
+      <div style="position: absolute; left: 30px; right: 30px; bottom: 16px; display: flex; gap: 10px; font: 500 20px Inter, sans-serif; color: #8E98A8"><svg width="22" height="22" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.8"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span>wow.vestras.nl</span><span style="flex: 1"></span><span>honorable kills</span></div>
+    </div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1800,"height":1950}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
