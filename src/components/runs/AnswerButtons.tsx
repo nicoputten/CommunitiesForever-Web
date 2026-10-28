@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useState } from "react";
 import type { Answer } from "@/core/runs";
 import type { AnswerChoice } from "@/core/views/runs";
+import { Dropdown } from "@/components/ui/Dropdown";
 import styles from "./Runs.module.css";
 
-const LABELS: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
-const ORDER: Answer[] = ["in", "maybe", "cant"];
+const LABELS: Record<"in" | "maybe" | "cant", string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
+const ORDER = ["in", "maybe", "cant"] as const;
 
 interface Pending {
   answer: Answer;
@@ -109,21 +110,18 @@ export function AnswerButtons({
   return (
     <div className={styles.answer}>
       {size === "normal" && choice.characters.length > 0 && (
-        <select
-          className={styles.select}
-          aria-label="Answer with"
+        <Dropdown
+          ariaLabel="Answer with"
+          className={styles.answerWith}
           value={guid}
-          onChange={(e) => setGuid(e.target.value)}
+          onChange={setGuid}
           disabled={!choice.open}
-        >
-          {choice.characters.map((c) => (
-            <option key={c.guid} value={c.guid}>
-              {c.name}
-              {c.level === undefined ? "" : ` ${c.level}`}
-              {c.fits ? ` · ${c.role}` : ` · ${c.off ?? "out of range"}`}
-            </option>
-          ))}
-        </select>
+          options={choice.characters.map((c) => ({
+            value: c.guid,
+            label: `${c.name}${c.level === undefined ? "" : ` ${c.level}`}`,
+            meta: c.fits ? c.role : (c.off ?? "out of range"),
+          }))}
+        />
       )}
       <div role="group" aria-label={label} className={styles.answerButtons} data-size={size}>
         {ORDER.map((a) => (

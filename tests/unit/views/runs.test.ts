@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { RunAnswer, RunRecord } from "@/core/runs";
 import { peopleViews, recordCharacters } from "@/core/views/characters";
-import { joinableUnanswered, planPage, runDetail, runsPage, type RunsInput } from "@/core/views/runs";
+import {
+  askCountdown,
+  BAND_RUNS,
+  joinableUnanswered,
+  planPage,
+  rosterRuns,
+  runDetail,
+  runsPage,
+  type RunsInput,
+} from "@/core/views/runs";
 import { NOW, sample } from "./sample";
 
 // WEB-40: the Runs pages' view model on the design prompt's group (sample.ts: Nico plays Ves 39, Grom 24, Sela 12;
@@ -83,7 +92,7 @@ describe("the runs list", () => {
     expect(page.thisWeek.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Armory", "Scarlet Monastery: Library"]);
     expect(page.later.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Cathedral"]);
     expect(page.hidden).toMatch(/^1 run hidden by “Runs I can join”: Zul'Farrak on .+ \(44–54\)\.$/);
-    expect(page.past.map((p) => [p.dungeon, p.result])).toEqual([
+    expect(page.past.map((p) => [p.dungeon, p.result.label])).toEqual([
       ["Wailing Caverns", "Cancelled"],
       ["Shadowfang Keep", "0 in"],
     ]);
@@ -97,16 +106,29 @@ describe("the runs list", () => {
       yours: true,
       pill: { label: "Open", tone: "open" },
       line: "32–42 · You lead as Ves Doombringer · Lia Thornwhisper in · Tok Ironhide maybe",
-      tally: "2 in · 1 maybe",
-      hint: { text: "Tank and damage still open: nobody in range", tone: "warn" },
+      // Finding 11: one summary instead of the warning hint.
+      summary: "2 in · 1 maybe · 3 open · no tank or damage in range",
     });
+    expect(armory!.hint).toBeUndefined();
     expect(armory!.slots.map((s) => s.filled)).toEqual([false, true, true, false, false]);
+    expect(armory!.slots.map((s) => s.letter).join("")).toBe("THDDD");
+    expect(armory!.slotRows).toEqual(["Tank · open", "Healer · Lia Thornwhisper", "Damage · Ves Doombringer · 2 open"]);
     expect(armory!.answer).toBeUndefined();
+    // Your answers (WEB-49): with character and role.
+    expect(runsPage(input(NICO), "join").yourAnswers.find((a) => a.href === "/runs/1")!.status).toBe(
+      "organiser as Ves Doombringer · Damage",
+    );
     expect(library!.organiserTime).toMatch(/^\d{2}:\d{2} for Bob$/);
     expect(library!.line).toBe("29–39 · Bob on Tok Ironhide (healer)");
     // Nico hasn't answered Bob's run and Ves fits: answer buttons on the card.
     expect(library!.answer?.characters[0]).toMatchObject({ name: "Ves Doombringer", fits: true });
     expect(library!.hint).toEqual({ text: "Your Ves Doombringer fits", tone: "good" });
+  });
+
+  it("words the hint with the fit label: over still counts as one you can join (WEB-47)", () => {
+    const rfk = run(9, { dungeonId: "rfk", organiser: BOB, startsAt: NOW + 26 * HOUR }); // 29–38: Ves (39) is +1 over
+    const page = runsPage(input(NICO, { runs: [rfk] }), "join");
+    expect(page.thisWeek.map((r) => r.hint?.text)).toEqual(["Your Ves Doombringer can join · +1 over"]);
   });
 
   it("counts the runs you can join and haven't answered: the top bar's badge", () => {
@@ -121,11 +143,12 @@ describe("a run's page", () => {
     expect(d.plannedBy).toBe("Planned by Nico on the website");
     expect(d.levels).toBe("Levels 32–42 · organiser Ves Doombringer (39 Warlock)");
     expect(d.slots.map((s) => [s.role, s.who?.character ?? s.open])).toEqual([
-      ["tank", "Nobody in range yet"],
+      // One fact per open slot (WEB-49, finding 1): nobody in range, and who is closest below.
+      ["tank", "No tank in range · Kel Dawnhammer is 14 below"],
       ["healer", "Lia Thornwhisper"],
       ["damage", "Ves Doombringer"],
-      ["damage", "Nobody in range yet"],
-      ["damage", "Nobody in range yet"],
+      ["damage", "No damage in range · Ruk Bloodhoof is 5 below"],
+      ["damage", "No damage in range · Ruk Bloodhoof is 5 below"],
     ]);
     expect(d.answers.map((a) => [a.character, a.answer])).toEqual([
       ["Ves Doombringer", "Organiser"],
@@ -139,13 +162,70 @@ describe("a run's page", () => {
   });
 
   it("says why I'm in is off, and offers the wing that fits", () => {
-    const d = runDetail(input(JORRIT), 1)!;
+    // Ruk (27) is 8 below the Cathedral: Maybe only (WEB-47). 5 below the Armory he may still join.
+    expect(runDetail(input(JORRIT), 1)!.outOfRange).toBeUndefined();
+    const d = runDetail(input(JORRIT), 4)!;
     expect(d.outOfRange).toBe(
-      "Ruk Bloodhoof (27) is below the Armory (32–42), so I'm in is off. Maybe or Can't still go.",
+      "Ruk Bloodhoof (27) is below the Cathedral (35–45), so I'm in is off. Maybe or Can't still go.",
     );
     expect(d.planOther).toEqual({
       label: "Plan the Graveyard for Ruk Bloodhoof",
       href: "/runs/new?dungeon=sm-graveyard",
+    });
+  });
+});
+
+describe("a run's page v2 (WEB-49)", () => {
+  it("gives the organiser their bar and a ⋯ menu on every filled slot, their own too", () => {
+    const d = runDetail(input(NICO), 1)!;
+    expect(d.isOrganiser).toBe(true);
+    expect(d.leadBar).toMatchObject({ state: "playing", character: "Ves Doombringer", role: "Damage" });
+    expect(d.summary).toBeUndefined();
+    const own = d.slots.find((s) => s.who?.character === "Ves Doombringer")!;
+    expect(own.who).toMatchObject({ yours: true, initials: "VD", fit: { kind: "fits", label: "fits" } });
+    expect(own.menu!.map((o) => [o.label, o.detail ?? "", Boolean(o.disabled)])).toEqual([
+      ["Tank", "not for warlocks", true],
+      ["Healer", "not for warlocks", true],
+      ["Damage", "current", true],
+      ["Bench yourself", "", false],
+      ["Leave the group", "", false],
+    ]);
+    const lia = d.slots.find((s) => s.who?.character === "Lia Thornwhisper")!;
+    expect(lia.menu!.map((o) => o.label)).toEqual([
+      "Tank",
+      "Healer",
+      "Move to Damage",
+      "Move to reserve",
+      "Remove from run",
+    ]);
+    expect(lia.menu!.at(-1)).toMatchObject({ to: "remove", danger: true });
+    expect(d.maybes).toEqual(["Tok Ironhide 33 · healer"]);
+    expect(d.reserves).toEqual([]);
+    expect(d.mayMove).toBe(true);
+  });
+
+  it("gives a friend the picker and their answer collapsed, and no menus", () => {
+    const d = runDetail(input(BOB), 1)!;
+    expect(d.leadBar).toBeUndefined();
+    expect(d.mayMove).toBe(false);
+    expect(d.slots.every((s) => s.menu === undefined)).toBe(true);
+    expect(d.picker.title).toBe("Join Scarlet Monastery: Armory");
+    expect(d.picker.roles.healer).toEqual({ state: "full → reserve", full: true });
+    expect(d.picker.roles.damage).toEqual({ state: "2 open", full: false });
+    const tok = runDetail(input(BOB), 1)!.answers.find((a) => a.character === "Tok Ironhide")!;
+    expect(tok.where).toMatch(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d\d:\d\d · /);
+    expect(tok.fit).toBe("fits");
+  });
+
+  it("lists every character in the picker with its fit, roles and note", () => {
+    const d = runDetail(input(JORRIT), 4)!;
+    const ruk = d.picker.characters.find((c) => c.name === "Ruk Bloodhoof")!;
+    expect(ruk).toMatchObject({
+      fit: { kind: "tooLow", label: "8 below" },
+      onlyMaybe: true,
+      roles: ["damage"],
+      notFor: "not for hunters",
+      note: "8 levels below: you can only answer Maybe.",
     });
   });
 });
@@ -159,12 +239,147 @@ describe("Plan a run", () => {
       fits: "Fits 3 friends' characters · no tank in range yet",
     });
     expect(p.dungeons.some((d) => d.id === "sm")).toBe(false);
-    expect(p.leads["sm-armory"]!.map((l) => l.label)).toEqual([
-      "Ves Doombringer 39 · damage",
-      "Grom Ashfeller 24 · too low",
-      "Sela Moonbrook 12 · too low",
+    expect(p.leadPicker["sm-armory"]!.map((c) => `${c.name} ${c.fit.label}`)).toEqual([
+      "Ves Doombringer fits",
+      "Grom Ashfeller 8 below",
+      "Sela Moonbrook 20 below",
     ]);
     expect(p.otherZones).toEqual([{ name: "Bob", timeZone: "Europe/London" }]);
-    expect(planPage(input(NICO), "nope").dungeonId).toBe("sm-armory");
+  });
+
+  // WEB-49 (board runs-v2-plan): the dropdown's groups and best fit, and no guessed dungeon (finding 6).
+  it("puts the dungeons that fit the viewer first, each with the viewer's best character", () => {
+    const p = planPage(input(NICO), undefined);
+    const firstOther = p.dungeons.findIndex((d) => !d.fitsYou);
+    expect(firstOther).toBeGreaterThan(0);
+    expect(p.dungeons.slice(firstOther).every((d) => !d.fitsYou)).toBe(true);
+    const mins = (list: typeof p.dungeons) => list.map((d) => d.range.min);
+    expect(mins(p.dungeons.slice(0, firstOther))).toEqual(
+      [...mins(p.dungeons.slice(0, firstOther))].sort((a, b) => a - b),
+    );
+    expect(mins(p.dungeons.slice(firstOther))).toEqual([...mins(p.dungeons.slice(firstOther))].sort((a, b) => a - b));
+    const d = (id: string) => p.dungeons.find((x) => x.id === id)!;
+    expect(d("sm-armory")).toMatchObject({
+      fitsYou: true,
+      best: { text: "Ves 39 fits", tone: "good" },
+      wingOf: "Scarlet Monastery",
+    });
+    expect(d("strat").best).toEqual({ text: "no fit" });
+    expect(d("thanes").forever).toBe(true);
+    expect(d("rfc").forever).toBe(false);
+    // Ves 39 is the best for Zul'Farrak (44–54): 5 below, the most it may be and still join.
+    expect(d("zf").best).toEqual({ text: "Ves 5 below", tone: "warn" });
+    // Many dungeons fit Nico's characters: nothing is guessed; a dungeon page still fills it in.
+    expect(p.dungeonId).toBeUndefined();
+    expect(planPage(input(NICO), "nope").dungeonId).toBeUndefined();
+    expect(planPage(input(NICO), "sm-armory").dungeonId).toBe("sm-armory");
+  });
+});
+
+describe("runs on the roster (WEB-45)", () => {
+  it("the next upcoming run, as the board's card says it, and each dungeon's runs for its band", () => {
+    const r = rosterRuns(input(BOB));
+    // Run 1 starts first (in 3 hours); the past and the cancelled run are left out.
+    expect(r.next).toMatchObject({ href: "/runs/1", dungeon: "Scarlet Monastery: Armory" });
+    expect(r.next!.line).toBe("Nico on Ves Doombringer · 2 in · 1 maybe · tank open · 2 damage open");
+    expect(r.byDungeon["sm-armory"]!.runs).toEqual([{ href: "/runs/1", label: `${r.next!.when} · 2 in` }]);
+    expect(Object.keys(r.byDungeon).sort()).toEqual(["sm-armory", "sm-cathedral", "sm-library", "zf"]);
+    // The organiser reads "You lead as".
+    expect(rosterRuns(input(NICO)).next!.line).toMatch(/^You lead as Ves Doombringer · /);
+  });
+
+  it("no card without an upcoming run; at most three runs per band, then a count", () => {
+    expect(rosterRuns(input(BOB, { runs: [] })).next).toBeUndefined();
+    const many = [1, 2, 3, 4, 5].map((i) => run(10 + i, { startsAt: NOW + i * HOUR }));
+    const band = rosterRuns(input(BOB, { runs: many })).byDungeon["sm-armory"]!;
+    expect(band.runs).toHaveLength(BAND_RUNS);
+    expect(band.more).toBe(2);
+  });
+});
+
+// WEB-51 (boards asks-now, asks-now-states): Asking now on the Runs page.
+describe("asking now", () => {
+  const MIRA = tag("Mira");
+  const MIN = 60;
+  const ASKS: RunRecord[] = [
+    run(10, {
+      dungeonId: "dm",
+      startsAt: NOW - 3 * MIN,
+      expiresAt: NOW + 7 * MIN,
+      kind: "ask",
+      source: "game",
+      note: "Quick run for the Defias quests",
+      answers: [
+        answer(NICO, "in", "Player-1-GROM", "tank", NOW - 3 * MIN),
+        answer(MIRA, "in", "Player-1-KEL", "healer", NOW - 2 * MIN),
+        answer(JORRIT, "maybe", "Player-1-RUK", "damage", NOW - MIN),
+        answer(BOB, "cant", undefined, "damage", NOW - MIN),
+      ],
+    }),
+    run(11, {
+      dungeonId: "zf",
+      organiser: MIRA,
+      startsAt: NOW - MIN,
+      expiresAt: NOW + 9 * MIN,
+      kind: "ask",
+      source: "discord",
+      answers: [answer(MIRA, "in", "Player-1-MIRA", "damage", NOW - MIN)],
+    }),
+    run(12, { dungeonId: "rfc", startsAt: NOW - 11 * MIN, expiresAt: NOW - MIN, kind: "ask", source: "game" }),
+  ];
+  const asks = (viewer: string) => runsPage(input(viewer, { asks: ASKS }), "join").asks;
+
+  it("shows the open asks newest first, with the asker, the answers and their time", () => {
+    const [zf, dm] = asks(FEMKE);
+    expect(asks(FEMKE).map((a) => a.id)).toEqual([11, 10]);
+    expect(dm).toMatchObject({
+      dungeon: "The Deadmines",
+      range: "17–26",
+      expiresAt: NOW + 7 * MIN,
+      asker: "Nico",
+      askerCharacter: { name: "Grom Ashfeller", role: "tank" },
+      from: "from the game",
+      note: "Quick run for the Defias quests",
+      maybe: 1,
+      cant: 1,
+      yours: false,
+    });
+    expect(dm!.ins.map((p) => `${p.name} ${p.level} ${p.className}`)).toEqual([
+      "Grom Ashfeller 24 Warrior",
+      "Kel Dawnhammer 18 Paladin",
+    ]);
+    expect(zf!.from).toBe("from Discord");
+    expect(runsPage(input(FEMKE), "join").asks).toEqual([]);
+  });
+
+  it("answers with the best character by the level-fit rule; none fit only when all are too low", () => {
+    const [zf, dm] = asks(FEMKE);
+    // Femke's Zul Kazrek 15 is 2 below the Deadmines and beats Lia 37, a carry (never the default when another goes).
+    expect(dm!.pick).toEqual({ guid: "Player-1-ZUL", role: "damage" });
+    expect(dm!.noneFit).toBeUndefined();
+    // Lia is 7 below Zul'Farrak and Zul far more: only Maybe or Can't.
+    expect(zf!.noneFit).toBe("None of your characters fit Zul'Farrak (44–54).");
+    // Nico's Ves 39 is 5 below: I'm in still goes, with Ves.
+    const nico = asks(NICO);
+    expect(nico[0]!.noneFit).toBeUndefined();
+    expect(nico[0]!.pick?.guid).toBe("Player-1-VES");
+  });
+
+  it("marks your own ask and your answer", () => {
+    const dm = asks(NICO)[1]!;
+    expect(dm).toMatchObject({ yours: true, asker: "You" });
+    expect(dm.answered).toBeUndefined();
+    const kel = asks(MIRA)[1]!;
+    expect(kel.answered).toMatchObject({ answer: "I'm in", character: "Kel Dawnhammer" });
+    expect(kel.picker.current).toEqual({ guid: "Player-1-KEL", role: "healer", answer: "in" });
+  });
+
+  it("counts down in whole minutes, then seconds in the last minute", () => {
+    expect(askCountdown(7 * MIN)).toBe("7 min");
+    expect(askCountdown(6 * MIN + 1)).toBe("7 min");
+    expect(askCountdown(61)).toBe("2 min");
+    expect(askCountdown(60)).toBe("60 s");
+    expect(askCountdown(39.2)).toBe("40 s");
+    expect(askCountdown(-3)).toBe("0 s");
   });
 });

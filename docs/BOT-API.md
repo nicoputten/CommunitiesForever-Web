@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40). `runEnded`, `askNow` and `ping` are **planned** (WEB-43, WEB-44): their shapes are a draft and the site does not send them yet.
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51).
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -117,6 +117,36 @@ Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event fee
 - A channel or role the admin picked that is no longer reported stays picked: the page shows it as removed, and `settings` keeps its id until the admin picks another.
 - Optional within v1: a site without it answers `404`; the bot carries on without reporting.
 
+## Card images (built, WEB-41d)
+`GET /api/bot/v1/cards/<id>.png` → `200 image/png` (`Cache-Control: private, max-age=86400`), for the bot to attach to a post. `404 not_found` for an id the site can't draw. Rendered by the site in its own style (Nico's references in `design/cards/`); a card that shows the map carries its credit ("Map: Syrio, CC BY-SA 4.0").
+
+| id | Size | When it exists |
+|---|---|---|
+| `recap-<week>-header` | 1200 × 400 | every stored recap: the award winner, else the busiest zone, else the headline |
+| `recap-<week>-zone` | 800 × 400 | a recap with the Zone of the week card (`S1`) |
+| `milestone-<event>-<n>` | 800 × 400 | the `n`-th milestone (from 0) of a `milestones` event when it is a `maxLevel`, a `newCharacter` at level 60, or a `professionCap` at 300 |
+| `whereis-<guid>` | 800 × 400 | a character the site has seen in a zone the map draws (for `/whereis`): the newest sighting and up to two earlier ones |
+
+Optional within v1: an older site answers 404 and the bot posts text only.
+
+## Look-ups (built, WEB-39b)
+`GET /api/bot/v1/lookup/<what>?discordUserId=<id>&…` → `200` the data of the bot's look-up commands (board `bot-commands-runs`); the bot formats it. Answered for anyone in the bot's server: only friends are in it (Nico, 2026-10-28, as for `/recap`). Only `me` needs the asker linked (WEB-39) to someone on the list who may sign in: `400 invalid_request` without `discordUserId`, `403 not_linked` otherwise (the bot then shows "Link your Discord first"). `404 no_data` before the first upload, `404 not_found` for an unknown friend, character or look-up.
+
+With a linked `discordUserId`, every answer has `asker`: the asker's display name (for the bot's "Shared by …"); without one it is left out. A character is `{ guid, name, owner?, classFile?, className?, race?, level?, role? ("tank" | "heal" | "dps"), spec?, ilvl?, talents? (points per tree), professions: [{ name, rank, max? }], seen?: { zone, at } }`: full names, the owner's display name, never a BattleTag. `seen.zone` is the map's zone name (a dungeon's name inside one).
+
+| `<what>` | Parameters | Answer |
+|---|---|---|
+| `names` | `q`, `kind` (`friend`, `character`, both when left out) | `{ names: [{ kind, name, value }] }`, at most 25: friends by display name (`value` = the name), characters by full name (`value` = GUID), for autocomplete |
+| `professions` | | `{ professions: [name] }`: every profession anyone has |
+| `whereis` | `friend` (display name) or `character` (GUID or full name) | `{ friend?, characters, card? }`: newest sighting first; `card` is the GUID for `cards/whereis-<guid>.png` |
+| `who` | `level` (`30-40` or `35`), `role` (`tank`, `healer`, `damage`), `class` (classFile), `recent=true` (seen in the last 24 hours) | `{ total, characters }`: highest level first, at most 15 |
+| `whocancraft` | `profession` | `{ profession, crafters: [character + { rank, max?, best }] }`: best first, `best` for the highest rank |
+| `character` | `name` (GUID or full name) | `{ character }` |
+| `alts` | `friend` (display name) | `{ friend, characters }`: highest level first |
+| `me` | | `{ friend, characters, week? }`: the asker's characters; `week: { levels, quests, runs }` from the activity feed of the last 7 days, only when they share their activity |
+
+Optional within v1: an older site answers 404 and the bot says the look-up isn't available.
+
 ## Event types
 
 ### `milestones` (built, WEB-38)
@@ -140,6 +170,27 @@ Decided with Nico (2026-10-27): the site's first accepted upload makes no milest
 ### `test` (built, WEB-39)
 The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
+### `recap` (built, WEB-41c)
+The weekly recap, once per week at the recap moment (the Discord page's day and time in the admin's time zone; default Sunday 13:00), when the page's Weekly recap is on. `data` is the recap as it is to be posted:
+
+| Field | |
+|---|---|
+| `week` | 1 for the first recap after launch |
+| `start`, `end` | the week, Unix seconds, `[start, end)` |
+| `quiet` | under 3 levels in total: the short recap (no award, one card) |
+| `headline` | `{ id, text }` |
+| `numbers` | `{ levels, friendsPlayed, runs, newCharacters }` |
+| `award` | optional: `{ id, slot: "award", name ("<site> of the week · The Grinder"), title, text, facts, friends }` |
+| `cards` | up to 4 cards in slot order (`stat`, `progress`, `social`, `fun`), each `{ id, slot, name, title, text, facts, friends }` |
+| `challenge` | `{ id, text }` |
+| `closing` | a closing line |
+
+- Texts are finished: the bot posts them as they are. `||…||` is a Discord spoiler (the answer of "Who am I?").
+- `facts` are the values the texts were made from (for images and later layouts); `friends` are person keys, never shown.
+- Card ids are the board's catalogue (A1 … F13). Names only: never a BattleTag.
+
+`GET /api/bot/v1/recap/latest` → `200` the last recap in the same shape (for `/recap`), `404 no_recap` before the first one.
+
 ### Run events (built, WEB-40)
 Written when the admin's Runs switch is on (WEB-39); the reminders have their own switch. Each `data` has `run`, the run as it is at that moment; a test post from the Discord page has `"test": true` and `run.id` 0 (nothing was planned).
 
@@ -157,7 +208,7 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
     "counts": { "in": 3, "maybe": 1, "cant": 0 },
     "answers": [
       { "name": "Femke", "character": "Lia Thornwhisper", "discordId": "100000000000000003", "answer": "in", "role": "healer", "source": "discord" },
-      { "name": "Bob", "character": "Tok Ironhide", "answer": "maybe", "role": "healer", "source": "website", "waitlisted": true }
+      { "name": "Bob", "character": "Tok Ironhide", "guid": "Player-1-0000B002", "fit": { "kind": "fits", "label": "fits" }, "answer": "maybe", "role": "healer", "source": "website", "reserve": true, "waitlisted": true }
     ]
   }
 }
@@ -175,10 +226,13 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 | `runCancelled` | `by` (a name), `mention` | Deleted by its organiser or the admin. The bot marks the post cancelled |
 | `runReminder` | `mention`, `minutes` | `minutes` before start (the admin's reminder time) |
 | `runStarting` | `mention` | At start time |
-| `runMovedUp` | `who` (`name`, `discordId`) | A Maybe moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
-| `runEnded` | `outcome`: `done` or `didntHappen` | Planned: marked from an upload (WEB-43) |
-| `askNow` | `ask` (dungeon, level range, roles, from whom) | Planned: an "Ask now" from the game with "Also post on Discord" (WEB-44, addon CF-27) |
-| `ping` | `from`, `text` | Planned: a Discord ping made in the game (WEB-44) |
+| `runMovedUp` | `who` (`name`, `discordId`) | A reserve (or a Maybe) moved up into a freed slot: a quiet notice to them (a direct message), not a channel post |
+| `runMoved` | `who` (`name`, `discordId`), `to` (`tank`, `healer`, `damage`, `reserve` or `removed`), `by` (a name) | WEB-47: the organiser or the admin moved their sign-up: a quiet notice to them, not a channel post |
+| `runEnded` | `outcome`: `done` (with `came` and `signedUp`) or `didntHappen` | An upload's run log showed it ("Ran it · 3 of 5 signed-up came"), or none did within 4 hours of the start. Only with the admin's "Mark runs done from uploads"; not posted for a run that ended more than a day ago |
+| `askNow` | `ask` (see "Asks"; no `run`) | A new ask: an "Ask now" from the game with "Also post on Discord" (addon CF-47), only within 10 minutes of being made and with the admin's "Ask now from the game" on; or `/ask` (WEB-51) with the Runs switch on |
+| `askChanged` | `ask` | WEB-51: someone answered the ask (on Discord, the site or in game) |
+| `askExpired` | `ask` | WEB-51: its 10 minutes are over (written when the bot polls, once): end the post, remove its buttons |
+| `ping` | `from` (`name`, `discordId`), `to` (`name`, `character`, `discordId`) | Someone pinged a friend on Discord from the game's start panel (addon CF-48); `run` is the run it's about |
 
 `mention`: Discord user ids of linked friends who answered I'm in or Maybe (decided with Nico: reminders mention only them).
 
@@ -190,12 +244,55 @@ For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit,
 | Request | Body / query | Answer |
 |---|---|---|
 | `GET /api/bot/v1/dungeons` | | `{ dungeons: [{ id, name, shortName, typicalLevels }] }`: Scarlet Monastery as its four wings |
+| `GET /api/bot/v1/plan?discordUserId=` | | BOT-04, `/plan`: `{ timeZone, admin, days: [{ offset, label, date }], dungeons: [{ id, name, typicalLevels, lead }] }`. `admin`: whether they are the admin (`/run edit` and `/run cancel` list every run for them). `days`: today and the next six in the user's own calendar (`label` "Today · Thu 19", "Fri 20"; send `offset` as `dayOffset`). `lead`: the character they would lead as (`guid`, `name`, `level`, `classFile`, `role`, `fit`; the best fit first, then the highest level), `null` when none of theirs may say I'm in |
 | `GET /api/bot/v1/runs` | | `{ runs: [run] }`: upcoming (not cancelled, not past), by start |
 | `GET /api/bot/v1/runs/<id>` | | `{ run }` |
-| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt` or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
-| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt` or `date` and `time`, `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
+| `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt`, or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, or `dayOffset` (`0` today … `6`, the user's own calendar; BOT-04) and `time`, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
+| `PATCH /api/bot/v1/runs/<id>` | `discordUserId`, `startsAt`, or `date` and `time`, or `dayOffset` and `time`, and `note` (each optional) | `{ run }`. Organiser only; dungeon can't change (delete and plan again) |
 | `POST /api/bot/v1/runs/<id>/cancel` | `discordUserId` | `{ run }`. The organiser, or the admin any run |
-| `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `guid` (required for `in`) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
-| `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role }] }`: the user's characters in the run's range (Pick my character) |
+| `POST /api/bot/v1/runs/<id>/answers` | `discordUserId`, `answer` (`in`, `maybe`, `cant`), `characterId` (or `guid`; required for `in`), `role` (optional, WEB-47: `tank`, `healer` or `damage`, one the class can play; default the character's role) | `{ stored: { answer, role, waitlisted }, run }`. I'm in on a full role is stored as Maybe, first in line: tell the user |
+| `GET /api/bot/v1/runs/<id>/characters?discordUserId=` | | `{ characters: [{ guid, name, level, classFile, role, roles, fit }] }`: the user's characters that may say I'm in (Pick my character); `roles` the roles their class can play, `fit` how their level fits (WEB-47) |
+| `POST /api/bot/v1/runs/<id>/move` | `discordUserId`, `characterId`, `to` (`tank`, `healer`, `damage`, `reserve` or `remove`) | `{ run }`. WEB-47: the organiser, or the admin any run, moves a sign-up to another role's open slot, to reserve, or off the run (the friend may answer again). The moved friend gets `runMoved` |
 
-Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`.
+For the bot's run post (BOT-04; optional fields within v1):
+- `organiser` and each answer with a character carry the character's `level` and `classFile` ("37 · Femke", "Ves Doombringer (39 Warlock)").
+- `outcome`: once known, `{ "kind": "done", "at", "came", "signedUp" }` ("Ran it · 3 of 5 signed-up came") or `{ "kind": "didntHappen", "at" }`.
+- `couldFill`: one entry per role with an open slot, `{ role, open, characters: [...], close?: [...] }`. `characters` lists up to three characters of friends who haven't answered that fit or are over and play that role (`name`, `character`, `level`, `classFile`, `fit`). Without one, `close` lists the closest below the range ("Close: Grom Ashfeller 24 (Nico), 8 below"). Names only, never BattleTags.
+
+WEB-47 (optional fields within v1): each answer in a run carries `guid`, `fit` (`kind`: `fits`, `over`, `carry`, `low` or `tooLow`; `label`: "fits", "+3 over", "carry · +12", "4 below"), and for a reserve `reserve: true`. A reserve is sent as `"answer": "maybe"` and keeps `waitlisted: true`, for bots from before WEB-47. "Runs I can join" and suggestions use `fits` and `over`; `tooLow` (6 or more below) can only answer Maybe. Errors for `answers` and `move`: `400 role_not_for_class`, `404 unknown_sign_up`, `409 role_full`, `409 same`.
+
+### Asks (built, WEB-51)
+An ask ("who's up right now") is a run that starts when it is made and takes answers for 10 minutes (`expiresAt`), from the game (WEB-43) or Discord's `/ask`. It has no slots: I'm in is in, there is no reserve (decided with Nico, 2026-10-28). It is stored even when the admin's "Ask now from the game" is off; that setting only decides whether an ask from the game reaches Discord (asks from Discord follow the Runs switch). Asks are not in `GET runs`, and the run endpoints answer `404 unknown_run` for them.
+
+```json
+{
+  "ask": {
+    "id": 12,
+    "dungeon": { "id": "dm", "name": "The Deadmines", "typicalLevels": { "min": 17, "max": 26 } },
+    "from": { "name": "Nico", "discordId": "100000000000000001" },
+    "character": "Grom Ashfeller",
+    "role": "tank",
+    "note": "Quick one",
+    "source": "game",
+    "at": 1793119800,
+    "expiresAt": 1793120400,
+    "state": "open",
+    "counts": { "in": 2, "maybe": 0, "cant": 1 },
+    "answers": [
+      { "name": "Nico", "character": "Grom Ashfeller", "discordId": "100000000000000001", "answer": "in", "role": "tank", "source": "game", "guid": "Player-1-0000A003", "fit": { "kind": "fits", "label": "fits" }, "level": 24, "classFile": "WARRIOR" }
+    ]
+  }
+}
+```
+
+- `id`: the stored ask's id since WEB-51 (before, the game item's id). `role`: the asker's, as the addon names it (`tank` / `heal` / `dps`), as in WEB-43; each answer's `role` is `tank`, `healer` or `damage` as in runs. `character` and `role` are missing when the asker has no character that may join. `state`: `open`, `expired` or `cancelled`. `source`: `game` or `discord`. `answers` as a run's (oldest first, `fit`, `level`, `classFile`), never `reserve`.
+
+| Request | Body / query | Answer |
+|---|---|---|
+| `GET /api/bot/v1/asks` | | `{ asks: [ask] }`: the open asks, oldest first |
+| `GET /api/bot/v1/asks/<id>` | | `{ ask }` (also an expired one) |
+| `POST /api/bot/v1/asks` | `discordUserId`, `dungeonId`, `note` (optional, ≤ 200), `leadGuid` (optional: the asker's character, as `/plan`'s `lead`), `role` (optional: its role, one the class can play) | `201 { ask }`: `/ask`, starting now, open for 10 minutes |
+| `POST /api/bot/v1/asks/<id>/answers` | as a run's answers | `{ stored: { answer, role }, ask }`. After `expiresAt`: `409 expired` ("This ask has expired") |
+| `GET /api/bot/v1/asks/<id>/characters?discordUserId=` | | as a run's (Pick my character) |
+
+Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time, or one that doesn't exist in the user's zone), `time_passed`, `note_too_long`, `lead_not_yours`, `lead_out_of_range`, `not_your_character`, `no_character`, `out_of_range` (I'm in with a character outside the range; Maybe and Can't always go); `403 not_linked`, `not_organiser`, `not_allowed`; `404 unknown_run`; `409 closed` (started or cancelled), `already_cancelled`, `expired` (an ask past its 10 minutes, WEB-51).

@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { FormState } from "@/app/(site)/runs/actions";
+import { DateField } from "@/components/ui/DateField";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { TimeField } from "@/components/ui/TimeField";
+import { PickerFields, initialPick, type PickerValue } from "./Picker";
 import { localTime, runWhen, zonedToUtc } from "@/core/runTime";
 import type { PlanPage } from "@/core/views/runs";
 import { joinNames } from "@/core/views/text";
@@ -17,33 +21,54 @@ export interface PlanFormProps {
   postsTo: string;
 }
 
-/** The board's evening time, the form's default. */
+/** Plan has no slots yet: the roles show no counts, only "your talents" and what the class can't play. */
+const NO_COUNTS = {
+  tank: { state: "", full: false },
+  healer: { state: "", full: false },
+  damage: { state: "", full: false },
+};
+
+/** The time chips (WEB-49, board `runs-v2-plan`); the board's evening time is the form's default. */
+const TIMES: readonly string[] = ["19:00", "19:30", "20:00", "20:30", "21:00"];
 const DEFAULT_TIME = "20:30";
 
-/** Plan a run (board `run-create`) and Edit run: the form, its states and the Discord preview. */
+const FITS_GROUP = "Fits your characters";
+const ALL_GROUP = "All dungeons by level";
+
+/** "2026-11-07" → "Sat 7 Nov", for a day picked beyond the chips. */
+function chipDate(date: string): string {
+  return new Date(`${date}T00:00:00Z`)
+    .toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+    .replace(",", "");
+}
+
+/** Plan a run (boards `run-create`, `runs-v2-plan`) and Edit run: the form, its states and the Discord preview. */
 export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
   const [state, submit, pending] = useActionState(action, {});
-  const [dungeonId, setDungeonId] = useState(edit?.dungeonId ?? page.dungeonId);
-  const leads = page.leads[dungeonId] ?? [];
-  const [lead, setLead] = useState(edit?.lead ?? leads.find((l) => l.fits)?.guid ?? "");
+  const [dungeonId, setDungeonId] = useState(edit?.dungeonId ?? page.dungeonId ?? "");
+  // Lead as (WEB-49): the picker with character and role, no answer step.
+  const leadsFor = (id: string) => page.leadPicker[id] ?? [];
+  const firstLead = (id: string): PickerValue | undefined => initialPick({ characters: leadsFor(id) });
+  const [lead, setLead] = useState<PickerValue | undefined>(() => firstLead(dungeonId));
   // 20:30 today, or tomorrow once that has passed.
   const evening = zonedToUtc(page.days[0]!.date, DEFAULT_TIME, page.timeZone);
   const firstDay = page.days[evening !== undefined && evening <= page.now ? 1 : 0]!.date;
-  const [day, setDay] = useState(
-    edit === undefined ? firstDay : page.days.some((d) => d.date === edit.date) ? edit.date : "other",
-  );
-  const [otherDay, setOtherDay] = useState(edit?.date ?? firstDay);
+  const [day, setDay] = useState(edit?.date ?? firstDay);
   const [time, setTime] = useState(edit?.time ?? DEFAULT_TIME);
+  // "Other…" opens the time input; Edit opens on it for a time that isn't a chip.
+  const [otherTime, setOtherTime] = useState(!TIMES.includes(edit?.time ?? DEFAULT_TIME));
   const [note, setNote] = useState(edit?.note ?? "");
   // "Now" when the page was rendered, for the time-passed state; the server checks again on submit.
   const now = page.now;
 
-  const dungeon = page.dungeons.find((d) => d.id === dungeonId) ?? page.dungeons[0]!;
-  const date = day === "other" ? otherDay : day;
-  const startsAt = zonedToUtc(date, time, page.timeZone);
+  const dungeon = page.dungeons.find((d) => d.id === dungeonId);
+  const startsAt = zonedToUtc(day, time, page.timeZone);
   const passed = startsAt !== undefined && startsAt <= now;
-  const noneFits = leads.every((l) => !l.fits);
-  const chosenLead = leads.find((l) => l.guid === lead && l.fits);
+  const leadChars = leadsFor(dungeonId);
+  const noneFits = dungeon !== undefined && leadChars.every((c) => c.onlyMaybe);
+  const chosen = leadChars.find((c) => c.guid === lead?.guid);
+  // A character too low to lead leaves the organiser without a slot (the server refuses it as lead).
+  const chosenLead = chosen !== undefined && !chosen.onlyMaybe ? chosen : undefined;
   const zones = new Map<string, string[]>();
   if (startsAt !== undefined) {
     for (const z of page.otherZones) {
@@ -51,7 +76,9 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
       zones.set(t, [...(zones.get(t) ?? []), z.name]);
     }
   }
-  const range = `${dungeon.range.min}–${dungeon.range.max}`;
+  const range = dungeon === undefined ? undefined : `${dungeon.range.min}–${dungeon.range.max}`;
+  // A day picked in the calendar beyond the seven chips gets a chip of its own.
+  const days = page.days.some((d) => d.date === day) ? page.days : [...page.days, { date: day, label: chipDate(day) }];
 
   return (
     <div className={styles.columns}>
@@ -60,100 +87,97 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
           <label htmlFor="dungeon" className={styles.label}>
             Dungeon
           </label>
-          <select
+          <Dropdown
             id="dungeon"
             name="dungeon"
-            className={styles.select}
             value={dungeonId}
             disabled={edit !== undefined}
-            onChange={(e) => {
-              setDungeonId(e.target.value);
-              setLead(page.leads[e.target.value]?.find((l) => l.fits)?.guid ?? "");
+            placeholder="Pick a dungeon"
+            options={page.dungeons.map((d) => ({
+              value: d.id,
+              label: d.name,
+              meta: `${d.range.min}–${d.range.max}${d.forever ? " · Forever" : ""}`,
+              group: d.fitsYou ? FITS_GROUP : ALL_GROUP,
+              ...(d.best === undefined ? {} : { hint: d.best.text }),
+              ...(d.best?.tone === undefined ? {} : { hintTone: d.best.tone }),
+              ...(d.wingOf === undefined ? {} : { family: d.wingOf }),
+            }))}
+            onChange={(id) => {
+              setDungeonId(id);
+              setLead(firstLead(id));
             }}
-          >
-            {page.dungeons.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-          {edit !== undefined && <input type="hidden" name="dungeon" value={dungeonId} />}
-          <p className={styles.small}>{dungeon.fits}</p>
+          />
+          {dungeon !== undefined && <p className={styles.small}>{dungeon.fits}</p>}
         </div>
 
-        {edit === undefined && (
-          <div className={styles.field}>
-            <label htmlFor="lead" className={styles.label}>
-              Lead as
-            </label>
-            <select
-              id="lead"
-              name="lead"
-              className={styles.select}
-              value={lead}
-              onChange={(e) => setLead(e.target.value)}
-            >
-              {leads.map((l) => (
-                <option key={l.guid} value={l.fits ? l.guid : ""} disabled={!l.fits}>
-                  {l.label}
-                </option>
-              ))}
-              {noneFits && <option value="">Organiser without a slot</option>}
-            </select>
+        {edit === undefined && dungeon !== undefined && (
+          <fieldset className={styles.field}>
+            <legend className={styles.label}>Lead as</legend>
+            {lead !== undefined && leadChars.length > 0 && (
+              <PickerFields
+                view={{ characters: leadChars, roles: NO_COUNTS }}
+                value={lead}
+                onChange={setLead}
+                withAnswer={false}
+              />
+            )}
+            <input type="hidden" name="lead" value={chosenLead?.guid ?? ""} />
+            <input type="hidden" name="leadRole" value={chosenLead === undefined ? "" : (lead?.role ?? "")} />
             {noneFits && (
               <p className={styles.warn}>
                 None of your characters fit {dungeon.name} ({range}). You can still plan it; you&apos;re listed as
                 organiser without a slot.
               </p>
             )}
-          </div>
+          </fieldset>
         )}
 
         <fieldset className={styles.field}>
           <legend className={styles.label}>Day</legend>
+          {/* One row that never wraps: the chips scroll sideways on a phone, the calendar stays at the end. */}
+          <div className={styles.dayRow}>
+            <div className={styles.chipScroll}>
+              {days.map((d) => (
+                <label key={d.date} className={styles.chip}>
+                  <input
+                    type="radio"
+                    name="day"
+                    value={d.date}
+                    checked={day === d.date}
+                    onChange={() => setDay(d.date)}
+                  />
+                  {d.label}
+                </label>
+              ))}
+            </div>
+            <DateField buttonOnly label="Another date" value={day} min={page.days[0]!.date} onChange={setDay} />
+          </div>
+        </fieldset>
+
+        <fieldset className={styles.field}>
+          <legend className={styles.label}>Time</legend>
           <div className={styles.chips}>
-            {page.days.map((d) => (
-              <label key={d.date} className={styles.chip}>
+            {TIMES.map((t) => (
+              <label key={t} className={styles.chip}>
                 <input
                   type="radio"
-                  name="day"
-                  value={d.date}
-                  checked={day === d.date}
-                  onChange={() => setDay(d.date)}
+                  name="timeChip"
+                  checked={!otherTime && time === t}
+                  onChange={() => {
+                    setOtherTime(false);
+                    setTime(t);
+                  }}
                 />
-                {d.label}
+                {t}
               </label>
             ))}
             <label className={styles.chip}>
-              <input type="radio" name="day" value="other" checked={day === "other"} onChange={() => setDay("other")} />
-              Other date…
+              <input type="radio" name="timeChip" checked={otherTime} onChange={() => setOtherTime(true)} />
+              Other…
             </label>
           </div>
-          {day === "other" && (
-            <input
-              type="date"
-              name="otherDay"
-              aria-label="Other date"
-              className={styles.input}
-              value={otherDay}
-              onChange={(e) => setOtherDay(e.target.value)}
-            />
-          )}
-        </fieldset>
-
-        <div className={styles.field}>
-          <label htmlFor="time" className={styles.label}>
-            Time
-          </label>
-          <input
-            id="time"
-            name="time"
-            type="time"
-            required
-            className={styles.input}
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-          />
+          {otherTime && <TimeField ariaLabel="Other time" required value={time} onChange={setTime} />}
+          <input type="hidden" name="time" value={time} />
           <p className={styles.small}>
             Your time zone: {page.timeZone.replace(/_/g, " ")}.{" "}
             <Link href="/discord" className={styles.inlineLink}>
@@ -170,7 +194,7 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
               now in the game to go right away.
             </p>
           )}
-        </div>
+        </fieldset>
 
         <div className={styles.field}>
           <label htmlFor="note" className={styles.label}>
@@ -192,7 +216,7 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
           </p>
         )}
         <div className={styles.buttons}>
-          <button type="submit" className={styles.primary} disabled={pending || passed}>
+          <button type="submit" className={styles.primary} disabled={pending || passed || dungeon === undefined}>
             {edit === undefined ? "Plan run" : "Save changes"}
           </button>
           <Link href={edit?.cancelHref ?? "/runs"} className={styles.ghost}>
@@ -209,16 +233,17 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
         <div className={styles.preview}>
           <span>
             {page.organiser.name}
-            {chosenLead === undefined ? "" : ` on ${chosenLead.label.split(" · ")[0]}`}
+            {chosenLead === undefined
+              ? ""
+              : ` on ${chosenLead.name}${chosenLead.level === undefined ? "" : ` ${chosenLead.level}`}`}
           </span>
-          <b>{dungeon.name}</b>
+          <b>{dungeon?.name ?? "Pick a dungeon"}</b>
           <span>
-            {startsAt === undefined ? time : atTime(runWhen(startsAt, page.timeZone, now))} · levels {range}
+            {startsAt === undefined ? time : atTime(runWhen(startsAt, page.timeZone, now))}
+            {range === undefined ? "" : ` · levels ${range}`}
           </span>
           {note.trim() !== "" && <span>“{note.trim()}”</span>}
-          <span>
-            {chosenLead === undefined ? "0 in · organiser without a slot" : "1 in · organiser fills their slot"}
-          </span>
+          <span>{chosenLead === undefined ? "0 in · organiser without a slot" : "1 in · organiser takes a slot"}</span>
           <div className={styles.previewButtons} aria-hidden="true">
             <span>I&apos;m in</span>
             <span>Maybe</span>

@@ -24,7 +24,7 @@ export async function POST(req: Request): Promise<Response> {
   const friend = botFriend(db, body.discordUserId);
   if (friend instanceof Response) return friend;
   if (typeof body.dungeonId !== "string") return apiError(400, "invalid_request", "Send dungeonId.");
-  const startsAt = startTime(body, friend.timeZone);
+  const startsAt = startTime(body, friend.timeZone, now);
   if (startsAt === undefined) return apiError(400, "invalid_time", "Send startsAt, or date and time in your zone.");
   const planned = planRunFor(
     db,

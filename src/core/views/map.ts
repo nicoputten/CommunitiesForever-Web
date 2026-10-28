@@ -121,6 +121,28 @@ export function miniMap(d: Dataset, guid: string, now: number): MiniMapView | un
   return { place, box, zones, coasts, occupied: world.occupied };
 }
 
+// The dungeon page's hero (WEB-42): the map around the entrance, centred on it, at about the scale of the board's
+// picture (a third of the world wide); the hero shows the part around the entrance that fits its shape.
+const ENTRANCE_WIDTH = 520;
+const ENTRANCE_HEIGHT = 325;
+
+export interface EntranceMapView {
+  box: ViewBox;
+  /** zones.json ids of the zones and terrain inside the box. */
+  zones: string[];
+  coasts: ("K" | "E")[];
+}
+
+/** The part of the world around a dungeon entrance (world coordinates), with the zones and coasts in it. */
+export function entranceMap(x: number, y: number): EntranceMapView {
+  const box = { x: x - ENTRANCE_WIDTH / 2, y: y - ENTRANCE_HEIGHT / 2, width: ENTRANCE_WIDTH, height: ENTRANCE_HEIGHT };
+  return {
+    box,
+    zones: map.zones.filter((z) => overlaps(zoneBox(z.id)!, box)).map((z) => z.id),
+    coasts: (["K", "E"] as const).filter((c) => overlaps(CONTINENT_BOXES[c], box)),
+  };
+}
+
 const overlaps = (a: ViewBox, b: ViewBox) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 

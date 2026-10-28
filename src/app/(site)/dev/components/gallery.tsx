@@ -3,6 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { Banner } from "@/components/ui/Banner";
 import { ClassDisc } from "@/components/ui/ClassDisc";
+import { DateField } from "@/components/ui/DateField";
+import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import { DataAgeBadge } from "@/components/ui/DataAgeBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FactionTag } from "@/components/ui/FactionTag";
@@ -10,6 +12,7 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { Segmented } from "@/components/ui/Segmented";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { TimeField } from "@/components/ui/TimeField";
 import { CLASSES, type ClassFile } from "@/core/gamedata/classes";
 import styles from "./gallery.module.css";
 
@@ -28,6 +31,30 @@ const SAMPLE_NAMES: Record<ClassFile, string> = {
   DRUID: "Sela Moonbrook",
 };
 const LEVELS = [24, 18, 27, 41, 37, 33, 60, 39, 12];
+
+// The board's dungeon dropdown (runs-v2-plan), invented characters; 8+ options, so it has the search field.
+const DUNGEONS: DropdownOption[] = [
+  { value: "sm-gy", label: "Scarlet Monastery: Graveyard", meta: "26–36", hint: "fits", group: "Fits your characters" },
+  { value: "sfk", label: "Shadowfang Keep", meta: "22–30", hint: "fits", group: "Fits your characters" },
+  { value: "rfc", label: "Ragefire Chasm", meta: "13–18", hint: "Twinkle 5 below", group: "All dungeons by level" },
+  { value: "wc", label: "Wailing Caverns", meta: "17–24", group: "All dungeons by level" },
+  { value: "dm", label: "The Deadmines", meta: "17–26", group: "All dungeons by level" },
+  { value: "bfd", label: "Blackfathom Deeps", meta: "24–32", group: "All dungeons by level" },
+  { value: "sm-lib", label: "Scarlet Monastery: Library", meta: "29–39", group: "All dungeons by level" },
+  { value: "sm-arm", label: "Scarlet Monastery: Armory", meta: "32–42", group: "All dungeons by level" },
+  {
+    value: "sm-cath",
+    label: "Scarlet Monastery: Cathedral",
+    meta: "35–45",
+    disabled: "No character within 10 levels",
+    group: "All dungeons by level",
+  },
+];
+const LEADS: DropdownOption[] = [
+  { value: "ves", label: "Vesgar Bloodhoof 27", meta: "tank" },
+  { value: "twk", label: "Twinkle 21", meta: "healer" },
+  { value: "low", label: "Kaz Coldbrew 12", disabled: "Too low for this dungeon" },
+];
 
 function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
@@ -53,6 +80,10 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
   const [view, setView] = useState<"cards" | "table">("cards");
   const [chips, setChips] = useState<Record<string, boolean>>({ All: true, Bob: false, Mira: false });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dungeon, setDungeon] = useState("sm-gy");
+  const [lead, setLead] = useState("ves");
+  const [day, setDay] = useState("2026-10-30");
+  const [time, setTime] = useState("20:30");
 
   return (
     <div className={styles.page}>
@@ -212,6 +243,35 @@ export function ComponentGallery({ now, seaPreview }: { now: number; seaPreview:
               </div>
             </div>
           ))}
+        </div>
+      </Section>
+
+      <Section
+        title="Dropdown, date and time"
+        note="WEB-48, board runs-v2-plan: replaces every native select, date and time input. Search from 8 options; a bottom sheet under 640 px; arrows, Enter, Esc and type-to-jump."
+      >
+        <div className={styles.fields}>
+          <Example label="Default, with search (9 options), groups, meta, hint and a disabled option">
+            <Dropdown ariaLabel="Dungeon" options={DUNGEONS} value={dungeon} onChange={setDungeon} />
+          </Example>
+          <Example label="Placeholder">
+            <Dropdown ariaLabel="Dungeon, none picked" options={DUNGEONS} value="" placeholder="Pick a dungeon" />
+          </Example>
+          <Example label="Few options (no search), type-to-jump">
+            <Dropdown ariaLabel="Lead as" options={LEADS} value={lead} onChange={setLead} />
+          </Example>
+          <Example label="Disabled">
+            <Dropdown ariaLabel="Character" options={[]} value="" placeholder="No characters yet" disabled />
+          </Example>
+          <Example label="Compact (36 px on desktop, the Discord page)">
+            <Dropdown ariaLabel="Channel" size="compact" options={LEADS} value={lead} onChange={setLead} />
+          </Example>
+          <Example label="Date: 44 × 44 calendar button, weeks from Monday, no past days">
+            <DateField label="Day" value={day} min="2026-10-28" onChange={setDay} />
+          </Example>
+          <Example label="Time: 24-hour, ↑↓ 15 minutes; type 2030">
+            <TimeField ariaLabel="Time" value={time} onChange={setTime} />
+          </Example>
         </div>
       </Section>
 

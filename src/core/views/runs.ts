@@ -1,9 +1,8 @@
 import { sameBattleTag } from "../access";
-import { RUNNABLE_DUNGEONS, classInfo, type LevelRange } from "../gamedata";
+import { RUNNABLE_DUNGEONS, classInfo, rolesFor, type LevelRange } from "../gamedata";
 import {
   counts,
   group,
-  inRange,
   isUpcoming,
   openSlots,
   phase,
@@ -15,17 +14,21 @@ import {
   type RunPhase,
   type RunRecord,
   type RunSource,
+  type MoveTo,
   type SlotRole,
 } from "../runs";
 import { localTime, nextDays, runWhen, untilStart, weekEnd, type DayOption } from "../runTime";
 import { byLevel, compareText, type CharacterView, type PersonView } from "./characters";
-import { joinNames } from "./text";
+import { levelFit, type FitKind, type LevelFit } from "../levelFit";
+import { initials, joinNames } from "./text";
 
 // The Runs pages (WEB-40, boards `runs`, `run-detail`, `run-create`, `runs-phone`): the list by This week, Later and
 // Past with its filters, a run's page, and Plan a run. Times in the viewer's own zone; names only.
 
 export interface RunsInput {
   runs: readonly RunRecord[];
+  /** Open asks (WEB-51), oldest first; none when left out. */
+  asks?: readonly RunRecord[];
   /** Every character with a record (recordCharacters). */
   characters: readonly CharacterView[];
   people: readonly PersonView[];
@@ -47,11 +50,11 @@ export function parseRunsFilter(value: unknown): RunsFilter {
 }
 
 export const ROLE_LABEL: Record<SlotRole, string> = { tank: "Tank", healer: "Healer", damage: "Damage" };
-export const ANSWER_LABEL: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't" };
+export const ANSWER_LABEL: Record<Answer, string> = { in: "I'm in", maybe: "Maybe", cant: "Can't", reserve: "Reserve" };
 const SOURCE_LABEL: Record<RunSource, string> = { website: "Website", discord: "Discord", game: "In game" };
 const PLANNED_ON: Record<RunSource, string> = { website: "on the website", discord: "in Discord", game: "in the game" };
 
-export type PillTone = "open" | "soon" | "full" | "done" | "cancelled";
+export type PillTone = "open" | "soon" | "full" | "done" | "dim" | "cancelled";
 
 export interface RunCharacterView {
   guid: string;
@@ -63,7 +66,10 @@ export interface RunCharacterView {
   colorToken?: string;
   role: SlotRole;
   /** Whether its level is in the run's range. */
+  /** May answer I'm in with it (levelFit: not 6+ below the range, WEB-47). */
   fits: boolean;
+  /** How its level fits the range (WEB-47 levelFit). */
+  fit: FitKind;
   /** "2 levels short", "3 levels over"; undefined in range. */
   off?: string;
 }
@@ -73,7 +79,7 @@ export interface AnswerChoice {
   runId: number;
   characters: RunCharacterView[];
   /** The viewer's answer so far. */
-  current?: { answer: Answer; guid?: string; waitlisted: boolean };
+  current?: { answer: Answer; guid?: string };
   /** Open: answers go. Closed: started or cancelled. */
   open: boolean;
 }
@@ -96,10 +102,12 @@ export interface RunCardView {
   line: string;
   /** "Tank still open: nobody in range", "Your Grom Ashfeller fits the open tank slot". */
   hint?: { text: string; tone: "warn" | "good" | "muted" };
-  /** "3 in · 1 maybe". */
-  tally: string;
-  /** The five slots in order (tank, healer, damage × 3): filled or not. */
-  slots: { role: SlotRole; filled: boolean }[];
+  /** "1 in · 4 open · no healer in range" (finding 11). */
+  summary: string;
+  /** The five slots in order (tank, healer, damage × 3): filled or not, with the role's letter. */
+  slots: { role: SlotRole; letter: string; filled: boolean }[];
+  /** The slot bar's tooltip, a row per role: "Tank · Ves Doombringer", "Damage · Lia Thornwhisper · 2 open". */
+  slotRows: string[];
   /** Answer buttons on the card: an upcoming run the viewer can join and hasn't answered. */
   answer?: AnswerChoice;
 }
@@ -111,15 +119,31 @@ export interface PastRunView {
   dungeon: string;
   /** "Nico", "ask now from the game · Nico". */
   by: string;
-  /** "3 in" or "Cancelled"; the outcome (Ran it, Didn't happen) comes with WEB-43. */
-  result: string;
-  cancelled: boolean;
+  /** "Ran it", "Didn't happen", "Cancelled", or "3 in" before the outcome is known (WEB-43). */
+  result: { label: string; tone: PillTone };
+  /** "3 of 5 signed-up came", "no upload showed it". */
+  detail?: string;
+}
+
+/** How a past run ended (WEB-43, runs board): its pill and the line after it. */
+export function pastResult(run: RunRecord): Pick<PastRunView, "result" | "detail"> {
+  if (run.cancelledAt !== undefined) return { result: { label: "Cancelled", tone: "cancelled" } };
+  if (run.outcome?.kind === "done") {
+    return {
+      result: { label: "Ran it", tone: "done" },
+      detail: `${run.outcome.came} of ${run.outcome.signedUp} signed-up came`,
+    };
+  }
+  if (run.outcome?.kind === "didntHappen") {
+    return { result: { label: "Didn't happen", tone: "dim" }, detail: "no upload showed it" };
+  }
+  return { result: { label: `${counts(run.answers).in} in`, tone: "done" } };
 }
 
 export interface YourAnswerView {
   href: string;
   dungeon: string;
-  /** "organiser", "not answered", "maybe", "I'm in", "can't". */
+  /** "organiser as Ves Doombringer · Tank", "organiser", "in as Lia Thornwhisper · Healer", "not answered". */
   status: string;
 }
 
@@ -131,6 +155,8 @@ export interface RunsPage {
   /** "1 run hidden by “Runs I can join”: Zul'Farrak on Sun 8 Nov (44–54)." */
   hidden?: string;
   yourAnswers: YourAnswerView[];
+  /** Asking now (WEB-51): the open asks, newest first. */
+  asks: AskCardView[];
   /** Upcoming runs at all (the empty state when none). */
   anyUpcoming: boolean;
   timeZone: string;
@@ -176,11 +202,10 @@ function rangeOf(run: RunRecord): LevelRange {
   return runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
 }
 
+/** The fit label when the level doesn't simply fit ("+3 over", "4 below"); undefined when it fits (WEB-47). */
 function offText(level: number | undefined, r: LevelRange): string | undefined {
-  if (level === undefined) return "level unknown";
-  if (level < r.min) return `${r.min - level} level${r.min - level === 1 ? "" : "s"} short`;
-  if (level > r.max) return `${level - r.max} level${level - r.max === 1 ? "" : "s"} over`;
-  return undefined;
+  const fit = levelFit(level, r.min, r.max);
+  return fit.kind === "fits" ? undefined : fit.label;
 }
 
 function characterView(c: CharacterView, r: LevelRange): RunCharacterView {
@@ -189,7 +214,8 @@ function characterView(c: CharacterView, r: LevelRange): RunCharacterView {
     guid: c.guid,
     name: c.name ?? c.guid,
     role: slotRole(c.role),
-    fits: inRange(c.level, r),
+    fits: levelFit(c.level, r.min, r.max).canPick,
+    fit: levelFit(c.level, r.min, r.max).kind,
   };
   if (c.level !== undefined) v.level = c.level;
   if (c.classFile !== undefined) v.classFile = c.classFile;
@@ -212,12 +238,13 @@ function viewerCharacters(ctx: Ctx, r: LevelRange): RunCharacterView[] {
     .sort((a, b) => Number(b.fits) - Number(a.fits));
 }
 
-function pill(p: RunPhase, startsAt: number, now: number): RunCardView["pill"] {
+function pill(run: RunRecord, p: RunPhase, now: number): RunCardView["pill"] {
+  const startsAt = run.startsAt;
   switch (p) {
     case "cancelled":
       return { label: "Cancelled", tone: "cancelled" };
     case "past":
-      return { label: "Past", tone: "done" };
+      return run.outcome === undefined ? { label: "Past", tone: "done" } : pastResult(run).result;
     case "started":
       return { label: "Started", tone: "soon" };
     case "full":
@@ -235,7 +262,7 @@ function answerChoice(ctx: Ctx, run: RunRecord): AnswerChoice {
     open: run.cancelledAt === undefined && ctx.input.now < run.startsAt,
   };
   if (mine !== undefined) {
-    choice.current = { answer: mine.answer, waitlisted: mine.waitlisted === true };
+    choice.current = { answer: mine.answer };
     if (mine.guid !== undefined) choice.current.guid = mine.guid;
   }
   return choice;
@@ -256,7 +283,10 @@ function openWithNobody(ctx: Ctx, run: RunRecord): SlotRole[] {
       !ctx.input.characters.some((c) => {
         const tag = ownerTag(ctx, c);
         return (
-          tag !== undefined && !answered.has(tag.toLowerCase()) && slotRole(c.role) === role && inRange(c.level, r)
+          tag !== undefined &&
+          !answered.has(tag.toLowerCase()) &&
+          slotRole(c.role) === role &&
+          levelFit(c.level, r.min, r.max).suggested
         );
       }),
   );
@@ -266,23 +296,27 @@ function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): R
   const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
   if (mine !== undefined && !yours) {
     const withChar = mine.guid === undefined ? "" : ` with ${charName(ctx, mine)}`;
-    const line = mine.waitlisted ? ", first in line" : "";
-    return { text: `You answered ${ANSWER_LABEL[mine.answer]}${withChar}${line}`, tone: "muted" };
-  }
-  if (yours) {
-    const nobody = openWithNobody(ctx, run);
-    if (nobody.length > 0) {
-      const roles = joinNames(nobody);
-      return { text: `${roles[0]!.toUpperCase()}${roles.slice(1)} still open: nobody in range`, tone: "warn" };
+    if (mine.answer === "reserve") {
+      return { text: `You're reserve${withChar}: ${mine.role} is full, you move up when a slot frees`, tone: "muted" };
     }
-    return undefined;
+    return { text: `You answered ${ANSWER_LABEL[mine.answer]}${withChar}`, tone: "muted" };
   }
-  const fitting = choice.characters.filter((c) => c.fits);
+  // The organiser's open roles nobody can fill are in the summary (finding 11).
+  if (yours) return undefined;
+  const fitting = choice.characters.filter((c) => c.fit === "fits" || c.fit === "over");
   if (fitting.length === 0) return undefined;
   const open = openSlots(run.answers);
+  // The fit label when it doesn't simply fit (WEB-47: one wording everywhere): "fits", "can join · +1 over".
+  const how = (c: RunCharacterView) => (c.fit === "fits" ? "fits" : `can join · ${c.off ?? ""}`);
   const forOpen = fitting.find((c) => open[c.role] > 0 && c.role !== "damage");
-  if (forOpen !== undefined) return { text: `Your ${forOpen.name} fits the open ${forOpen.role} slot`, tone: "good" };
-  return { text: `Your ${fitting[0]!.name} fits`, tone: "good" };
+  if (forOpen !== undefined) {
+    const text =
+      forOpen.fit === "fits"
+        ? `Your ${forOpen.name} fits the open ${forOpen.role} slot`
+        : `Your ${forOpen.name} can fill the open ${forOpen.role} slot · ${forOpen.off ?? ""}`;
+    return { text, tone: "good" };
+  }
+  return { text: `Your ${fitting[0]!.name} ${how(fitting[0]!)}`, tone: "good" };
 }
 
 function line(ctx: Ctx, run: RunRecord): string {
@@ -303,21 +337,59 @@ function line(ctx: Ctx, run: RunRecord): string {
   return parts.join(" · ");
 }
 
-function tally(run: RunRecord): string {
+/** "1 in · 1 maybe · 4 open · no healer in range"; "5 in · full". */
+function summary(ctx: Ctx, run: RunRecord): string {
   const c = counts(run.answers);
+  const open = openSlots(run.answers);
+  const left = open.tank + open.healer + open.damage;
   const parts = [`${c.in} in`];
   if (c.maybe > 0) parts.push(`${c.maybe} maybe`);
+  parts.push(left > 0 ? `${left} open` : "full");
+  const nobody = openWithNobody(ctx, run);
+  if (nobody.length > 0) parts.push(`no ${nobody.join(" or ")} in range`);
   return parts.join(" · ");
 }
+
+const ROLE_LETTER: Record<SlotRole, string> = { tank: "T", healer: "H", damage: "D" };
 
 function slotBars(run: RunRecord): RunCardView["slots"] {
   const g = group(run.answers);
   const out: RunCardView["slots"] = [];
   for (const role of SLOT_ROLES) {
     const size = role === "damage" ? 3 : 1;
-    for (let i = 0; i < size; i++) out.push({ role, filled: i < g[role].length });
+    for (let i = 0; i < size; i++) out.push({ role, letter: ROLE_LETTER[role], filled: i < g[role].length });
   }
   return out;
+}
+
+function slotRows(ctx: Ctx, run: RunRecord): string[] {
+  const g = group(run.answers);
+  const open = openSlots(run.answers);
+  return SLOT_ROLES.map((role) => {
+    const names = g[role].map((a) => charName(ctx, a));
+    const left = open[role] > 0 ? `${open[role]} open` : undefined;
+    const rest =
+      names.length === 0
+        ? "open"
+        : [names.join(", "), names.length > 0 && role === "damage" ? left : undefined]
+            .filter((x) => x !== undefined)
+            .join(" · ");
+    return `${ROLE_LABEL[role]} · ${rest}`;
+  });
+}
+
+/** "organiser as Ves Doombringer · Tank", "in as Lia Thornwhisper · Healer", "reserve as …", "can't". */
+function yourStatus(ctx: Ctx, run: RunRecord): string {
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const organiser = isViewer(ctx, run.organiser);
+  if (mine === undefined) return organiser ? "organiser" : "not answered";
+  if (mine.answer === "cant") return organiser ? "organiser" : "can't";
+  const as = mine.guid === undefined ? "" : ` as ${charName(ctx, mine)} · ${ROLE_LABEL[mine.role]}`;
+  if (organiser)
+    return mine.answer === "in"
+      ? `organiser${as}`
+      : `organiser · ${mine.answer === "reserve" ? "on the bench" : "maybe"}${as}`;
+  return `${mine.answer === "in" ? "in" : mine.answer}${as}`;
 }
 
 /** "20:00 for Bob" when the organiser's clock differs from the viewer's. */
@@ -330,7 +402,8 @@ function organiserTime(ctx: Ctx, run: RunRecord): string | undefined {
 
 /** Whether one of the viewer's characters is in the run's range. */
 function viewerFits(ctx: Ctx, run: RunRecord): boolean {
-  return viewerCharacters(ctx, rangeOf(run)).some((c) => c.fits);
+  // "Runs I can join": a character that fits or is over (WEB-47).
+  return viewerCharacters(ctx, rangeOf(run)).some((c) => c.fit === "fits" || c.fit === "over");
 }
 
 function involved(ctx: Ctx, run: RunRecord): boolean {
@@ -350,11 +423,12 @@ function card(ctx: Ctx, run: RunRecord): RunCardView {
     when: runWhen(run.startsAt, ctx.input.viewer.timeZone, now),
     until: untilStart(run.startsAt, now),
     phase: p,
-    pill: pill(p, run.startsAt, now),
+    pill: pill(run, p, now),
     yours,
     line: line(ctx, run),
-    tally: tally(run),
+    summary: summary(ctx, run),
     slots: slotBars(run),
+    slotRows: slotRows(ctx, run),
   };
   const other = organiserTime(ctx, run);
   if (other !== undefined) v.organiserTime = other;
@@ -397,20 +471,16 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
         day: runWhen(r.startsAt, tz, now).replace(/ \d{2}:\d{2}$/, ""),
         dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId,
         by: `${r.source === "game" ? "ask now from the game · " : ""}${friendName(ctx, r.organiser)}`,
-        result: r.cancelledAt !== undefined ? "Cancelled" : `${counts(r.answers).in} in`,
-        cancelled: r.cancelledAt !== undefined,
+        ...pastResult(r),
       })),
     yourAnswers: upcoming
       .filter((r) => involved(ctx, r) || viewerFits(ctx, r))
-      .map((r) => {
-        const mine = r.answers.find((a) => isViewer(ctx, a.battleTag));
-        const status = isViewer(ctx, r.organiser)
-          ? "organiser"
-          : mine === undefined
-            ? "not answered"
-            : ANSWER_LABEL[mine.answer].toLowerCase();
-        return { href: `/runs/${r.id}`, dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId, status };
-      }),
+      .map((r) => ({
+        href: `/runs/${r.id}`,
+        dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId,
+        status: yourStatus(ctx, r),
+      })),
+    asks: asksNow(ctx),
     anyUpcoming: upcoming.length > 0,
     timeZone: tz,
   };
@@ -435,13 +505,88 @@ export interface SlotView {
     character: string;
     level?: number;
     className?: string;
+    classFile?: string;
     colorToken?: string;
     friend: string;
     /** "organiser", "from talents", "set by player", "moved up". */
     note?: string;
+    /** WEB-49: the disc's letters and the fit tag. */
+    initials: string;
+    fit?: { kind: FitKind; label: string };
+    guid?: string;
+    /** The viewer's own sign-up. */
+    yours: boolean;
   };
-  /** For an open slot: "Nobody in range yet" or "Grom Ashfeller could". */
+  /** For an open slot, one fact (WEB-49, finding 1): "1 left", "No healer in range · Kaz Coldbrew is 4 below". */
   open?: string;
+  /** The organiser's (or admin's) ⋯ menu for this sign-up (WEB-49). */
+  menu?: MoveOption[];
+}
+
+/** One entry of a slot's ⋯ menu (WEB-49). */
+export interface MoveOption {
+  label: string;
+  to: MoveTo;
+  /** The character that trades places (a taken role). */
+  swapWith?: string;
+  /** "open", "current", "Healer"; or why it can't ("not for mages"). */
+  detail?: string;
+  disabled?: boolean;
+  danger?: boolean;
+}
+
+/** The answer picker (WEB-49, board `runs-v2-picker`): every character, the roles, the answer. */
+export interface PickerView {
+  runId: number;
+  /** "Join Scarlet Monastery: Graveyard". */
+  title: string;
+  /** "Fri 30 Oct 20:30 · levels 26–36". */
+  sub: string;
+  characters: PickerCharacter[];
+  /** Per role: "open", "3 open", "full → reserve" (counting without the viewer's own answer). */
+  roles: Record<SlotRole, { state: string; full: boolean }>;
+  current?: { guid?: string; role: SlotRole; answer: Answer };
+}
+
+export interface PickerCharacter {
+  guid: string;
+  name: string;
+  initials: string;
+  level?: number;
+  classFile?: string;
+  colorToken?: string;
+  /** "22 Priest · Holy". */
+  line: string;
+  fit: { kind: FitKind; label: string };
+  /** The roles its class can play, and the one the addon reports. */
+  roles: SlotRole[];
+  defaultRole: SlotRole;
+  /** "not for priests": why the other roles are off. */
+  notFor: string;
+  /** 6+ below: only Maybe (levelFit). */
+  onlyMaybe: boolean;
+  /** "4 levels below: tough, but the group can carry you." */
+  note?: string;
+}
+
+/** The viewer's answer, collapsed (WEB-49): "You're in as Kaz Coldbrew · Healer". */
+export interface AnswerSummary {
+  lead: string;
+  character?: string;
+  role?: string;
+  detail?: string;
+}
+
+/** The organiser's bar (WEB-49): "You lead as Vesgar Bloodhoof · Tank". */
+export interface LeadBar {
+  state: "playing" | "benched" | "out";
+  character?: string;
+  role?: string;
+  /** "27 Warrior · Protection talents". */
+  line?: string;
+  initials?: string;
+  classFile?: string;
+  colorToken?: string;
 }
 
 export interface AnswerRowView {
@@ -450,9 +595,13 @@ export interface AnswerRowView {
   colorToken?: string;
   friend: string;
   role: string;
+  /** "(usually tank)" when the role differs from the character's own (WEB-49). */
+  usualRole?: string;
+  /** The fit label ("fits", "carry · +21"); undefined without a character. */
+  fit?: string;
   answer: string;
-  answerTone: "in" | "maybe" | "cant" | "organiser";
-  /** "Discord · 17:40" in the viewer's zone. */
+  answerTone: "in" | "maybe" | "cant" | "reserve" | "organiser";
+  /** "Wed 09:12 · Discord" in the viewer's zone (WEB-49: with the day). */
   where: string;
 }
 
@@ -484,16 +633,29 @@ export interface RunDetail {
   slots: SlotView[];
   answers: AnswerRowView[];
   couldJoin: CouldJoinView[];
+  /** WEB-49: the big time, the countdown, the picker, your answer, the organiser's bar, Could fill, Maybe, Reserve. */
+  when: string;
+  countdown?: string;
+  picker: PickerView;
+  summary?: AnswerSummary;
+  /** "Answered Tue 21:40". */
+  answeredAt?: string;
+  leadBar?: LeadBar;
+  couldFill: string[];
+  maybes: string[];
+  reserves: string[];
+  /** The organiser or the admin: the slots have a ⋯ menu. */
+  mayMove: boolean;
+  isOrganiser: boolean;
   mayEdit: boolean;
   mayDelete: boolean;
   /** The admin deleting someone else's run. */
   adminDelete: boolean;
   /** "Cancelled by Nico". */
   cancelled?: string;
+  /** How it ended (WEB-43): "3 of 5 signed-up came", "no upload showed it". */
+  outcome?: string;
 }
-
-/** Characters this many levels below a run's range still show under "Could join". */
-export const COULD_JOIN_SHORT = 5;
 
 export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
   const ctx = context(input);
@@ -513,29 +675,49 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       const tag = ownerTag(ctx, ch);
       return tag !== undefined && !answered.has(tag.toLowerCase()) && ch.level !== undefined;
     })
-    .filter((ch) => ch.level! >= r.min - COULD_JOIN_SHORT && ch.level! <= r.max)
+    // "Could fill" (WEB-47): characters that fit or are over, for an open role.
+    .filter((ch) => levelFit(ch.level, r.min, r.max).suggested)
     .filter((ch) => open[slotRole(ch.role)] > 0)
-    .sort((a, b) => Number(inRange(b.level, r)) - Number(inRange(a.level, r)) || byLevel(a, b));
+    .sort(
+      (a, b) =>
+        Number(levelFit(b.level, r.min, r.max).kind === "fits") -
+          Number(levelFit(a.level, r.min, r.max).kind === "fits") || byLevel(a, b),
+    );
 
+  const closed = run.cancelledAt !== undefined || now >= run.startsAt;
+  const isOrganiser = isViewer(ctx, run.organiser);
+  const mayMove = isOrganiser || viewer.isAdmin;
   const slots: SlotView[] = [];
   for (const role of SLOT_ROLES) {
     const size = role === "damage" ? 3 : 1;
     for (let i = 0; i < size; i++) {
       const a = g[role][i];
       if (a === undefined) {
-        const could = candidates.find((ch) => slotRole(ch.role) === role && inRange(ch.level, r));
-        slots.push({ role, open: could === undefined ? "Nobody in range yet" : `${could.name ?? could.guid} could` });
+        slots.push({ role, open: openFact(ctx, run, role, open[role]) });
         continue;
       }
       const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
       const info = classInfo(ch?.classFile);
-      const who: NonNullable<SlotView["who"]> = { character: charName(ctx, a), friend: friendName(ctx, a.battleTag) };
+      const who: NonNullable<SlotView["who"]> = {
+        character: charName(ctx, a),
+        friend: friendName(ctx, a.battleTag),
+        initials: initials(charName(ctx, a)),
+        yours: isViewer(ctx, a.battleTag),
+      };
       if (ch?.level !== undefined) who.level = ch.level;
       if (ch?.className !== undefined) who.className = ch.className;
+      if (ch?.classFile !== undefined) who.classFile = ch.classFile;
       if (info !== undefined) who.colorToken = info.textToken;
+      if (a.guid !== undefined) who.guid = a.guid;
+      if (ch !== undefined) {
+        const fit = levelFit(ch.level, r.min, r.max);
+        who.fit = { kind: fit.kind, label: fit.label };
+      }
       if (a === lead) who.note = "organiser";
       else if (a.movedUp) who.note = "moved up";
-      slots.push({ role, who });
+      const slot: SlotView = { role, who };
+      if (mayMove && a.guid !== undefined && !closed) slot.menu = moveMenu(ctx, run, a);
+      slots.push(slot);
     }
   }
 
@@ -550,16 +732,33 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
         character: a.guid === undefined ? "—" : charName(ctx, a),
         friend: friendName(ctx, a.battleTag),
         role: a.answer === "cant" ? "—" : ROLE_LABEL[a.role],
-        answer: organiser ? "Organiser" : a.waitlisted ? "Maybe · first in line" : ANSWER_LABEL[a.answer],
+        answer: organiser ? "Organiser" : ANSWER_LABEL[a.answer],
         answerTone: organiser ? "organiser" : a.answer,
-        where: `${SOURCE_LABEL[a.source]} · ${localTime(a.answeredAt, viewer.timeZone)}`,
+        where: `${dayTime(a.answeredAt, viewer.timeZone)} · ${SOURCE_LABEL[a.source]}`,
       };
       if (ch?.level !== undefined) row.level = ch.level;
       if (info !== undefined) row.colorToken = info.textToken;
+      if (ch !== undefined) {
+        row.fit = levelFit(ch.level, r.min, r.max).label;
+        const usual = slotRole(ch.role);
+        if (a.answer !== "cant" && ch.role !== undefined && usual !== a.role) row.usualRole = `(usually ${usual})`;
+      }
       return row;
     });
 
   const choice = answerChoice(ctx, run);
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const nameOf = (a: RunAnswer) => (a.guid === undefined ? undefined : charName(ctx, a));
+  const listed = (kind: Answer) =>
+    run.answers
+      .filter((a) => a.answer === kind)
+      .sort((x, y) => x.answeredAt - y.answeredAt)
+      .map((a) => {
+        const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+        return [nameOf(a) ?? friendName(ctx, a.battleTag), ch?.level, "·", a.role]
+          .filter((x) => x !== undefined)
+          .join(" ");
+      });
   const detail: RunDetail = {
     card: c,
     plannedBy: `Planned by ${isViewer(ctx, run.organiser) ? "you" : friendName(ctx, run.organiser)} ${PLANNED_ON[run.source]}`,
@@ -591,15 +790,61 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       };
       if (ch.level !== undefined) v.level = ch.level;
       if (info !== undefined) v.colorToken = info.textToken;
-      const off = offText(ch.level, r);
+      const fit = levelFit(ch.level, r.min, r.max);
+      const off = fit.kind === "fits" ? undefined : fit.label;
       if (off !== undefined) v.off = off;
       return v;
     }),
+    when: runWhen(run.startsAt, viewer.timeZone, now),
+    picker: picker(ctx, run),
+    couldFill: candidates
+      .slice(0, 3)
+      .map((ch) => [ch.name ?? ch.guid, ch.level].filter((x) => x !== undefined).join(" ")),
+    maybes: listed("maybe"),
+    reserves: listed("reserve"),
+    mayMove: mayMove && !closed,
+    isOrganiser,
     mayEdit: isViewer(ctx, run.organiser) && c.phase !== "past" && c.phase !== "cancelled" && now < run.startsAt,
     mayDelete: (isViewer(ctx, run.organiser) || viewer.isAdmin) && run.cancelledAt === undefined,
     adminDelete: viewer.isAdmin && !isViewer(ctx, run.organiser),
   };
   if (run.note !== undefined) detail.note = run.note;
+  if (c.phase !== "past" && c.phase !== "cancelled") detail.countdown = untilStart(run.startsAt, now);
+  if (mine !== undefined) detail.answeredAt = `Answered ${dayTime(mine.answeredAt, viewer.timeZone)}`;
+  if (isOrganiser) {
+    const ch = mine?.guid === undefined ? undefined : ctx.byGuid.get(mine.guid);
+    const bar: LeadBar = {
+      state: mine?.answer === "in" ? "playing" : mine === undefined || mine.answer === "cant" ? "out" : "benched",
+    };
+    if (mine !== undefined && mine.answer !== "cant" && ch !== undefined) {
+      bar.character = charName(ctx, mine);
+      bar.role = ROLE_LABEL[mine.role];
+      bar.initials = initials(bar.character);
+      if (ch.classFile !== undefined) bar.classFile = ch.classFile;
+      const info = classInfo(ch.classFile);
+      if (info !== undefined) bar.colorToken = info.textToken;
+      const talents = ch.mainTreeName === undefined ? undefined : `${ch.mainTreeName} talents`;
+      bar.line = [[ch.level, ch.className].filter((x) => x !== undefined).join(" "), talents]
+        .filter((x) => x !== undefined && x !== "")
+        .join(" · ");
+    }
+    detail.leadBar = bar;
+  } else if (mine !== undefined) {
+    const character = nameOf(mine);
+    const role = ROLE_LABEL[mine.role];
+    const summary: AnswerSummary =
+      mine.answer === "in"
+        ? { lead: "You're in as", role }
+        : mine.answer === "reserve"
+          ? { lead: `${role} is full · you're reserve as`, detail: "You move up when someone drops out." }
+          : mine.answer === "maybe"
+            ? { lead: "Maybe as", role }
+            : { lead: "You can't make it" };
+    if (character !== undefined && mine.answer !== "cant") summary.character = character;
+    detail.summary = summary;
+  }
+  const ended = run.cancelledAt === undefined ? pastResult(run).detail : undefined;
+  if (ended !== undefined) detail.outcome = ended;
   if (run.cancelledAt !== undefined) {
     detail.cancelled = `Cancelled by ${run.cancelledBy === undefined ? "the organiser" : friendName(ctx, run.cancelledBy)}`;
   }
@@ -609,7 +854,10 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     const dir = best.level !== undefined && best.level < r.min ? "below" : "above";
     detail.outOfRange = `${best.name}${best.level === undefined ? "" : ` (${best.level})`} is ${dir} the ${where} (${rangeText(r)}), so I'm in is off. Maybe or Can't still go.`;
     const other = RUNNABLE_DUNGEONS.find(
-      (d) => d.instanceId === dungeon?.instanceId && d.id !== run.dungeonId && inRange(best.level, d.typicalLevels),
+      (d) =>
+        d.instanceId === dungeon?.instanceId &&
+        d.id !== run.dungeonId &&
+        levelFit(best.level, d.typicalLevels.min, d.typicalLevels.max).kind === "fits",
     );
     if (other !== undefined) {
       detail.planOther = {
@@ -621,6 +869,136 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
   return detail;
 }
 
+// --- WEB-49: the picker, the organiser's moves, the run page v2 -------------------------------------------------
+
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** "Wed 09:12" in a zone. */
+function dayTime(at: number, timeZone: string): string {
+  const weekday = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short" }).format(new Date(at * 1000));
+  return `${WEEKDAY_SHORT.find((d) => weekday.startsWith(d)) ?? weekday} ${localTime(at, timeZone)}`;
+}
+
+/** "priests", "mages". */
+function classPlural(className: string | undefined): string {
+  return className === undefined ? "this class" : `${className.toLowerCase()}s`;
+}
+
+function fitNote(kind: FitKind, label: string): string | undefined {
+  const n = label.match(/\d+/)?.[0];
+  switch (kind) {
+    case "low":
+      return `${n} levels below: tough, but the group can carry you.`;
+    case "tooLow":
+      return `${n} levels below: you can only answer Maybe.`;
+    case "carry":
+      return `${n} levels over. The others get less XP from kills, but runs go fast.`;
+    default:
+      return undefined;
+  }
+}
+
+function pickerCharacter(c: CharacterView, r: LevelRange): PickerCharacter {
+  const fit = levelFit(c.level, r.min, r.max);
+  const info = classInfo(c.classFile);
+  const roles = [...rolesFor(c.classFile)] as SlotRole[];
+  const own = slotRole(c.role);
+  const v: PickerCharacter = {
+    guid: c.guid,
+    name: c.name ?? c.guid,
+    initials: initials(c.name),
+    line: [[c.level, c.className].filter((x) => x !== undefined).join(" "), c.mainTreeName]
+      .filter((x) => x !== undefined && x !== "")
+      .join(" · "),
+    fit: { kind: fit.kind, label: fit.label },
+    roles,
+    defaultRole: roles.includes(own) ? own : roles[0]!,
+    notFor: `not for ${classPlural(c.className)}`,
+    onlyMaybe: !fit.canPick,
+  };
+  if (c.level !== undefined) v.level = c.level;
+  if (c.classFile !== undefined) v.classFile = c.classFile;
+  if (info !== undefined) v.colorToken = info.textToken;
+  const note = fitNote(fit.kind, fit.label);
+  if (note !== undefined) v.note = note;
+  return v;
+}
+
+/** The picker for the viewer: all their characters, the roles' states without their own answer. */
+function picker(ctx: Ctx, run: RunRecord): PickerView {
+  const r = rangeOf(run);
+  const dungeon = runDungeon(run.dungeonId);
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const open = openSlots(run.answers.filter((a) => a !== mine));
+  const roles = {} as PickerView["roles"];
+  for (const role of SLOT_ROLES) {
+    const n = open[role];
+    roles[role] = { state: n <= 0 ? "full → reserve" : role === "damage" ? `${n} open` : "open", full: n <= 0 };
+  }
+  const view: PickerView = {
+    runId: run.id,
+    title: `Join ${dungeon?.name ?? "the run"}`,
+    sub: `${runWhen(run.startsAt, ctx.input.viewer.timeZone, ctx.input.now)} · levels ${rangeText(r)}`,
+    characters: ctx.input.characters
+      .filter((c) => {
+        const tag = ownerTag(ctx, c);
+        return tag !== undefined && isViewer(ctx, tag);
+      })
+      .sort(byLevel)
+      .map((c) => pickerCharacter(c, r)),
+    roles,
+  };
+  if (mine !== undefined) {
+    view.current = { role: mine.role, answer: mine.answer };
+    if (mine.guid !== undefined) view.current.guid = mine.guid;
+  }
+  return view;
+}
+
+/** The ⋯ menu for a sign-up in a slot: other roles (open, or a swap), reserve, off the run (WEB-49). */
+function moveMenu(ctx: Ctx, run: RunRecord, a: RunAnswer): MoveOption[] {
+  const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+  const own = isViewer(ctx, a.battleTag);
+  const can = rolesFor(ch?.classFile);
+  const open = openSlots(run.answers);
+  const g = group(run.answers);
+  const menu: MoveOption[] = SLOT_ROLES.map((role): MoveOption => {
+    const label = ROLE_LABEL[role];
+    if (role === a.role) return { label, to: role, detail: "current", disabled: true };
+    if (!can.includes(role))
+      return { label, to: role, detail: `not for ${classPlural(ch?.className)}`, disabled: true };
+    if (open[role] > 0) return { label: `Move to ${label}`, to: role, detail: "open" };
+    // Full: trade places with someone there whose class can play this sign-up's role.
+    const partner = g[role].find((p) => {
+      const pc = p.guid === undefined ? undefined : ctx.byGuid.get(p.guid);
+      return p.guid !== undefined && rolesFor(pc?.classFile).includes(a.role);
+    });
+    if (partner === undefined) return { label, to: role, detail: "taken", disabled: true };
+    return { label: `Swap with ${charName(ctx, partner)}`, to: role, swapWith: partner.guid!, detail: label };
+  });
+  menu.push({ label: own ? "Bench yourself" : "Move to reserve", to: "reserve" });
+  menu.push({ label: own ? "Leave the group" : "Remove from run", to: "remove", danger: true });
+  return menu;
+}
+
+/** One fact for an open slot (finding 1): how many are left, or that nobody is in range and who is closest. */
+function openFact(ctx: Ctx, run: RunRecord, role: SlotRole, left: number): string {
+  const r = rangeOf(run);
+  const answered = new Set(run.answers.map((a) => a.battleTag.toLowerCase()));
+  const free = ctx.input.characters.filter((c) => {
+    const tag = ownerTag(ctx, c);
+    return tag !== undefined && !answered.has(tag.toLowerCase()) && rolesFor(c.classFile).includes(role);
+  });
+  if (free.some((c) => levelFit(c.level, r.min, r.max).suggested)) return `${left} left`;
+  const below = free
+    .filter((c) => c.level !== undefined && c.level < r.min)
+    .sort((x, y) => (y.level ?? 0) - (x.level ?? 0))[0];
+  const nobody = `No ${role} in range`;
+  return below === undefined
+    ? nobody
+    : `${nobody} · ${below.name ?? below.guid} is ${levelFit(below.level, r.min, r.max).label}`;
+}
+
 // --- Plan a run -------------------------------------------------------------------------------------------------------
 
 export interface DungeonOption {
@@ -630,18 +1008,23 @@ export interface DungeonOption {
   /** "Fits 4 friends' characters · no tank in range yet". */
   fits: string;
   range: LevelRange;
-}
-
-export interface LeadOption {
-  guid: string;
-  label: string;
-  fits: boolean;
+  /** One of Forever's new dungeons ("Forever" next to the range). */
+  forever: boolean;
+  /** The instance when this is one of its wings ("Scarlet Monastery"): searching shows the other wings. */
+  wingOf?: string;
+  /** A character of the viewer fits or is over: the "Fits your characters" group. */
+  fitsYou: boolean;
+  /** The viewer's best character for it: "Vesgar 27 fits", "Twinkle 5 below", "no fit". */
+  best?: { text: string; tone?: "good" | "warn" };
 }
 
 export interface PlanPage {
+  /** "Fits your characters" first, then "All dungeons by level" (WEB-49). */
   dungeons: DungeonOption[];
-  dungeonId: string;
-  leads: Record<string, LeadOption[]>;
+  /** Filled in from a dungeon page or a roster band, or when exactly one dungeon fits a character of the viewer. */
+  dungeonId?: string;
+  /** Lead as through the picker (WEB-49): the viewer's characters per dungeon, with fit, roles and notes. */
+  leadPicker: Record<string, PickerCharacter[]>;
   days: DayOption[];
   timeZone: string;
   /** Friends in another zone, for "Bob and Jorrit see 19:30". */
@@ -651,10 +1034,47 @@ export interface PlanPage {
   now: number;
 }
 
+/** Which of the viewer's characters is the best for a range: fits (highest), over, low, carry, then too low. */
+const FIT_RANK: Record<FitKind, number> = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 };
+
+/** The viewer's best character for a range by FIT_RANK, the closest within a kind (the highest when it fits). */
+function bestOf<C extends { level?: number }>(mine: readonly C[], r: LevelRange): { c: C; fit: LevelFit } | undefined {
+  const away = (level: number | undefined) =>
+    level === undefined ? Infinity : level > r.max ? level - r.max : level < r.min ? r.min - level : -level;
+  return mine
+    .map((c) => ({ c, fit: levelFit(c.level, r.min, r.max) }))
+    .sort((a, b) => FIT_RANK[a.fit.kind] - FIT_RANK[b.fit.kind] || away(a.c.level) - away(b.c.level))[0];
+}
+
+function bestFit(mine: readonly CharacterView[], r: LevelRange): DungeonOption["best"] {
+  const best = bestOf(mine, r);
+  if (best === undefined) return undefined;
+  const { c, fit } = best;
+  const name = (c.name ?? c.guid).split(" ")[0]!;
+  switch (fit.kind) {
+    case "fits":
+    case "over":
+      return { text: `${name} ${c.level ?? ""} ${fit.label}`, tone: "good" };
+    case "low":
+    case "carry":
+      return { text: `${name} ${fit.label}`, tone: "warn" };
+    default:
+      return { text: "no fit" };
+  }
+}
+
 export function planPage(input: RunsInput, dungeonId: string | undefined): PlanPage {
   const ctx = context(input);
-  const dungeons = RUNNABLE_DUNGEONS.map((d) => {
-    const fit = input.characters.filter((c) => inRange(c.level, d.typicalLevels));
+  const mine = input.characters
+    .filter((c) => {
+      const tag = ownerTag(ctx, c);
+      return tag !== undefined && isViewer(ctx, tag);
+    })
+    .sort(byLevel);
+  const all = RUNNABLE_DUNGEONS.map((d): DungeonOption => {
+    const fit = input.characters.filter(
+      (c) => levelFit(c.level, d.typicalLevels.min, d.typicalLevels.max).kind === "fits",
+    );
     const owners = new Set(fit.map((c) => c.owner));
     const missing = SLOT_ROLES.filter((role) => role !== "damage" && !fit.some((c) => slotRole(c.role) === role));
     const fits = [
@@ -663,16 +1083,29 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
     ]
       .filter((x) => x !== undefined)
       .join(" · ");
-    return { id: d.id, name: d.name, label: `${d.name} · ${rangeText(d.typicalLevels)}`, fits, range: d.typicalLevels };
+    const r = d.typicalLevels;
+    const o: DungeonOption = {
+      id: d.id,
+      name: d.name,
+      label: `${d.name} · ${rangeText(r)}`,
+      fits,
+      range: r,
+      forever: d.forever,
+      fitsYou: mine.some((c) => levelFit(c.level, r.min, r.max).suggested),
+    };
+    if (d.wingOf !== undefined) o.wingOf = d.wingOf;
+    const best = bestFit(mine, r);
+    if (best !== undefined) o.best = best;
+    return o;
   });
-  const leads: Record<string, LeadOption[]> = {};
-  for (const d of dungeons) {
-    leads[d.id] = viewerCharacters(ctx, d.range).map((c) => {
-      const why = c.fits ? c.role : c.level !== undefined && c.level < d.range.min ? "too low" : "too high";
-      return { guid: c.guid, label: `${c.name}${c.level === undefined ? "" : ` ${c.level}`} · ${why}`, fits: c.fits };
-    });
-  }
-  const best = dungeons.find((d) => d.id === dungeonId) ?? dungeons.find((d) => d.id === "sm-armory") ?? dungeons[0]!;
+  const byRange = (a: DungeonOption, b: DungeonOption) =>
+    a.range.min - b.range.min || a.range.max - b.range.max || compareText(a.name, b.name);
+  const dungeons = [...all.filter((d) => d.fitsYou).sort(byRange), ...all.filter((d) => !d.fitsYou).sort(byRange)];
+  const leadPicker: Record<string, PickerCharacter[]> = {};
+  for (const d of dungeons) leadPicker[d.id] = mine.map((c) => pickerCharacter(c, d.range));
+  // Finding 6: no guessed dungeon; when exactly one dungeon fits a character of the viewer, that one.
+  const fitting = dungeons.filter((d) => mine.some((c) => levelFit(c.level, d.range.min, d.range.max).kind === "fits"));
+  const chosen = dungeons.find((d) => d.id === dungeonId) ?? (fitting.length === 1 ? fitting[0] : undefined);
   const tz = input.viewer.timeZone;
   const others = new Map<string, string>();
   for (const p of input.people) {
@@ -683,12 +1116,220 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
   }
   return {
     dungeons,
-    dungeonId: best.id,
-    leads,
+    ...(chosen === undefined ? {} : { dungeonId: chosen.id }),
+    leadPicker,
     days: nextDays(input.now, tz),
     timeZone: tz,
     otherZones: [...others].map(([name, timeZone]) => ({ name, timeZone })).sort((a, b) => compareText(a.name, b.name)),
     organiser: { name: friendName(ctx, input.viewer.battleTag) },
     now: input.now,
   };
+}
+
+// --- runs on the roster (WEB-45, board `roster-cards-runs`) ----------------------------------------------------------
+
+export interface NextRunView {
+  href: string;
+  dungeon: string;
+  /** "Today 20:30" in the viewer's zone. */
+  when: string;
+  /** "Nico on Ves Doombringer · 3 in · 1 maybe · tank open". */
+  line: string;
+}
+
+export interface BandRunView {
+  href: string;
+  /** "Fri 20:30 · 3 in". */
+  label: string;
+}
+
+export interface RosterRuns {
+  /** The next upcoming run, whoever can join it (Nico, 2026-10-28); none when nothing is planned. */
+  next?: NextRunView;
+  /** Per dungeon id: its upcoming runs for the band popover, at most 3, and how many more. */
+  byDungeon: Record<string, { runs: BandRunView[]; more: number }>;
+}
+
+/** The runs per dungeon a band popover lists (Nico, 2026-10-28: up to three, each a link). */
+export const BAND_RUNS = 3;
+
+export function rosterRuns(input: RunsInput): RosterRuns {
+  const ctx = context(input);
+  const upcoming = input.runs
+    .filter((r) => isUpcoming(r, input.now))
+    .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
+  const out: RosterRuns = { byDungeon: {} };
+  const first = upcoming[0];
+  if (first !== undefined) {
+    const c = card(ctx, first);
+    const lead = first.answers.find((a) => sameBattleTag(a.battleTag, first.organiser) && a.answer === "in");
+    const who = isViewer(ctx, first.organiser)
+      ? lead === undefined
+        ? "You organise"
+        : `You lead as ${charName(ctx, lead)}`
+      : lead === undefined
+        ? `${friendName(ctx, first.organiser)} organises`
+        : `${friendName(ctx, first.organiser)} on ${charName(ctx, lead)}`;
+    const open = openSlots(first.answers);
+    const tallied = counts(first.answers);
+    const gaps = SLOT_ROLES.filter((r) => open[r] > 0).map((r) =>
+      r === "damage" && open[r] > 1 ? `${open[r]} damage open` : `${r} open`,
+    );
+    out.next = {
+      href: c.href,
+      dungeon: c.dungeon,
+      when: c.when,
+      line: [who, `${tallied.in} in`, ...(tallied.maybe > 0 ? [`${tallied.maybe} maybe`] : []), ...gaps].join(" · "),
+    };
+  }
+  for (const run of upcoming) {
+    const entry = (out.byDungeon[run.dungeonId] ??= { runs: [], more: 0 });
+    if (entry.runs.length >= BAND_RUNS) {
+      entry.more++;
+      continue;
+    }
+    const c = card(ctx, run);
+    entry.runs.push({ href: c.href, label: `${c.when} · ${counts(run.answers).in} in` });
+  }
+  return out;
+}
+
+// --- Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states) ---------------------------------------------
+
+const ASKED_FROM: Record<RunSource, string> = {
+  website: "from the website",
+  discord: "from Discord",
+  game: "from the game",
+};
+
+export interface AskCardView {
+  id: number;
+  dungeon: string;
+  /** "17–26". */
+  range: string;
+  /** When it stops taking answers (seconds); the countdown runs in the browser. */
+  expiresAt: number;
+  /** "Nico", or "You" for the viewer's own ask. */
+  asker: string;
+  /** The asker's character and its role: "Grom Ashfeller", "tank". */
+  askerCharacter?: { name: string; role: string; colorToken?: string };
+  /** "from the game", "from Discord". */
+  from: string;
+  note?: string;
+  /** I'm in, the asker first, then in answer order: "Grom Ashfeller 24 Warrior". */
+  ins: { name: string; level?: number; className?: string; colorToken?: string }[];
+  maybe: number;
+  cant: number;
+  /** The viewer's own ask: no answer buttons, only "Form the group in game". */
+  yours: boolean;
+  /** The viewer's answer: "I'm in" with "Lia Thornwhisper". */
+  answered?: { answer: string; character?: string; colorToken?: string };
+  /** "change ▾": the v2 picker without slot states (asks have no slots). */
+  picker: PickerView;
+  /** The character I'm in uses by default: fits, then over, then 1–5 below, a carry only when nothing else. */
+  pick?: { guid: string; role: SlotRole };
+  /** "None of your characters fit Zul'Farrak (44–54)." when every character is too low: only Maybe or Can't. */
+  noneFit?: string;
+}
+
+/** The roles of an ask: no slots, so no states. */
+const ASK_ROLES: PickerView["roles"] = {
+  tank: { state: "", full: false },
+  healer: { state: "", full: false },
+  damage: { state: "", full: false },
+};
+
+function classToken(ctx: Ctx, guid: string | undefined): string | undefined {
+  return classInfo(guid === undefined ? undefined : ctx.byGuid.get(guid)?.classFile)?.textToken;
+}
+
+function askCard(ctx: Ctx, ask: RunRecord): AskCardView {
+  const r = rangeOf(ask);
+  const dungeon = runDungeon(ask.dungeonId)?.name ?? ask.dungeonId;
+  const yours = isViewer(ctx, ask.organiser);
+  const lead = ask.answers.find((a) => sameBattleTag(a.battleTag, ask.organiser) && a.answer === "in");
+  const ordered = [...ask.answers].sort(
+    (a, b) => Number(b === lead) - Number(a === lead) || a.answeredAt - b.answeredAt,
+  );
+  const c = counts(ask.answers);
+  const characters = ctx.input.characters
+    .filter((ch) => {
+      const tag = ownerTag(ctx, ch);
+      return tag !== undefined && isViewer(ctx, tag);
+    })
+    .sort(byLevel)
+    .map((ch) => pickerCharacter(ch, r));
+  const view: AskCardView = {
+    id: ask.id,
+    dungeon,
+    range: rangeText(r),
+    expiresAt: ask.expiresAt ?? ask.startsAt,
+    asker: yours ? "You" : friendName(ctx, ask.organiser),
+    from: ASKED_FROM[ask.source],
+    ins: ordered
+      .filter((a) => a.answer === "in")
+      .map((a) => {
+        const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+        const row: AskCardView["ins"][number] = { name: charName(ctx, a) };
+        if (ch?.level !== undefined) row.level = ch.level;
+        if (ch?.className !== undefined) row.className = ch.className;
+        const token = classToken(ctx, a.guid);
+        if (token !== undefined) row.colorToken = token;
+        return row;
+      }),
+    maybe: c.maybe,
+    cant: c.cant,
+    yours,
+    picker: {
+      runId: ask.id,
+      title: `Join ${dungeon}`,
+      sub: `Asking now · levels ${rangeText(r)}`,
+      characters,
+      roles: ASK_ROLES,
+    },
+  };
+  if (ask.note !== undefined) view.note = ask.note;
+  if (lead !== undefined) {
+    const token = classToken(ctx, lead.guid);
+    view.askerCharacter = {
+      name: charName(ctx, lead),
+      role: lead.role,
+      ...(token === undefined ? {} : { colorToken: token }),
+    };
+  }
+  const answer = ask.answers.find((a) => isViewer(ctx, a.battleTag));
+  if (answer !== undefined && !yours) {
+    const token = classToken(ctx, answer.guid);
+    view.answered = {
+      answer: ANSWER_LABEL[answer.answer],
+      ...(answer.guid === undefined ? {} : { character: charName(ctx, answer) }),
+      ...(token === undefined ? {} : { colorToken: token }),
+    };
+    view.picker.current = {
+      role: answer.role,
+      answer: answer.answer,
+      ...(answer.guid === undefined ? {} : { guid: answer.guid }),
+    };
+  }
+  const best = bestOf(characters, r);
+  if (best !== undefined) {
+    view.pick = { guid: best.c.guid, role: best.c.defaultRole };
+    if (best.fit.kind === "tooLow") view.noneFit = `None of your characters fit ${dungeon} (${rangeText(r)}).`;
+  }
+  return view;
+}
+
+/** The open asks for the Runs page, newest first; one past its time is gone (no "ended" state). */
+function asksNow(ctx: Ctx): AskCardView[] {
+  const { now } = ctx.input;
+  return (ctx.input.asks ?? [])
+    .filter((a) => a.cancelledAt === undefined && (a.expiresAt ?? a.startsAt) > now)
+    .sort((a, b) => b.startsAt - a.startsAt || b.id - a.id)
+    .map((a) => askCard(ctx, a));
+}
+
+/** "7 min" (whole minutes, rounded up) until the last minute, then "40 s": the board's countdown. */
+export function askCountdown(secondsLeft: number): string {
+  const s = Math.max(0, Math.ceil(secondsLeft));
+  return s > 60 ? `${Math.ceil(s / 60)} min` : `${s} s`;
 }

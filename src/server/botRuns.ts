@@ -1,7 +1,8 @@
 import { mayAdmin, roleOf } from "@/core/access";
-import { RUNNABLE_DUNGEONS } from "@/core/gamedata";
-import { inRange, isUpcoming, runDungeon } from "@/core/runs";
-import { zonedToUtc } from "@/core/runTime";
+import { RUNNABLE_DUNGEONS, rolesFor } from "@/core/gamedata";
+import { isUpcoming, runDungeon, slotRole, type MoveTo, type SlotRole } from "@/core/runs";
+import { levelFit } from "@/core/levelFit";
+import { nextDays, zonedToUtc } from "@/core/runTime";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
 import { effectiveTimeZone, linkForDiscordUser } from "./discord";
@@ -35,20 +36,48 @@ export function botFriend(db: Db, discordUserId: unknown): BotFriend | Response 
   };
 }
 
+const ROLES = ["tank", "healer", "damage"] as const;
+
+/** A role as sent (WEB-47): tank, healer or damage; undefined when missing; null when not a role. */
+export function roleParam(value: unknown): SlotRole | undefined | null {
+  if (value === undefined || value === null) return undefined;
+  return ROLES.find((r) => r === value) ?? null;
+}
+
+/** The character of an answer: `characterId` (WEB-47) or `guid` (WEB-40). */
+export function characterParam(body: Record<string, unknown>): string | undefined {
+  const id = body.characterId ?? body.guid;
+  return typeof id === "string" ? id : undefined;
+}
+
+/** A move target (WEB-47): a role, `reserve` or `remove`. */
+export function moveParam(value: unknown): MoveTo | undefined {
+  return value === "reserve" || value === "remove" ? value : (ROLES.find((r) => r === value) ?? undefined);
+}
+
 /** The run's id from the path; undefined for anything but digits. */
 export function runIdParam(id: string): number | undefined {
   return /^\d{1,15}$/.test(id) ? Number(id) : undefined;
 }
 
 /**
- * A start time as the bot sends it: `startsAt` (Unix seconds), or `date` and `time` typed in the friend's own time
- * zone (Discord doesn't tell the bot the user's zone, WEB-39). Undefined for neither or a time that doesn't exist.
+ * A start time as the bot sends it: `startsAt` (Unix seconds); `date` and `time` typed in the friend's own time zone
+ * (Discord doesn't tell the bot the user's zone, WEB-39); or `dayOffset` (0 today … 6, in the friend's own zone, for
+ * `/plan`'s Today, Tomorrow and weekdays, BOT-04) and `time`. Undefined for none or a time that doesn't exist.
  */
-export function startTime(body: Record<string, unknown>, timeZone: string): number | undefined {
+export function startTime(body: Record<string, unknown>, timeZone: string, now: number): number | undefined {
   if (typeof body.startsAt === "number" && Number.isInteger(body.startsAt)) return body.startsAt;
-  if (typeof body.date === "string" && typeof body.time === "string") return zonedToUtc(body.date, body.time, timeZone);
+  if (typeof body.time !== "string") return undefined;
+  if (typeof body.date === "string") return zonedToUtc(body.date, body.time, timeZone);
+  const offset = body.dayOffset;
+  if (typeof offset === "number" && Number.isInteger(offset) && offset >= 0 && offset < DAY_CHOICES) {
+    return zonedToUtc(nextDays(now, timeZone, DAY_CHOICES)[offset]!.date, body.time, timeZone);
+  }
   return undefined;
 }
+
+/** `/plan`'s days: today and the next six (BOT-04). */
+export const DAY_CHOICES = 7;
 
 /** Upcoming runs as the bot shows them (`/runs`), by start. */
 export function upcomingRuns(db: Db, now: number) {
@@ -61,15 +90,20 @@ export function upcomingRuns(db: Db, now: number) {
 /** "Pick my character": the friend's characters in the run's range, highest first. */
 export function pickableCharacters(db: Db, run: StoredRun, battleTag: string) {
   const range = runDungeon(run.dungeonId)?.typicalLevels;
-  return charactersOf(loadState(db)?.data, battleTag)
-    .filter((c) => range !== undefined && inRange(c.level, range))
-    .map((c) => ({
-      guid: c.guid,
-      name: c.name ?? c.guid,
-      level: c.level ?? null,
-      classFile: c.classFile ?? null,
-      role: c.role ?? null,
-    }));
+  return (
+    charactersOf(loadState(db)?.data, battleTag)
+      // Every character that may say I'm in (WEB-47 levelFit), with how it fits.
+      .filter((c) => range !== undefined && levelFit(c.level, range.min, range.max).canPick)
+      .map((c) => ({
+        guid: c.guid,
+        name: c.name ?? c.guid,
+        level: c.level ?? null,
+        classFile: c.classFile ?? null,
+        role: c.role ?? null,
+        roles: rolesFor(c.classFile),
+        fit: range === undefined ? null : levelFit(c.level, range.min, range.max).label,
+      }))
+  );
 }
 
 export function dungeonList() {
@@ -92,6 +126,12 @@ const REFUSALS: Record<string, [number, string]> = {
   no_character: [400, "I'm in needs a character."],
   out_of_range: [400, "That character is not in the level range."],
   closed: [409, "The run has started or was cancelled."],
+  expired: [409, "This ask has expired."],
+  role_not_for_class: [400, "That character's class can't play that role."],
+  role_full: [409, "That role has no open slot."],
+  unknown_sign_up: [404, "No sign-up with that character."],
+  same: [409, "The sign-up already is there."],
+  not_in_role: [409, "That character doesn't hold a slot of that role."],
   not_organiser: [403, "Only the organiser can edit a run."],
   not_allowed: [403, "Only the organiser or the admin can delete a run."],
   already_cancelled: [409, "The run was already cancelled."],
@@ -106,4 +146,44 @@ export function refusalText(code: string): [number, string] {
 export function refusal(code: string): Response {
   const [status, text] = refusalText(code);
   return apiError(status, code, text);
+}
+
+// Who leads: the best fit first (fits, then over, low, carry), then the highest level (BOT-04).
+const LEAD_ORDER = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 } as const;
+
+/**
+ * `/plan`'s choices for a friend (BOT-04): their time zone, whether they are the admin (`/run` lists every run for
+ * them), today and the next six days in it (`dayOffset`), and per
+ * dungeon the character they would lead as (none when none of theirs may say I'm in).
+ */
+export function planChoices(db: Db, friend: BotFriend, now: number) {
+  const characters = charactersOf(loadState(db)?.data, friend.battleTag);
+  return {
+    timeZone: friend.timeZone,
+    admin: friend.isAdmin,
+    days: nextDays(now, friend.timeZone, DAY_CHOICES).map((d, offset) => ({ offset, label: d.label, date: d.date })),
+    dungeons: RUNNABLE_DUNGEONS.map((d) => {
+      const { min, max } = d.typicalLevels;
+      const lead = characters
+        .map((c) => ({ c, fit: levelFit(c.level, min, max) }))
+        .filter((x) => x.fit.canPick)
+        .sort((a, b) => LEAD_ORDER[a.fit.kind] - LEAD_ORDER[b.fit.kind])[0];
+      return {
+        id: d.id,
+        name: d.name,
+        typicalLevels: d.typicalLevels,
+        lead:
+          lead === undefined
+            ? null
+            : {
+                guid: lead.c.guid,
+                name: lead.c.name ?? lead.c.guid,
+                level: lead.c.level ?? null,
+                classFile: lead.c.classFile ?? null,
+                role: slotRole(lead.c.role),
+                fit: { kind: lead.fit.kind, label: lead.fit.label },
+              },
+      };
+    }),
+  };
 }

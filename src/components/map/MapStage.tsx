@@ -19,6 +19,7 @@ import {
   type ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
 import { classInfo } from "@/core/gamedata/classes";
+import type { MapDungeon } from "@/core/views/dungeon";
 import {
   CONTINENTS,
   ZOOM_MAX,
@@ -37,10 +38,10 @@ import {
 } from "@/core/views/mapMarkers";
 import { motionOn } from "@/components/atmosphere/motion";
 import { FilterMenu } from "@/components/roster/FilterMenu";
-import { DungeonIcon } from "@/components/ui/icons";
 import { BottomSheet, sheetHeights, type Snap } from "./BottomSheet";
 import { CharacterCard } from "./CharacterCard";
 import { CharacterSheet } from "./CharacterSheet";
+import { DungeonEntrance, DungeonPopover } from "./DungeonEntrance";
 import { FLY_EVENT, SHEET_EVENT, type SheetRequest } from "./flyTo";
 import { CharacterMarker, FAN_MAX, ZoneCluster, fanOffsets } from "./Markers";
 import styles from "./Markers.module.css";
@@ -60,8 +61,8 @@ export interface MapStageProps {
   frames?: Record<Continent, Box>;
   /** World x between the continents (map.ts CONTINENT_SPLIT). */
   split?: number;
-  /** Dungeon entrances, shown at zone zoom (4×). */
-  dungeons?: { name: string; x: number; y: number }[];
+  /** Dungeon entrances, shown at zone zoom (4×), with planned runs past the whole world (WEB-42). */
+  dungeons?: MapDungeon[];
   /** GUIDs of the sightings that drop in (`?drop=`, from a session report). */
   drop?: string[];
   /** Below 1024 px: the roll call for the phone's bottom sheet (WEB-28); the tapped character replaces it. */
@@ -146,6 +147,8 @@ export function MapStage({
   const [selected, setSelected] = useState(initial);
   const [hovered, setHovered] = useState<string>();
   const [openZone, setOpenZone] = useState<string>();
+  /** The dungeon entrance whose popover (or, below 1024 px, sheet) is open (WEB-42). */
+  const [openDungeon, setOpenDungeon] = useState<string>();
   const [level, setLevel] = useState<ZoomLevel>("world");
   const [scaleEnd, setScaleEnd] = useState<"min" | "mid" | "max">("min");
   const [focusZone, setFocusZone] = useState<{ id: string; name: string }>();
@@ -211,6 +214,7 @@ export function MapStage({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setOpenZone(undefined);
+      setOpenDungeon(undefined);
       setHovered(undefined);
       pickRef.current(undefined);
     };
@@ -509,6 +513,7 @@ export function MapStage({
   /** A marker or roll call row picked: the sheet below 1024 px, else the selection and card (WEB-25/26). */
   const pick = useCallback(
     (guid: string | undefined) => {
+      if (guid !== undefined) setOpenDungeon(undefined);
       if (!sheetOn.current) return select(guid);
       if (guid === undefined) {
         if (selectedNow.current !== undefined) closeSheet(true);
@@ -516,6 +521,27 @@ export function MapStage({
     },
     [select, openInSheet, closeSheet],
   );
+
+  /**
+   * A dungeon entrance clicked: its popover, or below 1024 px its sheet in place of a character, the map flying to the
+   * entrance in the part above the sheet as for a character (WEB-42).
+   */
+  const toggleDungeon = useCallback(
+    (name: string | undefined) => {
+      if (dragged.current) return;
+      setOpenDungeon(name);
+      if (!sheetOn.current) return;
+      if (name === undefined) setSnap("peek");
+      else {
+        if (selectedNow.current !== undefined) closeSheet(true, "half");
+        setSnap("half");
+        const d = dungeons.find((x) => x.name === name);
+        if (d !== undefined) void goTo(d.x, d.y, ZOOM_MAX, motionMs("--dur-fly"));
+      }
+    },
+    [closeSheet, setSnap, dungeons, goTo],
+  );
+  const sheetDungeon = sheetMode ? dungeons.find((d) => d.name === openDungeon) : undefined;
 
   // Back and Forward with the sheet: the URL's character is the open one.
   useEffect(() => {
@@ -668,6 +694,7 @@ export function MapStage({
           ref={root}
           className={styles.root}
           data-level={level}
+          data-whole={scaleEnd === "min" || undefined}
           onPointerOver={(e) => markZone(e.target)}
           onPointerLeave={() => markZone(null)}
           onPointerDown={() => {
@@ -677,18 +704,21 @@ export function MapStage({
             if (dragged.current) return;
             if (e.target instanceof Element && e.target.closest("[data-map-item]") !== null) return;
             setOpenZone(undefined);
+            setOpenDungeon(undefined);
             pick(undefined);
           }}
         >
           {children}
           <div className={styles.overlay}>
             {dungeons.map((d) => (
-              <span key={d.name} className={zoom.dungeon} style={at(d.x, d.y)} aria-hidden="true">
-                <span className={zoom.dungeonMark}>
-                  <DungeonIcon className={zoom.dungeonIcon} />
-                  <span>{d.name}</span>
-                </span>
-              </span>
+              <DungeonEntrance
+                key={d.name}
+                dungeon={d}
+                at={at(d.x, d.y)}
+                open={openDungeon === d.name}
+                inSheet={sheetMode}
+                onToggle={toggleDungeon}
+              />
             ))}
             {places.map((place) => {
               const holdsSelection = place.markers.some((m) => m.guid === selected);
@@ -772,6 +802,8 @@ export function MapStage({
               role: "group",
               "aria-label": "Map. Arrow keys pan, plus and minus zoom, 0 shows the whole world.",
               onKeyDown,
+              // The frame a dungeon entrance's popover keeps inside (WEB-42).
+              ...({ "data-map-frame": "" } as object),
             }}
           >
             {stage}
@@ -837,11 +869,23 @@ export function MapStage({
             snap={snap}
             onSnap={(to) => {
               if (selectedNow.current !== undefined && to === "peek") closeSheet(true);
+              else if (sheetDungeon !== undefined && to === "peek") toggleDungeon(undefined);
               else setSnap(to);
             }}
-            handle={open === undefined ? { open: "Open roll call", collapse: "Collapse roll call" } : undefined}
+            handle={
+              open === undefined && sheetDungeon === undefined
+                ? { open: "Open roll call", collapse: "Collapse roll call" }
+                : undefined
+            }
           >
-            {open === undefined ? (
+            {open === undefined && sheetDungeon !== undefined ? (
+              <DungeonPopover
+                key={sheetDungeon.name}
+                dungeon={sheetDungeon}
+                variant="sheet"
+                onClose={() => toggleDungeon(undefined)}
+              />
+            ) : open === undefined ? (
               sheet
             ) : (
               <CharacterSheet

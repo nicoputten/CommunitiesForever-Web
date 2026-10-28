@@ -1,5 +1,7 @@
 import { MAX_LEVEL, RUNNABLE_DUNGEONS, type RunnableDungeon } from "../gamedata";
 import type { Dataset } from "../model";
+import { levelFit } from "../levelFit";
+import { slotRole, type SlotRole } from "../runs";
 import { DAY } from "./age";
 import {
   byLevel,
@@ -61,8 +63,10 @@ export interface RosterFriend {
 export interface DungeonBand {
   /** A dungeon or a wing that is one (Scarlet Monastery's, WEB-32). */
   dungeon: RunnableDungeon;
-  /** Characters whose level is in the typical range, by level. */
+  /** Characters whose level is in the typical range (`levelFit` kind `fits`), by level. */
   fits: CharacterView[];
+  /** WEB-45: tank and healer when none of `fits` plays it ("no healer in range"). */
+  missing: SlotRole[];
 }
 
 export interface LevelSpread {
@@ -188,8 +192,12 @@ const width = (b: DungeonBand) => b.dungeon.typicalLevels.max - b.dungeon.typica
 export function levelSpread(characters: readonly CharacterView[]): LevelSpread {
   const bands: DungeonBand[] = [];
   for (const d of RUNNABLE_DUNGEONS) {
-    const fits = inRange(characters, d.typicalLevels.min, d.typicalLevels.max);
-    if (fits.length >= 2) bands.push({ dungeon: d, fits });
+    // Only who fits: we recommend, never restrict (DESIGN.md §8, Nico 2026-10-28).
+    const { min, max } = d.typicalLevels;
+    const fits = characters.filter((c) => levelFit(c.level, min, max).kind === "fits").sort(byLevel);
+    if (fits.length < 2) continue;
+    const missing = (["tank", "healer"] as const).filter((role) => !fits.some((c) => slotRole(c.role) === role));
+    bands.push({ dungeon: d, fits, missing });
   }
   bands.sort(
     (a, b) =>

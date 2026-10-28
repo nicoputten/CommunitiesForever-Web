@@ -210,6 +210,7 @@ export function summaryParts(summary: UploadSummary | undefined, first: boolean)
   if (first) return ["First upload", plural(c.newCharacters, "character")];
   const parts = [
     c.levelsGained > 0 ? plural(c.levelsGained, "level gained", "levels gained") : undefined,
+    (summary.runAnswers ?? 0) > 0 ? plural(summary.runAnswers!, "run answer") : undefined,
     c.skillGains > 0 ? plural(c.skillGains, "skill gain") : undefined,
     c.newCharacters > 0 ? plural(c.newCharacters, "new character") : undefined,
     c.sightings > 0 ? plural(c.sightings, "sighting") : undefined,

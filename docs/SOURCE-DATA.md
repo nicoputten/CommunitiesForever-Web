@@ -11,6 +11,9 @@ Source of truth: the addon repo, `docs/ARCHITECTURE.md` "Data model". This file 
 |---|---|---|
 | v0.3 | 1 | `tests/fixtures/addon/v0.3/savedvariables.lua` |
 | v0.4 | 1 | `tests/fixtures/addon/v0.4/savedvariables.lua` |
+| unreleased (CF-47, CF-48) | 2 | `tests/fixtures/addon-unreleased/pending.lua` (the `pending` list only, the addon's own sample) |
+
+Schema 2 adds only `global.pending`; the site reads schemas 1 and 2 with the same reader (`SUPPORTED_SCHEMA` = 2) and the pending items apart (`src/core/gameItems.ts`, WEB-43). A newer schema is stored as rejected ("newer format").
 
 The addon fixtures hold `global` only (as `return { ... }`), captured from invented players.
 
@@ -34,7 +37,7 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; later `recipes` (addon CF-38) | alts, professions |
 | `locations[guid]` | `{ zone, seenAt }`: last zone seen in the community while Nico was online. Zone name text, can be a dungeon. | map |
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
-| `self.feed`, `people[bt].feed` | activity per realm day | later (backlog) |
+| `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`; `false` when "Share my activity" is off; the last 7 realm days only | weekly recap history (WEB-41) |
 | `runs` | Nico's runs in progress | later (backlog) |
 | `settings` | `clubName` only | page title / group name |
 
@@ -47,4 +50,17 @@ Times are Unix seconds. Any field can be missing in older releases.
 - `locations[guid] = { zone, seenAt }`, `presence[guid] = { battleTag, lastSeen }`.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
 - `uploader` (person key of `self`) and `version` (`self.version`).
-- Not read yet: `feed`, `runs`, `invite`, other `settings`.
+- The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state.
+- Not read yet: `runs`, `invite`, other `settings`.
+
+## The game's items (`pending`, WEB-43)
+Schema 2 (addon CF-47, CF-48): what the player did in game that has to reach the site, until the site's runs list
+their ids under `received` (WEB-44). Each item: `id` (unique per player: account id, time, counter) and `at` (UTC).
+| `kind` | Fields | The site |
+|---|---|---|
+| `plan` | `dungeon` (the addon's id), `startsAt`, `guid`, `name`, `role`, `note` | a run, source "game", the player leading as that character (else organiser without a slot); dropped when its start has passed |
+| `answer` | `run` (`r-<id>`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role` | the player's answer, source "game" ("N run answers") |
+| `ask` | `dungeon`, `guid`, `name`, `role`, `note` | an `askNow` bot event, only within 10 minutes of `at` |
+| `ping` | `run`, `battleTag`, `guid`, `name` (who to ping) | a `ping` bot event |
+
+The run log (CF-23, in the feed: `feed[day][guid].runs`) decides "Ran it" (WEB-43, `src/core/runOutcome.ts`).

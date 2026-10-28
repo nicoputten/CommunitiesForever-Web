@@ -7,6 +7,7 @@ import { getViewer } from "@/app/viewer";
 import { Atmosphere } from "@/components/atmosphere/Atmosphere";
 import { BotTokenCard } from "@/components/discord/BotTokenCard";
 import { SettingFixed, SettingPick, SettingSwitch } from "@/components/discord/Controls";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { ChatIcon } from "@/components/ui/icons";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { battleTagName } from "@/core/access";
@@ -25,7 +26,7 @@ import {
   recapLabel,
   REMINDER_MINUTES,
   reminderLabel,
-  timeZoneLabel,
+  timeZoneOptions,
 } from "@/core/discord";
 import { adminBattleTag } from "@/server/access";
 import { botTokenStatus } from "@/server/bot";
@@ -172,13 +173,13 @@ export default async function DiscordPage({
             <label htmlFor="time-zone" className={styles.label}>
               Time zone
             </label>
-            <select id="time-zone" name="timeZone" defaultValue={zone} className={styles.select}>
-              {TIME_ZONES.map((tz) => (
-                <option key={tz} value={tz}>
-                  {timeZoneLabel(tz, now)}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              id="time-zone"
+              name="timeZone"
+              defaultValue={zone}
+              className={styles.pick}
+              options={timeZoneOptions(TIME_ZONES, now)}
+            />
           </div>
           <button type="submit" className={styles.secondary}>
             Save
@@ -296,9 +297,9 @@ function AdminSections({ adminTag, bot, now }: { adminTag: string | undefined; b
                 Send a test post
               </button>
             </form>
-            <button type="button" className={styles.ghost} disabled title="Comes with the weekly recap">
+            <Link href="/discord/recap" className={styles.ghost}>
               Preview next recap
-            </button>
+            </Link>
           </div>
         </section>
 

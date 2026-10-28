@@ -34,7 +34,8 @@ describe("diff", () => {
 
   it("is empty between equal states", () => {
     const d = upload('self = { battleTag = "Ada#1001", chars = { A = { level = 3 } } }');
-    const { senders, counts, ...lists } = diff(d, d);
+    const { senders, counts, runAnswers, ...lists } = diff(d, d);
+    expect(runAnswers).toBeUndefined();
     expect(Object.values(lists).every((list) => list.length === 0)).toBe(true);
     expect(senders).toEqual([{ key: "Ada#1001", displayName: "Ada", isUploader: true, status: "unchanged" }]);
     expect(Object.values(counts).every((n) => n === 0)).toBe(true);

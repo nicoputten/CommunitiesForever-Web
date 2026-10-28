@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import map from "@/core/map/zones.json";
+import { mapDungeons, type MapDungeon } from "@/core/views/dungeon";
 import { CONTINENT_SPLIT, continentViewBox, type Continent, type WorldMapView } from "@/core/views/map";
 import { SeaLayers } from "@/components/atmosphere/SeaLayers";
 import { MapStage } from "./MapStage";
@@ -17,6 +18,8 @@ export interface WorldMapProps {
   panel?: ReactNode;
   /** Below 1024 px: the roll call in the phone's bottom sheet (WEB-28). */
   sheet?: ReactNode;
+  /** The dungeon entrances with their planned runs (WEB-42); without runs when left out. */
+  dungeons?: MapDungeon[];
 }
 
 // Placed as on the map board (design/boards/map), world coordinates: decoration, not game data.
@@ -29,7 +32,7 @@ const CONTINENT_NAMES = [
 
 const capitals = map.cities.filter((c) => c.cap === 1);
 const towns = map.cities.filter((c) => c.cap === 0);
-const dungeons = map.dungeons.map(({ name, x, y }) => ({ name, x, y }));
+const NO_RUNS = mapDungeons([], 0);
 const WORLD = continentViewBox("azeroth");
 const FRAMES = {
   azeroth: WORLD,
@@ -46,7 +49,7 @@ const anchor = (x: number, y: number) => ({ "--ox": x, "--oy": y }) as CSSProper
  * the markers as an HTML overlay (MapStage). The whole 1440 × 900 world is drawn; pan, zoom and the continent switch
  * (a fly to the continent's frame) are MapStage's (WEB-26). Towns show from 2×, dungeons from 4×.
  */
-export function WorldMap({ view, continent, selected, drop, panel, sheet }: WorldMapProps) {
+export function WorldMap({ view, continent, selected, drop, panel, sheet, dungeons = NO_RUNS }: WorldMapProps) {
   const box = WORLD;
   return (
     <section

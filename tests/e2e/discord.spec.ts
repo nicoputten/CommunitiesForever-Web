@@ -1,6 +1,7 @@
 import { expect, type Page, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "./session";
+import { pick } from "./dropdown";
 
 // WEB-39: the Discord page against the real server, at desktop and phone size. Each project signs in as its own guest
 // for the link and time zone; the admin's settings are changed on desktop only (one settings row for the site).
@@ -36,6 +37,7 @@ test.describe("a friend", () => {
     await expect(page.getByRole("heading", { name: "What the bot posts" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Linked friends" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Bot token" })).toHaveCount(0);
+    expect((await page.goto("/discord/recap"))?.status()).toBe(404);
   });
 
   test("Link Discord asks Discord for identify only, and a forged callback changes nothing", async ({ page }) => {
@@ -76,10 +78,10 @@ test.describe("a friend", () => {
 
   test("picks a time zone", async ({ page }) => {
     await page.goto("/discord");
-    await page.getByLabel("Time zone", { exact: true }).selectOption("Asia/Tokyo");
+    await pick(page, page.getByLabel("Time zone", { exact: true }), "Tokyo");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("status")).toHaveText("Your time zone is saved.");
-    await expect(page.getByLabel("Time zone", { exact: true })).toHaveValue("Asia/Tokyo");
+    await expect(page.getByLabel("Time zone", { exact: true })).toContainText("Tokyo");
   });
 
   test("the callback needs a session", async ({ context, page }) => {
@@ -108,14 +110,14 @@ test.describe("the admin", () => {
     await expect(posts.getByLabel("Channel for posts")).toBeDisabled();
 
     const runs = page.getByRole("region", { name: "Runs" });
-    await runs.getByLabel("Reminder time (default for new runs)").selectOption("60");
-    await posts.getByLabel("Recap time").selectOption("5|20:00");
+    await pick(page, runs.getByLabel("Reminder time (default for new runs)"), "1 hour before");
+    await pick(page, posts.getByLabel("Recap time"), "Friday · 20:00");
     await page.waitForLoadState("networkidle");
 
     await page.reload();
     await expect(page.getByRole("switch", { name: "Milestones" })).toHaveAttribute("aria-checked", after);
-    await expect(page.getByLabel("Reminder time (default for new runs)")).toHaveValue("60");
-    await expect(page.getByLabel("Recap time")).toHaveValue("5|20:00");
+    await expect(page.getByLabel("Reminder time (default for new runs)")).toHaveText(/1 hour before/);
+    await expect(page.getByLabel("Recap time")).toHaveText(/Friday · 20:00/);
   });
 
   test("makes the bot token once, sends a test post the bot gets, and revokes it", async ({ page }, info) => {
@@ -174,12 +176,12 @@ test.describe("the admin", () => {
     const posts = page.getByLabel("Channel for posts");
     await expect(posts).toBeEnabled();
     await expect(page.getByText(/^From the bot, /)).toBeVisible();
-    await posts.selectOption({ label: "# general" });
-    await page.getByLabel("Mention on new runs").selectOption({ label: "@Raiders" });
+    await pick(page, posts, "# general");
+    await pick(page, page.getByLabel("Mention on new runs"), "@Raiders");
     await page.waitForLoadState("networkidle");
     await page.reload();
-    await expect(page.getByLabel("Channel for posts")).toHaveValue("80351110224678912");
-    await expect(page.getByLabel("Mention on new runs")).toHaveValue("80351110224678920");
+    await expect(page.getByLabel("Channel for posts")).toHaveText(/# general/);
+    await expect(page.getByLabel("Mention on new runs")).toHaveText(/@Raiders/);
 
     // The channel goes away on Discord: the pick stays, marked removed.
     await page.request.post("/api/bot/v1/guild", {
@@ -187,6 +189,32 @@ test.describe("the admin", () => {
       data: { channels: [{ id: "80351110224678913", name: "runs" }], roles: [] },
     });
     await page.reload();
-    await expect(page.getByLabel("Channel for posts").locator("option:checked")).toHaveText("(removed: # general)");
+    await expect(page.getByLabel("Channel for posts")).toHaveText(/\(removed: # general\)/);
+  });
+
+  test("previews the coming weekly recap (WEB-41c)", async ({ page }) => {
+    await page.goto("/discord");
+    await page.getByRole("link", { name: "Preview next recap" }).click();
+    await expect(page).toHaveURL(/\/discord\/recap$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Next recap");
+    await expect(page.getByText(/^Week \d+ · /)).toBeVisible();
+    await expect(page.getByRole("region", { name: "This week's challenge" })).toBeVisible();
+    await page.getByRole("link", { name: "Back to Discord" }).click();
+    await expect(page).toHaveURL(/\/discord$/);
+  });
+
+  test("the bot gets card images from the production server (WEB-41d)", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "one bot token for the site");
+    await page.goto("/discord");
+    const card = page.getByRole("region", { name: "Bot token" });
+    await card.getByRole("button", { name: /^(Create|Replace) token$/ }).click();
+    const token = await card.getByLabel(/won't be shown again/).inputValue();
+    const headers = { authorization: `Bearer ${token}` };
+    // Ves Doombringer of the sample, seen in a zone the map draws.
+    const res = await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png", { headers });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toBe("image/png");
+    expect((await res.body()).subarray(1, 4).toString("latin1")).toBe("PNG");
+    expect((await page.request.get("/api/bot/v1/cards/whereis-Player-1-0000A001.png")).status()).toBe(401);
   });
 });

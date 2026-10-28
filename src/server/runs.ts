@@ -10,10 +10,14 @@ import {
   mayDelete,
   mayEdit,
   openSlots,
+  SLOT_ROLES,
+  slotRole,
   phase,
   planRun,
   runDungeon,
-  type Answer,
+  moveSignUp,
+  type MoveRefusal,
+  type MoveTo,
   type AnswerOutcome,
   type AnswerRefusal,
   type PlanRefusal,
@@ -22,7 +26,11 @@ import {
   type RunSource,
   type SlotRole,
 } from "@/core/runs";
+import { rolesFor } from "@/core/gamedata";
+import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
+import { OUTCOME_SECONDS } from "@/core/runOutcome";
+import { ASK_EXPIRE_SECONDS } from "@/core/gameItems";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
 import { discordLinks, runAnswers, runs } from "./db/schema";
@@ -46,7 +54,8 @@ function answerFrom(row: AnswerRow): RunAnswer {
     answeredAt: row.answeredAt,
   };
   if (row.guid !== null) a.guid = row.guid;
-  if (row.waitlisted) a.waitlisted = true;
+  // A WEB-40 "Maybe, first in line" is a reserve (WEB-47).
+  if (row.waitlisted && row.answer === "maybe") a.answer = "reserve";
   if (row.movedUp) a.movedUp = true;
   return a;
 }
@@ -63,20 +72,38 @@ function runFrom(row: RunRow, answers: RunAnswer[]): StoredRun {
     answers,
   };
   if (row.note !== null) r.note = row.note;
+  if (row.kind === "ask") {
+    r.kind = "ask";
+    if (row.expiresAt !== null) r.expiresAt = row.expiresAt;
+  }
   if (row.cancelledAt !== null) r.cancelledAt = row.cancelledAt;
   if (row.cancelledBy !== null) r.cancelledBy = row.cancelledBy;
+  if (row.outcome === "done" && row.outcomeAt !== null) {
+    r.outcome = { kind: "done", at: row.outcomeAt, came: row.came ?? 0, signedUp: row.signedUp ?? 0 };
+  } else if (row.outcome === "didntHappen" && row.outcomeAt !== null) {
+    r.outcome = { kind: "didntHappen", at: row.outcomeAt };
+  }
   return r;
 }
 
-/** Every run with its answers, by start. */
+/** Every run with its answers, by start; asks (WEB-51) are left out. */
 export function listRuns(db: Db): StoredRun[] {
-  const rows = db.select().from(runs).orderBy(asc(runs.startsAt), asc(runs.id)).all();
+  return listKind(db, "run");
+}
+
+function listKind(db: Db, kind: "run" | "ask"): StoredRun[] {
+  const rows = db.select().from(runs).where(eq(runs.kind, kind)).orderBy(asc(runs.startsAt), asc(runs.id)).all();
   const answers = db.select().from(runAnswers).all();
   return rows.map((row) => runFrom(row, answers.filter((a) => a.runId === row.id).map(answerFrom)));
 }
 
-export function getRun(db: Db, id: number): StoredRun | undefined {
-  const row = db.select().from(runs).where(eq(runs.id, id)).get();
+/** A run by id; an ask (WEB-51) only when asked for with `kind` "ask". */
+export function getRun(db: Db, id: number, kind: "run" | "ask" = "run"): StoredRun | undefined {
+  const row = db
+    .select()
+    .from(runs)
+    .where(and(eq(runs.id, id), eq(runs.kind, kind)))
+    .get();
   if (row === undefined) return undefined;
   return runFrom(row, db.select().from(runAnswers).where(eq(runAnswers.runId, id)).all().map(answerFrom));
 }
@@ -94,7 +121,7 @@ function writeAnswers(db: Db, runId: number, answers: readonly RunAnswer[]): voi
         role: a.role,
         source: a.source,
         answeredAt: a.answeredAt,
-        waitlisted: a.waitlisted === true,
+        waitlisted: false,
         movedUp: a.movedUp === true,
       })
       .run();
@@ -140,7 +167,7 @@ export function charactersOf(data: Dataset | undefined, battleTag: string): RunC
 // --- bot events -----------------------------------------------------------------------------------------------------
 
 /** The friend's display name (never the BattleTag in a post). */
-function displayName(data: Dataset | undefined, battleTag: string): string {
+export function displayName(data: Dataset | undefined, battleTag: string): string {
   const person =
     data === undefined
       ? undefined
@@ -148,7 +175,7 @@ function displayName(data: Dataset | undefined, battleTag: string): string {
   return person?.displayName ?? battleTag.split("#")[0]!;
 }
 
-function discordIds(db: Db): Map<string, string> {
+export function discordIds(db: Db): Map<string, string> {
   return new Map(
     db
       .select()
@@ -182,29 +209,52 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
     organiser: {
       ...person(run.organiser),
       ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+      ...(lead?.guid === undefined ? {} : characterFacts(data, lead.guid)),
     },
     source: run.source,
     state: phase(run, run.answers, now),
     open,
     counts: counts(run.answers),
-    answers: [...run.answers]
-      .sort((a, b) => a.answeredAt - b.answeredAt)
-      .map((a) => ({
-        ...person(a.battleTag),
-        ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
-        answer: a.answer,
-        role: a.role,
-        source: a.source,
-        ...(a.movedUp ? { movedUp: true } : {}),
-        ...(a.waitlisted ? { waitlisted: true } : {}),
-      })),
+    ...(run.outcome === undefined ? {} : { outcome: run.outcome }),
+    couldFill: couldFill(data, run, open),
+    answers: answersPayload(data, run, ids),
   };
 }
 
-export type RunEventType = "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp";
+/** A run's (or ask's) answers as the bot gets them, oldest first: names, never BattleTags. */
+function answersPayload(data: Dataset | undefined, run: StoredRun, ids: Map<string, string>) {
+  const person = (battleTag: string) => {
+    const p: { name: string; discordId?: string } = { name: displayName(data, battleTag) };
+    const id = ids.get(battleTagKey(battleTag));
+    if (id !== undefined) p.discordId = id;
+    return p;
+  };
+  return [...run.answers]
+    .sort((a, b) => a.answeredAt - b.answeredAt)
+    .map((a) => ({
+      ...person(a.battleTag),
+      ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
+      // A reserve stays "maybe" with `reserve` for bots from before WEB-47 (optional fields within v1).
+      answer: a.answer === "reserve" ? "maybe" : a.answer,
+      role: a.role,
+      source: a.source,
+      ...(a.guid === undefined ? {} : { guid: a.guid, fit: fitOf(data, run, a.guid), ...characterFacts(data, a.guid) }),
+      ...(a.movedUp ? { movedUp: true } : {}),
+      ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
+    }));
+}
+
+export type RunEventType =
+  "runCreated" | "runChanged" | "runCancelled" | "runReminder" | "runStarting" | "runMovedUp" | "runMoved" | "runEnded";
 
 /** Writes a run event when the admin's Runs switch is on; the reminders have their own switch. */
-function runEvent(db: Db, type: RunEventType, run: StoredRun, now: number, extra: Record<string, unknown> = {}): void {
+export function runEvent(
+  db: Db,
+  type: RunEventType,
+  run: StoredRun,
+  now: number,
+  extra: Record<string, unknown> = {},
+): void {
   const settings = getBotSettings(db);
   if (!settings.runs || (type === "runReminder" && !settings.reminders)) return;
   enqueueBotEvent(db, type, { run: runPayload(db, run, now), ...extra }, now);
@@ -225,11 +275,11 @@ function mentions(db: Db, run: StoredRun): string[] {
  */
 export function writeDueRunEvents(db: Db, now: number): number {
   const minutes = getBotSettings(db).reminderMinutes;
-  let written = 0;
+  let written = markDidntHappen(db, now);
   const due = db
     .select()
     .from(runs)
-    .where(and(isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60)))
+    .where(and(eq(runs.kind, "run"), isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60)))
     .all()
     .filter((r) => r.remindedAt === null || (r.startingAt === null && r.startsAt <= now));
   for (const row of due) {
@@ -250,7 +300,7 @@ export function writeDueRunEvents(db: Db, now: number): number {
       }
     }
   }
-  return written;
+  return written + writeExpiredAsks(db, now);
 }
 
 // --- actions --------------------------------------------------------------------------------------------------------
@@ -263,6 +313,8 @@ export interface PlanRequest {
   source: RunSource;
   /** The organiser's character to lead as; none when none of theirs fits. */
   leadGuid?: string;
+  /** The lead's role for this run (WEB-47); default the character's role from the addon. */
+  leadRole?: SlotRole;
 }
 
 export function planRunFor(db: Db, req: PlanRequest, now: number): { id: number } | PlanRefusal {
@@ -286,6 +338,8 @@ export function planRunFor(db: Db, req: PlanRequest, now: number): { id: number 
               owner: lead.owner ?? "",
               ...(lead.level === undefined ? {} : { level: lead.level }),
               ...(lead.role === undefined ? {} : { role: lead.role }),
+              ...(lead.classFile === undefined ? {} : { classFile: lead.classFile }),
+              ...(req.leadRole === undefined ? {} : { slot: req.leadRole }),
             },
           }),
     },
@@ -317,10 +371,12 @@ export type RunMissing = "unknown_run";
 
 export interface AnswerRequest {
   battleTag: string;
-  answer: Answer;
+  answer: "in" | "maybe" | "cant";
   source: RunSource;
   /** Required for I'm in; it must be the friend's own. */
   guid?: string;
+  /** The role for this run (WEB-47); default the character's role from the addon. */
+  role?: SlotRole;
 }
 
 export function answerRunFor(
@@ -329,7 +385,17 @@ export function answerRunFor(
   req: AnswerRequest,
   now: number,
 ): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
-  const run = getRun(db, runId);
+  return answerFor(db, runId, "run", req, now);
+}
+
+function answerFor(
+  db: Db,
+  runId: number,
+  kind: "run" | "ask",
+  req: AnswerRequest,
+  now: number,
+): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
+  const run = getRun(db, runId, kind);
   if (run === undefined) return "unknown_run";
   const data = loadState(db)?.data;
   const character = req.guid === undefined ? undefined : runCharacter(data, req.guid);
@@ -351,8 +417,10 @@ export function answerRunFor(
               guid: character.guid,
               ...(character.level === undefined ? {} : { level: character.level }),
               ...(character.role === undefined ? {} : { role: character.role }),
+              ...(character.classFile === undefined ? {} : { classFile: character.classFile }),
             },
           }),
+      ...(req.role === undefined ? {} : { role: req.role }),
     },
     now,
     (guid) => runCharacter(data, guid)?.level,
@@ -362,7 +430,11 @@ export function answerRunFor(
     writeAnswers(tx as unknown as Db, runId, outcome.answers);
     tx.update(runs).set({ updatedAt: now }).where(eq(runs.id, runId)).run();
   });
-  const after = getRun(db, runId)!;
+  const after = getRun(db, runId, kind)!;
+  if (kind === "ask") {
+    askEvent(db, "askChanged", after, now);
+    return outcome;
+  }
   runEvent(db, "runChanged", after, now, { changed: ["answers"] });
   if (outcome.movedUp !== undefined) {
     const id = discordIds(db).get(battleTagKey(outcome.movedUp.battleTag));
@@ -456,4 +528,317 @@ export function sendTestRunPost(db: Db, adminName: string, now: number): number 
     },
     now,
   );
+}
+
+// --- outcomes (WEB-43) ----------------------------------------------------------------------------------------------
+
+/** A run ended more than this long ago is marked without a post: no news a day late (and none for older runs). */
+const ENDED_POST_SECONDS = 24 * 60 * 60;
+
+/** Stores how a run ended and, while it's news, writes `runEnded` for the bot. Only once per run. */
+export function setOutcome(db: Db, runId: number, outcome: NonNullable<StoredRun["outcome"]>, now: number): boolean {
+  const changed =
+    db
+      .update(runs)
+      .set({
+        outcome: outcome.kind,
+        outcomeAt: outcome.at,
+        came: outcome.kind === "done" ? outcome.came : null,
+        signedUp: outcome.kind === "done" ? outcome.signedUp : null,
+      })
+      .where(and(eq(runs.id, runId), isNull(runs.outcome), isNull(runs.cancelledAt)))
+      .run().changes > 0;
+  if (!changed) return false;
+  const run = getRun(db, runId)!;
+  if (now - (run.startsAt + OUTCOME_SECONDS) < ENDED_POST_SECONDS) {
+    runEvent(db, "runEnded", run, now, {
+      outcome: outcome.kind,
+      ...(outcome.kind === "done" ? { came: outcome.came, signedUp: outcome.signedUp } : {}),
+    });
+  }
+  return true;
+}
+
+/**
+ * Runs no upload showed within 4 hours of their start: "didn't happen" (story WEB-43), when the admin's "Mark runs
+ * done from uploads" is on. Written when the bot polls, as the reminders are.
+ */
+export function markDidntHappen(db: Db, now: number): number {
+  if (!getBotSettings(db).markDone) return 0;
+  const due = db
+    .select({ id: runs.id, startsAt: runs.startsAt })
+    .from(runs)
+    .where(
+      and(
+        eq(runs.kind, "run"),
+        isNull(runs.cancelledAt),
+        isNull(runs.outcome),
+        lte(runs.startsAt, now - OUTCOME_SECONDS),
+      ),
+    )
+    .all();
+  let marked = 0;
+  for (const r of due) {
+    if (setOutcome(db, r.id, { kind: "didntHappen", at: r.startsAt + OUTCOME_SECONDS }, now)) marked++;
+  }
+  return marked;
+}
+
+// --- the organiser's moves (WEB-47) ---------------------------------------------------------------------------------
+
+/** How a character's level fits the run (WEB-47 levelFit): its kind and label, for the bot and the uploader. */
+export function fitOf(data: Dataset | undefined, run: StoredRun, guid: string): { kind: FitKind; label: string } {
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const fit = levelFit(runCharacter(data, guid)?.level, range.min, range.max);
+  return { kind: fit.kind, label: fit.label };
+}
+
+export type MoveRefusalOrRights = MoveRefusal | RunMissing | "not_allowed";
+
+/**
+ * The organiser (or the admin) moves a sign-up to another role, to reserve, or off the run. The moved friend gets a
+ * quiet notice (`runMoved`, a direct message rather than a channel post), as does anyone who moved up.
+ */
+export function moveRunSignUp(
+  db: Db,
+  runId: number,
+  by: string,
+  isAdmin: boolean,
+  guid: string,
+  to: MoveTo,
+  now: number,
+  swapWith?: string,
+): StoredRun | MoveRefusalOrRights {
+  const run = getRun(db, runId);
+  if (run === undefined) return "unknown_run";
+  if (!isAdmin && !mayEdit(run, by)) return "not_allowed";
+  const data = loadState(db)?.data;
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const target = run.answers.find((a) => a.guid === guid);
+  const outcome = moveSignUp(
+    { ...run, range },
+    run.answers,
+    guid,
+    to,
+    now,
+    (g) => runCharacter(data, g)?.level,
+    (g) => runCharacter(data, g)?.classFile,
+    swapWith,
+  );
+  if (typeof outcome === "string") return outcome;
+  db.transaction((tx) => {
+    writeAnswers(tx as unknown as Db, runId, outcome.answers);
+    tx.update(runs).set({ updatedAt: now }).where(eq(runs.id, runId)).run();
+  });
+  const after = getRun(db, runId)!;
+  runEvent(db, "runChanged", after, now, { changed: ["answers"] });
+  const ids = discordIds(db);
+  const who = (battleTag: string) => {
+    const id = ids.get(battleTagKey(battleTag));
+    return { name: displayName(data, battleTag), ...(id === undefined ? {} : { discordId: id }) };
+  };
+  // The quiet notice goes to whoever was moved by someone else; the organiser moving themselves gets none (WEB-49).
+  const notify = (moved: { battleTag: string }, place: string) => {
+    if (battleTagKey(moved.battleTag) === battleTagKey(by)) return;
+    runEvent(db, "runMoved", after, now, { who: who(moved.battleTag), to: place, by: displayName(data, by) });
+  };
+  if (target !== undefined) notify(target, to === "remove" ? "removed" : to);
+  if (outcome.swapped !== undefined) {
+    notify(outcome.swapped, outcome.swapped.answer === "in" ? outcome.swapped.role : outcome.swapped.answer);
+  }
+  if (outcome.movedUp !== undefined) runEvent(db, "runMovedUp", after, now, { who: who(outcome.movedUp.battleTag) });
+  return after;
+}
+
+// --- for the bot's run post (BOT-04) --------------------------------------------------------------------------------
+
+/** A character's level and class for the run post ("37 · Femke", "39 Warlock"); optional fields within v1. */
+function characterFacts(data: Dataset | undefined, guid: string): { level?: number; classFile?: string } {
+  const c = runCharacter(data, guid);
+  return {
+    ...(c?.level === undefined ? {} : { level: c.level }),
+    ...(c?.classFile === undefined ? {} : { classFile: c.classFile }),
+  };
+}
+
+/** At most this many names per open role in "Could fill". */
+export const COULD_FILL_MAX = 3;
+
+/**
+ * "Could fill the tank slot" (the bot's run post, BOT-04): per role with an open slot, up to three characters of
+ * friends who haven't answered that fit or are over (WEB-47 levelFit) and whose class can play it; without one, the
+ * closest below the range as `close`.
+ */
+export function couldFill(data: Dataset | undefined, run: StoredRun, open: Record<SlotRole, number>) {
+  if (data === undefined) return [];
+  const range = runDungeon(run.dungeonId)?.typicalLevels ?? { min: 1, max: 60 };
+  const answered = new Set(run.answers.map((a) => battleTagKey(a.battleTag)));
+  const candidates = Object.keys(data.characters)
+    .map((guid) => runCharacter(data, guid))
+    .filter((c): c is RunCharacter => c !== undefined && c.owner !== undefined && !answered.has(battleTagKey(c.owner)))
+    .map((c) => ({ c, fit: levelFit(c.level, range.min, range.max) }));
+  const show = ({ c, fit }: (typeof candidates)[number]) => ({
+    name: displayName(data, c.owner!),
+    character: c.name ?? c.guid,
+    ...characterFacts(data, c.guid),
+    fit: { kind: fit.kind, label: fit.label },
+  });
+  return SLOT_ROLES.filter((role) => open[role] > 0).map((role) => {
+    const forRole = candidates.filter(({ c }) => rolesFor(c.classFile).includes(role) && slotRole(c.role) === role);
+    const fitting = forRole
+      .filter(({ fit }) => fit.suggested)
+      .sort(
+        (a, b) => Number(b.fit.kind === "fits") - Number(a.fit.kind === "fits") || (b.c.level ?? 0) - (a.c.level ?? 0),
+      );
+    const close = forRole
+      .filter(({ c }) => c.level !== undefined && c.level < range.min)
+      .sort((a, b) => (b.c.level ?? 0) - (a.c.level ?? 0));
+    return {
+      role,
+      open: open[role],
+      characters: fitting.slice(0, COULD_FILL_MAX).map(show),
+      ...(fitting.length === 0 && close.length > 0 ? { close: close.slice(0, COULD_FILL_MAX).map(show) } : {}),
+    };
+  });
+}
+
+// --- asks (WEB-51) --------------------------------------------------------------------------------------------------
+
+export interface AskRequest {
+  dungeonId: string;
+  note?: unknown;
+  organiser: string;
+  source: RunSource;
+  /** The asker's character and its role (as for a run's lead); none when none of theirs may join. */
+  leadGuid?: string;
+  leadRole?: SlotRole;
+  /** When it was made: in game for an ask from an upload (WEB-43), else now. */
+  at?: number;
+}
+
+/** An ask: a run that starts when it is made and takes answers for 10 minutes, without slots (Nico, 2026-10-28). */
+export function askFor(db: Db, req: AskRequest, now: number): { id: number } | PlanRefusal {
+  const data = loadState(db)?.data;
+  const at = req.at ?? now;
+  const note = cleanNote(req.note);
+  if (typeof req.note === "string" && req.note.trim().length > MAX_NOTE) return "note_too_long";
+  const lead = req.leadGuid === undefined ? undefined : runCharacter(data, req.leadGuid);
+  if (req.leadGuid !== undefined && lead === undefined) return "lead_not_yours";
+  const checked = planRun(
+    {
+      dungeonId: req.dungeonId,
+      startsAt: at,
+      organiser: req.organiser,
+      source: req.source,
+      ask: true,
+      ...(note === undefined ? {} : { note }),
+      ...(lead === undefined
+        ? {}
+        : {
+            lead: {
+              guid: lead.guid,
+              owner: lead.owner ?? "",
+              ...(lead.level === undefined ? {} : { level: lead.level }),
+              ...(lead.role === undefined ? {} : { role: lead.role }),
+              ...(lead.classFile === undefined ? {} : { classFile: lead.classFile }),
+              ...(req.leadRole === undefined ? {} : { slot: req.leadRole }),
+            },
+          }),
+    },
+    at,
+  );
+  if (typeof checked === "string") return checked;
+  const id = db.transaction((tx) => {
+    const { id } = tx
+      .insert(runs)
+      .values({
+        dungeonId: req.dungeonId,
+        startsAt: at,
+        note: note ?? null,
+        organiser: req.organiser,
+        source: req.source,
+        createdAt: now,
+        updatedAt: now,
+        kind: "ask",
+        expiresAt: at + ASK_EXPIRE_SECONDS,
+      })
+      .returning({ id: runs.id })
+      .get();
+    writeAnswers(tx as unknown as Db, id, checked.answers);
+    return id;
+  });
+  askEvent(db, "askNow", getRun(db, id, "ask")!, now);
+  return { id };
+}
+
+export function answerAskFor(
+  db: Db,
+  askId: number,
+  req: AnswerRequest,
+  now: number,
+): AnswerOutcome | AnswerRefusal | RunMissing | "not_your_character" {
+  return answerFor(db, askId, "ask", req, now);
+}
+
+/** Asks still taking answers, oldest first. */
+export function openAsks(db: Db, now: number): StoredRun[] {
+  return listKind(db, "ask").filter((a) => a.cancelledAt === undefined && (a.expiresAt ?? a.startsAt) > now);
+}
+
+export type AskEventType = "askNow" | "askChanged" | "askExpired";
+
+/**
+ * An ask's bot event: an ask from the game only with the admin's "Ask now from the game", one from Discord with the
+ * Runs switch (story WEB-51). Stored either way.
+ */
+export function askEvent(db: Db, type: AskEventType, ask: StoredRun, now: number): void {
+  const settings = getBotSettings(db);
+  if (ask.source === "game" ? !settings.askNow : !settings.runs) return;
+  enqueueBotEvent(db, type, { ask: askPayload(db, ask, now) }, now);
+}
+
+/** Asks past their 10 minutes: `askExpired` once each, so the bot ends the post (written when the bot polls). */
+function writeExpiredAsks(db: Db, now: number): number {
+  const due = db
+    .select({ id: runs.id })
+    .from(runs)
+    .where(and(eq(runs.kind, "ask"), isNull(runs.expiredAt), lte(runs.expiresAt, now)))
+    .all();
+  for (const { id } of due) {
+    db.update(runs).set({ expiredAt: now }).where(eq(runs.id, id)).run();
+    askEvent(db, "askExpired", getRun(db, id, "ask")!, now);
+  }
+  return due.length;
+}
+
+const GAME_ROLE: Record<SlotRole, "tank" | "heal" | "dps"> = { tank: "tank", healer: "heal", damage: "dps" };
+
+/**
+ * An ask as the bot gets it (docs/BOT-API.md `askNow`): the WEB-43 fields (`role` the addon's tank / heal / dps), now
+ * with the stored ask's id, `state` and its answers as a run's.
+ */
+export function askPayload(db: Db, ask: StoredRun, now: number, data = loadState(db)?.data) {
+  const dungeon = runDungeon(ask.dungeonId);
+  const ids = discordIds(db);
+  const lead = ask.answers.find((a) => sameBattleTag(a.battleTag, ask.organiser) && a.answer === "in");
+  const fromId = ids.get(battleTagKey(ask.organiser));
+  const expiresAt = ask.expiresAt ?? ask.startsAt;
+  return {
+    id: ask.id,
+    dungeon: {
+      id: ask.dungeonId,
+      name: dungeon?.name ?? ask.dungeonId,
+      typicalLevels: dungeon?.typicalLevels ?? { min: 1, max: 60 },
+    },
+    from: { name: displayName(data, ask.organiser), ...(fromId === undefined ? {} : { discordId: fromId }) },
+    ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+    ...(lead === undefined ? {} : { role: GAME_ROLE[lead.role] }),
+    ...(ask.note === undefined ? {} : { note: ask.note }),
+    source: ask.source,
+    at: ask.startsAt,
+    expiresAt,
+    state: ask.cancelledAt !== undefined ? "cancelled" : now >= expiresAt ? "expired" : "open",
+    counts: counts(ask.answers),
+    answers: answersPayload(data, ask, ids),
+  };
 }

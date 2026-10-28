@@ -1,0 +1,101 @@
+/* The slot's ⋯ menu (WEB-49): WEB-48's menu look. */
+
+.wrap {
+  position: relative;
+  flex: none;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  border-radius: var(--r-nav);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--input-bg);
+  color: var(--gold);
+  font-size: var(--fs-section);
+  cursor: pointer;
+}
+
+.button[aria-expanded="true"] {
+  border-color: var(--gold);
+  box-shadow: var(--ring-field-open);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--s-1-5));
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: var(--size-menu);
+  max-width: min(var(--size-menu-max), calc(100vw - 2 * var(--s-4)));
+  padding: var(--s-1-5);
+  border-radius: var(--r-menu);
+  background: var(--surface-menu);
+  border: var(--border) solid var(--line-menu);
+  box-shadow: var(--shadow-menu);
+}
+
+.head {
+  padding: var(--s-2) var(--s-2-5) var(--s-1);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-height: var(--size-touch);
+  padding: var(--s-1-5) var(--s-2-5);
+  border: 0;
+  border-radius: var(--r-nav);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--tint-option);
+  outline: none;
+}
+
+.item[aria-disabled="true"] {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.item[data-danger] {
+  color: var(--danger-text);
+}
+
+.detail {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.item[aria-disabled="true"] .detail {
+  color: var(--text-disabled);
+}
+
+.status:empty {
+  display: none;
+}
+
+.status {
+  font-size: var(--fs-body-sm);
+  color: var(--fresh-text);
+}

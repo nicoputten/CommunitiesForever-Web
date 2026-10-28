@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { CLASSES, rolesFor } from "@/core/gamedata";
+import { levelFit } from "@/core/levelFit";
 import {
   giveAnswer,
+  moveSignUp,
   group,
   mayDelete,
   mayEdit,
@@ -33,7 +36,18 @@ const NOW = Date.UTC(2026, 9, 27, 16, 0) / 1000;
 const HOUR = 3600;
 
 const run = { dungeonId: "sm-armory", startsAt: NOW + 3 * HOUR, organiser: "Nico#2201", range: { min: 32, max: 42 } };
-const levels: Record<string, number> = { VES: 39, LIA: 37, BOB: 41, TOK: 33, RUK: 27, GROM: 34, KEL: 35, MIRA: 40 };
+// The Armory is 32–42: RUK is 5 below ("low", may join), ZUL 7 below ("tooLow", Maybe only).
+const levels: Record<string, number> = {
+  VES: 39,
+  LIA: 37,
+  BOB: 41,
+  TOK: 33,
+  RUK: 27,
+  ZUL: 25,
+  GROM: 34,
+  KEL: 35,
+  MIRA: 40,
+};
 const levelOf = (guid: string) => levels[guid];
 
 let clock = NOW;
@@ -86,8 +100,16 @@ describe("slots and answers", () => {
     const tryAnswer = (input: Parameters<typeof giveAnswer>[2], at = NOW) => giveAnswer(run, [], input, at, levelOf);
     expect(tryAnswer({ battleTag: "Jorrit#4410", answer: "in", source: "website" })).toBe("no_character");
     expect(
-      tryAnswer({ battleTag: "Jorrit#4410", answer: "in", source: "discord", character: { guid: "RUK", level: 27 } }),
+      tryAnswer({ battleTag: "Femke#3307", answer: "in", source: "discord", character: { guid: "ZUL", level: 25 } }),
     ).toBe("out_of_range");
+    // 5 below may still join ("tough").
+    const low = tryAnswer({
+      battleTag: "Jorrit#4410",
+      answer: "in",
+      source: "discord",
+      character: { guid: "RUK", level: 27 },
+    });
+    expect((low as AnswerOutcome).stored.answer).toBe("in");
     const maybe = tryAnswer({
       battleTag: "Jorrit#4410",
       answer: "maybe",
@@ -106,28 +128,31 @@ describe("slots and answers", () => {
     expect(a[0]).toMatchObject({ guid: "TOK", answer: "in", role: "healer" });
   });
 
-  it("I'm in on a full role is kept as Maybe, first in line, and moves up when the run is full and someone drops", () => {
+  it("I'm in on a full role becomes reserve; the oldest reserve moves up before a Maybe", () => {
     let a: RunAnswer[] = [];
     a = answer(a, "Nico#2201", "in", "VES").answers;
     a = answer(a, "Bob#2002", "in", "BOB").answers;
     a = answer(a, "Mira#1188", "in", "MIRA").answers;
     a = answer(a, "Kai#5005", "maybe", "KEL").answers; // an earlier plain Maybe, damage
     const late = answer(a, "Femke#3307", "in", "LIA"); // a 4th damage
-    expect(late.stored).toMatchObject({ answer: "maybe", waitlisted: true });
+    expect(late.stored).toMatchObject({ answer: "reserve", role: "damage" });
     a = late.answers;
     expect(slots(a).damage).toEqual(["VES", "BOB", "MIRA"]);
 
-    // Bob drops: the first Maybe for damage in answer order (Kai) moves up.
+    // Bob drops: the reserve (Femke) moves up before the earlier plain Maybe (Kai).
     const drop = answer(a, "Bob#2002", "cant", "BOB");
-    expect(drop.movedUp).toMatchObject({ battleTag: "Kai#5005", answer: "in", movedUp: true });
-    expect(slots(drop.answers).damage).toEqual(["VES", "MIRA", "KEL"]);
+    expect(drop.movedUp).toMatchObject({ battleTag: "Femke#3307", answer: "in", movedUp: true });
+    expect(slots(drop.answers).damage).toEqual(["VES", "MIRA", "LIA"]);
+    // Without a reserve, the first Maybe in answer order.
+    const again = answer(drop.answers, "Mira#1188", "cant", "MIRA");
+    expect(again.movedUp?.battleTag).toBe("Kai#5005");
   });
 
   it("a Maybe out of range is skipped; a role that wasn't full pulls nobody in", () => {
     let a: RunAnswer[] = [];
     a = answer(a, "Nico#2201", "in", "VES").answers;
     a = answer(a, "Bob#2002", "in", "BOB").answers;
-    a = answer(a, "Jorrit#4410", "maybe", "RUK").answers; // 27: below 32
+    a = answer(a, "Jorrit#4410", "maybe", "ZUL").answers; // 25: 7 below 32, Maybe only
     a = answer(a, "Kai#5005", "maybe", "KEL").answers;
     // Damage has 2 of 3: Bob leaving pulls nobody in.
     expect(answer(a, "Bob#2002", "cant").movedUp).toBeUndefined();
@@ -153,6 +178,143 @@ describe("slots and answers", () => {
   });
 });
 
+describe("roles and the organiser's moves (WEB-47)", () => {
+  const classOf = (guid: string) =>
+    ({ VES: "WARLOCK", LIA: "PRIEST", BOB: "ROGUE", KEL: "PALADIN", GROM: "WARRIOR" })[guid];
+  const withClass =
+    (battleTag: string, guid: string, a: "in" | "maybe" | "cant", role?: "tank" | "healer" | "damage") =>
+    (prev: RunAnswer[]) => {
+      clock += 60;
+      const r = giveAnswer(
+        run,
+        prev,
+        {
+          battleTag,
+          answer: a,
+          source: "website",
+          character: { guid, level: levels[guid], classFile: classOf(guid) },
+          ...(role ? { role } : {}),
+        },
+        clock,
+        levelOf,
+      );
+      if (typeof r === "string") throw new Error(r);
+      return r;
+    };
+
+  it("takes the role chosen per sign-up, one the class can play", () => {
+    const tank = withClass("Mira#1188", "KEL", "in", "tank")([]);
+    expect(tank.stored.role).toBe("tank");
+    const refused = giveAnswer(
+      run,
+      [],
+      {
+        battleTag: "Nico#2201",
+        answer: "in",
+        source: "website",
+        character: { guid: "VES", level: 39, classFile: "WARLOCK" },
+        role: "healer",
+      },
+      NOW,
+      levelOf,
+    );
+    expect(refused).toBe("role_not_for_class");
+  });
+
+  it("moves a sign-up to another role, to reserve, or off the run; a freed slot pulls up the oldest reserve", () => {
+    let a = withClass("Nico#2201", "VES", "in")([]).answers;
+    a = withClass("Bob#2002", "BOB", "in")(a).answers;
+    a = withClass("Femke#3307", "LIA", "in", "damage")(a).answers;
+    a = withClass("Mira#1188", "KEL", "in", "damage")(a).answers; // a reserve: damage is full
+    expect(a.find((x) => x.guid === "KEL")!.answer).toBe("reserve");
+    const move = (answers: RunAnswer[], guid: string, to: Parameters<typeof moveSignUp>[3]) =>
+      moveSignUp(run, answers, guid, to, NOW, levelOf, classOf);
+
+    // Femke to healer (a priest can heal): her damage slot frees, the reserve (Kel) moves up.
+    const healer = move(a, "LIA", "healer");
+    if (typeof healer === "string") throw new Error(healer);
+    expect(healer.moved).toMatchObject({ guid: "LIA", answer: "in", role: "healer" });
+    expect(healer.movedUp).toMatchObject({ guid: "KEL", answer: "in", role: "damage" });
+    expect(move(healer.answers, "BOB", "tank")).toBe("role_not_for_class");
+    expect(move(healer.answers, "VES", "healer")).toBe("role_not_for_class");
+    expect(move(healer.answers, "KEL", "healer")).toBe("role_full");
+    expect(move(healer.answers, "BOB", "damage")).toBe("same");
+    expect(move(healer.answers, "NOPE", "remove")).toBe("unknown_sign_up");
+
+    const reserve = move(healer.answers, "BOB", "reserve");
+    if (typeof reserve === "string") throw new Error(reserve);
+    expect(reserve.moved).toMatchObject({ guid: "BOB", answer: "reserve" });
+    const removed = move(reserve.answers, "BOB", "remove");
+    if (typeof removed === "string") throw new Error(removed);
+    expect(removed.moved).toBeUndefined();
+    expect(removed.answers.some((x) => x.guid === "BOB")).toBe(false);
+    expect(moveSignUp({ ...run, cancelledAt: NOW }, a, "BOB", "remove", NOW, levelOf, classOf)).toBe("closed");
+  });
+
+  it("swaps two sign-ups into each other's places, and benches the organiser like anyone (WEB-49)", () => {
+    let a = withClass("Nico#2201", "VES", "in")([]).answers;
+    a = withClass("Bob#2002", "BOB", "in")(a).answers;
+    a = withClass("Femke#3307", "LIA", "in", "damage")(a).answers;
+    a = withClass("Mira#1188", "KEL", "in", "damage")(a).answers; // a reserve: damage is full
+    const swap = (answers: RunAnswer[], guid: string, to: Parameters<typeof moveSignUp>[3], withGuid: string) =>
+      moveSignUp(run, answers, guid, to, NOW, levelOf, classOf, withGuid);
+
+    // Kel (reserve) takes Bob's damage slot; Bob becomes the reserve. No slot frees, nobody moves up.
+    const traded = swap(a, "KEL", "damage", "BOB");
+    if (typeof traded === "string") throw new Error(traded);
+    expect(traded.moved).toMatchObject({ guid: "KEL", answer: "in", role: "damage" });
+    expect(traded.swapped).toMatchObject({ guid: "BOB", answer: "reserve", role: "damage" });
+    expect(traded.movedUp).toBeUndefined();
+    expect(traded.answers).toHaveLength(4);
+
+    // A swap partner must hold a slot of the role asked for.
+    expect(swap(a, "LIA", "healer", "KEL")).toBe("not_in_role");
+    expect(swap(a, "LIA", "damage", "NOPE")).toBe("unknown_sign_up");
+    expect(swap(a, "VES", "tank", "BOB")).toBe("not_in_role");
+
+    // The organiser benches themselves: their damage slot frees and the oldest reserve (Kel) moves up.
+    const bench = moveSignUp(run, a, "VES", "reserve", NOW, levelOf, classOf);
+    if (typeof bench === "string") throw new Error(bench);
+    expect(bench.moved).toMatchObject({ guid: "VES", battleTag: "Nico#2201", answer: "reserve" });
+    expect(bench.movedUp).toMatchObject({ guid: "KEL", answer: "in" });
+  });
+});
+
+describe("level fit and class roles (WEB-47)", () => {
+  it("one rule at every boundary", () => {
+    const at = (level: number | undefined) => {
+      const f = levelFit(level, 32, 42);
+      return [f.kind, f.label, f.canPick, f.suggested];
+    };
+    expect(at(32)).toEqual(["fits", "fits", true, true]);
+    expect(at(42)).toEqual(["fits", "fits", true, true]);
+    expect(at(43)).toEqual(["over", "+1 over", true, true]);
+    expect(at(51)).toEqual(["over", "+9 over", true, true]);
+    expect(at(52)).toEqual(["carry", "carry · +10", true, false]);
+    expect(at(31)).toEqual(["low", "1 below", true, false]);
+    expect(at(27)).toEqual(["low", "5 below", true, false]);
+    expect(at(26)).toEqual(["tooLow", "6 below", false, false]);
+    expect(at(undefined)).toEqual(["tooLow", "level unknown", false, false]);
+    expect(levelFit(55, 32, 42).note).toBe("Little XP for you here.");
+    expect(levelFit(30, 32, 42).note).toBe("This will be tough.");
+  });
+
+  it("roles per class", () => {
+    expect(Object.fromEntries(Object.keys(CLASSES).map((c) => [c, rolesFor(c)]))).toEqual({
+      WARRIOR: ["tank", "damage"],
+      PALADIN: ["tank", "healer", "damage"],
+      HUNTER: ["damage"],
+      ROGUE: ["damage"],
+      PRIEST: ["healer", "damage"],
+      SHAMAN: ["healer", "damage"],
+      MAGE: ["damage"],
+      WARLOCK: ["damage"],
+      DRUID: ["tank", "healer", "damage"],
+    });
+    expect(rolesFor(undefined)).toEqual(["tank", "healer", "damage"]);
+  });
+});
+
 describe("planning and rights", () => {
   const lead = { guid: "VES", level: 39, role: "dps" as const, owner: "Nico#2201" };
   const plan = { dungeonId: "sm-armory", startsAt: NOW + HOUR, organiser: "Nico#2201", source: "website" as const };
@@ -172,6 +334,7 @@ describe("planning and rights", () => {
     expect(planRun({ ...plan, note: "x".repeat(201) }, NOW)).toBe("note_too_long");
     expect(planRun({ ...plan, lead: { ...lead, owner: "Bob#2002" } }, NOW)).toBe("lead_not_yours");
     expect(planRun({ ...plan, lead: { ...lead, level: 24 } }, NOW)).toBe("lead_out_of_range");
+    expect(planRun({ ...plan, lead: { ...lead, classFile: "WARLOCK", slot: "tank" } }, NOW)).toBe("role_not_for_class");
   });
 
   it("only the organiser edits; the organiser and the admin delete", () => {
@@ -230,7 +393,7 @@ describe("run times", () => {
   it("this week ends at the next Monday 00:00 in the zone; the next seven days for the day chips", () => {
     expect(weekEnd(NOW, AMS)).toBe(Date.UTC(2026, 10, 1, 23, 0) / 1000);
     expect(nextDays(NOW, AMS).map((d) => d.label)).toEqual([
-      "Today · Tue 27",
+      "Today",
       "Wed 28",
       "Thu 29",
       "Fri 30",

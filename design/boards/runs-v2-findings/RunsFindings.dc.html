@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Runs test findings</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.card{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.85);border:1px solid rgba(212,175,106,.22)}
+.h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E}
+.cap{font-size:12px;color:#8E98A8;line-height:1.5}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.t-fit{background:rgba(127,217,154,.14);color:#9BE3B0}
+.t-over{background:rgba(63,199,235,.14);color:#8FE3F7}
+.t-carry{background:rgba(212,175,106,.18);color:#F3DFAE}
+.t-low{background:rgba(240,167,116,.16);color:#F6C29C}
+.t-no{background:rgba(174,182,195,.1);color:#8E98A8}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:44px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0B1220;color:#AEB6C3;font:600 13px Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.seg button small{font:500 11px Inter,sans-serif;color:#7E8898}
+.seg button.on{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.seg button.on small{color:#D4AF6A}
+.seg button[disabled]{opacity:.4;cursor:not-allowed}
+.crow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow.sel{border-color:#D4AF6A;background:rgba(212,175,106,.10)}
+.crow.dis{opacity:.45;cursor:not-allowed}
+.cn{font:16px Marcellus,serif}
+.cm{font-size:12px;color:#8E98A8;margin-top:1px}
+.d{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:600 12px Inter,sans-serif;color:#0B0F14;flex:none}
+.menu{padding:6px;border-radius:12px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;font-size:14px;color:#E6E1D6}
+.mi.hl{background:rgba(212,175,106,.14)}
+.mi small{font-size:12px;color:#8E98A8}
+.mi.dis{color:#6E7888}
+.mg{padding:10px 10px 4px;font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.trig{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.trig.open{border-color:#D4AF6A;box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.f{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(174,182,195,.14)}
+.fn{width:32px;height:32px;border-radius:50%;background:#121B2A;border:1px solid rgba(212,175,106,.45);color:#F0D08E;font:600 13px/30px Inter,sans-serif;text-align:center}
+.f b{display:block;color:#F3EBDA;font-size:14px;font-weight:600;margin-bottom:3px}
+.f p{margin:0;font-size:13px;color:#AEB6C3;line-height:1.5}
+.f .fix{margin-top:6px;color:#9BE3B0}
+.f q{color:#F6C29C;quotes:'“' '”'}
+.sev{font:700 10px/1 Inter,sans-serif;padding:4px 6px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:2px}
+.s-bug{background:rgba(218,55,60,.2);color:#F59A9C}.s-ux{background:rgba(212,175,106,.2);color:#F3DFAE}.s-copy{background:rgba(140,149,245,.2);color:#C3C7FB}.s-pol{background:rgba(174,182,195,.14);color:#C4C9D0}
+
+</style>
+</helmet>
+<div style="width: 1440px; box-sizing: border-box; padding: 44px 48px 56px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px"><div><h1 style="margin: 0; font: 38px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">Runs · test findings</h1><p style="margin: 6px 0 0; font-size: 14px; color: #8E98A8; max-width: 1150px; line-height: 1.55">Tested on wow.vestras.nl on 27 Oct 2026 as Vane: Runs list, run detail (organiser), Edit run, Plan a run and the roster bands. No answers or runs were submitted, because those post to Discord. Not tested: answering as someone else, phone widths, the Discord buttons.</p></div><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px"><div class="f"><span class="fn">1</span><div><b>Run detail · empty slots<span class="sev s-bug">bug</span></b><p>The three open damage slots each say <q>Khrono Wolfhowl could</q>: the sentence is cut off and the same name repeats in every slot.</p><p class="fix">→ Slots say only <q>Open</q>. One line under the group lists who could fill them: <q>Could fill: Khrono Wolfhowl, Ginji Shadowstep, Basil Stonegaze</q>.</p></div></div><div class="f"><span class="fn">2</span><div><b>Character rules differ per page<span class="sev s-bug">bug</span></b><p>Plan a run disables Twinkle Stardust 10 (<q>too low</q>). On the run page the same character is selectable as <q>16 levels short</q>.</p><p class="fix">→ One rule for both pages (see the level fit rules on the picker board).</p></div></div><div class="f"><span class="fn">3</span><div><b>Role is stuck to the character<span class="sev s-ux">UX</span></b><p>Vesgar Bloodhoof is always <q>tank</q>. Nobody can join as damage, and the organiser can't move a friend into the open healer slot.</p><p class="fix">→ Character and role are picked separately. The organiser can move people between slots.</p></div></div><div class="f"><span class="fn">4</span><div><b>Overleveled characters can't join<span class="sev s-ux">UX</span></b><p>Only characters inside the level range count. A 57 who wants to carry friends through the Graveyard doesn't appear.</p><p class="fix">→ Every character can be picked. A level tag explains the fit: <q>fits</q>, <q>+8 over</q>, <q>carry · +21</q>, <q>4 below</q>.</p></div></div><div class="f"><span class="fn">5</span><div><b>Organiser sees “Your answer”<span class="sev s-ux">UX</span></b><p>The organiser gets the answer card with I'm in already lit and a character dropdown. Pressing Can't as organiser is meaningless.</p><p class="fix">→ Replace it with <q>You lead as Vesgar Bloodhoof · Tank · Change</q>. The organiser's choices are change character or role, edit, delete.</p></div></div><div class="f"><span class="fn">6</span><div><b>Plan a run starts on a dungeon nobody fits<span class="sev s-ux">UX</span></b><p>The form opens on Scarlet Monastery: Armory (32–42) with <q>None of your characters fit</q>.</p><p class="fix">→ Start empty with <q>Pick a dungeon</q>, or on the best fit for the selected character.</p></div></div><div class="f"><span class="fn">7</span><div><b>Native dropdowns<span class="sev s-pol">polish</span></b><p>Dungeon, lead as and character use the browser's own select: white OS list on Windows, no search, no groups, 31 dungeons in one flat list with Forever dungeons tacked on at the end.</p><p class="fix">→ One styled listbox component (search, groups, meta text, disabled reason), bottom sheet on phones.</p></div></div><div class="f"><span class="fn">8</span><div><b>Day and time inputs<span class="sev s-pol">polish</span></b><p><q>Other date…</q> wraps onto its own line. Date and time are native inputs with OS icons, so they look different in every browser.</p><p class="fix">→ One scrollable chip row with a calendar chip at the end. Time chips for common times plus <q>Other…</q>.</p></div></div><div class="f"><span class="fn">9</span><div><b>Page jumps sideways<span class="sev s-bug">bug</span></b><p>Plan a run shifts about 12 px to the left when the page becomes long enough to scroll.</p><p class="fix">→ <code>html { scrollbar-gutter: stable; }</code></p></div></div><div class="f"><span class="fn">10</span><div><b>Healer text contradicts the sidebar<span class="sev s-copy">copy</span></b><p>The healer slot says <q>Nobody in range yet</q> while Could join lists Kaz Coldbrew as healer, 4 levels short.</p><p class="fix">→ <q>No healer in range · Kaz Coldbrew is 4 below</q>.</p></div></div><div class="f"><span class="fn">11</span><div><b>Runs list summary<span class="sev s-copy">copy</span></b><p>The card says <q>Healer still open: nobody in range</q> although 4 of 5 slots are open, and the 5 little bars have no legend.</p><p class="fix">→ <q>1 in · 4 open · no healer in range</q>; bars get a tooltip and role initials.</p></div></div><div class="f"><span class="fn">12</span><div><b>Small texts that read oddly<span class="sev s-copy">copy</span></b><p><q>organiser fills their slot</q> (preview) · <q>Only the organiser can edit</q> shown to the organiser · <q>Website · 23:24</q> with no day · the admin hint <q>posted once the admin picks a channel</q> shown to everyone.</p><p class="fix">→ <q>Organiser takes a slot</q> · hide the hint · <q>Website · Tue 23:24</q> · show the admin hint only to admins.</p></div></div><div class="f"><span class="fn">13</span><div><b>Roster dungeon bands<span class="sev s-ux">UX</span></b><p>11 bands stack into 9 rows, labels are cut off (<q>Ragefire Chasm …</q>, <q>Blackfathom Deeps 24–32 · 4…</q>), and clicking a band does nothing.</p><p class="fix">→ At most 4 rows, the busiest dungeons first, <q>Show all 11</q>, short names and a popover with Plan a run on click.</p></div></div><div class="f"><span class="fn">14</span><div><b>Dot tooltip on the roster<span class="sev s-pol">polish</span></b><p>The tooltip for the “4” dot is cut off at the top of the panel, and <q>Sjaak Grimhammer 30 · Sorrel</q> wraps over two lines.</p><p class="fix">→ Flip the tooltip below when there's no room above; one row per character, no wrapping.</p></div></div><div class="f"><span class="fn">15</span><div><b>Run time is small<span class="sev s-pol">polish</span></b><p>The most important fact, <q>Fri 30 Oct 20:30 · in 3 days</q>, is 13 px grey text under a 34 px title.</p><p class="fix">→ Time as large as the title, with the countdown next to it.</p></div></div></div><div style="display: flex; gap: 18px; font-size: 12px; color: #8E98A8"><span><span class="sev s-bug">bug</span> broken or wrong</span><span><span class="sev s-ux">UX</span> works, but the flow is off</span><span><span class="sev s-copy">copy</span> text</span><span><span class="sev s-pol">polish</span> looks</span><span>Console: no errors.</span></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

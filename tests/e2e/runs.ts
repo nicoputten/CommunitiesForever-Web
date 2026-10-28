@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { pick } from "./dropdown";
 
 // Helpers for the runs tests (WEB-40): plan through the real form, set a friend's time zone on the Discord page,
 // answer through the site's answer route.
@@ -17,12 +18,21 @@ export interface PlanInput {
 export async function planRun(page: Page, input: PlanInput): Promise<number> {
   await page.goto(`/runs/new?dungeon=${input.dungeon}`);
   if (input.lead !== undefined) {
-    const lead = page.getByLabel("Lead as");
-    const value = await lead.locator("option", { hasText: input.lead }).first().getAttribute("value");
-    await lead.selectOption(value ?? "");
+    // Lead as is the picker (WEB-49): the character listbox.
+    await page
+      .getByRole("listbox", { name: "1 · Character" })
+      .getByRole("option", { name: new RegExp(input.lead) })
+      .click();
   }
   await page.getByRole("group", { name: "Day" }).getByRole("radio").nth(input.day).check();
-  await page.getByLabel("Time").fill(input.time);
+  // Time chips (WEB-49), or Other… for the time input.
+  const chip = page.getByRole("group", { name: "Time" }).getByRole("radio", { name: input.time, exact: true });
+  if ((await chip.count()) > 0) {
+    await chip.check();
+  } else {
+    await page.getByRole("group", { name: "Time" }).getByRole("radio", { name: "Other…" }).check();
+    await page.getByLabel("Other time").fill(input.time);
+  }
   if (input.note !== undefined) await page.getByLabel("Note (optional)").fill(input.note);
   await page.getByRole("button", { name: "Plan run" }).click();
   await page.waitForURL(/\/runs\/\d+$/);
@@ -32,8 +42,8 @@ export async function planRun(page: Page, input: PlanInput): Promise<number> {
 /** Picks the signed-in friend's time zone on the Discord page. */
 export async function setTimeZone(page: Page, timeZone: string): Promise<void> {
   await page.goto("/discord");
-  const select = page.getByLabel("Time zone", { exact: true });
-  await select.selectOption(timeZone);
+  const [, ...place] = timeZone.split("/");
+  await pick(page, page.getByLabel("Time zone", { exact: true }), place.join(" / ").replace(/_/g, " "));
   await page.getByRole("button", { name: "Save" }).first().click();
   await expect(page).toHaveURL(/notice=time-zone/);
 }

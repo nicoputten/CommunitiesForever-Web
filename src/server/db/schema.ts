@@ -1,5 +1,7 @@
 import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
+import type { FeedDay } from "@/core/feed";
+import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
@@ -283,6 +285,20 @@ export const runs = sqliteTable("runs", {
   /** When the bot's reminder and "starting now" events were written, so each is written once. */
   remindedAt: integer("reminded_at"),
   startingAt: integer("starting_at"),
+  /** WEB-43: "Ran it" (from an upload's run log) or "didn't happen" (none within 4 hours of the start). */
+  outcome: text("outcome", { enum: ["done", "didntHappen"] }),
+  outcomeAt: integer("outcome_at"),
+  /** Ran it: signed-up characters seen in the run, of those who said I'm in. */
+  came: integer("came"),
+  signedUp: integer("signed_up"),
+  /** WEB-51: an ask ("who's up right now") is a run that starts when it is made and is open for 10 minutes. */
+  kind: text("kind", { enum: ["run", "ask"] })
+    .notNull()
+    .default("run"),
+  /** WEB-51: when an ask stops taking answers (made at + 10 minutes). */
+  expiresAt: integer("expires_at"),
+  /** WEB-51: when the bot's `askExpired` event was written, so it is written once. */
+  expiredAt: integer("expired_at"),
 });
 
 /** One answer per friend per run; replaced when they answer again. */
@@ -297,10 +313,12 @@ export const runAnswers = sqliteTable(
     key: text("key").notNull(),
     battleTag: text("battle_tag").notNull(),
     guid: text("guid"),
-    answer: text("answer", { enum: ["in", "maybe", "cant"] }).notNull(),
+    /** `reserve` (WEB-47): I'm in on a full role. */
+    answer: text("answer", { enum: ["in", "maybe", "cant", "reserve"] }).notNull(),
     role: text("role", { enum: ["tank", "healer", "damage"] }).notNull(),
     source: text("source", { enum: ["website", "discord", "game"] }).notNull(),
     answeredAt: integer("answered_at").notNull(),
+    /** WEB-40's "Maybe, first in line"; since WEB-47 a reserve answer instead (0011 turned them into reserve). */
     waitlisted: integer("waitlisted", { mode: "boolean" }).notNull(),
     movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
   },
@@ -332,4 +350,87 @@ export const guildReports = sqliteTable("guild_reports", {
   id: integer("id").primaryKey(),
   /** Unix seconds. */
   reportedAt: integer("reported_at").notNull(),
+});
+
+// History for the weekly recap (WEB-41, src/server/history.ts). Derived from the stored uploads: written with every
+// accepted upload, rebuilt by rebuild(). The addon keeps only the last 7 days; these keep every day the site saw.
+
+/** The addon's activity feed (CF-22) per realm day per character; the copy with the latest activity wins. */
+export const feedDays = sqliteTable(
+  "feed_days",
+  {
+    /** Realm day: days since 1970-01-01. */
+    day: integer("day").notNull(),
+    guid: text("guid").notNull(),
+    /** Person key of the feed's owner. */
+    owner: text("owner").notNull(),
+    /** Unix seconds of the last activity that day, when known. */
+    at: integer("at"),
+    /** The upload it came from. */
+    sourceUpload: integer("source_upload").notNull(),
+    data: text("data", { mode: "json" }).$type<FeedDay>().notNull(),
+  },
+  (t) => [uniqueIndex("feed_days_day_guid_unique").on(t.day, t.guid)],
+);
+
+/** Whether each person shares their activity ("Share my activity", CF-22), from their newest record seen. */
+export const feedSharing = sqliteTable("feed_sharing", {
+  owner: text("owner").primaryKey(),
+  shared: integer("shared", { mode: "boolean" }).notNull(),
+  sourceUpload: integer("source_upload").notNull(),
+});
+
+/** Every sighting of every upload (the `locations` table keeps only the newest per character). */
+export const sightings = sqliteTable(
+  "sightings",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    guid: text("guid").notNull(),
+    zone: text("zone").notNull(),
+    seenAt: integer("seen_at").notNull(),
+    sourceUpload: integer("source_upload").notNull(),
+  },
+  (t) => [uniqueIndex("sightings_guid_seen_at_unique").on(t.guid, t.seenAt)],
+);
+
+/**
+ * What the game sent (WEB-43, the addon's `pending`: plans, answers, asks, pings), by the item's id, so a file
+ * uploaded twice changes nothing. Not derived: a rebuild doesn't apply them again. Their ids go back to the game as
+ * `received` (GET /api/uploader/v1/runs), and the addon then forgets them.
+ */
+export const gameItems = sqliteTable("game_items", {
+  id: text("id").primaryKey(),
+  /** The uploader's BattleTag: the player who did it. */
+  battleTag: text("battle_tag").notNull(),
+  kind: text("kind", { enum: ["plan", "answer", "ask", "ping"] }).notNull(),
+  /** When it happened in game, and when the site got it (Unix seconds). */
+  at: integer("at").notNull(),
+  receivedAt: integer("received_at").notNull(),
+  uploadId: integer("upload_id").notNull(),
+  /** What the site did with it: "applied" or why not ("expired", "time_passed", "unknown_run", …). */
+  result: text("result").notNull(),
+  /** The run it made or answered. */
+  runId: integer("run_id"),
+});
+
+// The weekly recap (WEB-41c, src/server/recap.ts): computed once at the recap moment and stored, so a re-run never
+// changes what was posted. Not derived: a rebuild of the uploads leaves it alone.
+
+export const recaps = sqliteTable("recaps", {
+  /** 1 for the first recap after launch. */
+  week: integer("week").primaryKey(),
+  /** Unix seconds, `[start, end)`. */
+  start: integer("start").notNull(),
+  end: integer("end").notNull(),
+  computedAt: integer("computed_at").notNull(),
+  /** The recap as posted (cards, phrasings, facts) and what later recaps need (`past`, `cycles`). */
+  data: text("data", { mode: "json" }).$type<Recap>().notNull(),
+  /** The characters at `end`: the next week's start. */
+  snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
+});
+
+/** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */
+export const recapStart = sqliteTable("recap_start", {
+  id: integer("id").primaryKey(),
+  startedAt: integer("started_at").notNull(),
 });

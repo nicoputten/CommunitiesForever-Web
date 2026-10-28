@@ -1,0 +1,339 @@
+/* The dungeon page (WEB-42, board dungeon-page): the hero over a crop of the map, Who fits, and the side column with
+   Planned here and Ran here. Boxes, buttons and slot bars are the Runs pages' (Runs.module.css). One column below
+   1024 px. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-dungeon-aside);
+  gap: var(--s-5-5);
+  align-items: start;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+@media (max-width: 1023px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- hero ----------------------------------------------------------------------------------------------------------- */
+
+/* The map is centred on the entrance at (--entrance-x, --entrance-y): on desktop right of the text, on a phone in a
+   strip above it. */
+.hero {
+  --entrance-x: 65%;
+  --entrance-y: 35%;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: var(--size-dungeon-hero);
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--line-hero);
+  overflow: hidden;
+  background: var(--sea);
+}
+
+.heroMap {
+  position: absolute;
+  inset: 0;
+}
+
+/* The map keeps its shape, at least as wide as the hero, centred on the entrance at --entrance-y. */
+.heroSvg {
+  position: absolute;
+  left: var(--entrance-x);
+  top: var(--entrance-y);
+  width: max(100%, calc(var(--size-dungeon-hero) * 1.6));
+  height: auto;
+  aspect-ratio: var(--map-ratio);
+  transform: translate(-50%, -50%);
+}
+
+.entrance {
+  position: absolute;
+  left: var(--entrance-x);
+  top: var(--entrance-y);
+  transform: translate(-50%, -50%);
+}
+
+.entranceIcon {
+  box-sizing: border-box;
+  display: block;
+  width: var(--size-marker);
+  height: var(--size-marker);
+  padding: calc((var(--size-marker) - var(--size-icon-sm)) / 2);
+  border-radius: var(--r-badge);
+  background: var(--badge-bg);
+  border: var(--border-strong) solid var(--gold);
+  color: var(--gold-bright);
+  box-shadow: var(--glow-marker);
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--dungeon-veil);
+}
+
+.heroBody {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-5);
+  width: 100%;
+  padding: var(--s-6) var(--s-6-5);
+}
+
+.heroText {
+  flex: 1 1 var(--size-search-min);
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: var(--fs-meta);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-overline);
+  color: var(--gold);
+}
+
+.title {
+  margin: var(--s-1) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-dungeon-title);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  color: var(--gold-pale);
+}
+
+.levels {
+  margin: var(--s-1) 0 0;
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+}
+
+.wings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--surface-box);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wing:hover {
+  border-color: var(--line-link);
+  color: var(--text-strong);
+}
+
+.wing[aria-current="page"] {
+  border-color: var(--gold);
+  background: var(--tint-selected);
+  color: var(--text-strong);
+}
+
+.plus {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+
+.count {
+  padding: var(--s-0-75) var(--s-1-5);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+}
+
+/* Phone: the wings scroll sideways in one row, Plan a run takes the full width. */
+@media (max-width: 767px) {
+  .hero {
+    --entrance-x: 50%;
+    --entrance-y: calc(var(--size-dungeon-hero) / 4);
+  }
+
+  .heroBody {
+    padding: calc(var(--size-dungeon-hero) / 2) var(--s-4) var(--s-5);
+  }
+
+  .title {
+    font-size: var(--fs-run-title);
+  }
+
+  .wings {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .heroBody > a {
+    flex: 1 1 100%;
+  }
+}
+
+/* --- who fits ------------------------------------------------------------------------------------------------------ */
+
+.fitsHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.roles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3-5);
+}
+
+@media (max-width: 767px) {
+  .roles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.role {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roleTitle {
+  margin: 0;
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-overline);
+  color: var(--text-dim);
+}
+
+.fit {
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.fit a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.fit a:hover {
+  text-decoration: underline;
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.nobody {
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-control);
+  border: var(--border) dashed var(--line-nobody);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-nobody);
+}
+
+/* --- planned here -------------------------------------------------------------------------------------------------- */
+
+.planned {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plannedRun {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3-5);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--surface-planned);
+  border: var(--border) solid var(--line-planned);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.plannedRun:hover {
+  border-color: var(--gold);
+}
+
+.plannedWhen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.plannedWhen b {
+  font-family: var(--font-name);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  color: var(--text-strong);
+}
+
+.plannedText {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body);
+}
+
+.plannedText p {
+  margin: 0;
+}
+
+/* Other wings: one 44 px row each. */
+.links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  font-size: var(--fs-meta);
+  color: var(--gold);
+}

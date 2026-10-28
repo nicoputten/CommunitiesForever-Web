@@ -1,0 +1,160 @@
+/* The date field and its month popover (WEB-48): the dropdown's look, a 44 × 44 calendar button. */
+
+.wrap {
+  position: relative;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.value,
+.placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.placeholder {
+  color: var(--text-dim);
+}
+
+.button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.button[aria-expanded="true"],
+.button:focus-visible {
+  border-color: var(--gold);
+  box-shadow: var(--ring-field-open);
+  outline: none;
+}
+
+.icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + var(--s-1-5));
+  right: 0;
+  z-index: 20;
+  padding: var(--s-3);
+  border-radius: var(--r-menu);
+  background: var(--surface-menu);
+  border: var(--border) solid var(--line-menu);
+  box-shadow: var(--shadow-menu);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-2);
+}
+
+.month {
+  font-family: var(--font-display);
+  font-size: var(--fs-section);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.monthButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  border-radius: var(--r-nav);
+  border: 0;
+  background: none;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.monthButton:hover {
+  background: var(--tint-option);
+}
+
+.chevron {
+  width: var(--s-2);
+  height: var(--s-3);
+}
+
+.grid {
+  border-collapse: collapse;
+}
+
+.weekday {
+  height: var(--s-6);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-tag);
+  color: var(--text-faint);
+}
+
+.grid td {
+  padding: 0;
+}
+
+.day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  border-radius: var(--r-nav);
+  border: var(--border) solid transparent;
+  background: none;
+  color: var(--text);
+  font-size: var(--fs-body-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.day[data-outside] {
+  color: var(--text-dim);
+}
+
+.day:hover {
+  background: var(--tint-option);
+}
+
+.day[data-selected] {
+  border-color: var(--gold);
+  background: var(--tint-selected);
+  color: var(--text-strong);
+}
+
+.day[aria-disabled="true"] {
+  color: var(--text-disabled);
+  background: none;
+  cursor: not-allowed;
+}
+
+.day:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: calc(-1 * var(--focus-width));
+}

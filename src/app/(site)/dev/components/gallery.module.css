@@ -186,3 +186,14 @@
   stroke-opacity: 0.55;
   stroke-width: 1.1;
 }
+
+/* WEB-48: the form controls at a field's width. */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--size-search-min)), 1fr));
+  gap: var(--s-4) var(--s-6);
+}
+
+.fields > * > div:first-child {
+  display: block;
+}

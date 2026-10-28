@@ -233,6 +233,7 @@
   --border-strong: 2px;
   --focus-width: 2px;
   --focus-offset: 2px;
+  --focus-room: 4px; /* runs-v2-plan: room for the focus ring inside a scroll box (width + offset) */
 
   /* motion */
   --dur-shimmer: 1.6s; /* loading: skeleton */
@@ -717,4 +718,76 @@
   --discord-button-in: #248046;
   --discord-on-button-in: #ffffff; /* run-create: "I'm in" text; the board's #f2f3f5 is under 4.5 : 1 there */
   --r-discord: 4px;
+
+  /* weekly recap preview (WEB-41c): the bot-recap board's example embed */
+  --size-recap: 760px; /* bot-recap: the embed column (640 on the board, wider for the site's type) */
+
+  /* dropdown, date popover and time input (WEB-48): the runs-v2-plan board's dropdown spec */
+  --surface-menu: #0e1626; /* runs-v2-plan: dropdown menu */
+  --line-menu: rgba(212, 175, 106, 0.45); /* runs-v2-plan: the menu's gold line */
+  --shadow-menu: 0 18px 40px rgba(0, 0, 0, 0.6);
+  --ring-field-open: 0 0 0 3px rgba(212, 175, 106, 0.18); /* runs-v2-plan: open or focused trigger */
+  --tint-option: rgba(212, 175, 106, 0.14); /* runs-v2-plan: keyboard highlight */
+  --text-disabled: #6e7888; /* runs-v2-plan: disabled trigger and options (inactive, so no contrast minimum) */
+  --r-menu: 12px;
+  --size-menu-list: 320px; /* runs-v2-plan: the list scrolls beyond this */
+  --size-menu-max: 520px; /* runs-v2-plan: the dungeon dropdown's menu */
+  --size-picker: 440px; /* runs-v2-picker: the answer popover on desktop */
+  /* runs on the roster (WEB-45): boards roster-cards-runs (Next run, band popover) and runs-v2-plan (bands v2) */
+  --next-run-glow: radial-gradient(circle at 0% 50%, rgba(212, 175, 106, 0.14), rgba(12, 18, 30, 0.8) 50%);
+  --line-next-run: rgba(212, 175, 106, 0.35); /* roster-cards-runs: Next run card */
+  --ls-next-run: 0.14em; /* roster-cards-runs: NEXT RUN */
+  --line-band-pop: rgba(212, 175, 106, 0.55); /* roster-cards-runs: band popover */
+  --size-band-pop: 300px; /* roster-cards-runs: band popover */
+  --size-slot-role: 64px; /* runs-v2-run-detail: the role column of a slot */
+  /* Dungeon page (WEB-42): the dungeon-page board */
+  --size-dungeon-hero: 240px; /* dungeon-page: the hero's height */
+  --size-dungeon-aside: 380px; /* dungeon-page: the side column (Planned here, Ran here) */
+  --fs-dungeon-title: 40px; /* dungeon-page: the dungeon or wing (Marcellus SC) */
+  --line-hero: rgba(212, 175, 106, 0.4); /* dungeon-page: the hero's frame */
+  --dungeon-veil: linear-gradient(
+    0deg,
+    rgba(7, 12, 21, 0.96) 10%,
+    rgba(7, 12, 21, 0.3) 80%
+  ); /* dungeon-page: over the map */
+  --line-nobody: #f0a774; /* dungeon-page: "Nobody in range." (dashed) */
+  --text-nobody: #f6c29c;
+  --surface-planned: #0e1626; /* dungeon-page: a run planned here */
+  --line-planned: rgba(212, 175, 106, 0.35);
+  /* card images (WEB-41d): Nico's references in design/cards/; read by src/core/cards/palette.ts, kept equal by a test */
+  --card-w: 800px; /* cards: milestone, zone of the week, /whereis */
+  --card-wide: 1200px; /* cards: the recap headers */
+  --card-h: 400px;
+  --card-pad: 40px;
+  --fs-card-overline: 20px; /* cards: "MILESTONE", "WEEKLY RECAP · 20–26 OCT" */
+  --fs-card-title: 64px; /* cards: "Level 60" (Marcellus SC) */
+  --fs-card-award: 46px; /* cards: "<site> of the week" (Marcellus SC) */
+  --fs-card-name: 40px; /* cards: the character or friend (Marcellus) */
+  --fs-card-line: 26px; /* cards: the first detail line */
+  --fs-card-stat: 36px; /* cards: "6 levels · 3 dungeons" on the headers */
+  --fs-card-meta: 20px; /* cards: the second line, the footer */
+  --fs-card-initials: 64px; /* cards: initials on the big disc */
+  --size-card-disc: 230px; /* cards: the class disc with its gold ring */
+  --size-card-disc-small: 60px; /* cards: /whereis */
+  --size-card-ring: 6px;
+  --size-card-marker: 28px; /* cards: a sighting on the map */
+  --card-glow: rgba(240, 208, 142, 0.3); /* cards: the halo behind the disc and the highlighted zone */
+  --card-land: #18233a; /* cards: zones on the map crops */
+  --card-land-line: rgba(126, 136, 152, 0.45);
+  --card-zone: #6b634f; /* cards: the highlighted zone (the references' olive gold) */
+  --card-label-bg: rgba(7, 12, 21, 0.75); /* cards: "2 h ago" pills on the map */
+
+  /* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live cards in the fresh green. */
+  --size-ask-edge: 3px; /* the live left edge of an ask */
+  --size-ask-bar: 4px; /* the time-left bar */
+  --ask-bar-track: #1f2837;
+  --size-live-dot: 8px; /* the header's pulsing live dot */
+  --size-live-ring: 10px;
+  --live-ring: rgba(127, 217, 154, 0.55);
+  --answered-tint: rgba(127, 217, 154, 0.08); /* "You answered I'm in with …" */
+  --answered-line: rgba(127, 217, 154, 0.3);
+  --retry-tint: rgba(240, 167, 116, 0.08); /* "Your answer didn't go through." */
+  --retry-line: rgba(240, 167, 116, 0.4);
+  --retry-text: #f6d6bd;
+  --size-ask-note: 300px; /* "None of your characters fit …" */
 }

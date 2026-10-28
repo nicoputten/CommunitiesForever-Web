@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { getViewer } from "@/app/viewer";
+import { getViewer, isAdmin } from "@/app/viewer";
 import { parseRunsFilter, RUNS_FILTERS, runsPage } from "@/core/views/runs";
+import { AsksNow } from "@/components/runs/AsksNow";
 import { RunCard } from "@/components/runs/RunCard";
 import styles from "@/components/runs/Runs.module.css";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,8 +22,11 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
   if (viewer === undefined) notFound();
   const db = getDb();
   const filter = parseRunsFilter((await searchParams).show);
-  const page = runsPage(runsInput(db, viewer.battleTag, nowSeconds()), filter);
+  const now = nowSeconds();
+  const page = runsPage(runsInput(db, viewer.battleTag, now), filter);
   const settings = getBotSettings(db);
+  // The "once the admin picks a channel" hint is for the admin only (finding 12).
+  const admin = await isAdmin();
 
   return (
     <div className={styles.page}>
@@ -52,6 +56,9 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
           ))}
           <span className={styles.filterNote}>“Can join” = one of your characters fits the level range</span>
         </nav>
+
+        {/* Asking now (WEB-51): open asks above the runs, whatever the filter. */}
+        <AsksNow asks={page.asks} now={now} />
 
         {!page.anyUpcoming && page.past.length === 0 ? (
           <EmptyState title="No runs planned" action={{ href: "/runs/new", label: "Plan a run" }}>
@@ -85,8 +92,11 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
                         <span>
                           <b>{p.dungeon}</b> · {p.by}
                         </span>
-                        <span className={styles.pill} data-tone={p.cancelled ? "cancelled" : "done"}>
-                          {p.result}
+                        <span className={styles.pastResult}>
+                          <span className={styles.pill} data-tone={p.result.tone}>
+                            {p.result.label}
+                          </span>
+                          {p.detail !== undefined && <span>{p.detail}</span>}
                         </span>
                       </Link>
                     </li>
@@ -121,7 +131,9 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
               {!settings.runs
                 ? "not posted: the admin turned run posts off"
                 : settings.runsChannel === null
-                  ? "posted once the admin picks a channel for runs"
+                  ? admin
+                    ? "posted once you pick a channel for runs on the Discord page"
+                    : "not posted yet"
                   : `posted in the runs channel${settings.reminders ? `, reminder ${settings.reminderMinutes} min before` : ""}`}
             </span>
           </div>
