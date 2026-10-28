@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Feats: every milestone is now a feat, and new ones join them: honorable kills, a new highest PvP rank with our title, duel wins, a first battleground win, 100 deaths, the first epic, mounts, the first catch, Jack of all trades and the profession watch list (Arcanite Reaper, Mooncloth, the Fishing Extravaganza and more). The site keeps every character's feats, marks "First in the group", and draws a card image for the special ones.
 - The site keeps the coming addon's Doomsday data from uploads: PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's daily and weekly goals. There is no "Share my activity" any more: activity a friend's older addon stopped sharing shows again in the recap and `/me`.
 
 ## v0.4.1 (2026-10-28)
