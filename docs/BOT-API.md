@@ -380,7 +380,8 @@ At each reset, with the Board switch on: the new day's board. The bot posts it i
       }
     ],
     "withoutData": ["Sanne"],
-    "crown": null
+    "crown": null,
+    "yesterdayCrown": { "name": "Tok" }
   }
 }
 ```
@@ -390,6 +391,7 @@ At each reset, with the Board switch on: the new day's board. The bot posts it i
 - `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (struck through). `today`, `week`: points per track (`pvp` `null` for a PvP Virgin). `streak`, `best`: days.
 - `withoutData`: friends on the site without Doomsday data (no row).
 - `crown`: `{ "name", "at" }`, the first friend to finish the 3 PvE dailies, or `null`. No points.
+- `yesterdayCrown`: `{ "name" }`, the crown of the previous Doomsday day, or `null` when nobody took it (bot BOT-15, Nico 2026-10-28: "Yesterday's crown: Tok."). Optional: the bot shows the line only when it is sent.
 
 ### Event `doomsdayBoardUpdate`
 After each accepted upload that changes the day's board, with the Board switch on: the whole board again, the same `data`, plus:
@@ -411,6 +413,7 @@ On Sunday at the reset (the week turns), with the Ladder switch on: the week tha
 ```json
 {
   "week": 2965,
+  "label": "week 44",
   "start": 1792951200,
   "end": 1793556000,
   "pve": [
@@ -433,6 +436,7 @@ On Sunday at the reset (the week turns), with the Ladder switch on: the week tha
 - `pve`, `pvp`: the top 5 of each ladder. Ties: more goals done first, then more counted kills (PvP). `move`: `{ "kind": "up" | "down", "by" }`, `{ "kind": "same" }` or `{ "kind": "new" }` (not on last week's ladder).
 - `duelChampion`: the best Elo rating among friends who duelled that week (start 1000, K = 32), or `null`. `mostKillsInZone`: the most counted kills by one friend in one zone, or `null`.
 - `battlegrounds`: kept apart from the kills above. `friends`: the top 5 by battleground points; `games`: the group's wins and losses per battleground. `null` without a battleground that week.
+- `label`: the week as people say it (bot BOT-16, Nico 2026-10-28): "week" and the ISO 8601 week number of the Monday after the week's start, in the realm's time zone. Optional: without it the bot shows "week of <start>".
 - `pvpVirgins`: friends not ranked on the PvP ladder ("not ranked: no kills on any character, ever"); empty when none.
 
 ### Look-up `doomsday`
@@ -475,6 +479,7 @@ The `recap` event (and `recap/latest`) gains an optional `doomsday` field, the r
   "doomsday": {
     "mostDevoted": { "name": "Mira", "days": 6 },
     "perfectWeek": ["Mira"],
+    "crowns": [{ "name": "Mira", "count": 3 }, { "name": "Tok", "count": 2 }],
     "points": {
       "pve": [{ "name": "Mira", "points": 85 }],
       "pvp": [{ "name": "Nico", "points": 240 }]
@@ -483,7 +488,7 @@ The `recap` event (and `recap/latest`) gains an optional `doomsday` field, the r
 }
 ```
 
-- `mostDevoted`: goals done on the most days, or `null` when nobody did one. `perfectWeek`: friends who did every PvE daily on every day they played, on at least 4 days (empty when none). `points`: the top 3 per track for the recap's week.
+- `mostDevoted`: goals done on the most days, or `null` when nobody did one. `perfectWeek`: friends who did every PvE daily on every day they played, on at least 4 days (empty when none). `points`: the top 3 per track for the recap's week. `crowns` (bot BOT-16, Nico 2026-10-28): the crowns per friend that week, most first, then by name; empty when nobody took one ("Crowns this week: Mira 3, Tok 2"). Each is shown only when it is sent.
 - Left out when nobody has Doomsday data.
 
 ### Feats (the `milestones` event, WEB-56)
