@@ -119,7 +119,7 @@ describe("the recap job", () => {
 });
 
 describe("the week's input", () => {
-  it("takes the feed days and sightings of the week only, map zones by name, and leaves out who doesn't share", () => {
+  it("takes the feed days and sightings of the week only, and map zones by name; feed = false sends nothing", () => {
     const db = getDb();
     const w = assembleWeek(db, 9, t("2026-10-30T00:00:00Z"), t("2026-11-01T00:00:00Z"), {}, SITE);
     expect(w.days.map((d) => [d.guid, d.entry.levelTo])).toEqual([
@@ -129,13 +129,10 @@ describe("the week's input", () => {
     expect(w.sightings.map((s) => s.zone)).toEqual(["Stranglethorn Vale"]);
     expect(w.zonesBefore).toEqual(["Duskwood"]);
     expect(w.after["G-V"]).toMatchObject({ name: "Ves Example", race: "Undead", level: 23 });
-    expect(w.friends.map((f) => [f.name, f.shares])).toEqual([
-      ["Ada", true],
-      ["Nico", true],
-    ]);
+    expect(w.friends.map((f) => f.name)).toEqual(["Ada", "Nico"]);
     upload(db, file(24, t("2026-10-31T22:00:00Z"), "Duskwood", false), ADMIN, t("2026-10-31T23:00:00Z"), ADMIN);
     const off = assembleWeek(db, 9, t("2026-10-30T00:00:00Z"), t("2026-11-01T00:00:00Z"), {}, SITE);
-    expect(off.friends.find((f) => f.name === "Ada")?.shares).toBe(false);
-    expect(off.days.map((d) => d.guid)).toEqual(["G-V"]);
+    // "Share my activity" is gone (Nico, 2026-10-28): an older addon's feed = false keeps Ada's stored days.
+    expect(off.days.map((d) => d.guid)).toEqual(["G-A", "G-V"]);
   });
 });

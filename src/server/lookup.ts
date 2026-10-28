@@ -2,7 +2,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { sameBattleTag } from "@/core/access";
 import type { Dataset } from "@/core/model";
 import type { Db } from "./db";
-import { feedDays, feedSharing } from "./db/schema";
+import { feedDays } from "./db/schema";
 
 // The bot's look-ups on the server (WEB-39b): who a linked friend is in the data, and their week for `/me`.
 
@@ -15,20 +15,24 @@ export function personKeyOf(d: Dataset, battleTag: string): string | undefined {
 
 /**
  * `/me`'s week: levels, quests and dungeon runs of the last 7 days from the activity feed (WEB-41a). Undefined for
- * someone who doesn't share their activity (or never sent any).
+ * someone who never sent any.
  */
 export function weekOf(
   db: Db,
   personKey: string,
   now: number,
 ): { levels: number; quests: number; runs: number } | undefined {
-  const sharing = db.select().from(feedSharing).where(eq(feedSharing.owner, personKey)).get();
-  if (sharing === undefined || !sharing.shared) return undefined;
   const days = db
     .select({ data: feedDays.data })
     .from(feedDays)
     .where(and(eq(feedDays.owner, personKey), gte(feedDays.day, Math.floor(now / DAY) - 6)))
     .all();
+  if (
+    days.length === 0 &&
+    db.select({ day: feedDays.day }).from(feedDays).where(eq(feedDays.owner, personKey)).get() === undefined
+  ) {
+    return undefined;
+  }
   let levels = 0;
   let quests = 0;
   let runs = 0;

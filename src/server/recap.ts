@@ -6,7 +6,7 @@ import { nextRecapMoment, recapMomentAtOrBefore, type RecapSchedule } from "@/co
 import { adminBattleTag } from "./access";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
-import { feedDays, feedSharing, recaps, recapStart, sightings } from "./db/schema";
+import { feedDays, recaps, recapStart, sightings } from "./db/schema";
 import { effectiveTimeZone, getBotSettings } from "./discord";
 import { loadState } from "./uploads";
 
@@ -73,18 +73,10 @@ export function assembleWeek(
     const rc = recapChar(c);
     if (rc !== undefined) after[rc.guid] = rc;
   }
-  const sharing = new Map(
-    db
-      .select()
-      .from(feedSharing)
-      .all()
-      .map((r) => [r.owner, r.shared]),
-  );
   const friends = Object.values(state?.data.people ?? {})
     .filter((p) => p.hasRecord)
-    .map((p) => ({ key: p.key, name: p.displayName, shares: sharing.get(p.key) ?? true }))
+    .map((p) => ({ key: p.key, name: p.displayName }))
     .sort((a, b) => a.key.localeCompare(b.key));
-  const shares = new Set(friends.filter((f) => f.shares).map((f) => f.key));
 
   const inWeek = (day: number, at: number | null) => {
     const t = at ?? day * DAY + DAY / 2;
@@ -96,7 +88,7 @@ export function assembleWeek(
     .where(and(gte(feedDays.day, Math.floor(start / DAY) - 1), lt(feedDays.day, Math.ceil(end / DAY) + 1)))
     .orderBy(asc(feedDays.day), asc(feedDays.guid))
     .all()
-    .filter((d) => shares.has(d.owner) && inWeek(d.day, d.at))
+    .filter((d) => inWeek(d.day, d.at))
     .map((d) => ({ day: d.day, guid: d.guid, owner: d.owner, entry: d.data }));
 
   const all = sightingsBetween(db, 0, end);

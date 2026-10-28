@@ -25,7 +25,6 @@ describe("readFeeds", () => {
     expect(feeds).toEqual([
       {
         owner: "Ada#1001",
-        shared: true,
         days: {
           20744: {
             "G-1": {
@@ -42,11 +41,10 @@ describe("readFeeds", () => {
           },
         },
       },
-      { owner: "Bob#2002", shared: false, days: {} },
+      // feed = false (an older addon with "Share my activity" off) sends nothing.
       // Day 3 (1970) is no realm day the addon writes: left out.
       {
         owner: "Dee#4004",
-        shared: true,
         days: { 20745: { "G-4": { levelTo: 9, quests: {}, ranks: {}, learned: [], runs: [] } } },
       },
     ]);

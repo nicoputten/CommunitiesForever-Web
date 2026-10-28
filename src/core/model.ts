@@ -42,6 +42,22 @@ export interface Quest {
   dungeon?: boolean;
 }
 
+/** A character's PvP counters (addon CF-52), each only when the game gave it. */
+export interface Pvp {
+  /** Lifetime honorable kills. */
+  hk?: number;
+  /** PvP rank: 0 none, 1 to 14. */
+  rank?: number;
+  /** The game's name for the rank (per faction). */
+  rankName?: string;
+  weekKills?: number;
+  weekHonor?: number;
+  /** Lifetime counters the addon keeps from CF-52 on. */
+  deaths?: number;
+  duelsWon?: number;
+  duelsLost?: number;
+}
+
 export interface Character {
   guid: string;
   /** Person key; undefined when nobody is known to own the GUID (a location only). */
@@ -67,6 +83,10 @@ export interface Character {
   roleOverride?: string;
   /** Keyed by quest ID. */
   quests: Record<string, Quest>;
+  /** CF-52. */
+  pvp?: Pvp;
+  /** CF-53: the riding skill rank (0, 75 or 150). */
+  riding?: number;
   updatedAt?: number;
   lastPlayed?: number;
 }

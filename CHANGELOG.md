@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- The site keeps the coming addon's Doomsday data from uploads: PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's daily and weekly goals. There is no "Share my activity" any more: activity a friend's older addon stopped sharing shows again in the recap and `/me`.
 
 ## v0.4.1 (2026-10-28)
 - Roster: a narrow dungeon band keeps its name ("Ragef… 13–18 · 2") instead of showing only the levels and count.
