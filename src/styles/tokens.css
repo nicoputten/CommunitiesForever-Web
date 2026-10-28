@@ -846,4 +846,19 @@
   --heat-3: rgba(212, 175, 106, 0.66);
   --heat-4: rgba(212, 175, 106, 0.82);
   --heat-5: rgba(212, 175, 106, 0.98);
+  /* Doomsday Ladder, PvP and Feats (WEB-60, boards doomsday-ladder, doomsday-feats) */
+  --size-ladder-place: 28px; /* doomsday-ladder: the place column */
+  --size-ladder-points: 70px;
+  --size-ladder-move: 46px;
+  --fs-ladder-place: 18px; /* doomsday-ladder: the place (Marcellus) */
+  --fs-kills: 40px; /* doomsday-ladder: kills this week (Marcellus) */
+  --size-insignia: 30px; /* doomsday-ladder: the rank insignia */
+  --size-zone-name: 160px; /* doomsday-ladder: kills by zone, the zone column */
+  --size-bg-col: 54px; /* doomsday-ladder: battlegrounds, W / L / kills columns */
+  --size-feats-aside: 500px; /* doomsday-feats: Your feats */
+  --size-feat-icon: 44px; /* doomsday-feats: the icon box of a feat */
+  --size-feat-glyph: 24px;
+  --feat-icon-bg: radial-gradient(circle at 40% 35%, #1e2e48, #0a1322); /* doomsday-feats: the icon box */
+  --line-feat-own: rgba(212, 175, 106, 0.45); /* doomsday-feats: a feat you have */
+  --line-feat-locked: rgba(174, 182, 195, 0.1); /* doomsday-feats: a feat not reached yet */
 }
