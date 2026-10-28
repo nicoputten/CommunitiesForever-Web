@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
 import { getViewer, isAdmin } from "@/app/viewer";
 import { parseRunsFilter, RUNS_FILTERS, runsPage } from "@/core/views/runs";
+import { AsksNow } from "@/components/runs/AsksNow";
 import { RunCard } from "@/components/runs/RunCard";
 import styles from "@/components/runs/Runs.module.css";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,7 +22,8 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
   if (viewer === undefined) notFound();
   const db = getDb();
   const filter = parseRunsFilter((await searchParams).show);
-  const page = runsPage(runsInput(db, viewer.battleTag, nowSeconds()), filter);
+  const now = nowSeconds();
+  const page = runsPage(runsInput(db, viewer.battleTag, now), filter);
   const settings = getBotSettings(db);
   // The "once the admin picks a channel" hint is for the admin only (finding 12).
   const admin = await isAdmin();
@@ -54,6 +56,9 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
           ))}
           <span className={styles.filterNote}>“Can join” = one of your characters fits the level range</span>
         </nav>
+
+        {/* Asking now (WEB-51): open asks above the runs, whatever the filter. */}
+        <AsksNow asks={page.asks} now={now} />
 
         {!page.anyUpcoming && page.past.length === 0 ? (
           <EmptyState title="No runs planned" action={{ href: "/runs/new", label: "Plan a run" }}>
