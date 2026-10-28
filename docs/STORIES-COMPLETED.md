@@ -578,4 +578,4 @@ Decided with Nico (2026-10-28): an in-game ask with "Also post on Discord" reach
 - A new item kind `askAnswer { id, at, ask, answer, guid, name, role }` from the answerer's own file answers the ask as a Discord answer would (source "game", `askChanged`); an unknown ask (`unknown_ask`) or an expired one (`expired`) is logged with its result and ignored.
 - `received` (the uploader's runs feed) also returns the carried ids, so every carrier's game forgets them.
 - Compat: optional additions only (`battleTag` on an ask, the new kind); files from before CF-51 behave as before. Tests: four carriers, one ask, one post; expired; an asker outside the community; an answer to an unknown ask; the parser.
-- Done (PR #TBD): `src/core/gameItems.ts` (`askAnswer`, the ask's `battleTag`), `src/server/gameItems.ts` (`askerOf`, carriers, `askAnswer`, `receivedIds`), `docs/SOURCE-DATA.md`, `docs/UPLOADER-API.md`.
+- Done (PR #91): `src/core/gameItems.ts` (`askAnswer`, the ask's `battleTag`), `src/server/gameItems.ts` (`askerOf`, carriers, `askAnswer`, `receivedIds`), `docs/SOURCE-DATA.md`, `docs/UPLOADER-API.md`.
