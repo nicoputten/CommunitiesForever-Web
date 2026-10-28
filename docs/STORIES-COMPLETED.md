@@ -587,5 +587,5 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Cuts happen on the name text only, never in the middle of the range or count; the `title` and `aria-label` keep the full name and range.
 - Test: a band narrow enough to hit each fallback (full, short, cut name, cut name without range) at 1440 px, with a screenshot baseline; the phone list is unchanged (always the full name).
 - Cause: a dungeon without a short name (Ragefire Chasm, The Drowned City) rendered no short-name span, so the "short" step showed only the range and count.
-- Decided in the build: once the range has gone, the name gets the freed room back (whole short name, else the longest cut that fits), so "Rag… · 2" is the narrowest label; " · 1 run" stays with the count.
+- Agreed with Nico (2026-10-28): once the range has gone, the name gets the freed room back (whole short name, else the longest cut that fits), so "Rag… · 2" is the narrowest label; " · 1 run" stays with the count.
 - Done (PR #94): `DungeonBands` (`fitLabel`: full, short, cut, bare; each band observed for its own width), `nameCuts` in `src/core/views/text.ts`, `LevelSpread.module.css`; tests: `tests/unit/text.test.ts`, design check "band names on narrow bands" with the `roster-bands-narrow` baseline, e2e roster.
