@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapIcon, ProfessionsIcon, RosterIcon, RunsIcon } from "@/components/ui/icons";
+import { DoomsdayIcon, MapIcon, ProfessionsIcon, RosterIcon, RunsIcon } from "@/components/ui/icons";
 import { NAV, isCurrent, type NavHref } from "./nav";
 import { RunsBadge } from "./RunsBadge";
 import { LinkPending } from "./Pending";
@@ -13,10 +13,11 @@ const ICONS: Record<NavHref, typeof MapIcon> = {
   "/roster": RosterIcon,
   "/professions": ProfessionsIcon,
   "/runs": RunsIcon,
+  "/doomsday": DoomsdayIcon,
 };
 
 /**
- * Phone tab bar: Map · Roster · Professions · Runs (phone-map board; Runs with WEB-40). Hidden on desktop, where the
+ * Phone tab bar: Map · Roster · Professions · Runs · Doomsday (phone-map board; Runs with WEB-40, Doomsday WEB-59). Hidden on desktop, where the
  * top bar has them. `runsBadge`: upcoming runs you can join and haven't answered.
  */
 export function TabBar({ runsBadge = 0 }: { runsBadge?: number }) {

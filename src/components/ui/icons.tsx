@@ -268,3 +268,162 @@ export function DeviceIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Doomsday (E8, board doomsday-names): the sun rising over a shield, in the tab bar's line style. */
+export function DoomsdayIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 28 28" strokeWidth={1.8} {...props}>
+      <path d="M14 15V5 M14 15l7-6 M14 15L7 9 M3 15h22 M7 15c2 8 12 8 14 0 M12 19h4 M14 17v4" />
+    </Icon>
+  );
+}
+
+/** doomsday-today: the crown of the first to finish, filled gold. */
+export function CrownIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" {...props}>
+      <path
+        d="M2 12h12l1-8-4 3-3-5-3 5-4-3z"
+        fill="var(--gold-bright)"
+        stroke="var(--crown-line)"
+        strokeWidth=".8"
+        strokeLinejoin="round"
+      />
+      <rect x="2" y="12.5" width="12" height="2" rx="1" fill="var(--gold)" />
+    </svg>
+  );
+}
+
+/** doomsday-today: the streak's flame. */
+export function FlameIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 14 14" aria-hidden="true" focusable="false" {...props}>
+      <path d="M7 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 2 1 2 0-2 0-4 1-6z" fill="var(--streak-flame)" />
+    </svg>
+  );
+}
+
+/** doomsday-today: a goal swapped for one friend. */
+export function SwapIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 14 14" strokeWidth={1.4} {...props}>
+      <path d="M2 5h9l-2-2M12 9H3l2 2" />
+    </Icon>
+  );
+}
+
+/** doomsday-today: the big emblem next to the page title (sun over the shield-shaped bowl). */
+export function DoomsdayEmblem(props: IconProps) {
+  const rays = [
+    [52.8, 22],
+    [44, 13.2],
+    [32, 10],
+    [20, 13.2],
+    [11.2, 22],
+  ];
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" {...props}>
+      {rays.map(([x, y]) => (
+        <path
+          key={`${x}`}
+          d={`M32 34 L${x} ${y}`}
+          stroke="var(--gold)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          opacity=".8"
+        />
+      ))}
+      <circle cx="32" cy="34" r="14" fill="var(--gold-bright)" />
+      <path d="M6 40h52" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M14 40c4 14 32 14 36 0z" fill="var(--surface-raised)" stroke="var(--gold-bright)" strokeWidth="2.4" />
+      <path d="M27 46h10M32 41v10" stroke="var(--gold-bright)" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** doomsday-feats: a sword (first epic, watch-list items, PvP feats). */
+export function SwordIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M14 4h6v6L9 21l-6-6z" />
+      <path d="M5 13l6 6" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a mount. */
+export function MountIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M4 18c2-6 6-8 10-8l3-4 2 2-1 3c2 1 3 3 3 7" />
+      <path d="M8 18v3M17 18v3" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a fish (Fishing). */
+export function FishIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M3 12c4-6 12-6 16 0-4 6-12 6-16 0z" />
+      <path d="M19 12l3-3v6z" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a skull (deaths). */
+export function SkullIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <circle cx="12" cy="10" r="7" />
+      <path d="M9 21v-4M15 21v-4" />
+      <circle cx="9.5" cy="10" r="1.5" fill="currentColor" />
+      <circle cx="14.5" cy="10" r="1.5" fill="currentColor" />
+    </Icon>
+  );
+}
+
+/** doomsday-feats: a cooking pot (profession caps). */
+export function PotIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={1.8} {...props}>
+      <path d="M5 10h14l-1 9H6z" />
+      <path d="M8 10V7M12 10V5M16 10V7" />
+    </Icon>
+  );
+}
+
+/**
+ * doomsday-ladder: a PvP rank insignia, a gold shield: ranks 1 to 5 as that many chevrons, from rank 6 a dot over
+ * the rank's number (the board shows rank 2 and rank 6 only). None at rank 0.
+ */
+export function RankInsignia({ rank, ...props }: IconProps & { rank: number }) {
+  const chevrons = rank >= 1 && rank <= 5 ? rank : 0;
+  return (
+    <svg viewBox="0 0 26 26" aria-hidden="true" focusable="false" {...props}>
+      <path
+        d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"
+        fill="var(--gold)"
+        stroke="var(--card-badge-line)"
+        strokeWidth=".8"
+      />
+      {Array.from({ length: chevrons }, (_, i) => (
+        <path
+          key={i}
+          d={`M7 ${(9.3 - (chevrons - 1) * 1.3 + i * 2.6).toFixed(1)}l6 3 6-3`}
+          fill="none"
+          stroke="var(--on-gold)"
+          strokeWidth="1.4"
+        />
+      ))}
+      {rank >= 6 && (
+        <>
+          <circle cx="13" cy="8.5" r="1.4" fill="var(--on-gold)" />
+          <text x="13" y="17.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="var(--on-gold)">
+            {rank}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}

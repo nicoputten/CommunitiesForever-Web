@@ -1,0 +1,433 @@
+/* The Doomsday page's Ladder, PvP and Feats tabs (WEB-60): boards doomsday-ladder and doomsday-feats. The cards,
+   pills and tracks come from Doomsday.module.css. */
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4-5);
+  align-items: start;
+}
+
+.three {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4-5);
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .two,
+  .three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Ladder ──────────────────────────────────────────────────────────── */
+
+.ladder {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.row[data-you="true"] {
+  background: var(--row-you);
+}
+
+.head {
+  display: grid;
+  grid-template-columns:
+    var(--size-ladder-place) var(--size-avatar-board) minmax(0, 1fr) var(--size-ladder-points)
+    var(--size-ladder-move);
+  gap: var(--s-2-5);
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: var(--s-1) var(--s-1-5);
+  font-size: var(--fs-body);
+  color: var(--text-strong);
+  cursor: pointer;
+  list-style: none;
+}
+
+.head::-webkit-details-marker {
+  display: none;
+}
+
+.place {
+  font-family: var(--font-name);
+  font-size: var(--fs-ladder-place);
+  color: var(--gold-pale);
+}
+
+.caret {
+  display: inline-block;
+  color: var(--text-dim);
+}
+
+details[open] > .head .caret {
+  transform: rotate(90deg);
+}
+
+.points {
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.move {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  text-align: right;
+}
+
+.move[data-kind="up"] {
+  color: var(--pve-text);
+}
+
+.move[data-kind="down"] {
+  color: var(--pvp-text);
+}
+
+.move[data-kind="new"] {
+  color: var(--swap-text);
+}
+
+.move[data-kind="same"] {
+  color: var(--text-faint);
+}
+
+.char {
+  display: grid;
+  grid-template-columns:
+    calc(var(--size-ladder-place) + var(--size-avatar-board) + var(--s-2-5)) minmax(0, 1fr)
+    var(--size-ladder-points) var(--size-ladder-move);
+  gap: var(--s-2-5);
+  align-items: center;
+  padding: var(--s-1-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.charName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  min-width: 0;
+}
+
+.virgin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: var(--s-2-5) var(--s-1-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+/* ── PvP details ─────────────────────────────────────────────────────── */
+
+.section {
+  margin-top: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.kills {
+  font-family: var(--font-name);
+  font-size: var(--fs-kills);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+}
+
+.killsDetail {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+}
+
+.rank {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+.insignia {
+  width: var(--size-insignia);
+  height: var(--size-insignia);
+  flex: none;
+}
+
+.rankName {
+  font-family: var(--font-name);
+  font-size: var(--fs-name);
+  color: var(--text-strong);
+}
+
+.aka {
+  color: var(--gold-pale);
+}
+
+.zone {
+  display: grid;
+  grid-template-columns: var(--size-zone-name) minmax(0, 1fr) var(--size-ladder-move);
+  gap: var(--s-2-5);
+  align-items: center;
+  padding: var(--s-1) 0;
+  font-size: var(--fs-body-sm);
+}
+
+.track {
+  height: var(--size-goal-bar);
+  border-radius: var(--r-badge);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.track > span {
+  display: block;
+  height: 100%;
+  background: var(--pvp-text);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-strong);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.duels {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-body-sm);
+}
+
+.duels th {
+  padding: var(--s-2);
+  border-bottom: var(--border) solid var(--line-control);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-section);
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.duels thead th:first-child {
+  text-align: left;
+}
+
+.duels tbody th {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-regular);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-strong);
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.duels td {
+  padding: var(--s-2-5) var(--s-2);
+  border-bottom: var(--border) solid var(--line-row);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  color: var(--text-chip);
+}
+
+.duels td[data-result="won"] {
+  color: var(--pve-text);
+}
+
+.duels td[data-result="lost"] {
+  color: var(--pvp-text);
+}
+
+.duels td[data-self="true"] {
+  background: var(--surface-row);
+}
+
+.elo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-goal);
+}
+
+.eloRating {
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  color: var(--gold-pale);
+}
+
+.dashed {
+  border-style: dashed;
+}
+
+.bg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-bg-col) var(--size-bg-col) var(--size-bg-col);
+  gap: var(--s-1-5);
+  padding: var(--s-1-5) 0;
+  border-bottom: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+}
+
+.bgName {
+  color: var(--text-strong);
+}
+
+/* ── Feats ───────────────────────────────────────────────────────────── */
+
+.feats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-feats-aside);
+  gap: var(--s-4-5);
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .feats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.feat {
+  display: grid;
+  grid-template-columns: var(--size-feat-icon) minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-3) var(--s-3-5);
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-goal);
+}
+
+.featIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-feat-icon);
+  height: var(--size-feat-icon);
+  border-radius: var(--r-card);
+  background: var(--feat-icon-bg);
+  border: var(--border) solid var(--first-line);
+  color: var(--gold-bright);
+}
+
+.glyph {
+  width: var(--size-feat-glyph);
+  height: var(--size-feat-glyph);
+}
+
+.featTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-section);
+  color: var(--text-strong);
+}
+
+.epic {
+  color: var(--epic);
+}
+
+.featMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1-5);
+  margin-top: var(--s-0-5);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.own {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.ownFeat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-feat-own);
+}
+
+.ownFeat[data-done="false"] {
+  border-color: var(--line-feat-locked);
+}
+
+.ownTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-sm);
+  color: var(--text-strong);
+}
+
+.ownFeat[data-done="false"] .ownTitle {
+  color: var(--text-muted);
+}
+
+.ranks {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-body-sm);
+}
+
+.ranks th {
+  padding: var(--s-2);
+  border-bottom: var(--border) solid var(--line-control);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-section);
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--text-faint);
+}
+
+.ranks td {
+  padding: var(--s-2);
+  border-bottom: var(--border) solid var(--line-row);
+  color: var(--text-chip);
+}
+
+.ranks td:last-child {
+  color: var(--gold-pale);
+}
+
+.detailsLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  color: var(--gold);
+}
