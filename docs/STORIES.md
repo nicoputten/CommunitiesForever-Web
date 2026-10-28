@@ -105,3 +105,39 @@ Each card keeps the existing rules: a threshold, a score against earlier weeks, 
   - "Duel every friend once"
   - "A week without dying"
 - `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
+
+## E9 PvP ladder (decided with Nico, 2026-10-28)
+A weekly and a lifetime ladder, duels and a battleground block, with points per kill and daily and weekly goals. The rules live in the addon repo, `docs/LADDER.md` (one description for the addon, the site and the bot). The addon stores raw kills (`pvpKills`, CF-55) and derives the points itself, and the site derives them again from uploads with its own TypeScript copy of the rules. Both test against the same golden file, the addon's `tests/fixtures/ladder-cases.json`, copied here. The designs come from Nico (`docs/DESIGN-PROMPT-RECAP-V2.md`, section 3). Order: WEB-58 after WEB-55 and the addon's CF-55; WEB-59 after WEB-58 and the designs; the bot's BOT-15 after WEB-58.
+
+Compatibility: uploads from addons without CF-55 have no `pvpKills` and deaths without `t`. Such friends show with their lifetime honorable kills (CF-52) and "no ladder data yet", never 0 points as if known. A rule change in `LADDER.md` comes with a new golden file. Because the site recomputes from the stored uploads, a rebuild applies the new rules to every day; the addon only to its 7 days.
+
+### WEB-58 Ladder from uploads
+- Read `pvpKills` and the death `t` from uploads into the derived data per realm day, validated and capped as the addon does. A rebuild gives the same result.
+- `lib/ladder` implements `LADDER.md`:
+  - points per kill
+  - the draws and goal progress per character
+  - the views: week, lifetime, duels, battleground block, PvP Virgin
+  - **all-time points** (every stored day)
+  - the **duel Elo** (start 1000, K = 32, in time order, disputed duels left out)
+- Tests: the golden file copied from the addon (`tests/fixtures/ladder-cases.json`, with the addon commit it came from in a comment or a field) passes unchanged; plus all-time points and Elo over more than 7 days.
+- A setting for the weekly reset day: Wednesday (Europe, the default) or Tuesday.
+- Bot API (`docs/BOT-API.md`): look-up `ladder` with `view` = `week` (default), `lastweek`, `lifetime`, `duels` or `bg`. The answer:
+  - the ranking: friends with place, points or kills, movement since last week, and their characters
+  - the asker's place and row (with a linked `discordUserId`)
+  - today's goals (Hunt, Daily, Duel; the Class hunts per class) and this week's (Streak, Class weekly per class, Weekly bounty)
+  - for `duels`: the head-to-head and Elo
+  - `404 no_data` before any ladder data
+  
+  Optional within v1.
+- Recap (WEB-41): a "Ladder of the week" line with the week's winner and the top 3, only when at least 2 friends have ladder data. `docs/RECAP.md` updated.
+
+### WEB-59 Ladder page
+After WEB-58 and Nico's designs (boards from section 3 of `docs/DESIGN-PROMPT-RECAP-V2.md`).
+- A **Ladder** page in the navigation with the views:
+  - **This week**, **Last week**, **Lifetime** (honorable kills and rank, plus all-time points)
+  - **Duels** (head-to-head grid, Elo, this week's wins and losses)
+  - **Battlegrounds** (the block)
+- Friends ranked, expandable to their characters. Top 3 in gold, silver and bronze, movement since last week. **PvP Virgin** shown as in the design.
+- A goals panel: today's Hunt and Daily, the Class hunt for each class someone plays, and this week's Streak, Class weekly and Weekly bounty. Each with who has done it.
+- States: no ladder data yet ("Nobody has drawn blood yet"), only one friend with data, and friends without CF-55 data.
+- Desktop and phone as in the design. Tests on the page's data (ranking, ties, movement, states).
