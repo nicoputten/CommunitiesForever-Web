@@ -5,6 +5,8 @@ import { field, findGlobal, list, num, str, table, type Table } from "./normaliz
 // src/core/Pending.lua and its sample tests/fixtures/pending.lua): runs planned, answers given, asks to post on
 // Discord and Discord pings. The game saves them in `global.pending` (schema 2) until the site's runs list them
 // under `received` (WEB-44). Untrusted like the rest of the file: wrong items are left out, text loses WoW escapes.
+// WEB-53 (addon CF-51): a friend's ask carried in another member's file (its asker's guid, the asker's item id), and
+// an in-game answer to an ask (`askAnswer`).
 
 export type GameRole = "tank" | "heal" | "dps";
 
@@ -25,7 +27,10 @@ interface Who {
 export type GameItem =
   | (ItemBase & Who & { kind: "plan"; dungeon: string; startsAt: number; note?: string })
   | (ItemBase & Who & { kind: "answer"; run: string; answer: "in" | "maybe" | "cant" })
-  | (ItemBase & Who & { kind: "ask"; dungeon: string; note?: string })
+  /** `battleTag`: the asker, when the game knows it (WEB-53: a carried ask names its asker by guid or BattleTag). */
+  | (ItemBase & Who & { kind: "ask"; dungeon: string; note?: string; battleTag?: string })
+  /** WEB-53: an answer given in game to an ask; `ask` is the ask's item id. */
+  | (ItemBase & Who & { kind: "askAnswer"; ask: string; answer: "in" | "maybe" | "cant" })
   | (ItemBase & { kind: "ping"; run: string; battleTag?: string; guid?: string; name?: string });
 
 /** The addon's caps (Pending.MAX_ITEMS, MAX_NOTE). */
@@ -88,7 +93,22 @@ function item(t: Table): GameItem | undefined {
     case "ask": {
       const dungeon = token(t, "dungeon");
       if (dungeon === undefined) return undefined;
-      return { id, at, kind: "ask", dungeon, ...who(t), ...(note === undefined ? {} : { note }) };
+      const battleTag = text(t, "battleTag", 48);
+      return {
+        id,
+        at,
+        kind: "ask",
+        dungeon,
+        ...who(t),
+        ...(note === undefined ? {} : { note }),
+        ...(battleTag === undefined ? {} : { battleTag }),
+      };
+    }
+    case "askAnswer": {
+      const ask = token(t, "ask");
+      const answer = str(t, "answer");
+      if (ask === undefined || answer === undefined || !ANSWERS.has(answer)) return undefined;
+      return { id, at, kind: "askAnswer", ask, answer: answer as "in" | "maybe" | "cant", ...who(t) };
     }
     case "ping": {
       const run = token(t, "run");

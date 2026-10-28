@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Asks from the game reach the site and Discord sooner: any friend's upload carries a friend's ask (once, as the asker's ask), and answers given to an ask in game show up too.
 - Runs: any character may say I'm in or lead, also one 6 or more levels below the dungeon. It shows how far below it is and that it will be tough, and it is never suggested ("recommend, never restrict").
 
 ## v0.4.0 (2026-10-28)

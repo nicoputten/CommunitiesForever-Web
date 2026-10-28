@@ -58,9 +58,10 @@ Schema 2 (addon CF-47, CF-48): what the player did in game that has to reach the
 their ids under `received` (WEB-44). Each item: `id` (unique per player: account id, time, counter) and `at` (UTC).
 | `kind` | Fields | The site |
 |---|---|---|
-| `plan` | `dungeon` (the addon's id), `startsAt`, `guid`, `name`, `role`, `note` | a run, source "game", the player leading as that character (else organiser without a slot); dropped when its start has passed |
+| `plan` (own file only) | `dungeon` (the addon's id), `startsAt`, `guid`, `name`, `role`, `note` | a run, source "game", the player leading as that character (else organiser without a slot); dropped when its start has passed |
 | `answer` | `run` (`r-<id>`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role` | the player's answer, source "game" ("N run answers") |
-| `ask` | `dungeon`, `guid`, `name`, `role`, `note` | an `askNow` bot event, only within 10 minutes of `at` |
+| `ask` | `dungeon`, `guid`, `name`, `role`, `note`; `battleTag` (optional, addon CF-51: the asker) | an ask (WEB-51) and an `askNow` bot event, only within 10 minutes of `at`. WEB-53: a friend's ask carried in another member's file (CF-51) is the asker's, by the owner of `guid`, else the person `battleTag` names; created once by its `id` (the asker's), every carrier kept (`game_item_carriers`); an asker the community's data doesn't know: `not_member` |
+| `askAnswer` | `ask` (the ask's `id`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role` | WEB-53 (CF-51): the player's answer to that ask, source "game", as a Discord answer; `unknown_ask` when the site has no such ask, `expired` after its 10 minutes |
 | `ping` | `run`, `battleTag`, `guid`, `name` (who to ping) | a `ping` bot event |
 
 The run log (CF-23, in the feed: `feed[day][guid].runs`) decides "Ran it" (WEB-43, `src/core/runOutcome.ts`).

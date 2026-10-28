@@ -1,4 +1,4 @@
-import { blob, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
@@ -402,7 +402,7 @@ export const gameItems = sqliteTable("game_items", {
   id: text("id").primaryKey(),
   /** The uploader's BattleTag: the player who did it. */
   battleTag: text("battle_tag").notNull(),
-  kind: text("kind", { enum: ["plan", "answer", "ask", "ping"] }).notNull(),
+  kind: text("kind", { enum: ["plan", "answer", "ask", "ping", "askAnswer"] }).notNull(),
   /** When it happened in game, and when the site got it (Unix seconds). */
   at: integer("at").notNull(),
   receivedAt: integer("received_at").notNull(),
@@ -412,6 +412,22 @@ export const gameItems = sqliteTable("game_items", {
   /** The run it made or answered. */
   runId: integer("run_id"),
 });
+
+/**
+ * WEB-53: who carried a friend's ask in their file (addon CF-51), one row per carrier, also after the ask was made:
+ * for the audit, and so every carrier gets the id back in `received` and the game forgets it.
+ */
+export const gameItemCarriers = sqliteTable(
+  "game_item_carriers",
+  {
+    id: text("id").notNull(),
+    /** The carrier's BattleTag (the uploader of the file). */
+    battleTag: text("battle_tag").notNull(),
+    uploadId: integer("upload_id").notNull(),
+    receivedAt: integer("received_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.id, t.battleTag] })],
+);
 
 // The weekly recap (WEB-41c, src/server/recap.ts): computed once at the recap moment and stored, so a re-run never
 // changes what was posted. Not derived: a rebuild of the uploads leaves it alone.
