@@ -33,9 +33,12 @@ export function runsInput(db: Db, battleTag: string, now: number, admin = adminB
 }
 
 /** Where Plan a run's post goes: "Posts in the runs channel · reminder 30 min before" (the admin's settings, WEB-39). */
-export function postsTo(db: Db): string {
+export function postsTo(db: Db, admin: boolean): string {
   const s = getBotSettings(db);
   if (!s.runs) return "Run posts are off: the admin turned them off on the Discord page.";
-  const where = s.runsChannel === null ? "Posts once the admin picks a channel for runs" : "Posts in the runs channel";
+  // The channel hint is for the admin only (WEB-49, finding 12).
+  if (s.runsChannel === null)
+    return admin ? "Posts once you pick a channel for runs on the Discord page" : "Not posted in Discord yet";
+  const where = "Posts in the runs channel";
   return s.reminders ? `${where} · reminder ${s.reminderMinutes} min before` : where;
 }

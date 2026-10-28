@@ -3,7 +3,10 @@ import type { RunCardView } from "@/core/views/runs";
 import { AnswerButtons } from "./AnswerButtons";
 import styles from "./Runs.module.css";
 
-/** A run in the list (runs board): when, what, who, the five slots, and answer buttons when you can join it. */
+/**
+ * A run in the list (runs board; v2 WEB-49): when, what, who, the five slots with their letters and tooltip, the
+ * summary, and answer buttons when you can join it.
+ */
 export function RunCard({ run }: { run: RunCardView }) {
   const [day, time] = splitWhen(run.when);
   return (
@@ -35,14 +38,24 @@ export function RunCard({ run }: { run: RunCardView }) {
         )}
       </div>
       <div className={styles.side}>
-        <span className={styles.slots} aria-hidden="true">
-          {run.slots.map((s, i) => (
-            <i key={i} data-filled={s.filled || undefined} />
-          ))}
+        {/* The slot bar (finding 11): role letters, and who sits where in a tooltip on hover and focus. */}
+        <span className={styles.slotBar} role="img" tabIndex={0} aria-label={`Group: ${run.slotRows.join("; ")}`}>
+          <span className={styles.slots} aria-hidden="true">
+            {run.slots.map((s, i) => (
+              <span key={i} className={styles.slotCell} data-filled={s.filled || undefined}>
+                <span className={styles.slotLetter}>{s.letter}</span>
+                <i />
+              </span>
+            ))}
+          </span>
+          <span className={styles.slotTip} aria-hidden="true">
+            {run.slotRows.map((row) => (
+              <span key={row}>{row}</span>
+            ))}
+          </span>
         </span>
-        {run.answer === undefined ? (
-          <span className={styles.tally}>{run.tally}</span>
-        ) : (
+        <span className={styles.tally}>{run.summary}</span>
+        {run.answer !== undefined && (
           <AnswerButtons choice={run.answer} size="small" label={`Answer for ${run.dungeon}`} />
         )}
       </div>

@@ -359,12 +359,41 @@
   gap: var(--s-2);
 }
 
+/* The slot bar (WEB-49, finding 11): a role letter over each bar; the tooltip on hover and keyboard focus. */
+.slotBar {
+  position: relative;
+  border-radius: var(--r-slot);
+}
+
+.slotBar:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
 .slots {
   display: flex;
   gap: var(--s-1);
 }
 
-.slots i {
+.slotCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-0-5);
+}
+
+.slotLetter {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  color: var(--text-dim);
+}
+
+.slotCell[data-filled] .slotLetter {
+  color: var(--gold);
+}
+
+.slotCell i {
   display: block;
   width: var(--size-slot-w);
   height: var(--size-slot-h);
@@ -372,8 +401,33 @@
   background: var(--slot-empty);
 }
 
-.slots i[data-filled] {
+.slotCell[data-filled] i {
   background: var(--slot-filled);
+}
+
+.slotTip {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: calc(100% + var(--s-1-5));
+  display: none;
+  flex-direction: column;
+  width: max-content;
+  max-width: var(--size-tooltip);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-tooltip);
+  border: var(--border) solid var(--line-tooltip);
+  box-shadow: var(--shadow-tooltip);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-relaxed);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.slotBar:hover .slotTip,
+.slotBar:focus-visible .slotTip {
+  display: flex;
 }
 
 .tally {
@@ -784,6 +838,30 @@
   gap: var(--s-2);
 }
 
+/* Plan's day row (WEB-49): the chips never wrap; they scroll sideways when narrow, the calendar button stays put. */
+.dayRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.chipScroll {
+  display: flex;
+  flex: 1;
+  gap: var(--s-2);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Room for the focus ring inside the scroll box. */
+  padding: var(--focus-room);
+  margin: calc(-1 * var(--focus-room));
+}
+
+.chipScroll .chip {
+  flex: none;
+  white-space: nowrap;
+}
+
 .chip {
   position: relative;
   display: inline-flex;
@@ -970,5 +1048,15 @@
 
   .form {
     padding: var(--s-4);
+  }
+}
+
+/* On a phone the slot bar is tapped for its tooltip: a 44 px target around it. */
+@media (max-width: 767px) {
+  .slotBar {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+    min-width: var(--size-touch);
   }
 }

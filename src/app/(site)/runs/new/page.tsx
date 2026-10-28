@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { getViewer } from "@/app/viewer";
+import { getViewer, isAdmin } from "@/app/viewer";
 import { planPage } from "@/core/views/runs";
 import { PlanForm } from "@/components/runs/PlanForm";
 import styles from "@/components/runs/Runs.module.css";
@@ -25,7 +25,7 @@ export default async function PlanRunPage({ searchParams }: { searchParams: Prom
         <Link href="/runs">Runs</Link> › Plan a run
       </p>
       <PageTitle>Plan a run</PageTitle>
-      <PlanForm page={page} action={planAction} postsTo={postsTo(db)} />
+      <PlanForm page={page} action={planAction} postsTo={postsTo(db, await isAdmin())} />
     </div>
   );
 }

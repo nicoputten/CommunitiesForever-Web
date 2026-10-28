@@ -393,7 +393,7 @@ describe("run times", () => {
   it("this week ends at the next Monday 00:00 in the zone; the next seven days for the day chips", () => {
     expect(weekEnd(NOW, AMS)).toBe(Date.UTC(2026, 10, 1, 23, 0) / 1000);
     expect(nextDays(NOW, AMS).map((d) => d.label)).toEqual([
-      "Today · Tue 27",
+      "Today",
       "Wed 28",
       "Thu 29",
       "Fri 30",

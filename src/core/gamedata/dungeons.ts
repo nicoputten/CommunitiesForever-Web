@@ -55,6 +55,8 @@ export interface DungeonInfo {
   wingsAreDungeons?: true;
   /** Short name for narrow places, e.g. the roster's bands ("SM Armory"). */
   shortName?: string;
+  /** One of Forever's nine new dungeons ("Forever" next to its range in Plan's dropdown, WEB-49). */
+  forever?: true;
   /** The addon's dungeon id ("rfc", "lbrs", "lfg1984"); undefined when the addon has none. */
   addonId?: string;
   /** Zone texts the addon may record for it (the name included). */
@@ -257,6 +259,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "thanes",
+    forever: true,
     addonId: "lfg1984",
     name: "Hall of Thanes",
     kind: "dungeon",
@@ -266,6 +269,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "lordaeron",
+    forever: true,
     addonId: "lfg1982",
     name: "Ruins of Lordaeron",
     kind: "dungeon",
@@ -275,6 +279,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "excavation",
+    forever: true,
     addonId: "lfg1981",
     name: "Excavation Site",
     kind: "dungeon",
@@ -284,6 +289,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "dalaran",
+    forever: true,
     addonId: "lfg1983",
     name: "City of Dalaran",
     kind: "dungeon",
@@ -293,6 +299,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "drowned",
+    forever: true,
     name: "The Drowned City",
     kind: "dungeon",
     zone: "stv",
@@ -301,6 +308,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "kroldok",
+    forever: true,
     name: "Krol'dok Stronghold",
     kind: "dungeon",
     zone: "riverglades",
@@ -309,6 +317,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "alcaz",
+    forever: true,
     name: "Alcaz Prison",
     kind: "dungeon",
     zone: "dustwallow",
@@ -317,6 +326,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "blackmaw",
+    forever: true,
     name: "Blackmaw Hold",
     kind: "dungeon",
     zone: "azshara",
@@ -325,6 +335,7 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "shaper",
+    forever: true,
     name: "Shaper's Terrace",
     kind: "dungeon",
     zone: "ungoro",
@@ -365,6 +376,10 @@ export interface RunnableDungeon {
   addonId?: string;
   /** Typical level range (label it "typical"). */
   typicalLevels: LevelRange;
+  /** One of Forever's new dungeons. */
+  forever: boolean;
+  /** The instance's name when this is one of its wings ("Scarlet Monastery"). */
+  wingOf?: string;
 }
 
 export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d) => d.kind === "dungeon").flatMap(
@@ -376,6 +391,8 @@ export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d)
           shortName: `${d.shortName ?? d.name} ${w.name}`,
           instanceId: d.id,
           typicalLevels: w.typicalLevels,
+          forever: d.forever === true,
+          wingOf: d.name,
           ...(w.addonId === undefined ? {} : { addonId: w.addonId }),
         }))
       : [
@@ -385,6 +402,7 @@ export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d)
             shortName: d.shortName ?? d.name,
             instanceId: d.id,
             typicalLevels: d.typicalLevels,
+            forever: d.forever === true,
             ...(d.addonId === undefined ? {} : { addonId: d.addonId }),
           },
         ],

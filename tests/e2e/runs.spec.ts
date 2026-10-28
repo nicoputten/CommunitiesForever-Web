@@ -106,7 +106,61 @@ test("Plan a run says when the time has passed, and when none of your characters
   // Ves (39) is 19 below Scholomance: too low to lead (WEB-47 levelFit; 5 below Zul'Farrak he may).
   await expect(page.getByText(/None of your characters fit Scholomance \(58–60\)/)).toBeVisible();
   await page.getByRole("group", { name: "Day" }).getByRole("radio").first().check();
-  await page.getByLabel("Time").fill("00:01");
+  await page.getByRole("group", { name: "Time" }).getByRole("radio", { name: "Other…" }).check();
+  await page.getByLabel("Other time").fill("00:01");
   await expect(page.getByText(/^Time already passed\./)).toBeVisible();
   await expect(page.getByRole("button", { name: "Plan run" })).toBeDisabled();
+});
+
+// WEB-49 part B (board runs-v2-plan, findings 6 and 11): no guessed dungeon, the dropdown's groups and other wings,
+// day and time chips; the runs list's slot bar with its tooltip.
+test("Plan v2: an empty dungeon, its groups and wings, day and time chips", async ({ page, context, baseURL }) => {
+  await as(context, baseURL!, E2E.admin);
+  await page.goto("/runs/new");
+  const dungeon = page.getByRole("combobox", { name: "Dungeon", exact: true });
+  await expect(dungeon).toContainText("Pick a dungeon");
+  await expect(page.getByRole("button", { name: "Plan run" })).toBeDisabled();
+  await expect(page.getByRole("group", { name: "Lead as" })).toHaveCount(0);
+
+  await dungeon.click();
+  await expect(page.getByRole("group", { name: "Fits your characters" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "All dungeons by level" })).toBeAttached();
+  await page.getByRole("combobox", { name: "Search" }).fill("graveyard");
+  await expect(page.getByRole("group", { name: "Other Scarlet Monastery wings" }).getByRole("option")).toHaveCount(3);
+  await page.getByRole("option", { name: /^Scarlet Monastery: Graveyard/ }).click();
+  await expect(dungeon).toContainText("Scarlet Monastery: Graveyard");
+  await expect(page.getByRole("listbox", { name: "1 · Character" })).toBeVisible();
+
+  // Time: the chips, and Other… for any other time.
+  const time = page.getByRole("group", { name: "Time" });
+  await expect(time.getByRole("radio", { name: "20:30" })).toBeChecked();
+  await time.getByRole("radio", { name: "Other…" }).check();
+  await page.getByLabel("Other time").fill("21:45");
+  await page.getByLabel("Other time").blur();
+  await expect(page.getByRole("region", { name: "Preview in Discord" })).toContainText("at 21:45");
+
+  // Day: seven chips; a date picked beyond them gets a chip of its own.
+  const day = page.getByRole("group", { name: "Day" });
+  await expect(day.getByRole("radio")).toHaveCount(7);
+  await expect(day.getByRole("radio").first()).toHaveAccessibleName("Today");
+  await page.getByRole("button", { name: /^Another date/ }).click();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(day.getByRole("radio")).toHaveCount(8);
+  await expect(day.getByRole("radio").last()).toBeChecked();
+  await expect(page.getByRole("button", { name: "Plan run" })).toBeEnabled();
+});
+
+test("the runs list: a summary and the slot bar's tooltip", async ({ page, context, baseURL }) => {
+  await as(context, baseURL!, E2E.admin);
+  // Its own run (the seed has none): each size plans a different dungeon.
+  const [dungeon, name] = isPhone(page) ? ["rfk", "Razorfen Kraul"] : ["sfk", "Shadowfang Keep"];
+  await planRun(page, { dungeon, day: 2, time: "19:00" });
+  await page.goto("/runs?show=all");
+  const bar = page.getByRole("article", { name }).getByRole("img", { name: /^Group: Tank · / });
+  await expect(bar).toBeVisible();
+  await expect(page.getByText(/^\d+ in( · \d+ maybe)? · (\d+ open|full)/).first()).toBeVisible();
+  await bar.focus();
+  await expect(bar.getByText(/^Healer · /)).toBeVisible();
 });
