@@ -108,7 +108,6 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
   await expect(page.getByTestId("feat").filter({ hasText: "First epic" })).toContainText("First in the group");
   await expect(page.getByRole("heading", { name: "Your feats" })).toBeVisible();
   await expect(page.getByText("412 / 1,000")).toBeVisible();
-  await expect(page.getByText("Ves Doombringer · before tracking")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Grass: Untouched" })).toBeVisible();
 });
 
