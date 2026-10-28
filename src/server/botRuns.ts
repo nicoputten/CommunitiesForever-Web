@@ -1,6 +1,6 @@
 import { mayAdmin, roleOf } from "@/core/access";
 import { RUNNABLE_DUNGEONS, rolesFor } from "@/core/gamedata";
-import { isUpcoming, runDungeon, type MoveTo, type SlotRole } from "@/core/runs";
+import { isUpcoming, runDungeon, slotRole, type MoveTo, type SlotRole } from "@/core/runs";
 import { levelFit } from "@/core/levelFit";
 import { nextDays, zonedToUtc } from "@/core/runTime";
 import { adminBattleTag, loadAccessList } from "./access";
@@ -144,4 +144,42 @@ export function refusalText(code: string): [number, string] {
 export function refusal(code: string): Response {
   const [status, text] = refusalText(code);
   return apiError(status, code, text);
+}
+
+// Who leads: the best fit first (fits, then over, low, carry), then the highest level (BOT-04).
+const LEAD_ORDER = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 } as const;
+
+/**
+ * `/plan`'s choices for a friend (BOT-04): their time zone, today and the next six days in it (`dayOffset`), and per
+ * dungeon the character they would lead as (none when none of theirs may say I'm in).
+ */
+export function planChoices(db: Db, friend: BotFriend, now: number) {
+  const characters = charactersOf(loadState(db)?.data, friend.battleTag);
+  return {
+    timeZone: friend.timeZone,
+    days: nextDays(now, friend.timeZone, DAY_CHOICES).map((d, offset) => ({ offset, label: d.label, date: d.date })),
+    dungeons: RUNNABLE_DUNGEONS.map((d) => {
+      const { min, max } = d.typicalLevels;
+      const lead = characters
+        .map((c) => ({ c, fit: levelFit(c.level, min, max) }))
+        .filter((x) => x.fit.canPick)
+        .sort((a, b) => LEAD_ORDER[a.fit.kind] - LEAD_ORDER[b.fit.kind])[0];
+      return {
+        id: d.id,
+        name: d.name,
+        typicalLevels: d.typicalLevels,
+        lead:
+          lead === undefined
+            ? null
+            : {
+                guid: lead.c.guid,
+                name: lead.c.name ?? lead.c.guid,
+                level: lead.c.level ?? null,
+                classFile: lead.c.classFile ?? null,
+                role: slotRole(lead.c.role),
+                fit: { kind: lead.fit.kind, label: lead.fit.label },
+              },
+      };
+    }),
+  };
 }

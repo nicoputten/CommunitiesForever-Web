@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as dungeonsRoute } from "@/app/api/bot/v1/dungeons/route";
+import { GET as planChoicesRoute } from "@/app/api/bot/v1/plan/route";
 import { POST as answerRoute } from "@/app/api/bot/v1/runs/[id]/answers/route";
 import { POST as cancelRoute } from "@/app/api/bot/v1/runs/[id]/cancel/route";
 import { POST as moveRoute } from "@/app/api/bot/v1/runs/[id]/move/route";
@@ -371,6 +372,22 @@ describe("the bot's run post data (BOT-04)", () => {
     // Damage: Bob Example fits; Mira Sunstrider (60) is a carry and Ruk (27) only low: not suggested.
     expect(byRole.damage!.characters.map((c) => [c.character, c.fit.label])).toEqual([["Bob Example", "fits"]]);
     expect(JSON.stringify(payload)).not.toContain("#");
+  });
+
+  it("gives /plan the days in the asker's calendar and who they would lead as", async () => {
+    const res = await planChoicesRoute(req(`/api/bot/v1/plan?discordUserId=${IDS.bob}`));
+    const { status, body } = await json(res);
+    expect(status).toBe(200);
+    // Bob is in London; NOW is Thu 19 Nov 2026 20:00 UTC.
+    expect(body.timeZone).toBe("Europe/London");
+    expect(body.days).toHaveLength(7);
+    expect(body.days[1]).toEqual({ offset: 1, label: "Fri 20", date: "2026-11-20" });
+    const byId = Object.fromEntries(body.dungeons.map((d: Json) => [d.id, d]));
+    // The Armory (32–42): Bob Example 41 fits before Tok Ironhide 33.
+    expect(byId["sm-armory"].lead).toMatchObject({ guid: BOB, name: "Bob Example", level: 41, fit: { kind: "fits" } });
+    expect(byId["scholo"].lead).toBeNull();
+    expect(JSON.stringify(body)).not.toContain("#");
+    expect((await planChoicesRoute(req("/api/bot/v1/plan?discordUserId=100000000000000099"))).status).toBe(403);
   });
 });
 
