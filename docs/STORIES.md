@@ -47,3 +47,32 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Dungeons: who has which dungeon quests.
 - Final emblem and logo for the site.
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).
+
+## E10 Dailies and weeklies (decided with Nico, 2026-10-28)
+Small personal goals per friend: 3 dailies per realm day and 3 weeklies per week (Monday to Sunday). They earn **DoomPoints PvE** (1 per daily, 3 per weekly) and a streak (days in a row with all 3 dailies). The pool, the pick, the swaps and the points are in the addon repo's `docs/DAILIES.md` (addon stories CF-57 to CF-60). **The addon decides what's done** and uploads it in the record's `goals` field (CF-58). The site doesn't recompute goals: it stores, counts and shows them. The PvP ladder's **DoomPoints PvP** (E9) are separate. Wherever a friend's points show, PvE and PvP stand side by side, never added up. The ladder's own PvP goals (Hunt, Daily, Duel, Weekly bounty) are not part of this. The designs come from Nico (prompt: `docs/DESIGN-PROMPT-DAILIES.md`). Order: WEB-60 after the addon's CF-58, then WEB-61 (after the designs) and WEB-62. The bot's BOT-16 after WEB-62.
+
+Compatibility: uploads from addons without CF-58 have no `goals`. Those friends show "not shared yet", never zero points or a broken streak. A friend who turned off "Share my activity" sends `goals = false`: their stored goals stop showing, as with the feed.
+
+### WEB-60 Store dailies and weeklies from uploads
+- Read `goals` (own record and friends' records in an upload): per realm day `set`, `swapped`, `done`, `at`; per week the same; `pool`. Keep them per friend and per realm day or week in the derived data, kept as long as the activity feed (not only the 7 days an upload holds). The newer `at` wins, as the addon merges. A rebuild gives the same result.
+- Validate and cap as the addon does (ids ≤ 24 characters, at most 3 per set, numbers ≥ 0).
+- Derived per friend: DoomPoints PvE this week, last week and all time (counted from the stored days, 1 per daily and 3 per weekly, not taken from the addon's `total`); the current and best streak; dailies done per day.
+- A catalogue `src/core/dailies/catalogue.ts` with every id and title from the addon's `docs/DAILIES.md`. An unknown id shows as "A daily from a newer addon" and still counts.
+- `docs/ARCHITECTURE.md` updated. Tests on a fixture with `goals`, one without it, and one with `false`; points and streaks across a missed day and a week boundary.
+
+### WEB-61 Dailies page and points on the roster
+- A new page **Dailies** (`/dailies`, in the navigation):
+  - **Today:** this realm day's base set (the 3 dailies) and, per friend, a check mark per goal they finished. A friend's swapped goal shows as the swap, with the original in its tooltip. The time until the realm day resets.
+  - **This week:** the same for the 3 weeklies, with the time until Monday.
+  - **Friends:** per friend the streak (and best), **DoomPoints · PvE** this week and all time, with **PvP** next to it from E9 once that's built, and a calendar heatmap of dailies done per day (0 to 3) for the last 12 weeks.
+  - States: nobody shares yet ("No dailies yet: friends need an addon version with dailies"), only some friends, loading, error.
+- The roster shows the PvE points and the streak per friend, next to the PvP points (E9), in the place the design gives.
+- As every UI story (design checks, 375 and 1440 px, Playwright).
+
+### WEB-62 Dailies in the weekly recap
+IDs continue the catalogue (`docs/RECAP.md`). The existing rules apply: threshold, score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend.
+- Award **A15 Daily devotee:** the most DoomPoints PvE in the recap week, at least 10. ("Ada earned 19 DoomPoints PvE")
+- Fun card **F23 Perfect week:** all 3 dailies on every day the friend played, at least 4 days. ("Bob did every daily on 5 days")
+- The recap week counts each realm day it covers. Weeklies count in the week they were done.
+- The award and card go to the bot through the recap API as every card does (`facts`: points, days, streak). No new milestone kinds and no live posts.
+- `docs/RECAP.md` updated. Tests: above and below the threshold, and absent without `goals`.
