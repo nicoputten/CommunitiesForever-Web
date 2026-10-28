@@ -1,6 +1,7 @@
 import { expect, type Page, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "./session";
+import { pick } from "./dropdown";
 
 // WEB-39: the Discord page against the real server, at desktop and phone size. Each project signs in as its own guest
 // for the link and time zone; the admin's settings are changed on desktop only (one settings row for the site).
@@ -77,10 +78,10 @@ test.describe("a friend", () => {
 
   test("picks a time zone", async ({ page }) => {
     await page.goto("/discord");
-    await page.getByLabel("Time zone", { exact: true }).selectOption("Asia/Tokyo");
+    await pick(page, page.getByLabel("Time zone", { exact: true }), "Tokyo");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("status")).toHaveText("Your time zone is saved.");
-    await expect(page.getByLabel("Time zone", { exact: true })).toHaveValue("Asia/Tokyo");
+    await expect(page.getByLabel("Time zone", { exact: true })).toContainText("Tokyo");
   });
 
   test("the callback needs a session", async ({ context, page }) => {
@@ -109,14 +110,14 @@ test.describe("the admin", () => {
     await expect(posts.getByLabel("Channel for posts")).toBeDisabled();
 
     const runs = page.getByRole("region", { name: "Runs" });
-    await runs.getByLabel("Reminder time (default for new runs)").selectOption("60");
-    await posts.getByLabel("Recap time").selectOption("5|20:00");
+    await pick(page, runs.getByLabel("Reminder time (default for new runs)"), "1 hour before");
+    await pick(page, posts.getByLabel("Recap time"), "Friday · 20:00");
     await page.waitForLoadState("networkidle");
 
     await page.reload();
     await expect(page.getByRole("switch", { name: "Milestones" })).toHaveAttribute("aria-checked", after);
-    await expect(page.getByLabel("Reminder time (default for new runs)")).toHaveValue("60");
-    await expect(page.getByLabel("Recap time")).toHaveValue("5|20:00");
+    await expect(page.getByLabel("Reminder time (default for new runs)")).toHaveText(/1 hour before/);
+    await expect(page.getByLabel("Recap time")).toHaveText(/Friday · 20:00/);
   });
 
   test("makes the bot token once, sends a test post the bot gets, and revokes it", async ({ page }, info) => {
@@ -175,12 +176,12 @@ test.describe("the admin", () => {
     const posts = page.getByLabel("Channel for posts");
     await expect(posts).toBeEnabled();
     await expect(page.getByText(/^From the bot, /)).toBeVisible();
-    await posts.selectOption({ label: "# general" });
-    await page.getByLabel("Mention on new runs").selectOption({ label: "@Raiders" });
+    await pick(page, posts, "# general");
+    await pick(page, page.getByLabel("Mention on new runs"), "@Raiders");
     await page.waitForLoadState("networkidle");
     await page.reload();
-    await expect(page.getByLabel("Channel for posts")).toHaveValue("80351110224678912");
-    await expect(page.getByLabel("Mention on new runs")).toHaveValue("80351110224678920");
+    await expect(page.getByLabel("Channel for posts")).toHaveText(/# general/);
+    await expect(page.getByLabel("Mention on new runs")).toHaveText(/@Raiders/);
 
     // The channel goes away on Discord: the pick stays, marked removed.
     await page.request.post("/api/bot/v1/guild", {
@@ -188,7 +189,7 @@ test.describe("the admin", () => {
       data: { channels: [{ id: "80351110224678913", name: "runs" }], roles: [] },
     });
     await page.reload();
-    await expect(page.getByLabel("Channel for posts").locator("option:checked")).toHaveText("(removed: # general)");
+    await expect(page.getByLabel("Channel for posts")).toHaveText(/\(removed: # general\)/);
   });
 
   test("previews the coming weekly recap (WEB-41c)", async ({ page }) => {

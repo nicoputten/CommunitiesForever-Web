@@ -3,6 +3,7 @@ import { E2E } from "../../playwright.config";
 import { isPhone } from "../design/checks";
 import { planRun } from "./runs";
 import { signInAs } from "./session";
+import { pick } from "./dropdown";
 
 // WEB-40: plan a run, friends answer from the list and the run's page (an answer that didn't go through is kept and
 // retried), the organiser edits and deletes, someone else can't. On the e2e sample (seed.setup.ts): the admin plays
@@ -44,7 +45,7 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await as(context, baseURL!, "Femke#3307");
   await page.goto(`/runs/${runId}`);
   const answer = page.getByRole("region", { name: "Your answer" });
-  await answer.getByLabel("Answer with").selectOption({ label: "Lia Thornwhisper 37 · healer" });
+  await pick(page, answer.getByLabel("Answer with"), "Lia Thornwhisper 37 · healer");
   await page.route("**/api/runs/*/answer", (route) => route.abort());
   await answer.getByRole("button", { name: "I'm in" }).click();
   await expect(answer.getByText(/Answer didn.t go through/)).toBeVisible();

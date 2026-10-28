@@ -258,6 +258,29 @@ export function timeZoneLabel(timeZone: string, now: number): string {
   return `${timeZone.replace(/_/g, " ")} · ${utcOffset(timeZone, now)}`;
 }
 
+/**
+ * The time zone dropdown's options (WEB-48): grouped by region ("Europe"), the place as label ("Isle of Man",
+ * "Argentina / Buenos Aires") and the offset as meta. Zones without a region ("UTC") go under "Other".
+ */
+export function timeZoneOptions(
+  timeZones: readonly string[],
+  now: number,
+): { value: string; label: string; meta: string; group: string }[] {
+  return timeZones
+    .map((tz) => {
+      const [region, ...place] = tz.split("/");
+      return {
+        value: tz,
+        label: (place.length > 0 ? place.join(" / ") : tz).replace(/_/g, " "),
+        meta: utcOffset(tz, now),
+        group: place.length > 0 ? region! : "Other",
+      };
+    })
+    .sort((a, b) =>
+      a.group === b.group ? 0 : a.group === "Other" ? 1 : b.group === "Other" ? -1 : a.group < b.group ? -1 : 1,
+    );
+}
+
 /** "19:30" in a time zone, 24-hour. */
 export function clockIn(timeZone: string, now: number): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(

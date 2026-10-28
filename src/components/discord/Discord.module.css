@@ -364,30 +364,8 @@ a.ghost {
   color: var(--text-faint);
 }
 
-.select {
-  width: 100%;
-  min-width: 0;
-  height: var(--size-select);
+.pick {
   margin-top: var(--s-1-5);
-  padding: 0 var(--s-3);
-  border-radius: var(--r-nav);
-  background: var(--input-bg);
-  border: var(--border) solid var(--line-neutral);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--fs-body-sm);
-  accent-color: var(--gold);
-}
-
-.select:disabled {
-  cursor: not-allowed;
-  color: var(--text-dim);
-}
-
-@media (max-width: 767px) {
-  .select {
-    height: var(--size-touch);
-  }
 }
 
 .hint {

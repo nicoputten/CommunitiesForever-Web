@@ -1,0 +1,38 @@
+/* The time input (WEB-48): the dropdown trigger's look as a text field. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  background: var(--input-bg);
+  border: var(--border) solid var(--line-neutral);
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+.input:focus-visible {
+  border-color: var(--gold);
+  box-shadow: var(--ring-field-open);
+  outline: none;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--warn-line);
+}
+
+.error {
+  font-size: var(--fs-meta);
+  color: var(--stale-text);
+}

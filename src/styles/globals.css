@@ -10,6 +10,13 @@
 html {
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
+  /* Room for the scrollbar always, so a page doesn't jump sideways when it appears (WEB-48, finding 9). */
+  scrollbar-gutter: stable;
+}
+
+/* The map fills the window and never scrolls: no empty scrollbar strip beside it. */
+html:has([data-page="map"]) {
+  scrollbar-gutter: auto;
 }
 
 body {

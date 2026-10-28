@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Every dropdown on the site is now the site's own (Plan a run, your answer's character, the Discord page): a search from 8 options, groups, and on a phone a sheet from the bottom. The date and time fields are the site's own too, without the browser's icons, and pages no longer jump sideways when the scrollbar appears.
 - Runs from the game: runs planned and answers given in game (with the coming addon version) reach the site with your next upload, "Ask now" with "Also post on Discord" and Discord pings from the game reach the bot, and past runs say "Ran it · 3 of 5 signed-up came" when an upload's run log shows it, or "Didn't happen". The session report and the upload history say "N run answers". The site reads the coming addon's new file format.
 - Card images for the Discord bot: the weekly recap's header (the award winner or the busiest zone on the map), the Zone of the week map, milestone cards (level 60, a new character at 60, a profession at 300) and where a character was last seen, in the site's own style.
 - The weekly recap: every week at the recap time (the Discord page, Sunday 13:00 by default) the site puts together the week of the community (a headline, the numbers, "<community> of the week", four cards that change from week to week and a challenge) and the bot posts it. The admin sees the coming one under Discord › Preview next recap.

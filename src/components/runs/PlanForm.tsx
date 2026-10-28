@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { FormState } from "@/app/(site)/runs/actions";
+import { DateField } from "@/components/ui/DateField";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { TimeField } from "@/components/ui/TimeField";
 import { localTime, runWhen, zonedToUtc } from "@/core/runTime";
 import type { PlanPage } from "@/core/views/runs";
 import { joinNames } from "@/core/views/text";
@@ -60,24 +63,17 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
           <label htmlFor="dungeon" className={styles.label}>
             Dungeon
           </label>
-          <select
+          <Dropdown
             id="dungeon"
             name="dungeon"
-            className={styles.select}
             value={dungeonId}
             disabled={edit !== undefined}
-            onChange={(e) => {
-              setDungeonId(e.target.value);
-              setLead(page.leads[e.target.value]?.find((l) => l.fits)?.guid ?? "");
+            options={page.dungeons.map((d) => ({ value: d.id, label: d.name, meta: `${d.range.min}–${d.range.max}` }))}
+            onChange={(id) => {
+              setDungeonId(id);
+              setLead(page.leads[id]?.find((l) => l.fits)?.guid ?? "");
             }}
-          >
-            {page.dungeons.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-          {edit !== undefined && <input type="hidden" name="dungeon" value={dungeonId} />}
+          />
           <p className={styles.small}>{dungeon.fits}</p>
         </div>
 
@@ -86,20 +82,20 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
             <label htmlFor="lead" className={styles.label}>
               Lead as
             </label>
-            <select
+            <Dropdown
               id="lead"
               name="lead"
-              className={styles.select}
               value={lead}
-              onChange={(e) => setLead(e.target.value)}
-            >
-              {leads.map((l) => (
-                <option key={l.guid} value={l.fits ? l.guid : ""} disabled={!l.fits}>
-                  {l.label}
-                </option>
-              ))}
-              {noneFits && <option value="">Organiser without a slot</option>}
-            </select>
+              onChange={setLead}
+              options={[
+                ...leads.map((l) => ({
+                  value: l.fits ? l.guid : `out:${l.guid}`,
+                  label: l.label,
+                  disabled: l.fits ? undefined : "Doesn't fit this dungeon",
+                })),
+                ...(noneFits ? [{ value: "", label: "Organiser without a slot" }] : []),
+              ]}
+            />
             {noneFits && (
               <p className={styles.warn}>
                 None of your characters fit {dungeon.name} ({range}). You can still plan it; you&apos;re listed as
@@ -130,13 +126,12 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
             </label>
           </div>
           {day === "other" && (
-            <input
-              type="date"
+            <DateField
               name="otherDay"
-              aria-label="Other date"
-              className={styles.input}
+              label="Other date"
               value={otherDay}
-              onChange={(e) => setOtherDay(e.target.value)}
+              min={page.days[0]!.date}
+              onChange={setOtherDay}
             />
           )}
         </fieldset>
@@ -145,15 +140,7 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
           <label htmlFor="time" className={styles.label}>
             Time
           </label>
-          <input
-            id="time"
-            name="time"
-            type="time"
-            required
-            className={styles.input}
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-          />
+          <TimeField id="time" name="time" required value={time} onChange={setTime} />
           <p className={styles.small}>
             Your time zone: {page.timeZone.replace(/_/g, " ")}.{" "}
             <Link href="/discord" className={styles.inlineLink}>
