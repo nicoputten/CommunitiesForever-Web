@@ -53,6 +53,9 @@ describe("history", () => {
     expect(days()).toEqual([[20744, "G-V", ADMIN, 600, 22]]);
     expect(upload(db, nico(700, 23), ADMIN, 1200, ADMIN).status).toBe("ok");
     expect(days()).toEqual([[20744, "G-V", ADMIN, 700, 23]]);
+    // An equal copy keeps the stored one (as the addon's Feed.merge): a relay can't wipe newer fields.
+    expect(upload(db, nico(700, 24), ADMIN, 1300, ADMIN).status).toBe("ok");
+    expect(days()).toEqual([[20744, "G-V", ADMIN, 700, 23]]);
   });
 
   it("keeps a friend's stored days when an older addon sends feed = false, and every sighting once", () => {

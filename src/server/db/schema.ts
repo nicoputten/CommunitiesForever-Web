@@ -376,7 +376,7 @@ export const feedDays = sqliteTable(
 
 /**
  * Doomsday goals as each friend's addon recorded them (addon CF-56, WEB-55): per person, Doomsday day or week; the
- * copy with the newer `at` wins, an equal one from a later upload too.
+ * copy with the newer `at` wins; on an equal one the stored copy stays.
  */
 export const doomsdayGoals = sqliteTable(
   "doomsday_goals",
