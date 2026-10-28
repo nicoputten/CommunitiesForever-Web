@@ -46,4 +46,224 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Activity feed (level ups, profession gains, dungeon runs per day).
 - Dungeons: who has which dungeon quests.
 - Final emblem and logo for the site.
+- Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).
+
+## E8 Doomsday (decided with Nico, 2026-10-28)
+Daily and weekly goals, points per track (PvE and PvP, never added together), a streak, a crown, feats and a ladder, in the game (addon E15), on the site and in Discord (bot "Doomsday"). **The rules are in the addon repo's `docs/DOOMSDAY.md`**, the one description for all three; read it first. It replaces the three workshop designs (milestones, PvP ladder, dailies and weeklies; their PRs were closed unmerged), and the recap v2 data and cards are part of it.
+
+Boards (`design/README.md`, "Doomsday"):
+- `doomsday-names`, `doomsday-rules`
+- `doomsday-today`, `doomsday-ladder`, `doomsday-feats`, `doomsday-phone`
+- `roster-cards-doomsday`, `doomsday-feat-cards`
+
+The bot's boards are in its repo, the addon's in `docs/design/doomsday-2026-10/` there. Where a board and `DOOMSDAY.md` disagree, `DOOMSDAY.md` wins:
+- the reset is **19:00** (a setting), not 09:00
+- goals are computed, not delivered
+- the crown gives no points (version B)
+
+The design prompt is `docs/DESIGN-PROMPT-DOOMSDAY.md`.
+
+Key decisions:
+- **Single source of truth:** uploads stay it. The addon decides when a goal is done and sends the time (`goals`, CF-56), because the Doomsday day (19:00 to 19:00) doesn't line up with the feed's realm days. The site stores and counts. Kill points the site computes itself from the raw kills (`pvpKills`, CF-55), against the addon's golden file.
+- **All-time totals** live only on the site and in the bot; the addon shows this week.
+- Gold is never shown as an amount. No pronouns in texts. Names: friends by display name, characters by full name, never BattleTags or Discord IDs.
+
+Compatibility: uploads from addons without CF-52 to CF-56 have none of the new fields. Each is optional everywhere. A card, feat or goal whose data is missing never shows, and friends without Doomsday data show "no Doomsday data yet", never 0 as if known.
+
+Two workers (Nico, 2026-10-28):
+- **Engine:** WEB-55, WEB-58, WEB-56, WEB-57, in that order.
+- **Screens:** WEB-59, WEB-60, WEB-61. They start from view models with fixture data, so they don't wait for the engine, and agree the view-model shapes with the engine worker first.
+
+The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
+
+### WEB-55 Store the new data from uploads
+- Read the new character fields (`pvp`, `riding`) and the new feed fields from uploads into the derived data, kept per realm day like the activity feed. The feed fields:
+  - CF-52: `kills`, `deaths` with `t`, `duels` with `t`
+  - CF-53: `loot`, `notable`, `gold`, `sessions`, `groups`
+  - CF-55: `pvpKills`
+- Read `goals` (CF-56, own and friends' records in an upload):
+  - per Doomsday day and week: `set`, `swapped`, `done`, `at`
+  - `streak`, `best`, `pool`, `reset`
+  - kept per friend for as long as the activity feed (not only the 7 days an upload holds)
+  - the newer `at` wins, as the addon merges
+  - `goals = false` (sharing off): their stored goals stop showing, as with the feed
+- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 3 per set, numbers ≥ 0.
+- `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated. Tests on a fixture with every new field, one without them, and one with `goals = false`.
+
+### WEB-58 The Doomsday engine and its API
+After WEB-55 and the addon's CF-55 (its golden file).
+- `src/core/doomsday/` implements `DOOMSDAY.md`:
+  - the schedule (realm time zone, reset setting, day and week numbers)
+  - the draw, pools and swaps; a catalogue of every goal id and title (an unknown id shows as "a goal from a newer version" and still counts)
+  - points per track: goals from the stored `goals`, kill points and the Duel slot from the raw data
+  - crossing out, the crown and the streak
+  - the ladder per track (week, last week, all time, movement, the split per character)
+  - the PvP details: kills by zone, solo and skulls, rank with our title, the duel grid and **Elo** (start 1000, K = 32, in time order, disputed duels left out), the battleground block, PvP Virgin
+  - a 12-week heatmap per friend
+  
+  Where a victim field was unknown or guessed, the view model marks it so that screens can show "≈".
+- Tests: the addon's `tests/fixtures/doomsday-cases.json`, copied with the addon commit it came from, passes unchanged. Plus all-time totals and Elo over more than 7 days, a reset setting change (from the next reset only), and friends without data.
+- **Settings** on the Discord page (admin), as the other bot settings:
+  - **Doomsday reset** (realm time, default 19:00)
+  - **realm time zone** (default `Europe/Paris`)
+  - a **Doomsday channel** (default: the posts channel)
+  - switches for the **daily board post** and the **weekly ladder post**
+  
+  The reset setting goes into `GET uploader/v1/runs` for the uploader's `Runs.lua` (`doomsday = { reset, changedAt }`), as an optional field within v1 (`docs/UPLOADER-API.md`). Check with the uploader whether it writes unknown fields through, or needs a small story.
+- **Bot API** (`docs/BOT-API.md`), optional within v1:
+  - Event **`doomsdayBoard`**: at each reset, the new day's board (goals per track, every friend's row, the crown, the reset time). The bot posts it and acknowledges it with its message id. After each accepted upload that changes the day, an event **`doomsdayBoardUpdate`** for the same day carries the whole board again; the bot edits its message. At the next reset, a final `doomsdayBoardUpdate` with `final: true` and the day's summary (goals done, who won the Hunt race, the longest streak).
+  - Event **`doomsdayLadder`**: at the weekly reset (Sunday at the reset time):
+    - the week number
+    - the top 5 per track with movement
+    - the duel champion with rating, the most kills in one zone
+    - the battleground block, the PvP Virgin of the week (if any)
+  - Look-up **`doomsday`** with an optional `friend` (a display name) and the asker's linked Discord id. It returns:
+    - that friend's goals today with progress
+    - points this week and all time per track
+    - the place on both ladders, the streak and best, the time to the reset
+    
+    It answers `404 no_data` before any Doomsday data.
+  - Events only when the matching switch is on. A bot that doesn't know an event type skips and acknowledges it.
+- **Recap (WEB-41):**
+  - The Doomsday section of the recap: **Most devoted** (goals on the most days), **Perfect week** (every PvE daily, every day played, at least 4 days), and the points per track (top 3 each).
+  - It replaces the dailies workshop's A15 and F23 and the ladder workshop's "Ladder of the week" line.
+  - It comes through the `recap` event as an optional `doomsday` field.
+  - `docs/RECAP.md` updated.
+
+### WEB-56 Feats
+After WEB-55. **Every milestone becomes a feat**: the existing kinds (`level`, `maxLevel`, `professionCap`, `newCharacter`) and the new ones below. The bot posts them as "Feat unlocked" (BOT-14). The event type stays `milestones` (bot API v1); only the words change. No points. The rank titles are also in `DOOMSDAY.md`.
+
+**PvP and danger**
+- `honorKills`: the first honorable kill, then 100, 1,000, 5,000 and 10,000 (lifetime kills from `pvp`). The first one has a playful text ("First blood: Ves Doombringer"). 10,000 gets a card image.
+- `pvpRank`: a character's **new highest rank ever**, every rank 1 to 14. No post on decay or on regaining a rank held before (the site keeps the highest rank per character). Several characters ranking up after the weekly honor reset arrive together; that is fine. The post gives the official rank (per faction) followed by "a.k.a." our title, the same for both factions:
+
+  | Rank | Horde / Alliance | Our title |
+  |---|---|---|
+  | 0 | none | Conscientious Objector (not posted; for the ladder and the rank race) |
+  | 1 | Scout / Private | Fresh Meat |
+  | 2 | Grunt / Corporal | Accidental Flagger |
+  | 3 | Sergeant / Sergeant | Lowbie Botherer |
+  | 4 | Senior Sergeant / Master Sergeant | Corpse Camper |
+  | 5 | First Sergeant / Sergeant Major | Spirit Healer's Pen Pal |
+  | 6 | Stone Guard / Knight | Mailbox Menace |
+  | 7 | Blood Guard / Knight-Lieutenant | Flag Hugger |
+  | 8 | Legionnaire / Knight-Captain | Honor Goblin |
+  | 9 | Centurion / Knight-Champion | Queue Dweller |
+  | 10 | Champion / Lieutenant Commander | Crossroads Landlord |
+  | 11 | Lieutenant General / Commander | Hillsbrad Housing Crisis |
+  | 12 | General / Marshal | Last Seen Questing at Launch |
+  | 13 | Warlord / Field Marshal | Sleep Is for the Dishonorable |
+  | 14 | High Warlord / Grand Marshal | Grass: Untouched |
+
+  Card images from rank 6; rank 14 gets a special image.
+- `duelWins`: 10, 50 and 100 duel wins (counted from the feed's `duels`, so from the day the character runs CF-52).
+- `bgFirstWin`: the first win in each battleground (Warsong Gulch, Arathi Basin, Alterac Valley), from `runs`.
+- `deaths100`: 100 deaths, "A spirit healer's best friend" (counted from the feed's `deaths`), once per character.
+
+**Loot and mounts**
+- `firstEpic`: only a character's first epic item; later epics go into the recap. The post shows the item name in epic purple, its slot and the level it was looted at (from CF-53's `loot.epic` entries). No Wowhead link. Card image.
+- `mount`: riding 75, with the level and the place in the group ("the 3rd mount in the group").
+- `epicMount`: riding 150, the same, with a card image.
+
+**Professions and fishing** (no new kind for the caps: the existing Profession cap feat already covers Fishing, Cooking and First Aid at 75/150/225/300)
+- At 300, the existing Profession cap post gets a flavour title: Cooking "Head Chef", First Aid "Field Medic", Fishing "Fish Whisperer".
+- `firstCatch`: the Fishing rank goes above 1 (from `professions`/the feed's `ranks`).
+- `jackOfAllTrades`: two primary professions plus Cooking, First Aid and Fishing all at 300. Card image.
+- `notableItem`: the first time a character gets an item from the addon's watch list (CF-53's `notable`), each with its own text and card image:
+  - Arcanite Reaper created
+  - the first Arcanite transmute (Arcanite Bar created)
+  - the first Mooncloth
+  - Devilsaur Gauntlets or Leggings created (one feat for the set)
+  - joined the Stranglethorn Fishing Extravaganza (Speckled Tastyfish looted)
+  - won the Extravaganza (Arcanite Fishing Pole or Hook of the Master Angler received)
+
+**First in the group**
+- A "First in the group" badge on the post when no character in the group reached it before: the first honorable kill, the first rank 6, the first epic, the first mount, the first epic mount, the first to 60 (the existing Max level feat), every `notableItem` and Jack of all trades.
+
+**Rules**
+- No Discord pings. Reputation comes later.
+- Same rules as now: the site's first upload makes none, and a rebuild never makes events again. A bot without BOT-14 skips kinds it doesn't know.
+- Card images (as WEB-41d), as the board `doomsday-feat-cards` shows: `honorKills` 10,000, `pvpRank` 6 to 13 and the special 14, `firstEpic`, `epicMount`, `jackOfAllTrades` and each `notableItem`.
+- `docs/RECAP.md` section 1 lists every new kind.
+
+- The site keeps every character's feats (with the date and the "First in the group" mark) for the feats page (WEB-60) and the addon-independent history.
+
+### WEB-57 New recap cards, awards, headlines and challenges
+After WEB-55. The dailies' A15 and F23 are not built: the Doomsday section (WEB-58) covers them.
+Each card keeps the existing rules: a threshold, a score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend. IDs continue the catalogue.
+- Awards:
+  - A11 Warmonger: most honorable kills, at least 10
+  - A12 Battlemaster: most battleground wins, at least 2
+  - A13 Loot goblin: most rare and epic items, at least 5
+  - A14 Duelist: most duel wins, at least 3
+  - A7 Social butterfly: in a group with the most different friends, at least 3
+- Stat cards:
+  - S13 Bloodbath zone: the zone with the most honorable kills, at least 10
+  - S14 Battleground of the week: the most played battleground, with wins and losses, at least 2 games
+  - S15 Deadliest zone: the zone with the most deaths, at least 3
+  - S11 Biggest group night: the evening with the most friends in groups together, at least 3
+- Progress cards: P14 Rank race, two friends' characters one PvP rank apart, or the same rank with honor within 10 %.
+- Social cards:
+  - F14 Revenge: died to players most, then got the most kills, at least 3 of each
+  - F15 Duel rivals: the pair that duelled each other most, with the score, at least 3 duels
+- Fun cards:
+  - F16 Most deaths: at least 5
+  - F17 Fell to their death: a `fall` death
+  - F18 Died by fire: a `fire` death ("the campfire won")
+  - F19 Untouchable: the most levels gained with 0 deaths, at least 3 levels
+  - F20 Big spender: the biggest gold spent; text without amounts ("someone bought something shiny")
+  - F21 Purple rain: epic items received, at least 1
+  - F22 Marathon: the longest session, at least 3 hours
+  - F7 Night owl: played after 01:00 the most
+  - F8 Early bird: played before 08:00 the most (both in each friend's own saved time zone; without one, the site's)
+- Headlines: `pvp` (a week with many kills), `danger` (a week with many deaths).
+- Challenges:
+  - "Win 3 battlegrounds as a group"
+  - "Each of you gets 25 honorable kills"
+  - "Take back Tarren Mill" (kills in Hillsbrad Foothills)
+  - "Duel every friend once"
+  - "A week without dying"
+- `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
+
+### WEB-59 The Doomsday page: Today, Week, Board and heatmap
+Boards `doomsday-today` (desktop) and `doomsday-rules` (labels, tone). Starts from view models with fixture data, agreed with the engine worker; switches to WEB-58's data when it lands.
+- A page **Doomsday** (`/doomsday`, in the navigation after Runs) with a header:
+  - today's and this week's points (PvE and PvP side by side), the streak and best
+  - tabs: Today, Week, Board, Ladder, Feats, PvP
+- **Today:**
+  - your 5 goals with progress or a check and its time, the swap mark with the original in its tooltip
+  - the Duel slot (who's done, who's open), the time to the reset
+  - "Today so far" (the crown, who finished, who hasn't started, who has no addon)
+- **Week:** the 3 weeklies and the Weekly bounty with progress, the time to Sunday's reset.
+- **Board:** every friend × today's goals, struck through with the time when done. A friend's name is crossed out when the 3 PvE dailies are done. The crown, today's and this week's points, the streak.
+- **The 12-week heatmap** per friend (goals done per day).
+- "Goals are suggestions with points. Skip any of them; nothing is locked."
+- As every UI story: design checks, 1440 px, Playwright (the phone in WEB-61).
+
+### WEB-60 The Doomsday page: Ladder, PvP and Feats
+Boards `doomsday-ladder` and `doomsday-feats`. Same fixture-first start as WEB-59.
+- **Ladder:**
+  - This week and All time, PvE and PvP side by side, each with its own ranking
+  - rows expand to characters; movement (▲, ▼, new)
+  - PvP Virgin shown and not ranked ("not ranked: no kills on any character, ever")
+  - the time to the weekly reset
+- **PvP:** the details for a selected friend:
+  - kills this week (solo, skulls), rank with insignia and "a.k.a." title per character, kills by zone
+  - the duel grid with wins–losses and the Elo rating (with movement)
+  - the battleground block, apart from the week's kills, and first wins unlocked
+  - "≈" where data was guessed
+- **Feats:** per friend and the whole group's feats, newest first, with "First in the group", the rank titles table and the feat states from the board.
+- As every UI story (1440 px; the phone in WEB-61).
+
+### WEB-61 Doomsday on the phone, its states, and the roster
+Boards `doomsday-phone` and `roster-cards-doomsday`.
+- The Doomsday page at 375 px as the board shows.
+- The states:
+  - empty, on the first day ("Nobody has done anything yet")
+  - loading
+  - only one friend with data
+  - friends without the addon or without Doomsday data
+  - error
+- The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
+- As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
