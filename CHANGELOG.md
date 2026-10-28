@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Runs: any character may say I'm in or lead, also one 6 or more levels below the dungeon. It shows how far below it is and that it will be tough, and it is never suggested ("recommend, never restrict").
 
 ## v0.4.0 (2026-10-28)
 - Roster: a "Next run" card above the level spread; the dungeon bands sit in at most four rows (most fits first, "Show all" for the rest), say how many fit and how many runs are planned, and open a popover with who's missing, the planned runs and Plan a run (a sheet on a phone). The dot tooltip no longer gets cut off at the top and keeps each character on one line.

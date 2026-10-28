@@ -45,8 +45,11 @@ test("asking now: three, then and 2 more; none fit and your own ask", async ({ p
   await expect(page.getByRole("region", { name: "Asking now" }).getByRole("article")).toHaveCount(3);
   await page.getByRole("button", { name: "and 2 more ▾" }).click();
   await expect(page.getByRole("region", { name: "Asking now" }).getByRole("article")).toHaveCount(5);
-  await expect(card(page, 3).getByRole("button", { name: "I'm in" })).toBeDisabled();
-  await expect(card(page, 3).getByText(/None of your characters fit Zul'Farrak \(44–54\)\. Maybe or Can't still go\./)).toBeVisible();
+  // None fit: advice only, I'm in still goes (WEB-52, "recommend, never restrict").
+  await expect(card(page, 3).getByRole("button", { name: "I'm in" })).toBeEnabled();
+  await expect(
+    card(page, 3).getByText(/None of your characters fit Zul'Farrak \(44–54\)\. You can still say I'm in; it will be tough\./),
+  ).toBeVisible();
   await expect(card(page, 4).getByText("Your ask")).toBeVisible();
   await expect(card(page, 4).getByRole("button")).toHaveCount(0);
 });

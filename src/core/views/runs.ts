@@ -66,7 +66,7 @@ export interface RunCharacterView {
   colorToken?: string;
   role: SlotRole;
   /** Whether its level is in the run's range. */
-  /** May answer I'm in with it (levelFit: not 6+ below the range, WEB-47). */
+  /** May answer I'm in with it (levelFit; every character since WEB-52). */
   fits: boolean;
   /** How its level fits the range (WEB-47 levelFit). */
   fit: FitKind;
@@ -563,7 +563,7 @@ export interface PickerCharacter {
   defaultRole: SlotRole;
   /** "not for priests": why the other roles are off. */
   notFor: string;
-  /** 6+ below: only Maybe (levelFit). */
+  /** Maybe only (levelFit): no character since WEB-52; kept for the picker's states. */
   onlyMaybe: boolean;
   /** "4 levels below: tough, but the group can carry you." */
   note?: string;
@@ -849,10 +849,11 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     detail.cancelled = `Cancelled by ${run.cancelledBy === undefined ? "the organiser" : friendName(ctx, run.cancelledBy)}`;
   }
   const best = choice.characters[0];
-  if (best !== undefined && !best.fits) {
+  // Advice when the best character is 6+ below (WEB-52: I'm in still goes, "recommend, never restrict").
+  if (best !== undefined && best.fit === "tooLow") {
     const where = dungeon?.name.split(": ").at(-1) ?? dungeon?.name ?? "this run";
     const dir = best.level !== undefined && best.level < r.min ? "below" : "above";
-    detail.outOfRange = `${best.name}${best.level === undefined ? "" : ` (${best.level})`} is ${dir} the ${where} (${rangeText(r)}), so I'm in is off. Maybe or Can't still go.`;
+    detail.outOfRange = `${best.name}${best.level === undefined ? "" : ` (${best.level})`} is ${dir} the ${where} (${rangeText(r)}). You can still say I'm in; it will be tough.`;
     const other = RUNNABLE_DUNGEONS.find(
       (d) =>
         d.instanceId === dungeon?.instanceId &&
@@ -890,7 +891,7 @@ function fitNote(kind: FitKind, label: string): string | undefined {
     case "low":
       return `${n} levels below: tough, but the group can carry you.`;
     case "tooLow":
-      return `${n} levels below: you can only answer Maybe.`;
+      return `${n} levels below: very tough; the group will have to carry you.`;
     case "carry":
       return `${n} levels over. The others get less XP from kills, but runs go fast.`;
     default:
@@ -1228,7 +1229,7 @@ export interface AskCardView {
   picker: PickerView;
   /** The character I'm in uses by default: fits, then over, then 1–5 below, a carry only when nothing else. */
   pick?: { guid: string; role: SlotRole };
-  /** "None of your characters fit Zul'Farrak (44–54)." when every character is too low: only Maybe or Can't. */
+  /** "None of your characters fit Zul'Farrak (44–54)." when every character is 6+ below: advice, I'm in still goes. */
   noneFit?: string;
 }
 

@@ -166,7 +166,7 @@ describe("a run's page", () => {
     expect(runDetail(input(JORRIT), 1)!.outOfRange).toBeUndefined();
     const d = runDetail(input(JORRIT), 4)!;
     expect(d.outOfRange).toBe(
-      "Ruk Bloodhoof (27) is below the Cathedral (35–45), so I'm in is off. Maybe or Can't still go.",
+      "Ruk Bloodhoof (27) is below the Cathedral (35–45). You can still say I'm in; it will be tough.",
     );
     expect(d.planOther).toEqual({
       label: "Plan the Graveyard for Ruk Bloodhoof",
@@ -222,10 +222,10 @@ describe("a run's page v2 (WEB-49)", () => {
     const ruk = d.picker.characters.find((c) => c.name === "Ruk Bloodhoof")!;
     expect(ruk).toMatchObject({
       fit: { kind: "tooLow", label: "8 below" },
-      onlyMaybe: true,
+      onlyMaybe: false,
       roles: ["damage"],
       notFor: "not for hunters",
-      note: "8 levels below: you can only answer Maybe.",
+      note: "8 levels below: very tough; the group will have to carry you.",
     });
   });
 });

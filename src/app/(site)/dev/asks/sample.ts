@@ -34,7 +34,8 @@ function character(
     roles,
     defaultRole: roles[0]!,
     notFor: `not for ${info.name.toLowerCase()}s`,
-    onlyMaybe: fit[0] === "tooLow",
+    // Every character may answer I'm in (WEB-52).
+    onlyMaybe: false,
     level,
     classFile,
     colorToken: info.textToken,
