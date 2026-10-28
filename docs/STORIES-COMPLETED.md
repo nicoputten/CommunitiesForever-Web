@@ -579,3 +579,13 @@ Decided with Nico (2026-10-28): an in-game ask with "Also post on Discord" reach
 - `received` (the uploader's runs feed) also returns the carried ids, so every carrier's game forgets them.
 - Compat: optional additions only (`battleTag` on an ask, the new kind); files from before CF-51 behave as before. Tests: four carriers, one ask, one post; expired; an asker outside the community; an answer to an unknown ask; the parser.
 - Done (PR #91): `src/core/gameItems.ts` (`askAnswer`, the ask's `battleTag`), `src/server/gameItems.ts` (`askerOf`, carriers, `askAnswer`, `receivedIds`), `docs/SOURCE-DATA.md`, `docs/UPLOADER-API.md`.
+
+### WEB-54 Band names on narrow roster bands (bug)
+Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a narrow band such as Ragefire Chasm shows only "13–18 · 2". The name is dropped (`data-fit="count"`), so you can't tell which dungeon it is. The name always comes first.
+- The label never drops the name. Order of fallback: full name, then short name, then the short name cut with an ellipsis ("Ragef… 13–18 · 2"), keeping at least 3 letters before the "…".
+- The range and count stay whole. Only when 3 letters + "…" and the rest still don't fit, the range goes before the name is cut further ("Rag… · 2"); the count always stays.
+- Cuts happen on the name text only, never in the middle of the range or count; the `title` and `aria-label` keep the full name and range.
+- Test: a band narrow enough to hit each fallback (full, short, cut name, cut name without range) at 1440 px, with a screenshot baseline; the phone list is unchanged (always the full name).
+- Cause: a dungeon without a short name (Ragefire Chasm, The Drowned City) rendered no short-name span, so the "short" step showed only the range and count.
+- Decided in the build: once the range has gone, the name gets the freed room back (whole short name, else the longest cut that fits), so "Rag… · 2" is the narrowest label; " · 1 run" stays with the count.
+- Done (PR #TBD): `DungeonBands` (`fitLabel`: full, short, cut, bare; each band observed for its own width), `nameCuts` in `src/core/views/text.ts`, `LevelSpread.module.css`; tests: `tests/unit/text.test.ts`, design check "band names on narrow bands" with the `roster-bands-narrow` baseline, e2e roster.

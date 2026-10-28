@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { dungeonHref, planHref } from "@/core/views/dungeon";
+import { nameCuts } from "@/core/views/text";
 import styles from "./LevelSpread.module.css";
 
 export interface BandView {
@@ -33,12 +34,38 @@ export interface BandView {
 
 /** Below this width the bands are a list, and the popover is a bottom sheet (LevelSpread.module.css). */
 const PHONE_QUERY = "(max-width: 767px)";
-const LABELS = ["full", "short", "count"] as const;
+/** The label that fits a band, in this order: full name, short name, the short name cut with the range, then without. */
+function fitLabel(button: HTMLButtonElement, cut: HTMLElement): void {
+  const fits = () => button.scrollWidth <= button.clientWidth;
+  for (const label of ["full", "short"]) {
+    button.dataset.fit = label;
+    if (fits()) return;
+  }
+  // The longest option that fits, by halving (a longer cut never fits where a shorter one doesn't).
+  const longest = (options: string[]) => {
+    let lo = 0;
+    let hi = options.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      cut.textContent = `${options[mid]} `;
+      if (fits()) hi = mid;
+      else lo = mid + 1;
+    }
+    cut.textContent = `${options[lo]} `;
+    return fits();
+  };
+  const { short = "" } = button.dataset;
+  button.dataset.fit = "cut";
+  if (longest(nameCuts(short))) return;
+  // Without the range the name gets its room back: the whole short name, else cut; the count always stays.
+  button.dataset.fit = "bare";
+  longest([short, ...nameCuts(short)]);
+}
 
 /**
  * The dungeon bands (WEB-45, board `runs-v2-plan` "Roster bands v2", popover from `roster-cards-runs`): at most 4 rows
- * with "Show all N"; each label the full name where it fits, else the short name, else only the range and count, never
- * cut mid-word; a click opens the popover (who fits, missing roles, planned runs, Plan a run, View run, Dungeon page),
+ * with "Show all N"; each label the full name where it fits, else the short name, else the short name cut with "…"
+ * (at least 3 letters), else that without the range (WEB-54: the name always shows, and the count); a click opens the popover (who fits, missing roles, planned runs, Plan a run, View run, Dungeon page),
  * on a phone as a bottom sheet.
  */
 export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows: number; rowsAll: number }) {
@@ -51,28 +78,36 @@ export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows
   const shown = all ? bands : bands.filter((b) => !b.extra);
   const band = bands.find((b) => b.id === open);
 
-  // The label that fits each band, measured in the browser: full, short, or the range and count only.
+  // The label that fits each band, measured in the browser (WEB-54: the name never goes, it gets cut).
   useLayoutEffect(() => {
     const ul = list.current;
     if (ul === null) return;
+    const buttons = [...ul.querySelectorAll<HTMLButtonElement>("button[data-band]")];
     const fit = () => {
-      for (const button of ul.querySelectorAll<HTMLButtonElement>("button[data-band]")) {
-        for (const label of LABELS) {
-          button.dataset.fit = label;
-          if (button.scrollWidth <= button.clientWidth) break;
-        }
-        // The visible label first, then the full name: screen readers hear what is seen (WCAG 2.5.3).
-        const { name = "", short = name, rest = "" } = button.dataset;
-        const fit = button.dataset.fit;
+      for (const button of buttons) {
+        const cut = button.querySelector<HTMLElement>("[data-cut]");
+        if (cut === null) continue;
+        fitLabel(button, cut);
+        // The visible label first, then the full name and range: screen readers hear what is seen (WCAG 2.5.3).
+        const { name = "", short = name, range = "", count = "", fit: label } = button.dataset;
+        const shown = (cut.textContent ?? "").trim();
         button.setAttribute(
           "aria-label",
-          fit === "full" ? `${name} ${rest}` : `${fit === "short" ? `${short} ` : ""}${rest}, ${name}`,
+          label === "full"
+            ? `${name} ${range} ${count}`
+            : label === "short"
+              ? `${short} ${range} ${count}, ${name}`
+              : label === "cut"
+                ? `${shown} ${range} ${count}, ${name}`
+                : `${shown} ${count}, ${name} ${range}`,
         );
       }
     };
     fit();
+    // Each band too: a band's width can change without the list's (WEB-54).
     const observer = new ResizeObserver(fit);
     observer.observe(ul);
+    for (const button of buttons) observer.observe(button);
     return () => observer.disconnect();
   }, [all]);
 
@@ -144,9 +179,9 @@ export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows
 
   const runCount = (b: BandView) => b.runs.length + b.moreRuns;
   const runsText = (b: BandView) => (runCount(b) === 0 ? "" : ` · ${runCount(b)} run${runCount(b) === 1 ? "" : "s"}`);
-  const rest = (b: BandView) => `${b.range} · ${b.fits}${runsText(b)}`;
+  const count = (b: BandView) => `· ${b.fits}${runsText(b)}`;
   // Before the label is measured: the full name ("Scarlet Monastery: Graveyard 26–36 · 6 · 1 run").
-  const label = (b: BandView) => `${b.name} ${rest(b)}`;
+  const label = (b: BandView) => `${b.name} ${b.range} ${count(b)}`;
 
   return (
     <>
@@ -179,7 +214,8 @@ export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows
               aria-label={label(b)}
               data-name={b.name}
               data-short={b.shortName}
-              data-rest={rest(b)}
+              data-range={b.range}
+              data-count={count(b)}
               aria-expanded={open === b.id}
               aria-controls={open === b.id && !asSheet ? `band-pop-${b.id}` : undefined}
               onClick={() => {
@@ -188,11 +224,12 @@ export function DungeonBands({ bands, rows, rowsAll }: { bands: BandView[]; rows
               }}
             >
               <span className={styles.bandFull}>{b.name} </span>
-              {b.shortName !== b.name && <span className={styles.bandShort}>{b.shortName} </span>}
-              <span>
-                {b.range} · {b.fits}
-                {runsText(b)}
-              </span>
+              {/* Also when it is the name itself: a fit of "short" must still show a name (WEB-54). */}
+              <span className={styles.bandShort}>{b.shortName} </span>
+              {/* The cut name, set by fitLabel. */}
+              <span className={styles.bandCut} data-cut />
+              <span className={styles.bandRange}>{b.range} </span>
+              <span>{count(b)}</span>
             </button>
             {open === b.id && !asSheet && (
               <div id={`band-pop-${b.id}`} role="dialog" aria-label={b.name} className={styles.pop}>
