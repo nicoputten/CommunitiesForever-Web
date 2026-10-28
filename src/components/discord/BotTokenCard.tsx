@@ -5,8 +5,9 @@ import type { BotTokenState } from "@/app/(site)/discord/actions";
 import styles from "./Discord.module.css";
 
 /**
- * "Bot token" (not on the board, DESIGN.md §11; WEB-38's token): its status, Create (or Replace) and Revoke. A new token
- * is shown once with Copy and lives only in this form's state, never in the URL or the page cache. Revoke asks first.
+ * The bot token row of "The bot" (board `discord-page`, WEB-58; WEB-38's token): its status, Create (or Replace) and
+ * Revoke. A new token is shown once with Copy and lives only in this form's state, never in the URL or the page cache.
+ * Revoke asks first. Only the token's hash is stored, so the row shows no characters of it (Nico, 2026-10-29).
  */
 export function BotTokenCard({
   line,
@@ -24,18 +25,44 @@ export function BotTokenCard({
   const [asking, setAsking] = useState(false);
   const id = useId();
   return (
-    <section aria-labelledby={`${id}-title`} className={styles.box}>
-      <div className={styles.boxHead}>
-        <h2 id={`${id}-title`} className={styles.boxTitle}>
-          Bot token
-        </h2>
-        <span className={styles.small}>Admin only</span>
+    <div className={styles.tokenBlock}>
+      <div className={styles.tokenHead}>
+        <span>
+          <span className={styles.optionName}>{active ? "Bot token" : "No bot token yet"}</span>
+          <span className={styles.optionText}>
+            {active
+              ? line
+              : "The bot needs one secret to talk to the site. Create it, paste it in the bot's settings, and the bot comes online."}
+          </span>
+        </span>
+        <div className={styles.tokenButtons}>
+          <form action={submit}>
+            <button type="submit" className={active ? styles.ghost : styles.primary} disabled={pending}>
+              {active ? "Replace" : "Create bot token"}
+            </button>
+          </form>
+          {active && !asking && (
+            <button type="button" className={styles.danger} onClick={() => setAsking(true)}>
+              Revoke
+            </button>
+          )}
+        </div>
       </div>
-      <p className={styles.body}>{line}</p>
+      {active && asking && (
+        <form action={revoke} className={styles.confirm}>
+          <span className={styles.small}>The bot stops at its next call.</span>
+          <button type="submit" className={styles.danger}>
+            Revoke token
+          </button>
+          <button type="button" className={styles.ghost} onClick={() => setAsking(false)}>
+            Keep it
+          </button>
+        </form>
+      )}
       {state.token !== undefined && (
         <div className={styles.shown}>
-          <label htmlFor={`${id}-token`} className={styles.small}>
-            Copy it now: it won&apos;t be shown again. It goes into the bot&apos;s BOT_API_TOKEN.
+          <label htmlFor={`${id}-token`} className={styles.label}>
+            Your new bot token · shown once
           </label>
           <div className={styles.tokenRow}>
             <input
@@ -47,40 +74,20 @@ export function BotTokenCard({
             />
             <button
               type="button"
-              className={styles.ghost}
+              className={styles.secondary}
               onClick={() => {
                 void navigator.clipboard?.writeText(state.token!).then(() => setCopied(state.token));
               }}
             >
-              {copied === state.token ? "Copied" : "Copy"}
+              {copied === state.token ? "Copied" : "Copy token"}
             </button>
           </div>
+          <p className={styles.small}>
+            Copy it into the bot&apos;s settings (BOT_API_TOKEN) now. After you leave this page it isn&apos;t shown
+            again; if you lose it, replace it. Replacing makes a new one and the old one stops at once.
+          </p>
         </div>
       )}
-      <div className={styles.buttons}>
-        <form action={submit}>
-          <button type="submit" className={active ? styles.secondary : styles.primary} disabled={pending}>
-            {active ? "Replace token" : "Create token"}
-          </button>
-        </form>
-        {active && !asking && (
-          <button type="button" className={styles.ghost} onClick={() => setAsking(true)}>
-            Revoke
-          </button>
-        )}
-        {active && asking && (
-          <form action={revoke} className={styles.confirm}>
-            <span className={styles.small}>The bot stops at its next call.</span>
-            <button type="submit" className={styles.danger}>
-              Revoke token
-            </button>
-            <button type="button" className={styles.ghost} onClick={() => setAsking(false)}>
-              Keep it
-            </button>
-          </form>
-        )}
-      </div>
-      {active && <p className={styles.small}>Replacing makes a new token; the old one stops working at once.</p>}
-    </section>
+    </div>
   );
 }

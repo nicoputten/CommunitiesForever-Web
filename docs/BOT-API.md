@@ -170,7 +170,7 @@ Decided with Nico (2026-10-27): the site's first accepted upload makes no milest
 ### `test` (built, WEB-39)
 The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }` (the channel for posts). The bot posts a short test message there and acknowledges it like any event. A bot that doesn't know the type skips it (and still acknowledges it, so it isn't handed out again).
 
-Planned (WEB-58 part 2, the reorganised Discord page; Nico, 2026-10-28): a test button per box, so `kind` may also be `feats`, `recap` or `doomsday`. The bot posts a sample of that kind (a made-up feat, a short recap, a board) in that kind's channel, marked as a test. A bot that doesn't know a kind posts the plain test message in the posts channel.
+WEB-58 part 2 (the reorganised Discord page; Nico, 2026-10-28): a test button per box, so `kind` may also be `feats`, `recap` or `doomsday`. The bot posts a sample of that kind (a made-up feat, a short recap, a board) in that kind's channel, marked as a test. A bot that doesn't know a kind posts the plain test message in the posts channel.
 
 ### `recap` (built, WEB-41c)
 The weekly recap, once per week at the recap moment (the Discord page's day and time in the admin's time zone; default Sunday 13:00), when the page's Weekly recap is on. `data` is the recap as it is to be posted:
@@ -321,7 +321,7 @@ Common rules:
 
 - `posts.doomsdayBoard`, `posts.doomsdayLadder`: the admin's switches on the Discord page. Off means no such events are made. Both are **off until the admin turns them on** (Nico, 2026-10-28), so deploying the site never makes the bot post a board at the next reset by itself.
 - `channels.doomsday`: the Doomsday channel; `null` means the posts channel (`channels.posts`).
-- Planned (WEB-58 part 2): `channels.feats`, the channel for feats (the `milestones` event); `null` means the posts channel. On the reorganised Discord page `channels.posts` is "Default channel".
+- `channels.feats` (WEB-58 part 2): the channel for feats (the `milestones` event); `null` means the posts channel. On the Discord page `channels.posts` is "Default channel".
 - `doomsday.reset`: the reset in realm time (`HH:MM`); `timeZone`: the realm's IANA time zone. A change takes effect from the next reset. `url`: the site's Doomsday page, for "Open the board ↗" and the ladder's link.
 
 ### Goals

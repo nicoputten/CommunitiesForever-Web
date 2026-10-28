@@ -230,6 +230,22 @@ export function setTimeZone(db: Db, battleTag: string, timeZone: string, from: "
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** What the bot posts and where; the defaults until the admin changes something. */
+/**
+ * Takes back a reset change that hasn't taken effect yet (the Discord page's Undo, WEB-58): the reset stays as it is
+ * today. Nothing happens once the change took effect.
+ */
+export function undoDoomsdayReset(db: Db, by: string, now: number): BotSettings {
+  const s = getBotSettings(db);
+  const setting = doomsdayResetSetting(s);
+  if (setting.previous === undefined || now >= effectiveFrom(setting, s.realmTimeZone)) return s;
+  return updateBotSettings(
+    db,
+    { doomsdayReset: setting.previous, doomsdayResetPrevious: null, doomsdayResetChangedAt: null },
+    by,
+    now,
+  );
+}
+
 /** The Doomsday reset setting of the bot settings, for the engine. */
 export function doomsdayResetSetting(s: BotSettings): ResetSetting {
   return {
@@ -276,7 +292,13 @@ export function botApiSettings(db: Db, admin = adminBattleTag()) {
       doomsdayBoard: s.doomsdayBoard,
       doomsdayLadder: s.doomsdayLadder,
     },
-    channels: { posts: s.postsChannel, recap: s.recapChannel, runs: s.runsChannel, doomsday: s.doomsdayChannel },
+    channels: {
+      posts: s.postsChannel,
+      recap: s.recapChannel,
+      runs: s.runsChannel,
+      doomsday: s.doomsdayChannel,
+      feats: s.featsChannel,
+    },
     mentionRole: s.mentionRole,
     recap: { day: s.recapDay, time: s.recapTime, timeZone: effectiveTimeZone(db, admin, admin) },
     runs: {
@@ -295,8 +317,13 @@ export function updateBotSettings(db: Db, change: Partial<BotSettings>, by: stri
   return db.transaction((tx) => {
     const before = botSettingsFrom(tx.select().from(botSettings).where(eq(botSettings.id, 1)).get());
     const next = { ...before, ...change };
-    // A new Doomsday reset applies from the next reset (WEB-58): keep the one in force now until then.
-    if (change.doomsdayReset !== undefined && change.doomsdayReset !== before.doomsdayReset) {
+    // A new Doomsday reset applies from the next reset (WEB-58): keep the one in force now until then. An Undo
+    // (undoDoomsdayReset) clears the change itself.
+    if (
+      change.doomsdayReset !== undefined &&
+      change.doomsdayReset !== before.doomsdayReset &&
+      change.doomsdayResetChangedAt === undefined
+    ) {
       next.doomsdayResetPrevious = effectiveReset(doomsdayResetSetting(before), now, before.realmTimeZone);
       next.doomsdayResetChangedAt = now;
     }
