@@ -230,6 +230,15 @@ export function DungeonIcon(props: IconProps) {
   );
 }
 
+/** Plus before "Plan a run" (dungeon-page board). */
+export function PlusIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 14 14" strokeWidth={2} {...props}>
+      <path d="M7 1v12M1 7h12" />
+    </Icon>
+  );
+}
+
 /** Compass rose over "The map is still empty" (empty-site board); colour from currentColor. */
 export function CompassIcon(props: IconProps) {
   return (

@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-27): WEB-44, then Runs v2 (WEB-47, WEB-48, WEB-49 with WEB-50 merged in), WEB-43, WEB-42, WEB-45. The order across the repos is under E7.
+Build order (2026-10-27): WEB-44, then Runs v2 (WEB-47, WEB-48, WEB-49 with WEB-50 merged in), WEB-43, WEB-42 (done), WEB-45. The order across the repos is under E7.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -41,10 +41,6 @@ Decided with Nico (2026-10-28): BOT-04 found that `/ask` and answering an ask in
 - Tests: an ask from an upload and from the bot, answers before and after expiry, the same upload twice, the events.
 - Decided with Nico (2026-10-28): an ask is stored as a run with `kind` ask (migration `0013_asks`), without slots or reserve; an ask from the game is stored even with "Ask now from the game" off (the setting only decides whether Discord gets it); the "Asking now" block on the Runs page waits for its board (prompt: `docs/DESIGN-PROMPT-ASKS.md`).
 - Done so far (PR #83): the model, `askFor` / `answerAskFor` / `openAsks` and the ask events in `src/server/runs.ts`, asks from uploads, the bot API (`asks`, `asks/<id>`, `asks/<id>/answers`, `asks/<id>/characters`; `askNow`, `askChanged`, `askExpired`), and the uploader feed's `asks`. Left: the Runs page block, once the board is there.
-
-### WEB-42 Dungeon page
-- Board: `dungeon-page`. A page per dungeon (`/dungeons/<id>`), Scarlet Monastery as its four wings (WEB-32), each with its own range: who fits per role, runs planned here and in the other wings, "Ran here" (WEB-43), Plan a run.
-- The map's dungeon markers get a badge with the number of planned runs; their popover has Plan a run and Dungeon page.
 
 ### WEB-45 Runs on the roster and the map
 - Board: `roster-cards-runs`. The "Next run" card on the roster; a dungeon band opens a popover with who fits, planned runs, Plan a run and Dungeon page; the Role filter.

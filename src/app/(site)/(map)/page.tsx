@@ -3,6 +3,7 @@ import { getDataset } from "@/app/dataset";
 import { getFirstUpload } from "@/app/first-upload";
 import { adminBattleTag, listGuests } from "@/server/access";
 import { getDb } from "@/server/db";
+import { listRuns } from "@/server/runs";
 import { getUpload } from "@/server/uploads";
 import { Atmosphere } from "@/components/atmosphere/Atmosphere";
 import { EmptyMap } from "@/components/map/EmptyMap";
@@ -19,6 +20,7 @@ import {
   worldMap,
   type WorldMapView,
 } from "@/core/views";
+import { mapDungeons } from "@/core/views/dungeon";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -30,7 +32,7 @@ const EMPTY: WorldMapView = { places: [], occupied: {} };
  * that upload's new sightings in. The roll call (WEB-27) sits over the map's right side; its filters
  * (`friend`, `new`, `faction`, `level`) filter the markers too. Before the first upload the map is bare under the
  * empty-site card and the guest list (WEB-29). Below 1024 px the roll call is a bottom sheet over a full-screen map
- * and a tapped character opens in it (WEB-28).
+ * and a tapped character opens in it (WEB-28). Dungeon entrances show their planned runs (WEB-42).
  */
 export default async function MapPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -54,6 +56,7 @@ export default async function MapPage({ searchParams }: { searchParams: Promise<
         continent={parseContinent(params.continent)}
         selected={character}
         drop={drop}
+        dungeons={mapDungeons(listRuns(getDb()), now)}
         panel={
           call === undefined ? (
             <EmptyMap {...await getFirstUpload()} guestList={guestList()} />

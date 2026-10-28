@@ -734,6 +734,20 @@
   --size-menu-max: 520px; /* runs-v2-plan: the dungeon dropdown's menu */
   --size-picker: 440px; /* runs-v2-picker: the answer popover on desktop */
   --size-slot-role: 64px; /* runs-v2-run-detail: the role column of a slot */
+  /* Dungeon page (WEB-42): the dungeon-page board */
+  --size-dungeon-hero: 240px; /* dungeon-page: the hero's height */
+  --size-dungeon-aside: 380px; /* dungeon-page: the side column (Planned here, Ran here) */
+  --fs-dungeon-title: 40px; /* dungeon-page: the dungeon or wing (Marcellus SC) */
+  --line-hero: rgba(212, 175, 106, 0.4); /* dungeon-page: the hero's frame */
+  --dungeon-veil: linear-gradient(
+    0deg,
+    rgba(7, 12, 21, 0.96) 10%,
+    rgba(7, 12, 21, 0.3) 80%
+  ); /* dungeon-page: over the map */
+  --line-nobody: #f0a774; /* dungeon-page: "Nobody in range." (dashed) */
+  --text-nobody: #f6c29c;
+  --surface-planned: #0e1626; /* dungeon-page: a run planned here */
+  --line-planned: rgba(212, 175, 106, 0.35);
   /* card images (WEB-41d): Nico's references in design/cards/; read by src/core/cards/palette.ts, kept equal by a test */
   --card-w: 800px; /* cards: milestone, zone of the week, /whereis */
   --card-wide: 1200px; /* cards: the recap headers */

@@ -1,0 +1,299 @@
+/* Dungeon entrances on the map (map-states board; WEB-42): the entrance with its name at zone zoom (4×); with runs
+ * planned there, from any zoom past the whole world with a gold count badge (the name only at zone zoom). A dungeon's entrance opens a
+ * popover with Plan a run and Dungeon page. Like the markers they keep their screen size at any zoom. */
+
+.entrance {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  /* Under the markers (z-index 1): a character seen near an entrance stays on top. */
+  z-index: 0;
+  width: 0;
+  height: 0;
+  display: none;
+  transform: scale(calc(1 / var(--zoom, 1)));
+  pointer-events: none;
+}
+
+[data-level="zone"] .entrance,
+.entrance[data-planned] {
+  display: block;
+}
+
+/* Not over the whole world (1×), where they would crowd the markers: from the continent switch or any zoom in. */
+[data-whole] .entrance[data-planned] {
+  display: none;
+}
+
+.entrance[data-open] {
+  z-index: 5;
+}
+
+/* The button is the 44 px target around the 18 px badge (DESIGN.md §11); the name sits next to it. */
+.button {
+  position: absolute;
+  left: calc(var(--size-touch) / -2);
+  top: calc(var(--size-touch) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.button:focus-visible {
+  outline: none;
+}
+
+.button:focus-visible .icon {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.entrance > .mark {
+  position: absolute;
+  left: calc(var(--size-badge) / -2);
+  top: calc(var(--size-badge) / -2);
+}
+
+.label {
+  position: absolute;
+  left: calc(var(--size-badge) / 2 + var(--s-1-5));
+  top: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.mark,
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  color: var(--capital-label);
+  font-family: var(--font-name);
+  font-size: var(--fs-tiny);
+  font-style: italic;
+  white-space: nowrap;
+  text-shadow: var(--shadow-hover-name);
+}
+
+.icon {
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--size-badge);
+  height: var(--size-badge);
+  border-radius: var(--r-badge);
+}
+
+.svg {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: calc((var(--size-badge) - var(--size-badge-icon)) / 2);
+  border-radius: var(--r-badge);
+  background: var(--badge-bg);
+  border: var(--border) solid var(--gold);
+  color: var(--gold-bright);
+}
+
+.button:hover .svg,
+.entrance[data-open] .svg {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.count {
+  position: absolute;
+  right: calc(-1 * var(--s-2));
+  top: calc(-1 * var(--s-2));
+  min-width: var(--s-4);
+  padding: var(--s-0-5) var(--s-1);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-family: var(--font-ui);
+  font-size: var(--fs-tiny);
+  font-style: normal;
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  text-align: center;
+  text-shadow: none;
+}
+
+/* The name only at zone zoom; further out the badge alone. */
+.name {
+  display: none;
+}
+
+[data-level="zone"] .name {
+  display: inline;
+}
+
+[data-level="zone"] .label {
+  display: block;
+}
+
+/* --- the popover ---------------------------------------------------------------------------------------------------- */
+
+.anchor {
+  position: absolute;
+  left: var(--s-5);
+  top: 0;
+  pointer-events: auto;
+}
+
+.popover {
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateY(-50%);
+  width: var(--size-card-map);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface-strong);
+  backdrop-filter: blur(var(--blur-surface));
+  border: var(--border) solid var(--line-strong);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-ui);
+  animation: popIn var(--dur-card) var(--ease-out);
+}
+
+.anchor[data-side="left"] {
+  left: auto;
+  right: var(--s-5);
+}
+
+.anchor[data-side="left"] .popover {
+  left: auto;
+  right: 0;
+}
+
+.anchor[data-v="down"] .popover {
+  top: calc(-1 * var(--s-6));
+  transform: none;
+}
+
+.anchor[data-v="up"] .popover {
+  top: auto;
+  bottom: calc(-1 * var(--s-6));
+  transform: none;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.sheet {
+  gap: var(--s-3-5);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-name);
+  font-size: var(--fs-name-card);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+}
+
+.sub {
+  margin: var(--s-0-5) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.wings {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-1);
+  border-bottom: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.wing:hover {
+  color: var(--gold-bright);
+}
+
+.wingCount {
+  font-size: var(--fs-meta);
+  color: var(--gold);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.primary,
+.secondary {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-btn);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.primary {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+
+.primary:hover {
+  background: var(--gold-bright);
+  color: var(--on-gold);
+}
+
+.secondary {
+  border: var(--border) solid var(--button-line-gold);
+  color: var(--gold-bright);
+}
+
+.secondary:hover {
+  background: var(--tint-hover);
+}
