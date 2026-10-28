@@ -25,7 +25,14 @@ export async function planRun(page: Page, input: PlanInput): Promise<number> {
       .click();
   }
   await page.getByRole("group", { name: "Day" }).getByRole("radio").nth(input.day).check();
-  await page.getByLabel("Time").fill(input.time);
+  // Time chips (WEB-49), or Other… for the time input.
+  const chip = page.getByRole("group", { name: "Time" }).getByRole("radio", { name: input.time, exact: true });
+  if ((await chip.count()) > 0) {
+    await chip.check();
+  } else {
+    await page.getByRole("group", { name: "Time" }).getByRole("radio", { name: "Other…" }).check();
+    await page.getByLabel("Other time").fill(input.time);
+  }
   if (input.note !== undefined) await page.getByLabel("Note (optional)").fill(input.note);
   await page.getByRole("button", { name: "Plan run" }).click();
   await page.waitForURL(/\/runs\/\d+$/);

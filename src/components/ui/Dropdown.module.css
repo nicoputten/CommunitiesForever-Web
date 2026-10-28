@@ -195,6 +195,14 @@
   color: var(--text-muted);
 }
 
+.hint[data-tone="good"] {
+  color: var(--fresh-text);
+}
+
+.hint[data-tone="warn"] {
+  color: var(--stale-text);
+}
+
 .empty {
   padding: var(--s-3) var(--s-2-5);
   font-size: var(--fs-body-sm);

@@ -125,7 +125,7 @@ export function weekEnd(now: number, timeZone: string): number {
 export interface DayOption {
   /** "2026-10-27" */
   date: string;
-  /** "Today · Tue 27", "Wed 28" */
+  /** "Today", "Wed 28" */
   label: string;
 }
 
@@ -137,7 +137,7 @@ export function nextDays(now: number, timeZone: string, count = 7): DayOption[] 
     const label = `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}`;
     return {
       date: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`,
-      label: i === 0 ? `Today · ${label}` : label,
+      label: i === 0 ? "Today" : label,
     };
   });
 }

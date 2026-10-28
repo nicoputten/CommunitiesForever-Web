@@ -233,6 +233,7 @@
   --border-strong: 2px;
   --focus-width: 2px;
   --focus-offset: 2px;
+  --focus-room: 4px; /* runs-v2-plan: room for the focus ring inside a scroll box (width + offset) */
 
   /* motion */
   --dur-shimmer: 1.6s; /* loading: skeleton */

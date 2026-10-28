@@ -35,6 +35,29 @@ describe("dropdown search", () => {
     expect(filterOptions(options, "stormwind")).toEqual([]);
     expect(searchKey("Europe/Isle_of_Man")).toBe("europe/isle of man");
   });
+
+  // WEB-49 (board runs-v2-plan): a family's other options follow its first match, matching or not.
+  it("groups a dungeon's other wings after the first match while searching", () => {
+    const wings = [
+      { label: "Scarlet Monastery: Graveyard", group: "Fits your characters", family: "Scarlet Monastery" },
+      { label: "Shadowfang Keep", group: "Fits your characters" },
+      { label: "Scarlet Monastery: Library", group: "All dungeons by level", family: "Scarlet Monastery" },
+      { label: "Scarlet Monastery: Armory", group: "All dungeons by level", family: "Scarlet Monastery" },
+    ];
+    const show = (q: string) => filterOptions(wings, q).map((o) => `${o.label} (${o.group})`);
+    expect(show("scar")).toEqual([
+      "Scarlet Monastery: Graveyard (Fits your characters)",
+      "Scarlet Monastery: Library (Other Scarlet Monastery wings)",
+      "Scarlet Monastery: Armory (Other Scarlet Monastery wings)",
+    ]);
+    expect(show("armory")).toEqual([
+      "Scarlet Monastery: Armory (All dungeons by level)",
+      "Scarlet Monastery: Graveyard (Other Scarlet Monastery wings)",
+      "Scarlet Monastery: Library (Other Scarlet Monastery wings)",
+    ]);
+    expect(show("shadow")).toEqual(["Shadowfang Keep (Fits your characters)"]);
+    expect(filterOptions(wings, "")).toHaveLength(4);
+  });
 });
 
 describe("parseTime", () => {

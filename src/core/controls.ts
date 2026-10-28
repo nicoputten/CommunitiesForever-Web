@@ -10,6 +10,8 @@ export interface SearchableOption {
   label: string;
   meta?: string;
   group?: string;
+  /** Options of one family (a dungeon's wings): while searching, the family's other options follow the first match. */
+  family?: string;
 }
 
 /** Lower case, accents and underscores off, so "sao_paulo" finds "São Paulo". */
@@ -17,14 +19,25 @@ export function searchKey(text: string): string {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/_/g, " ").toLowerCase();
 }
 
-/** The options whose label, meta or group contain every word of the query, in their order. */
+/**
+ * The options whose label, meta or group contain every word of the query, in their order. A family's first match
+ * keeps its place; the family's other options, matching or not, follow at the end under "Other <family> wings"
+ * (WEB-49, board `runs-v2-plan`: searching "scar" shows the Graveyard that fits, then the other Scarlet Monastery wings).
+ */
 export function filterOptions<T extends SearchableOption>(options: readonly T[], query: string): T[] {
   const words = searchKey(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return [...options];
-  return options.filter((o) => {
+  const matched = options.filter((o) => {
     const text = searchKey(`${o.label} ${o.meta ?? ""} ${o.group ?? ""}`);
     return words.every((w) => text.includes(w));
   });
+  const first = new Map<string, T>();
+  for (const o of matched) if (o.family !== undefined && !first.has(o.family)) first.set(o.family, o);
+  if (first.size === 0) return matched;
+  const others = [...first].flatMap(([family, kept]) =>
+    options.filter((o) => o.family === family && o !== kept).map((o) => ({ ...o, group: `Other ${family} wings` })),
+  );
+  return [...matched.filter((o) => o.family === undefined || first.get(o.family) === o), ...others];
 }
 
 // --- time input ---------------------------------------------------------------------------------------------------

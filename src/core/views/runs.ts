@@ -100,10 +100,12 @@ export interface RunCardView {
   line: string;
   /** "Tank still open: nobody in range", "Your Grom Ashfeller fits the open tank slot". */
   hint?: { text: string; tone: "warn" | "good" | "muted" };
-  /** "3 in · 1 maybe". */
-  tally: string;
-  /** The five slots in order (tank, healer, damage × 3): filled or not. */
-  slots: { role: SlotRole; filled: boolean }[];
+  /** "1 in · 4 open · no healer in range" (finding 11). */
+  summary: string;
+  /** The five slots in order (tank, healer, damage × 3): filled or not, with the role's letter. */
+  slots: { role: SlotRole; letter: string; filled: boolean }[];
+  /** The slot bar's tooltip, a row per role: "Tank · Ves Doombringer", "Damage · Lia Thornwhisper · 2 open". */
+  slotRows: string[];
   /** Answer buttons on the card: an upcoming run the viewer can join and hasn't answered. */
   answer?: AnswerChoice;
 }
@@ -139,7 +141,7 @@ export function pastResult(run: RunRecord): Pick<PastRunView, "result" | "detail
 export interface YourAnswerView {
   href: string;
   dungeon: string;
-  /** "organiser", "not answered", "maybe", "I'm in", "can't". */
+  /** "organiser as Ves Doombringer · Tank", "organiser", "in as Lia Thornwhisper · Healer", "not answered". */
   status: string;
 }
 
@@ -295,14 +297,8 @@ function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): R
     }
     return { text: `You answered ${ANSWER_LABEL[mine.answer]}${withChar}`, tone: "muted" };
   }
-  if (yours) {
-    const nobody = openWithNobody(ctx, run);
-    if (nobody.length > 0) {
-      const roles = joinNames(nobody);
-      return { text: `${roles[0]!.toUpperCase()}${roles.slice(1)} still open: nobody in range`, tone: "warn" };
-    }
-    return undefined;
-  }
+  // The organiser's open roles nobody can fill are in the summary (finding 11).
+  if (yours) return undefined;
   const fitting = choice.characters.filter((c) => c.fit === "fits" || c.fit === "over");
   if (fitting.length === 0) return undefined;
   const open = openSlots(run.answers);
@@ -337,21 +333,59 @@ function line(ctx: Ctx, run: RunRecord): string {
   return parts.join(" · ");
 }
 
-function tally(run: RunRecord): string {
+/** "1 in · 1 maybe · 4 open · no healer in range"; "5 in · full". */
+function summary(ctx: Ctx, run: RunRecord): string {
   const c = counts(run.answers);
+  const open = openSlots(run.answers);
+  const left = open.tank + open.healer + open.damage;
   const parts = [`${c.in} in`];
   if (c.maybe > 0) parts.push(`${c.maybe} maybe`);
+  parts.push(left > 0 ? `${left} open` : "full");
+  const nobody = openWithNobody(ctx, run);
+  if (nobody.length > 0) parts.push(`no ${nobody.join(" or ")} in range`);
   return parts.join(" · ");
 }
+
+const ROLE_LETTER: Record<SlotRole, string> = { tank: "T", healer: "H", damage: "D" };
 
 function slotBars(run: RunRecord): RunCardView["slots"] {
   const g = group(run.answers);
   const out: RunCardView["slots"] = [];
   for (const role of SLOT_ROLES) {
     const size = role === "damage" ? 3 : 1;
-    for (let i = 0; i < size; i++) out.push({ role, filled: i < g[role].length });
+    for (let i = 0; i < size; i++) out.push({ role, letter: ROLE_LETTER[role], filled: i < g[role].length });
   }
   return out;
+}
+
+function slotRows(ctx: Ctx, run: RunRecord): string[] {
+  const g = group(run.answers);
+  const open = openSlots(run.answers);
+  return SLOT_ROLES.map((role) => {
+    const names = g[role].map((a) => charName(ctx, a));
+    const left = open[role] > 0 ? `${open[role]} open` : undefined;
+    const rest =
+      names.length === 0
+        ? "open"
+        : [names.join(", "), names.length > 0 && role === "damage" ? left : undefined]
+            .filter((x) => x !== undefined)
+            .join(" · ");
+    return `${ROLE_LABEL[role]} · ${rest}`;
+  });
+}
+
+/** "organiser as Ves Doombringer · Tank", "in as Lia Thornwhisper · Healer", "reserve as …", "can't". */
+function yourStatus(ctx: Ctx, run: RunRecord): string {
+  const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
+  const organiser = isViewer(ctx, run.organiser);
+  if (mine === undefined) return organiser ? "organiser" : "not answered";
+  if (mine.answer === "cant") return organiser ? "organiser" : "can't";
+  const as = mine.guid === undefined ? "" : ` as ${charName(ctx, mine)} · ${ROLE_LABEL[mine.role]}`;
+  if (organiser)
+    return mine.answer === "in"
+      ? `organiser${as}`
+      : `organiser · ${mine.answer === "reserve" ? "on the bench" : "maybe"}${as}`;
+  return `${mine.answer === "in" ? "in" : mine.answer}${as}`;
 }
 
 /** "20:00 for Bob" when the organiser's clock differs from the viewer's. */
@@ -388,8 +422,9 @@ function card(ctx: Ctx, run: RunRecord): RunCardView {
     pill: pill(run, p, now),
     yours,
     line: line(ctx, run),
-    tally: tally(run),
+    summary: summary(ctx, run),
     slots: slotBars(run),
+    slotRows: slotRows(ctx, run),
   };
   const other = organiserTime(ctx, run);
   if (other !== undefined) v.organiserTime = other;
@@ -436,15 +471,11 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
       })),
     yourAnswers: upcoming
       .filter((r) => involved(ctx, r) || viewerFits(ctx, r))
-      .map((r) => {
-        const mine = r.answers.find((a) => isViewer(ctx, a.battleTag));
-        const status = isViewer(ctx, r.organiser)
-          ? "organiser"
-          : mine === undefined
-            ? "not answered"
-            : ANSWER_LABEL[mine.answer].toLowerCase();
-        return { href: `/runs/${r.id}`, dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId, status };
-      }),
+      .map((r) => ({
+        href: `/runs/${r.id}`,
+        dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId,
+        status: yourStatus(ctx, r),
+      })),
     anyUpcoming: upcoming.length > 0,
     timeZone: tz,
   };
@@ -972,18 +1003,21 @@ export interface DungeonOption {
   /** "Fits 4 friends' characters · no tank in range yet". */
   fits: string;
   range: LevelRange;
-}
-
-export interface LeadOption {
-  guid: string;
-  label: string;
-  fits: boolean;
+  /** One of Forever's new dungeons ("Forever" next to the range). */
+  forever: boolean;
+  /** The instance when this is one of its wings ("Scarlet Monastery"): searching shows the other wings. */
+  wingOf?: string;
+  /** A character of the viewer fits or is over: the "Fits your characters" group. */
+  fitsYou: boolean;
+  /** The viewer's best character for it: "Vesgar 27 fits", "Twinkle 5 below", "no fit". */
+  best?: { text: string; tone?: "good" | "warn" };
 }
 
 export interface PlanPage {
+  /** "Fits your characters" first, then "All dungeons by level" (WEB-49). */
   dungeons: DungeonOption[];
-  dungeonId: string;
-  leads: Record<string, LeadOption[]>;
+  /** Filled in from a dungeon page or a roster band, or when exactly one dungeon fits a character of the viewer. */
+  dungeonId?: string;
   /** Lead as through the picker (WEB-49): the viewer's characters per dungeon, with fit, roles and notes. */
   leadPicker: Record<string, PickerCharacter[]>;
   days: DayOption[];
@@ -995,9 +1029,39 @@ export interface PlanPage {
   now: number;
 }
 
+/** Which of the viewer's characters is the best for a range: fits (highest), over, low, carry, then too low. */
+const FIT_RANK: Record<FitKind, number> = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 };
+
+function bestFit(mine: readonly CharacterView[], r: LevelRange): DungeonOption["best"] {
+  const away = (level: number | undefined) =>
+    level === undefined ? Infinity : level > r.max ? level - r.max : level < r.min ? r.min - level : -level;
+  const best = mine
+    .map((c) => ({ c, fit: levelFit(c.level, r.min, r.max) }))
+    .sort((a, b) => FIT_RANK[a.fit.kind] - FIT_RANK[b.fit.kind] || away(a.c.level) - away(b.c.level))[0];
+  if (best === undefined) return undefined;
+  const { c, fit } = best;
+  const name = (c.name ?? c.guid).split(" ")[0]!;
+  switch (fit.kind) {
+    case "fits":
+    case "over":
+      return { text: `${name} ${c.level ?? ""} ${fit.label}`, tone: "good" };
+    case "low":
+    case "carry":
+      return { text: `${name} ${fit.label}`, tone: "warn" };
+    default:
+      return { text: "no fit" };
+  }
+}
+
 export function planPage(input: RunsInput, dungeonId: string | undefined): PlanPage {
   const ctx = context(input);
-  const dungeons = RUNNABLE_DUNGEONS.map((d) => {
+  const mine = input.characters
+    .filter((c) => {
+      const tag = ownerTag(ctx, c);
+      return tag !== undefined && isViewer(ctx, tag);
+    })
+    .sort(byLevel);
+  const all = RUNNABLE_DUNGEONS.map((d): DungeonOption => {
     const fit = input.characters.filter(
       (c) => levelFit(c.level, d.typicalLevels.min, d.typicalLevels.max).kind === "fits",
     );
@@ -1009,25 +1073,29 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
     ]
       .filter((x) => x !== undefined)
       .join(" · ");
-    return { id: d.id, name: d.name, label: `${d.name} · ${rangeText(d.typicalLevels)}`, fits, range: d.typicalLevels };
+    const r = d.typicalLevels;
+    const o: DungeonOption = {
+      id: d.id,
+      name: d.name,
+      label: `${d.name} · ${rangeText(r)}`,
+      fits,
+      range: r,
+      forever: d.forever,
+      fitsYou: mine.some((c) => levelFit(c.level, r.min, r.max).suggested),
+    };
+    if (d.wingOf !== undefined) o.wingOf = d.wingOf;
+    const best = bestFit(mine, r);
+    if (best !== undefined) o.best = best;
+    return o;
   });
-  const leads: Record<string, LeadOption[]> = {};
+  const byRange = (a: DungeonOption, b: DungeonOption) =>
+    a.range.min - b.range.min || a.range.max - b.range.max || compareText(a.name, b.name);
+  const dungeons = [...all.filter((d) => d.fitsYou).sort(byRange), ...all.filter((d) => !d.fitsYou).sort(byRange)];
   const leadPicker: Record<string, PickerCharacter[]> = {};
-  const mine = input.characters
-    .filter((c) => {
-      const tag = ownerTag(ctx, c);
-      return tag !== undefined && isViewer(ctx, tag);
-    })
-    .sort(byLevel);
-  for (const d of dungeons) {
-    leadPicker[d.id] = mine.map((c) => pickerCharacter(c, d.range));
-    leads[d.id] = viewerCharacters(ctx, d.range).map((c) => {
-      // One wording everywhere (WEB-47 levelFit): "damage", "+3 over", "carry · +12", "4 below".
-      const why = c.fit === "fits" ? c.role : (c.off ?? "");
-      return { guid: c.guid, label: `${c.name}${c.level === undefined ? "" : ` ${c.level}`} · ${why}`, fits: c.fits };
-    });
-  }
-  const best = dungeons.find((d) => d.id === dungeonId) ?? dungeons.find((d) => d.id === "sm-armory") ?? dungeons[0]!;
+  for (const d of dungeons) leadPicker[d.id] = mine.map((c) => pickerCharacter(c, d.range));
+  // Finding 6: no guessed dungeon; when exactly one dungeon fits a character of the viewer, that one.
+  const fitting = dungeons.filter((d) => mine.some((c) => levelFit(c.level, d.range.min, d.range.max).kind === "fits"));
+  const chosen = dungeons.find((d) => d.id === dungeonId) ?? (fitting.length === 1 ? fitting[0] : undefined);
   const tz = input.viewer.timeZone;
   const others = new Map<string, string>();
   for (const p of input.people) {
@@ -1038,8 +1106,7 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
   }
   return {
     dungeons,
-    dungeonId: best.id,
-    leads,
+    ...(chosen === undefined ? {} : { dungeonId: chosen.id }),
     leadPicker,
     days: nextDays(input.now, tz),
     timeZone: tz,
