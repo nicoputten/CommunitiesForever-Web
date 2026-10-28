@@ -2,6 +2,7 @@
 
 ## Unreleased
 - The site keeps the coming addon's Doomsday data from uploads: PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's daily and weekly goals. There is no "Share my activity" any more: activity a friend's older addon stopped sharing shows again in the recap and `/me`.
+- Roster: a narrow dungeon band keeps its name ("Ragef… 13–18 · 2") instead of showing only the levels and count.
 - Asks from the game reach the site and Discord sooner: any friend's upload carries a friend's ask (once, as the asker's ask), and answers given to an ask in game show up too.
 - Runs: any character may say I'm in or lead, also one 6 or more levels below the dungeon. It shows how far below it is and that it will be tough, and it is never suggested ("recommend, never restrict").
 
