@@ -149,6 +149,31 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
+test("roster: band names on narrow bands (WEB-54)", async ({ page }) => {
+  test.skip(isPhone(page), "the phone list always has the full name");
+  await openScreen(page, "/roster");
+  const bands = page.getByRole("list", { name: "Dungeon bands" });
+  const band = (id: string) => bands.locator(`button[data-band="${id}"]`);
+  // At 1440 px: the full name, the short name, and Ragefire Chasm (no short name) cut, with its range and count.
+  await expect(band("sm-library")).toHaveAttribute("data-fit", "full");
+  await expect(band("sm-cathedral")).toHaveAttribute("data-fit", "short");
+  await expect(band("sm-cathedral")).toHaveText("SM Cathedral 35–45 · 3 · 1 run", { useInnerText: true });
+  await expect(band("rfc")).toHaveAttribute("data-fit", "cut");
+  await expect(band("rfc")).toHaveText(/^Rag\w*… 13–18 · 2$/, { useInnerText: true });
+  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18");
+  await expect(band("rfc")).toHaveAttribute("aria-label", /^Rag\w*… 13–18 · 2, Ragefire Chasm$/);
+  // Narrower still: 3 letters, the range goes, the count stays.
+  await bands.locator('li:has(> button[data-band="rfc"])').evaluate((li: HTMLElement) => (li.style.width = "60px"));
+  await expect(band("rfc")).toHaveAttribute("data-fit", "bare");
+  await expect(band("rfc")).toHaveText("Rag… · 2", { useInnerText: true });
+  await expect(band("rfc")).toHaveAttribute("aria-label", "Rag… · 2, Ragefire Chasm 13–18");
+  await expectAccessible(page);
+  test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
+  await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot(
+    "roster-bands-narrow.png",
+  );
+});
+
 test("roster: no matches", async ({ page }) => {
   await openScreen(page, "/roster?q=nobody");
   await expect(page.getByRole("heading", { name: "No characters match" })).toBeVisible();
