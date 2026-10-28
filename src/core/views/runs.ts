@@ -1161,6 +1161,7 @@ export function rosterRuns(input: RunsInput): RosterRuns {
         ? `${friendName(ctx, first.organiser)} organises`
         : `${friendName(ctx, first.organiser)} on ${charName(ctx, lead)}`;
     const open = openSlots(first.answers);
+    const tallied = counts(first.answers);
     const gaps = SLOT_ROLES.filter((r) => open[r] > 0).map((r) =>
       r === "damage" && open[r] > 1 ? `${open[r]} damage open` : `${r} open`,
     );
@@ -1168,7 +1169,7 @@ export function rosterRuns(input: RunsInput): RosterRuns {
       href: c.href,
       dungeon: c.dungeon,
       when: c.when,
-      line: [who, c.tally, ...gaps].join(" · "),
+      line: [who, `${tallied.in} in`, ...(tallied.maybe > 0 ? [`${tallied.maybe} maybe`] : []), ...gaps].join(" · "),
     };
   }
   for (const run of upcoming) {
