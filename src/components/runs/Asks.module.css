@@ -1,0 +1,333 @@
+/* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live, not planned, so fresh green. */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-3);
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.live {
+  width: var(--size-live-dot);
+  height: var(--size-live-dot);
+  border-radius: var(--r-pill);
+  background: var(--fresh);
+  animation: live var(--dur-pulse) var(--ease-out) infinite;
+}
+
+@keyframes live {
+  from {
+    box-shadow: 0 0 0 0 var(--live-ring);
+  }
+  to {
+    box-shadow: 0 0 0 var(--size-live-ring) transparent;
+  }
+}
+
+.sub {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.ask {
+  display: grid;
+  grid-template-columns: var(--size-run-when) minmax(0, 1fr) auto;
+  gap: var(--s-4-5);
+  align-items: start;
+  padding: var(--s-3-5) var(--s-4-5);
+  border-radius: var(--r-card);
+  background: var(--surface-box);
+  border: var(--border) solid var(--fresh-line);
+  box-shadow: inset var(--size-ask-edge) 0 0 var(--fresh);
+}
+
+.ask[data-tone="yours"] {
+  border-color: var(--line-ghost);
+  box-shadow: inset var(--size-ask-edge) 0 0 var(--gold);
+}
+
+.ask[data-tone="last"] {
+  border-color: var(--stale-line);
+  box-shadow: inset var(--size-ask-edge) 0 0 var(--stale);
+}
+
+/* At 0 the card folds away; no "ended" state. */
+.ask[data-gone] {
+  overflow: hidden;
+  animation: gone var(--dur-card) var(--ease-out) forwards;
+}
+
+@keyframes gone {
+  to {
+    max-height: 0;
+    padding-block: 0;
+    border-width: 0;
+    opacity: 0;
+  }
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.endsIn {
+  font-size: var(--fs-overline);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.countdown b {
+  font-family: var(--font-name);
+  font-size: var(--fs-run-time);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  color: var(--fresh-text);
+}
+
+.bar {
+  display: block;
+  height: var(--size-ask-bar);
+  margin-top: var(--s-1-5);
+  border-radius: var(--r-slot);
+  background: var(--ask-bar-track);
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--fresh);
+}
+
+.ask[data-tone="last"] .countdown b {
+  color: var(--stale-text);
+}
+
+.ask[data-tone="last"] .bar i {
+  background: var(--stale);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-card);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+.range {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.line {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.line b {
+  font-weight: var(--fw-medium);
+  color: var(--text);
+}
+
+.note {
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+
+.buttons {
+  display: flex;
+  gap: var(--s-1-5);
+}
+
+.in,
+.answer {
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.in {
+  border-color: var(--answer-in-line);
+  background: var(--answer-in-tint);
+  color: var(--fresh-text);
+}
+
+.in:disabled,
+.answer:disabled {
+  border-color: var(--line-neutral);
+  background: transparent;
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.in:focus-visible,
+.answer:focus-visible,
+.link:focus-visible,
+.more:focus-visible {
+  outline: var(--focus-width) solid var(--gold-bright);
+  outline-offset: var(--focus-offset);
+}
+
+.as {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-1-5);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.done,
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1-5);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-btn);
+  font-size: var(--fs-body-sm);
+}
+
+.done {
+  background: var(--answered-tint);
+  border: var(--border) solid var(--answered-line);
+  color: var(--fresh-text);
+}
+
+.error {
+  background: var(--retry-tint);
+  border: var(--border) solid var(--retry-line);
+  font-size: var(--fs-meta);
+  color: var(--retry-text);
+}
+
+.noneFit,
+.formGroup {
+  max-width: var(--size-ask-note);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.formGroup b {
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+
+.more {
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-1);
+  border: 0;
+  background: none;
+  font-size: var(--fs-body-sm);
+  color: var(--gold);
+  cursor: pointer;
+}
+
+/* Phone (board asks-now-phone): full-width cards, the buttons across the bottom. */
+@media (max-width: 767px) {
+  .ask {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+
+  .countdown {
+    flex-direction: row;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+
+  .bar {
+    flex-basis: 100%;
+    margin-top: 0;
+  }
+
+  .actions {
+    align-items: stretch;
+  }
+
+  .buttons > button {
+    flex: 1;
+  }
+
+  .as {
+    justify-content: flex-start;
+  }
+
+  .noneFit,
+  .formGroup {
+    max-width: none;
+    text-align: left;
+  }
+
+  /* "change ▾", "Change", "Retry": 44 px to tap. */
+  .link {
+    min-height: var(--size-touch);
+    padding: 0 var(--s-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live,
+  .ask[data-gone] {
+    animation: none;
+  }
+
+  .ask[data-gone] {
+    display: none;
+  }
+}
