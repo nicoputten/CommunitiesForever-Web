@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Doomsday: the site counts daily and weekly goals, PvE and PvP points (never added together), kills and duels, the crown, streaks, both ladders with all-time totals and duel ratings. The bot gets the daily board at each reset (kept up to date after uploads), the weekly ladder on Sunday, a `/doomsday` look-up and a Doomsday section in the recap. The reset time (19:00 realm time by default) reaches the game through the uploader.
 - Feats: every milestone is now a feat, and new ones join them: honorable kills, a new highest PvP rank with our title, duel wins, a first battleground win, 100 deaths, the first epic, mounts, the first catch, Jack of all trades and the profession watch list (Arcanite Reaper, Mooncloth, the Fishing Extravaganza and more). The site keeps every character's feats, marks "First in the group", and draws a card image for the special ones.
 - The site keeps the coming addon's Doomsday data from uploads: PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's daily and weekly goals. There is no "Share my activity" any more: activity a friend's older addon stopped sharing shows again in the recap and `/me`.
 
