@@ -570,4 +570,4 @@ Decided with Nico (2026-10-28): BOT-04 found that `/ask` and answering an ask in
 
 ### WEB-52 Any level may answer I'm in
 - Nico (2026-10-28, after testing v0.4.0; the rule "recommend, never restrict", DESIGN.md §8): a character 6 or more levels below a dungeon (`levelFit` kind `tooLow`) may answer I'm in and lead, with its "N below" and a "tough" note; it is still never suggested, counted in a band or "could fill".
-- Done (PR #TBD): `levelFit` gives every character `canPick` (and the note for `tooLow`); the plan form's and an ask's "None of your characters fit" is advice and no longer blocks; the run page says "You can still say I'm in; it will be tough."; the bot API's `characters` lists every character and `out_of_range` / `lead_out_of_range` are no longer given (`docs/BOT-API.md`).
+- Done (PR #90): `levelFit` gives every character `canPick` (and the note for `tooLow`); the plan form's and an ask's "None of your characters fit" is advice and no longer blocks; the run page says "You can still say I'm in; it will be tough."; the bot API's `characters` lists every character and `out_of_range` / `lead_out_of_range` are no longer given (`docs/BOT-API.md`).
