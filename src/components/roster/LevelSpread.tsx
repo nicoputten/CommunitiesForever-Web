@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { classInfo } from "@/core/gamedata";
 import type { CharacterView } from "@/core/views/characters";
 import type { LevelSpread as Spread } from "@/core/views/roster";
-import { bandRows, levelPosition, MERGE_LEVELS, MERGE_LEVELS_PHONE, spreadDots } from "@/core/views/spreadLayout";
+import { bandLayout, levelPosition, MERGE_LEVELS, MERGE_LEVELS_PHONE, spreadDots } from "@/core/views/spreadLayout";
 import styles from "./LevelSpread.module.css";
 import { SpreadTrack, type TrackDot } from "./SpreadTrack";
 
@@ -55,7 +55,7 @@ export function LevelSpread({ spread, own }: { spread: Spread; own?: string | un
       if (one === undefined) dot.count = d.characters.length;
       return dot;
     });
-  const bands = bandRows(spread);
+  const bands = bandLayout(spread).shown;
   const bandRowCount = Math.max(0, ...bands.map((b) => b.row + 1));
 
   return (

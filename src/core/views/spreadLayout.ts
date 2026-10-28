@@ -67,26 +67,45 @@ export interface PlacedBand {
   to: number;
 }
 
+/** At most this many rows of bands until "Show all N" (WEB-45, board `runs-v2-plan` "Roster bands v2"). */
+export const BAND_ROWS = 4;
+
+export interface BandLayout {
+  /** The bands placed, top to bottom and left to right (the list's reading order). */
+  shown: PlacedBand[];
+  /** Bands that found no place in the rows allowed: shown after "Show all N". */
+  hidden: number;
+}
+
+const fitsFirst = (a: DungeonBand, b: DungeonBand) =>
+  b.fits.length - a.fits.length ||
+  a.dungeon.typicalLevels.max - a.dungeon.typicalLevels.min - (b.dungeon.typicalLevels.max - b.dungeon.typicalLevels.min) ||
+  a.dungeon.typicalLevels.min - b.dungeon.typicalLevels.min;
+
 /**
- * The bands in rows: the best band first in row 0, then the others by level, each in the first row where it does not
- * overlap a band (levels are inclusive: 17–26 and 26–45 overlap).
+ * The bands in rows (WEB-45): sorted by how many fit (ties: the narrower range, then the lower), each in the first row
+ * where it doesn't overlap a band (levels are inclusive: 17–26 and 26–45 overlap). With `maxRows`, a band that needs a
+ * row beyond it is left out and counted in `hidden`.
  */
-export function bandRows(spread: Pick<LevelSpread, "bands" | "best">): PlacedBand[] {
-  const best = spread.best;
-  const ordered = best === undefined ? spread.bands : [best, ...spread.bands.filter((b) => b !== best)];
+export function bandLayout(spread: Pick<LevelSpread, "bands" | "best">, maxRows = Infinity): BandLayout {
   const rows: DungeonBand[][] = [];
-  const placed = ordered.map((band) => {
+  const shown: PlacedBand[] = [];
+  let hidden = 0;
+  for (const band of [...spread.bands].sort(fitsFirst)) {
     const { min, max } = band.dungeon.typicalLevels;
     let row = rows.findIndex((r) =>
       r.every((o) => max < o.dungeon.typicalLevels.min || min > o.dungeon.typicalLevels.max),
     );
     if (row === -1) {
+      if (rows.length >= maxRows) {
+        hidden++;
+        continue;
+      }
       row = rows.length;
       rows.push([]);
     }
     rows[row]!.push(band);
-    return { band, best: band === best, row, from: levelPosition(min), to: levelPosition(max) };
-  });
-  // Top to bottom, left to right: the reading order of the list for screen readers.
-  return placed.sort((a, b) => a.row - b.row || a.from - b.from);
+    shown.push({ band, best: band === spread.best, row, from: levelPosition(min), to: levelPosition(max) });
+  }
+  return { shown: shown.sort((a, b) => a.row - b.row || a.from - b.from), hidden };
 }

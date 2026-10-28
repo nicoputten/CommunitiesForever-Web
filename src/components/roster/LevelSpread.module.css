@@ -104,15 +104,24 @@
   text-align: center;
 }
 
-/* Above the track, centred on the dot and kept inside the track at its ends. */
+/*
+ * Above the track, centred on the dot and kept inside the track at its ends; below it when there is no room above
+ * (WEB-45, finding 14). As wide as its longest line, one line per character: `--tip-width` is measured when shown.
+ */
 .tip {
   position: absolute;
   z-index: 2;
   bottom: calc(100% - var(--spread-line-top) + var(--size-dot-group) / 2 + var(--s-1));
-  left: clamp(0px, calc(var(--pos) - var(--size-tooltip) / 2), calc(100% - var(--size-tooltip)));
+  left: clamp(
+    0px,
+    calc(var(--pos) - var(--tip-width, var(--size-tooltip)) / 2),
+    calc(100% - var(--tip-width, var(--size-tooltip)))
+  );
   display: flex;
   flex-direction: column;
-  width: min(var(--size-tooltip), 100%);
+  width: max-content;
+  min-width: min(var(--size-tooltip), 100%);
+  max-width: 100%;
   padding: var(--s-2-5) var(--s-3);
   border-radius: var(--r-btn);
   background: var(--surface-tooltip);
@@ -126,6 +135,15 @@
 
 .tip[hidden] {
   display: none;
+}
+
+.tip[data-below] {
+  top: calc(var(--spread-line-top) + var(--size-dot-group) / 2 + var(--s-1));
+  bottom: auto;
+}
+
+.tipLine {
+  white-space: nowrap;
 }
 
 .owner {
