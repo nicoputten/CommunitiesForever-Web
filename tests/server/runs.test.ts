@@ -380,6 +380,7 @@ describe("the bot's run post data (BOT-04)", () => {
     expect(status).toBe(200);
     // Bob is in London; NOW is Thu 19 Nov 2026 20:00 UTC.
     expect(body.timeZone).toBe("Europe/London");
+    expect(body.admin).toBe(false);
     expect(body.days).toHaveLength(7);
     expect(body.days[1]).toEqual({ offset: 1, label: "Fri 20", date: "2026-11-20" });
     const byId = Object.fromEntries(body.dungeons.map((d: Json) => [d.id, d]));

@@ -150,13 +150,15 @@ export function refusal(code: string): Response {
 const LEAD_ORDER = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 } as const;
 
 /**
- * `/plan`'s choices for a friend (BOT-04): their time zone, today and the next six days in it (`dayOffset`), and per
+ * `/plan`'s choices for a friend (BOT-04): their time zone, whether they are the admin (`/run` lists every run for
+ * them), today and the next six days in it (`dayOffset`), and per
  * dungeon the character they would lead as (none when none of theirs may say I'm in).
  */
 export function planChoices(db: Db, friend: BotFriend, now: number) {
   const characters = charactersOf(loadState(db)?.data, friend.battleTag);
   return {
     timeZone: friend.timeZone,
+    admin: friend.isAdmin,
     days: nextDays(now, friend.timeZone, DAY_CHOICES).map((d, offset) => ({ offset, label: d.label, date: d.date })),
     dungeons: RUNNABLE_DUNGEONS.map((d) => {
       const { min, max } = d.typicalLevels;

@@ -224,7 +224,7 @@ For `/plan`, `/runs`, the answer buttons ("Pick my character") and `/run` (edit,
 | Request | Body / query | Answer |
 |---|---|---|
 | `GET /api/bot/v1/dungeons` | | `{ dungeons: [{ id, name, shortName, typicalLevels }] }`: Scarlet Monastery as its four wings |
-| `GET /api/bot/v1/plan?discordUserId=` | | BOT-04, `/plan`: `{ timeZone, days: [{ offset, label, date }], dungeons: [{ id, name, typicalLevels, lead }] }`. `days`: today and the next six in the user's own calendar (`label` "Today · Thu 19", "Fri 20"; send `offset` as `dayOffset`). `lead`: the character they would lead as (`guid`, `name`, `level`, `classFile`, `role`, `fit`; the best fit first, then the highest level), `null` when none of theirs may say I'm in |
+| `GET /api/bot/v1/plan?discordUserId=` | | BOT-04, `/plan`: `{ timeZone, admin, days: [{ offset, label, date }], dungeons: [{ id, name, typicalLevels, lead }] }`. `admin`: whether they are the admin (`/run edit` and `/run cancel` list every run for them). `days`: today and the next six in the user's own calendar (`label` "Today · Thu 19", "Fri 20"; send `offset` as `dayOffset`). `lead`: the character they would lead as (`guid`, `name`, `level`, `classFile`, `role`, `fit`; the best fit first, then the highest level), `null` when none of theirs may say I'm in |
 | `GET /api/bot/v1/runs` | | `{ runs: [run] }`: upcoming (not cancelled, not past), by start |
 | `GET /api/bot/v1/runs/<id>` | | `{ run }` |
 | `POST /api/bot/v1/runs` | `discordUserId`, `dungeonId`, `startsAt`, or `date` (`"2026-10-27"`) and `time` (`"20:30"`) in the user's own time zone, or `dayOffset` (`0` today … `6`, the user's own calendar; BOT-04) and `time`, `note` (optional, ≤ 200), `leadGuid` (optional: their character to lead as) | `201 { run }` |
