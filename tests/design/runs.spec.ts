@@ -159,7 +159,7 @@ test("run detail v2: the ⋯ menu open", async ({ page }) => {
 });
 
 test.describe("a friend", () => {
-  test.beforeEach(async ({ context, baseURL }) => signInAs(context, baseURL!, "Jorrit#4410"));
+  test.beforeEach(async ({ context, baseURL }) => signInAs(context, baseURL!, "Femke#3307"));
 
   test("run detail v2: the picker", async ({ page }) => {
     await openScreen(page, await armory(page));
