@@ -221,15 +221,22 @@
   color: var(--gold-pale);
 }
 
-/* The label that fits (measured in the browser, DungeonBands): the full name, the short name, or neither. */
+/* The label that fits (measured in the browser, DungeonBands): the full name, the short name, the short name cut
+   (WEB-54), or the cut name without the range. */
 .bandShort,
+.bandCut,
 .band[data-fit="short"] .bandFull,
-.band[data-fit="count"] .bandFull,
-.band[data-fit="count"] .bandShort {
+.band[data-fit="cut"] .bandFull,
+.band[data-fit="cut"] .bandShort,
+.band[data-fit="bare"] .bandFull,
+.band[data-fit="bare"] .bandShort,
+.band[data-fit="bare"] .bandRange {
   display: none;
 }
 
-.band[data-fit="short"] .bandShort {
+.band[data-fit="short"] .bandShort,
+.band[data-fit="cut"] .bandCut,
+.band[data-fit="bare"] .bandCut {
   display: inline;
 }
 
@@ -429,12 +436,16 @@
     white-space: normal;
   }
 
-  /* A list item is wide enough: always the full name. */
-  .band .bandFull {
+  /* A list item is wide enough: always the full name and range, whatever was measured. */
+  .band .bandFull,
+  .band[data-fit] .bandFull,
+  .band[data-fit] .bandRange {
     display: inline;
   }
 
-  .band .bandShort {
+  .band .bandShort,
+  .band[data-fit] .bandShort,
+  .band[data-fit] .bandCut {
     display: none;
   }
 

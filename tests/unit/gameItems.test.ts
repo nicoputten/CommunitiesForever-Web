@@ -71,6 +71,21 @@ describe("the game's items", () => {
     ]);
   });
 
+  it("reads a carried ask's asker and an in-game answer to an ask (WEB-53, addon CF-51)", () => {
+    const items = readGameItems(
+      file(`{
+        { id = "k-ada-1", kind = "ask", at = 20, dungeon = "dm", guid = "Player-1-0000A001", battleTag = "Ada#1001" },
+        { id = "b-1", kind = "askAnswer", at = 21, ask = "k-ada-1", answer = "in", guid = "Player-1-0000B001", role = "heal" },
+        { id = "b-2", kind = "askAnswer", at = 22, ask = "k-ada-1", answer = "soon" },
+        { id = "b-3", kind = "askAnswer", at = 23, answer = "in" },
+      }`),
+    );
+    expect(items).toEqual([
+      { id: "k-ada-1", at: 20, kind: "ask", dungeon: "dm", guid: "Player-1-0000A001", battleTag: "Ada#1001" },
+      { id: "b-1", at: 21, kind: "askAnswer", ask: "k-ada-1", answer: "in", guid: "Player-1-0000B001", role: "heal" },
+    ]);
+  });
+
   it("knows the site's runs and the addon's dungeons", () => {
     expect([siteRunId("r-102"), siteRunId("r-x"), siteRunId("102")]).toEqual([102, undefined, undefined]);
     expect(["smarm", "ubrs", "lbrs", "lfg1984", "lfg9999"].map((id) => runDungeonByAddonId(id)?.id)).toEqual([

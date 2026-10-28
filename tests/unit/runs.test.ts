@@ -99,9 +99,10 @@ describe("slots and answers", () => {
   it("refuses I'm in without a character or out of range; Maybe and Can't always go", () => {
     const tryAnswer = (input: Parameters<typeof giveAnswer>[2], at = NOW) => giveAnswer(run, [], input, at, levelOf);
     expect(tryAnswer({ battleTag: "Jorrit#4410", answer: "in", source: "website" })).toBe("no_character");
+    // 7 below may say I'm in too (WEB-52, "recommend, never restrict").
     expect(
       tryAnswer({ battleTag: "Femke#3307", answer: "in", source: "discord", character: { guid: "ZUL", level: 25 } }),
-    ).toBe("out_of_range");
+    ).toMatchObject({ stored: { answer: "in" } });
     // 5 below may still join ("tough").
     const low = tryAnswer({
       battleTag: "Jorrit#4410",
@@ -148,17 +149,17 @@ describe("slots and answers", () => {
     expect(again.movedUp?.battleTag).toBe("Kai#5005");
   });
 
-  it("a Maybe out of range is skipped; a role that wasn't full pulls nobody in", () => {
+  it("the first Maybe moves up whatever the level (WEB-52); a role that wasn't full pulls nobody in", () => {
     let a: RunAnswer[] = [];
     a = answer(a, "Nico#2201", "in", "VES").answers;
     a = answer(a, "Bob#2002", "in", "BOB").answers;
-    a = answer(a, "Jorrit#4410", "maybe", "ZUL").answers; // 25: 7 below 32, Maybe only
+    a = answer(a, "Jorrit#4410", "maybe", "ZUL").answers; // 25: 7 below 32, may still join (WEB-52)
     a = answer(a, "Kai#5005", "maybe", "KEL").answers;
     // Damage has 2 of 3: Bob leaving pulls nobody in.
     expect(answer(a, "Bob#2002", "cant").movedUp).toBeUndefined();
     a = answer(a, "Mira#1188", "in", "MIRA").answers; // now full
     const drop = answer(a, "Mira#1188", "maybe", "MIRA");
-    expect(drop.movedUp?.battleTag).toBe("Kai#5005");
+    expect(drop.movedUp?.battleTag).toBe("Jorrit#4410");
   });
 
   it("is full when all five slots are taken, started at start, past 2 hours after", () => {
@@ -293,8 +294,10 @@ describe("level fit and class roles (WEB-47)", () => {
     expect(at(52)).toEqual(["carry", "carry · +10", true, false]);
     expect(at(31)).toEqual(["low", "1 below", true, false]);
     expect(at(27)).toEqual(["low", "5 below", true, false]);
-    expect(at(26)).toEqual(["tooLow", "6 below", false, false]);
-    expect(at(undefined)).toEqual(["tooLow", "level unknown", false, false]);
+    // Every level may be picked (WEB-52); 6+ below is never suggested and gets the "tough" note.
+    expect(at(26)).toEqual(["tooLow", "6 below", true, false]);
+    expect(at(undefined)).toEqual(["tooLow", "level unknown", true, false]);
+    expect(levelFit(20, 32, 42).note).toBe("This will be tough.");
     expect(levelFit(55, 32, 42).note).toBe("Little XP for you here.");
     expect(levelFit(30, 32, 42).note).toBe("This will be tough.");
   });
@@ -333,7 +336,8 @@ describe("planning and rights", () => {
     expect(planRun({ ...plan, startsAt: NOW }, NOW)).toBe("time_passed");
     expect(planRun({ ...plan, note: "x".repeat(201) }, NOW)).toBe("note_too_long");
     expect(planRun({ ...plan, lead: { ...lead, owner: "Bob#2002" } }, NOW)).toBe("lead_not_yours");
-    expect(planRun({ ...plan, lead: { ...lead, level: 24 } }, NOW)).toBe("lead_out_of_range");
+    // 8 below may lead (WEB-52).
+    expect(planRun({ ...plan, lead: { ...lead, level: 24 } }, NOW)).toMatchObject({ answers: [{ answer: "in" }] });
     expect(planRun({ ...plan, lead: { ...lead, classFile: "WARLOCK", slot: "tank" } }, NOW)).toBe("role_not_for_class");
   });
 

@@ -166,21 +166,26 @@ describe("runs through the bot", () => {
     expect((await json(res)).body.error).toBe("lead_not_yours");
   });
 
-  it("Pick my character lists the friend's characters in range", async () => {
+  it("Pick my character lists every character of the friend, with how it fits (WEB-52)", async () => {
     const pick = async (id: string) =>
       (
         await json(
           await charactersRoute(req(`/api/bot/v1/runs/${runId}/characters?discordUserId=${id}`), params(runId)),
         )
       ).body;
-    expect((await pick(IDS.nico)).characters.map((c: { name: string }) => c.name)).toEqual(["Ves Doombringer"]);
+    // Every character may answer I'm in (WEB-52, "recommend, never restrict"): Grom and Sela are far below.
+    expect((await pick(IDS.nico)).characters.map((c: { name: string; fit: string }) => [c.name, c.fit])).toEqual([
+      ["Ves Doombringer", "fits"],
+      ["Grom Ashfeller", "8 below"],
+      ["Sela Moonbrook", "20 below"],
+    ]);
     // Ruk (27) is 5 below the Armory: he may still join (WEB-47 levelFit), with how he fits.
     expect((await pick(IDS.jorrit)).characters).toMatchObject([
       { name: "Ruk Bloodhoof", fit: "5 below", roles: ["damage"] },
     ]);
   });
 
-  it("answers fill slots from roles; out of range only Maybe; not someone else's character", async () => {
+  it("answers fill slots from roles; any level may say I'm in; not someone else's character", async () => {
     const answer = async (id: string, a: string, guid?: string) =>
       json(
         await answerRoute(
@@ -194,8 +199,9 @@ describe("runs through the bot", () => {
       reserve: false,
       waitlisted: false,
     });
-    // Zul Kazrek (15) is 17 below the Armory: Maybe only (WEB-47 levelFit). Femke's answer stays.
-    expect((await answer(IDS.femke, "in", "Player-1-0000E002")).body.error).toBe("out_of_range");
+    // Zul Kazrek (15) is 17 below the Armory: still I'm in (WEB-52); it replaces Femke's answer, then Lia again.
+    expect((await answer(IDS.femke, "in", "Player-1-0000E002")).body.stored.answer).toBe("in");
+    expect((await answer(IDS.femke, "in", LIA)).body.stored.answer).toBe("in");
     expect((await answer(IDS.jorrit, "maybe", RUK)).body.stored.answer).toBe("maybe");
     expect((await answer(IDS.nico, "in", BOB)).body.error).toBe("not_your_character");
     expect((await answer(IDS.nico, "in")).body.error).toBe("no_character");
@@ -433,7 +439,8 @@ describe("the bot's run post data (BOT-04)", () => {
     const byId = Object.fromEntries(body.dungeons.map((d: Json) => [d.id, d]));
     // The Armory (32–42): Bob Example 41 fits before Tok Ironhide 33.
     expect(byId["sm-armory"].lead).toMatchObject({ guid: BOB, name: "Bob Example", level: 41, fit: { kind: "fits" } });
-    expect(byId["scholo"].lead).toBeNull();
+    // Scholomance (58–60): nobody of Bob's fits, yet he may lead (WEB-52) with his best, far below.
+    expect(byId["scholo"].lead).toMatchObject({ name: "Bob Example", fit: { kind: "tooLow" } });
     expect(JSON.stringify(body)).not.toContain("#");
     expect((await planChoicesRoute(req("/api/bot/v1/plan?discordUserId=100000000000000099"))).status).toBe(403);
   });

@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { battleTagKey, sameBattleTag } from "@/core/access";
 import type { FeedDay } from "@/core/feed";
 import { ASK_EXPIRE_SECONDS, siteRunId, type GameItem, type GameRole } from "@/core/gameItems";
@@ -6,9 +6,11 @@ import { OUTCOME_SECONDS, ranIt } from "@/core/runOutcome";
 import { runDungeon, runDungeonByAddonId, type SlotRole } from "@/core/runs";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
-import { feedDays, gameItems, runs } from "./db/schema";
+import type { Dataset } from "@/core/model";
+import { feedDays, gameItemCarriers, gameItems, runs } from "./db/schema";
 import { getBotSettings } from "./discord";
 import {
+  answerAskFor,
   answerRunFor,
   askFor,
   discordIds,
@@ -23,7 +25,10 @@ import { loadState } from "./uploads";
 
 // What the game sent with an upload (WEB-43): the uploader's runs planned, answers given, asks to post on Discord and
 // Discord pings, each applied once (by its id, so a file uploaded twice changes nothing); and after every upload,
-// whether a planned run happened, from the stored run log. Called after the upload's transaction.
+// whether a planned run happened, from the stored run log. Called after the upload's transaction. WEB-53: an ask
+// of another community member carried in the file is theirs (once, by the asker's item id; each carrier is kept),
+// and an in-game answer to an ask (`askAnswer`) answers it as a Discord answer would. Plans, answers and pings are
+// only taken as the uploader's own.
 
 /** The addon's role (tank | heal | dps) as a group slot (WEB-47); undefined when the game sent none. */
 function slotFromGame(role: GameRole | undefined): SlotRole | undefined {
@@ -58,14 +63,26 @@ export function applyGameItems(
       .all()
       .map((r) => r.id),
   );
+  const data = loadState(db)?.data;
   for (const item of items) {
+    // A friend's ask in this file (WEB-53): the asker's, carried by the uploader.
+    const asker = item.kind === "ask" ? askerOf(data, item, battleTag) : battleTag;
+    const carried = asker === undefined || !sameBattleTag(asker, battleTag);
+    if (carried) {
+      db.insert(gameItemCarriers)
+        .values({ id: item.id, battleTag, uploadId, receivedAt: now })
+        .onConflictDoNothing()
+        .run();
+    }
     if (known.has(item.id)) continue;
-    const { outcome, runId } = apply(db, battleTag, item, now);
+    known.add(item.id);
+    const { outcome, runId } =
+      asker === undefined ? { outcome: "not_member", runId: undefined } : apply(db, asker, item, now);
     if (item.kind === "answer" && outcome === "applied") result.runAnswers++;
     db.insert(gameItems)
       .values({
         id: item.id,
-        battleTag,
+        battleTag: asker ?? battleTag,
         kind: item.kind,
         at: item.at,
         receivedAt: now,
@@ -77,6 +94,26 @@ export function applyGameItems(
       .run();
   }
   return result;
+}
+
+/**
+ * Whose ask an `ask` item is (WEB-53): the owner of its character, else the person its `battleTag` names, else the
+ * uploader's own (files from before CF-51 name no one). Undefined: a friend the community's data doesn't know.
+ */
+function askerOf(
+  data: Dataset | undefined,
+  item: Extract<GameItem, { kind: "ask" }>,
+  uploader: string,
+): string | undefined {
+  if (item.guid !== undefined) {
+    const owner = runCharacter(data, item.guid)?.owner;
+    if (owner !== undefined && owner !== "") return owner;
+  }
+  if (item.battleTag !== undefined && !sameBattleTag(item.battleTag, uploader)) {
+    const person = Object.values(data?.people ?? {}).find((p) => sameBattleTag(p.battleTag ?? p.key, item.battleTag!));
+    return person === undefined ? undefined : (person.battleTag ?? person.key);
+  }
+  return uploader;
 }
 
 function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcome: string; runId?: number } {
@@ -145,6 +182,23 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
       }
       return typeof asked === "string" ? { outcome: asked } : { outcome: "applied", runId: asked.id };
     }
+    case "askAnswer": {
+      // The ask by its item id (WEB-53): answered as from Discord, but with source "game".
+      const ask = db.select().from(gameItems).where(eq(gameItems.id, item.ask)).get();
+      if (ask === undefined || ask.kind !== "ask" || ask.runId === null) return { outcome: "unknown_ask" };
+      const request = {
+        battleTag,
+        answer: item.answer,
+        source: "game" as const,
+        ...(item.guid === undefined ? {} : { guid: item.guid }),
+      };
+      const role = slotFromGame(item.role);
+      let answered = answerAskFor(db, ask.runId, { ...request, ...(role === undefined ? {} : { role }) }, now);
+      if (answered === "role_not_for_class") answered = answerAskFor(db, ask.runId, request, now);
+      return typeof answered === "string"
+        ? { outcome: answered, runId: ask.runId }
+        : { outcome: "applied", runId: ask.runId };
+    }
     case "ping": {
       const runId = siteRunId(item.run);
       const run = runId === undefined ? undefined : getRun(db, runId);
@@ -176,12 +230,21 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
 
 /** The ids of a player's items the site has, newest first, for the game to forget (`received`, at most 200). */
 export function receivedIds(db: Db, battleTag: string, limit = 200): string[] {
-  return db
-    .select({ id: gameItems.id, battleTag: gameItems.battleTag })
+  const own = db
+    .select({ id: gameItems.id, battleTag: gameItems.battleTag, receivedAt: gameItems.receivedAt })
     .from(gameItems)
-    .orderBy(desc(gameItems.receivedAt), desc(gameItems.at))
     .all()
-    .filter((r) => sameBattleTag(r.battleTag, battleTag))
+    .filter((r) => sameBattleTag(r.battleTag, battleTag));
+  // WEB-53: friends' asks this player carried, so their game forgets them too.
+  const carried = db
+    .select({ id: gameItemCarriers.id, battleTag: gameItemCarriers.battleTag, receivedAt: gameItemCarriers.receivedAt })
+    .from(gameItemCarriers)
+    .all()
+    .filter((r) => sameBattleTag(r.battleTag, battleTag));
+  const seen = new Set<string>();
+  return [...own, ...carried]
+    .sort((a, b) => b.receivedAt - a.receivedAt)
+    .filter((r) => !seen.has(r.id) && seen.add(r.id))
     .slice(0, limit)
     .map((r) => r.id);
 }

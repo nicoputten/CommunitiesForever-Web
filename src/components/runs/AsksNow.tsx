@@ -188,7 +188,7 @@ function AskCard({ ask, left }: { ask: AskCardView; left: number }) {
               <button
                 type="button"
                 className={styles.in}
-                disabled={busy || ask.noneFit !== undefined || ask.pick === undefined}
+                disabled={busy || ask.pick === undefined}
                 onClick={() => void send("in")}
               >
                 I&apos;m in
@@ -201,7 +201,7 @@ function AskCard({ ask, left }: { ask: AskCardView; left: number }) {
               </button>
             </div>
             {ask.noneFit !== undefined ? (
-              <p className={styles.noneFit}>{ask.noneFit} Maybe or Can&apos;t still go.</p>
+              <p className={styles.noneFit}>{ask.noneFit} You can still say I&apos;m in; it will be tough.</p>
             ) : (
               pick !== undefined && (
                 <p className={styles.as}>

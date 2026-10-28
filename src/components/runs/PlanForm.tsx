@@ -65,9 +65,9 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
   const startsAt = zonedToUtc(day, time, page.timeZone);
   const passed = startsAt !== undefined && startsAt <= now;
   const leadChars = leadsFor(dungeonId);
-  const noneFits = dungeon !== undefined && leadChars.every((c) => c.onlyMaybe);
+  // Advice only (WEB-52, "recommend, never restrict"): every character may lead.
+  const noneFits = dungeon !== undefined && leadChars.length > 0 && leadChars.every((c) => c.fit.kind === "tooLow");
   const chosen = leadChars.find((c) => c.guid === lead?.guid);
-  // A character too low to lead leaves the organiser without a slot (the server refuses it as lead).
   const chosenLead = chosen !== undefined && !chosen.onlyMaybe ? chosen : undefined;
   const zones = new Map<string, string[]>();
   if (startsAt !== undefined) {
@@ -125,8 +125,7 @@ export function PlanForm({ page, action, edit, postsTo }: PlanFormProps) {
             <input type="hidden" name="leadRole" value={chosenLead === undefined ? "" : (lead?.role ?? "")} />
             {noneFits && (
               <p className={styles.warn}>
-                None of your characters fit {dungeon.name} ({range}). You can still plan it; you&apos;re listed as
-                organiser without a slot.
+                None of your characters fit {dungeon.name} ({range}). You can still lead with one; it will be tough.
               </p>
             )}
           </fieldset>

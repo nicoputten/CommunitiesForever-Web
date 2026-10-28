@@ -3,12 +3,14 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { sameBattleTag } from "@/core/access";
+import type { GameItem } from "@/core/gameItems";
 import { summaryLine } from "@/core/views/upload";
 import { pendingEvents } from "@/server/bot";
 import { openDatabase, type Db } from "@/server/db";
-import { gameItems, runs } from "@/server/db/schema";
-import { markRanIt, receivedIds } from "@/server/gameItems";
-import { answerRunFor, getRun, listRuns, markDidntHappen, planRunFor } from "@/server/runs";
+import { gameItemCarriers, gameItems, runs } from "@/server/db/schema";
+import { applyGameItems, markRanIt, receivedIds } from "@/server/gameItems";
+import { answerRunFor, getRun, listRuns, markDidntHappen, openAsks, planRunFor } from "@/server/runs";
 import { getUpload, rebuild, upload } from "@/server/uploads";
 import { ADMIN, NOW, sampleSavedVariables } from "../design/sample";
 
@@ -180,5 +182,92 @@ describe("how runs ended", () => {
     expect(getRun(db, id)!.outcome).toEqual({ kind: "didntHappen", at: NOW + 5 * HOUR });
     expect(pendingEvents(db, before, NOW).map((e) => e.type)).toContain("runEnded");
     expect(markDidntHappen(db, NOW + 6 * HOUR)).toBe(0);
+  });
+});
+
+describe("carried asks and in-game answers (WEB-53)", () => {
+  const ask = (over: Partial<Extract<GameItem, { kind: "ask" }>> = {}): GameItem => ({
+    id: "k-nico-1",
+    at: NOW - 60,
+    kind: "ask",
+    dungeon: "dm",
+    guid: VES,
+    role: "dps",
+    note: "Quick",
+    ...over,
+  });
+  const askEvents = (after: number) => pendingEvents(db, after, NOW).filter((e) => e.type === "askNow");
+
+  it("takes a friend's ask from any carrier once; every carrier gets it back in received", () => {
+    const before = pendingEvents(db, 0, NOW).at(-1)?.id ?? 0;
+    for (const carrier of ["Bob#2002", "Femke#3307", "Jorrit#4410", "Mira#1188"]) {
+      applyGameItems(db, 1, carrier, [ask()], NOW);
+    }
+    const asks = openAsks(db, NOW);
+    expect(asks).toHaveLength(1);
+    // The asker's ask: Nico's (Ves is his), not the first carrier's.
+    expect(asks[0]).toMatchObject({ organiser: ADMIN, source: "game", dungeonId: "dm", note: "Quick" });
+    expect(askEvents(before)).toHaveLength(1);
+    for (const carrier of ["Bob#2002", "Femke#3307", "Jorrit#4410", "Mira#1188"]) {
+      expect(receivedIds(db, carrier)).toContain("k-nico-1");
+    }
+    // The asker's own file later: nothing new; the asker forgets it too.
+    applyGameItems(db, 2, ADMIN, [ask()], NOW + 30);
+    expect(openAsks(db, NOW + 30)).toHaveLength(1);
+    expect(receivedIds(db, ADMIN)).toContain("k-nico-1");
+    const audit = db.select().from(gameItemCarriers).where(eq(gameItemCarriers.id, "k-nico-1")).all();
+    expect(audit.map((r) => r.battleTag).sort()).toEqual(["Bob#2002", "Femke#3307", "Jorrit#4410", "Mira#1188"]);
+  });
+
+  it("drops an expired carried ask and one from someone outside the community", () => {
+    applyGameItems(db, 1, "Bob#2002", [ask({ id: "k-old", at: NOW - 11 * 60 })], NOW);
+    applyGameItems(
+      db,
+      1,
+      "Bob#2002",
+      [ask({ id: "k-stranger", guid: "Player-1-0000F999", battleTag: "Stranger#9999" })],
+      NOW,
+    );
+    expect(openAsks(db, NOW)).toHaveLength(0);
+    const results = Object.fromEntries(
+      db
+        .select()
+        .from(gameItems)
+        .all()
+        .map((r) => [r.id, r.result]),
+    );
+    expect(results).toMatchObject({ "k-old": "expired", "k-stranger": "not_member" });
+    expect(receivedIds(db, "Bob#2002")).toEqual(expect.arrayContaining(["k-old", "k-stranger"]));
+  });
+
+  it("answers an ask from the answerer's own file; an unknown ask is logged and ignored", () => {
+    applyGameItems(db, 1, "Femke#3307", [ask()], NOW);
+    const answer: GameItem = {
+      id: "k-bob-1",
+      at: NOW + 20,
+      kind: "askAnswer",
+      ask: "k-nico-1",
+      answer: "in",
+      guid: BOB,
+    };
+    const unknown: GameItem = { id: "k-bob-2", at: NOW + 20, kind: "askAnswer", ask: "k-none", answer: "maybe" };
+    applyGameItems(db, 2, "Bob#2002", [answer, unknown], NOW + 30);
+    const [stored] = openAsks(db, NOW + 30);
+    expect(stored!.answers.find((a) => sameBattleTag(a.battleTag, "Bob#2002"))).toMatchObject({
+      answer: "in",
+      guid: BOB,
+      source: "game",
+    });
+    const results = Object.fromEntries(
+      db
+        .select()
+        .from(gameItems)
+        .all()
+        .map((r) => [r.id, r.result]),
+    );
+    expect(results).toMatchObject({ "k-bob-1": "applied", "k-bob-2": "unknown_ask" });
+    // After its 10 minutes the answer is refused.
+    applyGameItems(db, 3, "Bob#2002", [{ ...answer, id: "k-bob-3", answer: "cant" }], NOW + 11 * 60);
+    expect(db.select().from(gameItems).where(eq(gameItems.id, "k-bob-3")).get()?.result).toBe("expired");
   });
 });
