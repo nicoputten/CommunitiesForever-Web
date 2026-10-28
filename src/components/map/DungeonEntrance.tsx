@@ -8,6 +8,8 @@ import sheetStyles from "./CharacterSheet.module.css";
 import styles from "./DungeonEntrance.module.css";
 
 const planned = (n: number) => `${n} planned`;
+/** Room the popover keeps from the map frame's edges and the top bar over it (px). */
+const EDGE = 8;
 
 /**
  * A dungeon entrance on the map (WEB-42): its name at zone zoom, a badge with the planned runs (with runs planned, the
@@ -29,6 +31,8 @@ export function DungeonEntrance({
 }) {
   const button = useRef<HTMLButtonElement>(null);
   const anchor = useRef<HTMLSpanElement>(null);
+  /** Opened from the keyboard (Enter or Space): focus moves into the popover; a click leaves it on the entrance. */
+  const byKeyboard = useRef(false);
   // Away from the map frame's edges it is near, as the hover card (MapStage placeCard): the map may be zoomed and
   // panned, so measured.
   useLayoutEffect(() => {
@@ -41,6 +45,16 @@ export function DungeonEntrance({
     const fy = (at.top - f.top) / f.height;
     a.dataset.side = fx > 0.62 ? "left" : "right";
     a.dataset.v = fy > 0.7 ? "up" : fy < 0.25 ? "down" : "mid";
+    // Then whatever still sticks out (under the top bar, which lies over the map) is moved back in.
+    const pop = a.firstElementChild;
+    if (pop === null) return;
+    a.style.setProperty("--pop-shift", "0px");
+    const r = pop.getBoundingClientRect();
+    const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+    const top = Math.max(f.top, bar) + EDGE;
+    const bottom = Math.min(f.bottom, window.innerHeight) - EDGE;
+    const shift = r.top < top ? top - r.top : r.bottom > bottom ? Math.max(bottom - r.bottom, top - r.top) : 0;
+    a.style.setProperty("--pop-shift", `${shift}px`);
   }, [open]);
   const icon = (
     <span className={styles.icon}>
@@ -76,7 +90,10 @@ export function DungeonEntrance({
         className={styles.button}
         aria-expanded={open}
         aria-label={d.planned > 0 ? `${d.name}, ${planned(d.planned)}` : d.name}
-        onClick={() => onToggle(open ? undefined : d.name)}
+        onClick={(e) => {
+          byKeyboard.current = e.detail === 0;
+          onToggle(open ? undefined : d.name);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Escape" && open) {
             e.stopPropagation();
@@ -91,7 +108,7 @@ export function DungeonEntrance({
       </span>
       {open && !inSheet && (
         <span ref={anchor} className={styles.anchor}>
-          <DungeonPopover dungeon={d} onClose={close} />
+          <DungeonPopover dungeon={d} onClose={close} focusFirst={byKeyboard.current} />
         </span>
       )}
     </span>
@@ -103,15 +120,18 @@ export function DungeonPopover({
   dungeon: d,
   onClose,
   variant = "popover",
+  focusFirst = false,
 }: {
   dungeon: MapDungeon;
   onClose: () => void;
   variant?: "popover" | "sheet";
+  /** Moves focus to the first link (opened from the keyboard). */
+  focusFirst?: boolean;
 }) {
   const root = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (variant === "popover") root.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
-  }, [variant]);
+    if (focusFirst) root.current?.querySelector<HTMLElement>("a")?.focus({ preventScroll: true });
+  }, [focusFirst]);
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key !== "Escape") return;
     e.stopPropagation();

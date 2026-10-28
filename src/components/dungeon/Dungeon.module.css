@@ -29,7 +29,10 @@
 
 /* --- hero ----------------------------------------------------------------------------------------------------------- */
 
+/* The map is centred on the entrance at (--entrance-x, --entrance-y): on desktop right of the text, on a phone in a
+   strip above it. */
 .hero {
+  --entrance-x: 65%;
   --entrance-y: 35%;
   position: relative;
   display: flex;
@@ -49,7 +52,7 @@
 /* The map keeps its shape, at least as wide as the hero, centred on the entrance at --entrance-y. */
 .heroSvg {
   position: absolute;
-  left: 50%;
+  left: var(--entrance-x);
   top: var(--entrance-y);
   width: max(100%, calc(var(--size-dungeon-hero) * 1.6));
   height: auto;
@@ -59,7 +62,7 @@
 
 .entrance {
   position: absolute;
-  left: 50%;
+  left: var(--entrance-x);
   top: var(--entrance-y);
   transform: translate(-50%, -50%);
 }
@@ -175,8 +178,13 @@
 
 /* Phone: the wings scroll sideways in one row, Plan a run takes the full width. */
 @media (max-width: 767px) {
+  .hero {
+    --entrance-x: 50%;
+    --entrance-y: calc(var(--size-dungeon-hero) / 4);
+  }
+
   .heroBody {
-    padding: var(--s-5) var(--s-4);
+    padding: calc(var(--size-dungeon-hero) / 2) var(--s-4) var(--s-5);
   }
 
   .title {

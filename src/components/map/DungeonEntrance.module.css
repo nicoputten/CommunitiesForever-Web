@@ -157,6 +157,7 @@
   left: 0;
   top: 0;
   transform: translateY(-50%);
+  translate: 0 var(--pop-shift, 0);
   width: var(--size-card-map);
   display: flex;
   flex-direction: column;
