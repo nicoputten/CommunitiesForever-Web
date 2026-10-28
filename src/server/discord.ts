@@ -12,7 +12,8 @@ import {
   isTimeZone,
   resetLabel,
 } from "@/core/discord";
-import { effectiveFrom, effectiveReset, type ResetSetting } from "@/core/doomsday/engine";
+import { effectiveFrom, effectiveReset, nextZoneChange, type ResetSetting, zoneOffset } from "@/core/doomsday/engine";
+import type { UploaderDoomsday } from "@/core/uploaderRuns";
 import { adminBattleTag, listGuests, listMembers } from "./access";
 import type { Db } from "./db";
 import { botSettings, discordLinks, userPrefs } from "./db/schema";
@@ -243,10 +244,18 @@ export function doomsdayResetSetting(s: BotSettings): ResetSetting {
  * The Doomsday reset in force at `now` for the uploader's runs (docs/UPLOADER-API.md "Runs"): a new one only from the
  * reset it takes effect at, with that moment as `changedAt` (0 while it was never changed).
  */
-export function doomsdayResetNow(s: BotSettings, now: number): { reset: number; changedAt: number } {
+export function doomsdayResetNow(s: BotSettings, now: number): UploaderDoomsday {
   const setting = doomsdayResetSetting(s);
   const from = effectiveFrom(setting, s.realmTimeZone);
-  return { reset: effectiveReset(setting, now, s.realmTimeZone), changedAt: from !== 0 && now >= from ? from : 0 };
+  // The realm's offset for the addon (Nico, 2026-10-28: the day boundary is realm time for everyone, also a friend
+  // playing from another zone), with its next daylight saving change.
+  const change = nextZoneChange(s.realmTimeZone, now);
+  return {
+    reset: effectiveReset(setting, now, s.realmTimeZone),
+    changedAt: from !== 0 && now >= from ? from : 0,
+    offset: zoneOffset(s.realmTimeZone, now),
+    ...(change !== undefined ? { offsetUntil: change.at, offsetAfter: change.offset } : {}),
+  };
 }
 
 export function getBotSettings(db: Db | Tx): BotSettings {

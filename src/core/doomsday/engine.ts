@@ -121,6 +121,31 @@ export function zoneOffset(timeZone: string, at: number): number {
   }
 }
 
+/**
+ * The next change of a time zone's UTC offset after `now` (daylight saving), within `horizon` seconds: when, and the
+ * offset after it. Undefined for a zone without one.
+ */
+export function nextZoneChange(
+  timeZone: string,
+  now: number,
+  horizon = 400 * 86400,
+): { at: number; offset: number } | undefined {
+  const start = zoneOffset(timeZone, now);
+  // Daily steps find the day, then a binary search finds the second.
+  for (let t = now + 86400; t <= now + horizon; t += 86400) {
+    if (zoneOffset(timeZone, t) === start) continue;
+    let lo = t - 86400;
+    let hi = t;
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2);
+      if (zoneOffset(timeZone, mid) === start) lo = mid;
+      else hi = mid;
+    }
+    return { at: hi, offset: zoneOffset(timeZone, hi) };
+  }
+  return undefined;
+}
+
 /** When a changed reset takes effect: the first reset (under the old time) after the change; 0 when never changed. */
 export function effectiveFrom(setting: ResetSetting, timeZone: string): number {
   if (setting.previous === undefined || setting.changedAt === undefined) return 0;
