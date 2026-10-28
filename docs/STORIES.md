@@ -97,6 +97,7 @@ After WEB-55 and the addon's CF-55 (its golden file).
   
   Where a victim field was unknown or guessed, the view model marks it so that screens can show "≈".
 - Tests: the addon's `tests/fixtures/doomsday-cases.json`, copied with the addon commit it came from, passes unchanged. Plus all-time totals and Elo over more than 7 days, a reset setting change (from the next reset only), and friends without data.
+- **The Discord page, reorganised** as the boards `discord-page`, `discord-page-map`, `discord-page-friend`, `discord-page-states` and `discord-page-phone` show (designed 2026-10-28): one box per kind of post, each with its own switch, channel picker and test button; Runs moves entirely into its box; "Milestones" becomes "Feats"; section shortcuts. `discord-page-map` lists where each of the 20 existing settings went; none may be lost.
 - **Settings** on the Discord page (admin), as the other bot settings:
   - **Doomsday reset** (realm time, default 19:00)
   - **realm time zone** (default `Europe/Paris`)
