@@ -770,4 +770,18 @@
   --card-land-line: rgba(126, 136, 152, 0.45);
   --card-zone: #6b634f; /* cards: the highlighted zone (the references' olive gold) */
   --card-label-bg: rgba(7, 12, 21, 0.75); /* cards: "2 h ago" pills on the map */
+
+  /* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live cards in the fresh green. */
+  --size-ask-edge: 3px; /* the live left edge of an ask */
+  --size-ask-bar: 4px; /* the time-left bar */
+  --ask-bar-track: #1f2837;
+  --size-live-dot: 8px; /* the header's pulsing live dot */
+  --size-live-ring: 10px;
+  --live-ring: rgba(127, 217, 154, 0.55);
+  --answered-tint: rgba(127, 217, 154, 0.08); /* "You answered I'm in with …" */
+  --answered-line: rgba(127, 217, 154, 0.3);
+  --retry-tint: rgba(240, 167, 116, 0.08); /* "Your answer didn't go through." */
+  --retry-line: rgba(240, 167, 116, 0.4);
+  --retry-text: #f6d6bd;
+  --size-ask-note: 300px; /* "None of your characters fit …" */
 }

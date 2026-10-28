@@ -4,7 +4,7 @@ import type { RunsInput } from "@/core/views/runs";
 import { adminBattleTag, loadAccessList } from "./access";
 import type { Db } from "./db";
 import { effectiveTimeZone, getBotSettings } from "./discord";
-import { listRuns, markDidntHappen } from "./runs";
+import { listRuns, markDidntHappen, openAsks } from "./runs";
 import { loadState } from "./uploads";
 
 // The Runs pages' input (WEB-40): the runs, the group's characters and people, and the viewer with their time zone.
@@ -24,6 +24,7 @@ export function runsInput(db: Db, battleTag: string, now: number, admin = adminB
   };
   return {
     runs: listRuns(db),
+    asks: openAsks(db, now),
     characters: data === undefined ? [] : recordCharacters(data, now),
     people: data === undefined ? [] : peopleViews(data, now),
     viewer: { battleTag, isAdmin: mayAdmin(battleTag, loadAccessList(db, admin)), timeZone: timeZoneOf(battleTag) },

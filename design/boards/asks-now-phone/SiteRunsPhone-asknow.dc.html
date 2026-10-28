@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Asking now on phone</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.ask{position:relative;display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:18px;align-items:start;padding:14px 18px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(127,217,154,.35);box-shadow:inset 3px 0 0 #7FD99A}
+.ask.mine{border-color:rgba(212,175,106,.4);box-shadow:inset 3px 0 0 #D4AF6A}
+.ask.last{border-color:rgba(224,138,74,.55);box-shadow:inset 3px 0 0 #E08A4A}
+.cd{display:flex;flex-direction:column;gap:3px}
+.cd span{font-size:11px;color:#8E98A8;text-transform:uppercase;letter-spacing:.1em}
+.cd b{font:24px/1 Marcellus,serif;color:#9BE3B0;font-weight:400}
+.cd.last b{color:#F0A774}
+.bar{height:4px;border-radius:2px;background:#1F2837;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:#7FD99A}
+.cd.last .bar i{background:#E08A4A}
+.an{font-size:13px;color:#AEB6C3;margin-top:6px;line-height:1.5}
+.an b{color:#E6E1D6;font-weight:500}
+.note{font-size:13px;color:#E6E1D6;margin-top:6px}
+.note:before{content:"“";color:#D4AF6A}.note:after{content:"”";color:#D4AF6A}
+.btns{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.btns .row{display:flex;gap:6px}
+.b{min-height:44px;padding:0 14px;border-radius:10px;font:600 13px Inter,sans-serif;border:1px solid rgba(174,182,195,.25);background:transparent;color:#AEB6C3;cursor:pointer}
+.b.in{background:rgba(127,217,154,.16);color:#9BE3B0;border-color:rgba(127,217,154,.5)}
+.b.dis{opacity:.4}
+.as{font-size:12px;color:#8E98A8;display:flex;align-items:center;gap:6px}
+.as a{color:#D4AF6A;text-decoration:none}
+.tag{display:inline-flex;align-items:center;font:600 11px/1 Inter,sans-serif;padding:4px 7px;border-radius:999px;white-space:nowrap}
+.t-fit{background:rgba(127,217,154,.14);color:#9BE3B0}.t-low{background:rgba(240,167,116,.16);color:#F6C29C}.t-carry{background:rgba(212,175,106,.18);color:#F3DFAE}
+.done{display:flex;align-items:center;gap:8px;font-size:13px;color:#9BE3B0;padding:9px 12px;border-radius:10px;background:rgba(127,217,154,.08);border:1px solid rgba(127,217,154,.3)}
+.done a{color:#D4AF6A;text-decoration:none;margin-left:6px}
+.err{display:flex;align-items:center;gap:10px;font-size:12px;color:#F6D6BD;padding:9px 12px;border-radius:10px;background:rgba(240,167,116,.08);border:1px solid rgba(240,167,116,.4)}
+.nofit{font-size:12px;color:#AEB6C3;max-width:300px;text-align:right;line-height:1.45}
+.live{width:8px;height:8px;border-radius:50%;background:#7FD99A;box-shadow:0 0 0 0 rgba(127,217,154,.6);animation:lp 2s ease-out infinite;display:inline-block}
+@keyframes lp{0%{box-shadow:0 0 0 0 rgba(127,217,154,.55)}100%{box-shadow:0 0 0 10px rgba(127,217,154,0)}}
+@media (prefers-reduced-motion: reduce){.live{animation:none}}
+.qa{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.85);border:1px solid rgba(174,182,195,.14)}
+.qa .n{width:28px;height:28px;border-radius:50%;background:#121B2A;border:1px solid rgba(212,175,106,.45);color:#F0D08E;font:600 12px/26px Inter,sans-serif;text-align:center}
+.qa>div>b{display:block;color:#F3EBDA;font-size:14px;font-weight:600;margin-bottom:3px}
+.qa p{margin:0;font-size:13px;color:#AEB6C3;line-height:1.5}
+
+</style>
+</helmet>
+<div style="width: 1720px; box-sizing: border-box; padding: 40px 48px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 26px">
+  <div><h1 style="margin: 0; font: 36px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">Runs on a phone · Asking now</h1>
+  <p style="margin: 6px 0 0; font-size: 14px; color: #8E98A8">375 px. The card is full width; countdown sits top-right, answer buttons span the bottom at 44 px, “change ▾” below them for the character.</p></div>
+  <div style="display: grid; grid-template-columns: repeat(4, max-content); gap: 28px"><div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+      <div style="width: 375px; height: 780px; border-radius: 34px; padding: 10px; background: #02050A; box-shadow: 0 0 0 1px rgba(212,175,106,0.3), 0 30px 60px rgba(0,0,0,0.6); box-sizing: border-box">
+        <div style="width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column">
+          <div style="height: 54px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid rgba(212,175,106,0.15)"><svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="flex: 1; font: 16px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Runs</span><svg width="22" height="22" viewBox="0 0 22 22" stroke="#AEB6C3" stroke-width="1.6" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16"></path></svg></div>
+          <div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px"><h2 class="bt" style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span class="live"></span>Asking now</h2><div class="ask" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">The Deadmines</span><span style="font-size: 13px; color: #8E98A8">17–26</span></div>
+      <div class="rm">Nico asks on <span class="wa">Grom Ashfeller</span> (tank) · <span class="muted">from the game</span></div>
+      <div class="note">Quick run for the Defias quests</div><div class="an"><b>In</b> <span style="white-space: nowrap"><span class="wa">Grom Ashfeller</span> 24 Warrior</span> · <span style="white-space: nowrap"><span class="pa">Kel Dawnhammer</span> 18 Paladin</span> <span class="muted">·</span> <b>Maybe</b> 1 <span class="muted">·</span> <b>Can't</b> 1</div></div><div class="cd" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">7 min</b><div class="bar"><i style="width: 70%"></i></div></div></div>
+          <div style="display: flex; gap: 6px"><button class="b in" style="flex: 1">I'm in</button><button class="b" style="flex: 1">Maybe</button><button class="b" style="flex: 1">Can't</button></div><div class="as" style="justify-content: center">as <span class="wl">Zul Kazrek</span> <span class="tag t-low">2 below</span> <a href="#">change ▾</a></div></div><div class="lab" style="margin-top: 6px">This week</div><div style="padding: 12px 14px; border-radius: 12px; background: rgba(12,18,30,.85); border: 1px solid rgba(212,175,106,.45)"><div style="font-size: 12px; color: #8E98A8">Today · <b style="font: 16px Marcellus, serif; color: #F3EBDA; font-weight: 400">20:30</b></div><div style="font: 16px Marcellus, serif; color: #F3EBDA">Scarlet Monastery: Armory</div><div style="font-size: 12px; color: #9BE3B0">You're in as Lia Thornwhisper · Healer</div></div></div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #AEB6C3">One ask · in place above This week</div>
+    </div><div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+      <div style="width: 375px; height: 780px; border-radius: 34px; padding: 10px; background: #02050A; box-shadow: 0 0 0 1px rgba(212,175,106,0.3), 0 30px 60px rgba(0,0,0,0.6); box-sizing: border-box">
+        <div style="width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column">
+          <div style="height: 54px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid rgba(212,175,106,0.15)"><svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="flex: 1; font: 16px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Runs</span><svg width="22" height="22" viewBox="0 0 22 22" stroke="#AEB6C3" stroke-width="1.6" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16"></path></svg></div>
+          <div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px"><h2 class="bt" style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span class="live"></span>Asking now</h2><div class="ask" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">The Deadmines</span><span style="font-size: 13px; color: #8E98A8">17–26</span></div>
+      <div class="rm">Nico asks on <span class="wa">Grom Ashfeller</span> (tank) · <span class="muted">from the game</span></div>
+      <div class="note">Quick run for the Defias quests</div><div class="an"><b>In</b> <span style="white-space: nowrap"><span class="wa">Grom Ashfeller</span> 24 Warrior</span> · <span style="white-space: nowrap"><span class="pa">Kel Dawnhammer</span> 18 Paladin</span> <span class="muted">·</span> <b>Maybe</b> 1 <span class="muted">·</span> <b>Can't</b> 1</div></div><div class="cd" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">7 min</b><div class="bar"><i style="width: 70%"></i></div></div></div>
+          <div style="display: flex; gap: 6px"><button class="b in" style="flex: 1">I'm in</button><button class="b" style="flex: 1">Maybe</button><button class="b" style="flex: 1">Can't</button></div><div class="as" style="justify-content: center">as <span class="wl">Zul Kazrek</span> <span class="tag t-low">2 below</span> <a href="#">change ▾</a></div></div><div class="ask" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">Scarlet Monastery: Library</span><span style="font-size: 13px; color: #8E98A8">29–39</span></div>
+      <div class="rm">Bob asks on <span class="sh">Tok Ironhide</span> (healer) · <span class="muted">from Discord</span></div>
+      <div class="an"><b>In</b> <span style="white-space: nowrap"><span class="sh">Tok Ironhide</span> 33 Shaman</span> · <span style="white-space: nowrap"><span class="pr">Lia Thornwhisper</span> 37 Priest</span> <span class="muted">·</span> <b>Maybe</b> 0 <span class="muted">·</span> <b>Can't</b> 0</div></div><div class="cd" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">4 min</b><div class="bar"><i style="width: 40%"></i></div></div></div>
+          <div class="done"><span>✓ You answered I'm in with <span class="pr">Lia Thornwhisper</span></span><a href="#" style="margin-left: auto">Change</a></div></div></div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #AEB6C3">Two asks · second already answered</div>
+    </div><div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+      <div style="width: 375px; height: 780px; border-radius: 34px; padding: 10px; background: #02050A; box-shadow: 0 0 0 1px rgba(212,175,106,0.3), 0 30px 60px rgba(0,0,0,0.6); box-sizing: border-box">
+        <div style="width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column">
+          <div style="height: 54px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid rgba(212,175,106,0.15)"><svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="flex: 1; font: 16px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Runs</span><svg width="22" height="22" viewBox="0 0 22 22" stroke="#AEB6C3" stroke-width="1.6" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16"></path></svg></div>
+          <div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px"><h2 class="bt" style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span class="live"></span>Asking now</h2><div class="ask last" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">The Deadmines</span><span style="font-size: 13px; color: #8E98A8">17–26</span></div>
+      <div class="rm">Nico asks on <span class="wa">Grom Ashfeller</span> (tank) · <span class="muted">from the game</span></div>
+      <div class="note">Quick run for the Defias quests</div><div class="an"><b>In</b> <span style="white-space: nowrap"><span class="wa">Grom Ashfeller</span> 24 Warrior</span> · <span style="white-space: nowrap"><span class="pa">Kel Dawnhammer</span> 18 Paladin</span> <span class="muted">·</span> <b>Maybe</b> 1 <span class="muted">·</span> <b>Can't</b> 1</div></div><div class="cd last" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">40 s</b><div class="bar"><i style="width: 7%"></i></div></div></div>
+          <div style="display: flex; gap: 6px"><button class="b in" style="flex: 1">I'm in</button><button class="b" style="flex: 1">Maybe</button><button class="b" style="flex: 1">Can't</button></div><div class="as" style="justify-content: center">as <span class="wl">Zul Kazrek</span> <span class="tag t-low">2 below</span> <a href="#">change ▾</a></div></div><div class="ask" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">Scarlet Monastery: Library</span><span style="font-size: 13px; color: #8E98A8">29–39</span></div>
+      <div class="rm">Bob asks on <span class="sh">Tok Ironhide</span> (healer) · <span class="muted">from Discord</span></div>
+      <div class="an"><b>In</b> <span style="white-space: nowrap"><span class="sh">Tok Ironhide</span> 33 Shaman</span> · <span style="white-space: nowrap"><span class="pr">Lia Thornwhisper</span> 37 Priest</span> <span class="muted">·</span> <b>Maybe</b> 0 <span class="muted">·</span> <b>Can't</b> 0</div></div><div class="cd" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">3 min</b><div class="bar"><i style="width: 30%"></i></div></div></div>
+          <div style="display: flex; gap: 6px"><button class="b in" style="flex: 1">I'm in</button><button class="b" style="flex: 1">Maybe</button><button class="b" style="flex: 1">Can't</button></div><div class="err">Your answer didn't go through. <button class="b" style="min-height: 36px; margin-left: auto; padding: 0 12px; color: #F6C29C; border-color: rgba(240,167,116,.5)">Retry</button></div></div></div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #AEB6C3">Last minute · answer failed</div>
+    </div><div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+      <div style="width: 375px; height: 780px; border-radius: 34px; padding: 10px; background: #02050A; box-shadow: 0 0 0 1px rgba(212,175,106,0.3), 0 30px 60px rgba(0,0,0,0.6); box-sizing: border-box">
+        <div style="width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column">
+          <div style="height: 54px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid rgba(212,175,106,0.15)"><svg width="20" height="20" viewBox="0 0 26 26" fill="none" stroke="#D4AF6A" stroke-width="1.6" aria-hidden="true"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="flex: 1; font: 16px 'Marcellus SC', serif; letter-spacing: .06em; color: #F0D08E">Runs</span><svg width="22" height="22" viewBox="0 0 22 22" stroke="#AEB6C3" stroke-width="1.6" aria-hidden="true"><path d="M3 6h16M3 11h16M3 16h16"></path></svg></div>
+          <div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px"><h2 class="bt" style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span class="live"></span>Asking now</h2><div class="ask" style="grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start"><div style="min-width: 0"><div style="display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap"><span class="rn">Zul'Farrak</span><span style="font-size: 13px; color: #8E98A8">44–54</span></div>
+      <div class="rm">Mira asks on <span class="ma">Mira Sunstrider</span> (damage) · <span class="muted">from Discord</span></div>
+      <div class="note">Carry for the sandfury quest</div><div class="an"><b>In</b> <span style="white-space: nowrap"><span class="ma">Mira Sunstrider</span> 60 Mage</span> <span class="muted">·</span> <b>Maybe</b> 0 <span class="muted">·</span> <b>Can't</b> 1</div></div><div class="cd" style="flex: none; text-align: right; min-width: 64px"><span>ends in</span><b style="font-size: 20px">9 min</b><div class="bar"><i style="width: 90%"></i></div></div></div>
+          <div style="display: flex; gap: 6px"><button class="b dis" style="flex: 1">I'm in</button><button class="b" style="flex: 1">Maybe</button><button class="b" style="flex: 1">Can't</button></div><div style="font-size: 12px; color: #AEB6C3; line-height: 1.45">None of your characters fit Zul'Farrak (44–54). Maybe or Can't still go.</div></div><a href="#" style="font-size: 13px; text-decoration: none; min-height: 44px; display: flex; align-items: center">and 2 more ▾</a></div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: #AEB6C3">Nobody fits · and more</div>
+    </div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1720,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -41,5 +41,8 @@ View them: `npm run design`, then open http://localhost:4400.
 | `runs-v2-picker` | `RunsPicker.dc.html` | Runs v2: character and role picker, level fit rules, roles per class (WEB-47, WEB-49) |
 | `runs-v2-run-detail` | `RunDetailV2.dc.html` | Runs v2: run detail for the organiser: lead bar, slots with the move menu, could fill, answers (WEB-49) |
 | `runs-v2-plan` | `RunsPlanV2.dc.html` | Runs v2: Plan a run, the dropdown component spec, the dungeon dropdown, roster bands v2 (WEB-48, WEB-50, WEB-45) |
+| `asks-now` | `SiteRuns-asknow.dc.html` | Asking now: the Runs page with the open asks above This week, as a friend sees it (WEB-51) |
+| `asks-now-phone` | `SiteRunsPhone-asknow.dc.html` | Asking now on 375 px phones: full-width cards, 44 px buttons at the bottom (WEB-51) |
+| `asks-now-states` | `AskNowStates.dc.html` | Asking now: every state (answered, last minute, none fit, didn't go through, your own ask, and N more) and the answers to the brief (WEB-51) |
 
 The planned-runs boards (2026-10-27, from `docs/DESIGN-PROMPT-PLANNED-RUNS.md` in the Discord repo) are copies of earlier boards with the runs added; the earlier boards stay as they were. Where they overlap, the runs board is the newer design: `roster-cards-runs` over `roster-cards`, `discord-settings-runs` over `discord-settings`. The Runs v2 boards (2026-10-27, after testing the live site) are newer again: `runs-v2-*` over `runs`, `run-detail`, `run-create` and the bands of `roster-cards-runs`. Their account names (BattleTags, friends) are made up; the character names are from the live site (Nico: fine).

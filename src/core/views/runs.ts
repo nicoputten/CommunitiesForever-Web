@@ -19,7 +19,7 @@ import {
 } from "../runs";
 import { localTime, nextDays, runWhen, untilStart, weekEnd, type DayOption } from "../runTime";
 import { byLevel, compareText, type CharacterView, type PersonView } from "./characters";
-import { levelFit, type FitKind } from "../levelFit";
+import { levelFit, type FitKind, type LevelFit } from "../levelFit";
 import { initials, joinNames } from "./text";
 
 // The Runs pages (WEB-40, boards `runs`, `run-detail`, `run-create`, `runs-phone`): the list by This week, Later and
@@ -27,6 +27,8 @@ import { initials, joinNames } from "./text";
 
 export interface RunsInput {
   runs: readonly RunRecord[];
+  /** Open asks (WEB-51), oldest first; none when left out. */
+  asks?: readonly RunRecord[];
   /** Every character with a record (recordCharacters). */
   characters: readonly CharacterView[];
   people: readonly PersonView[];
@@ -153,6 +155,8 @@ export interface RunsPage {
   /** "1 run hidden by “Runs I can join”: Zul'Farrak on Sun 8 Nov (44–54)." */
   hidden?: string;
   yourAnswers: YourAnswerView[];
+  /** Asking now (WEB-51): the open asks, newest first. */
+  asks: AskCardView[];
   /** Upcoming runs at all (the empty state when none). */
   anyUpcoming: boolean;
   timeZone: string;
@@ -476,6 +480,7 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
         dungeon: runDungeon(r.dungeonId)?.name ?? r.dungeonId,
         status: yourStatus(ctx, r),
       })),
+    asks: asksNow(ctx),
     anyUpcoming: upcoming.length > 0,
     timeZone: tz,
   };
@@ -1032,12 +1037,17 @@ export interface PlanPage {
 /** Which of the viewer's characters is the best for a range: fits (highest), over, low, carry, then too low. */
 const FIT_RANK: Record<FitKind, number> = { fits: 0, over: 1, low: 2, carry: 3, tooLow: 4 };
 
-function bestFit(mine: readonly CharacterView[], r: LevelRange): DungeonOption["best"] {
+/** The viewer's best character for a range by FIT_RANK, the closest within a kind (the highest when it fits). */
+function bestOf<C extends { level?: number }>(mine: readonly C[], r: LevelRange): { c: C; fit: LevelFit } | undefined {
   const away = (level: number | undefined) =>
     level === undefined ? Infinity : level > r.max ? level - r.max : level < r.min ? r.min - level : -level;
-  const best = mine
+  return mine
     .map((c) => ({ c, fit: levelFit(c.level, r.min, r.max) }))
     .sort((a, b) => FIT_RANK[a.fit.kind] - FIT_RANK[b.fit.kind] || away(a.c.level) - away(b.c.level))[0];
+}
+
+function bestFit(mine: readonly CharacterView[], r: LevelRange): DungeonOption["best"] {
+  const best = bestOf(mine, r);
   if (best === undefined) return undefined;
   const { c, fit } = best;
   const name = (c.name ?? c.guid).split(" ")[0]!;
@@ -1114,4 +1124,144 @@ export function planPage(input: RunsInput, dungeonId: string | undefined): PlanP
     organiser: { name: friendName(ctx, input.viewer.battleTag) },
     now: input.now,
   };
+}
+
+// --- Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states) ---------------------------------------------
+
+const ASKED_FROM: Record<RunSource, string> = {
+  website: "from the website",
+  discord: "from Discord",
+  game: "from the game",
+};
+
+export interface AskCardView {
+  id: number;
+  dungeon: string;
+  /** "17–26". */
+  range: string;
+  /** When it stops taking answers (seconds); the countdown runs in the browser. */
+  expiresAt: number;
+  /** "Nico", or "You" for the viewer's own ask. */
+  asker: string;
+  /** The asker's character and its role: "Grom Ashfeller", "tank". */
+  askerCharacter?: { name: string; role: string; colorToken?: string };
+  /** "from the game", "from Discord". */
+  from: string;
+  note?: string;
+  /** I'm in, the asker first, then in answer order: "Grom Ashfeller 24 Warrior". */
+  ins: { name: string; level?: number; className?: string; colorToken?: string }[];
+  maybe: number;
+  cant: number;
+  /** The viewer's own ask: no answer buttons, only "Form the group in game". */
+  yours: boolean;
+  /** The viewer's answer: "I'm in" with "Lia Thornwhisper". */
+  answered?: { answer: string; character?: string; colorToken?: string };
+  /** "change ▾": the v2 picker without slot states (asks have no slots). */
+  picker: PickerView;
+  /** The character I'm in uses by default: fits, then over, then 1–5 below, a carry only when nothing else. */
+  pick?: { guid: string; role: SlotRole };
+  /** "None of your characters fit Zul'Farrak (44–54)." when every character is too low: only Maybe or Can't. */
+  noneFit?: string;
+}
+
+/** The roles of an ask: no slots, so no states. */
+const ASK_ROLES: PickerView["roles"] = {
+  tank: { state: "", full: false },
+  healer: { state: "", full: false },
+  damage: { state: "", full: false },
+};
+
+function classToken(ctx: Ctx, guid: string | undefined): string | undefined {
+  return classInfo(guid === undefined ? undefined : ctx.byGuid.get(guid)?.classFile)?.textToken;
+}
+
+function askCard(ctx: Ctx, ask: RunRecord): AskCardView {
+  const r = rangeOf(ask);
+  const dungeon = runDungeon(ask.dungeonId)?.name ?? ask.dungeonId;
+  const yours = isViewer(ctx, ask.organiser);
+  const lead = ask.answers.find((a) => sameBattleTag(a.battleTag, ask.organiser) && a.answer === "in");
+  const ordered = [...ask.answers].sort(
+    (a, b) => Number(b === lead) - Number(a === lead) || a.answeredAt - b.answeredAt,
+  );
+  const c = counts(ask.answers);
+  const characters = ctx.input.characters
+    .filter((ch) => {
+      const tag = ownerTag(ctx, ch);
+      return tag !== undefined && isViewer(ctx, tag);
+    })
+    .sort(byLevel)
+    .map((ch) => pickerCharacter(ch, r));
+  const view: AskCardView = {
+    id: ask.id,
+    dungeon,
+    range: rangeText(r),
+    expiresAt: ask.expiresAt ?? ask.startsAt,
+    asker: yours ? "You" : friendName(ctx, ask.organiser),
+    from: ASKED_FROM[ask.source],
+    ins: ordered
+      .filter((a) => a.answer === "in")
+      .map((a) => {
+        const ch = a.guid === undefined ? undefined : ctx.byGuid.get(a.guid);
+        const row: AskCardView["ins"][number] = { name: charName(ctx, a) };
+        if (ch?.level !== undefined) row.level = ch.level;
+        if (ch?.className !== undefined) row.className = ch.className;
+        const token = classToken(ctx, a.guid);
+        if (token !== undefined) row.colorToken = token;
+        return row;
+      }),
+    maybe: c.maybe,
+    cant: c.cant,
+    yours,
+    picker: {
+      runId: ask.id,
+      title: `Join ${dungeon}`,
+      sub: `Asking now · levels ${rangeText(r)}`,
+      characters,
+      roles: ASK_ROLES,
+    },
+  };
+  if (ask.note !== undefined) view.note = ask.note;
+  if (lead !== undefined) {
+    const token = classToken(ctx, lead.guid);
+    view.askerCharacter = {
+      name: charName(ctx, lead),
+      role: lead.role,
+      ...(token === undefined ? {} : { colorToken: token }),
+    };
+  }
+  const answer = ask.answers.find((a) => isViewer(ctx, a.battleTag));
+  if (answer !== undefined && !yours) {
+    const token = classToken(ctx, answer.guid);
+    view.answered = {
+      answer: ANSWER_LABEL[answer.answer],
+      ...(answer.guid === undefined ? {} : { character: charName(ctx, answer) }),
+      ...(token === undefined ? {} : { colorToken: token }),
+    };
+    view.picker.current = {
+      role: answer.role,
+      answer: answer.answer,
+      ...(answer.guid === undefined ? {} : { guid: answer.guid }),
+    };
+  }
+  const best = bestOf(characters, r);
+  if (best !== undefined) {
+    view.pick = { guid: best.c.guid, role: best.c.defaultRole };
+    if (best.fit.kind === "tooLow") view.noneFit = `None of your characters fit ${dungeon} (${rangeText(r)}).`;
+  }
+  return view;
+}
+
+/** The open asks for the Runs page, newest first; one past its time is gone (no "ended" state). */
+function asksNow(ctx: Ctx): AskCardView[] {
+  const { now } = ctx.input;
+  return (ctx.input.asks ?? [])
+    .filter((a) => a.cancelledAt === undefined && (a.expiresAt ?? a.startsAt) > now)
+    .sort((a, b) => b.startsAt - a.startsAt || b.id - a.id)
+    .map((a) => askCard(ctx, a));
+}
+
+/** "7 min" (whole minutes, rounded up) until the last minute, then "40 s": the board's countdown. */
+export function askCountdown(secondsLeft: number): string {
+  const s = Math.max(0, Math.ceil(secondsLeft));
+  return s > 60 ? `${Math.ceil(s / 60)} min` : `${s} s`;
 }
