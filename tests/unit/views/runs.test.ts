@@ -97,11 +97,18 @@ describe("the runs list", () => {
       yours: true,
       pill: { label: "Open", tone: "open" },
       line: "32–42 · You lead as Ves Doombringer · Lia Thornwhisper in · Tok Ironhide maybe",
-      tally: "2 in · 1 maybe",
-      hint: { text: "Tank and damage still open: nobody in range", tone: "warn" },
+      // Finding 11: one summary instead of the warning hint.
+      summary: "2 in · 1 maybe · 3 open · no tank or damage in range",
     });
+    expect(armory!.hint).toBeUndefined();
     expect(armory!.slots.map((s) => s.filled)).toEqual([false, true, true, false, false]);
+    expect(armory!.slots.map((s) => s.letter).join("")).toBe("THDDD");
+    expect(armory!.slotRows).toEqual(["Tank · open", "Healer · Lia Thornwhisper", "Damage · Ves Doombringer · 2 open"]);
     expect(armory!.answer).toBeUndefined();
+    // Your answers (WEB-49): with character and role.
+    expect(runsPage(input(NICO), "join").yourAnswers.find((a) => a.href === "/runs/1")!.status).toBe(
+      "organiser as Ves Doombringer · Damage",
+    );
     expect(library!.organiserTime).toMatch(/^\d{2}:\d{2} for Bob$/);
     expect(library!.line).toBe("29–39 · Bob on Tok Ironhide (healer)");
     // Nico hasn't answered Bob's run and Ves fits: answer buttons on the card.
@@ -223,12 +230,39 @@ describe("Plan a run", () => {
       fits: "Fits 3 friends' characters · no tank in range yet",
     });
     expect(p.dungeons.some((d) => d.id === "sm")).toBe(false);
-    expect(p.leads["sm-armory"]!.map((l) => l.label)).toEqual([
-      "Ves Doombringer 39 · damage",
-      "Grom Ashfeller 24 · 8 below",
-      "Sela Moonbrook 12 · 20 below",
+    expect(p.leadPicker["sm-armory"]!.map((c) => `${c.name} ${c.fit.label}`)).toEqual([
+      "Ves Doombringer fits",
+      "Grom Ashfeller 8 below",
+      "Sela Moonbrook 20 below",
     ]);
     expect(p.otherZones).toEqual([{ name: "Bob", timeZone: "Europe/London" }]);
-    expect(planPage(input(NICO), "nope").dungeonId).toBe("sm-armory");
+  });
+
+  // WEB-49 (board runs-v2-plan): the dropdown's groups and best fit, and no guessed dungeon (finding 6).
+  it("puts the dungeons that fit the viewer first, each with the viewer's best character", () => {
+    const p = planPage(input(NICO), undefined);
+    const firstOther = p.dungeons.findIndex((d) => !d.fitsYou);
+    expect(firstOther).toBeGreaterThan(0);
+    expect(p.dungeons.slice(firstOther).every((d) => !d.fitsYou)).toBe(true);
+    const mins = (list: typeof p.dungeons) => list.map((d) => d.range.min);
+    expect(mins(p.dungeons.slice(0, firstOther))).toEqual(
+      [...mins(p.dungeons.slice(0, firstOther))].sort((a, b) => a - b),
+    );
+    expect(mins(p.dungeons.slice(firstOther))).toEqual([...mins(p.dungeons.slice(firstOther))].sort((a, b) => a - b));
+    const d = (id: string) => p.dungeons.find((x) => x.id === id)!;
+    expect(d("sm-armory")).toMatchObject({
+      fitsYou: true,
+      best: { text: "Ves 39 fits", tone: "good" },
+      wingOf: "Scarlet Monastery",
+    });
+    expect(d("strat").best).toEqual({ text: "no fit" });
+    expect(d("thanes").forever).toBe(true);
+    expect(d("rfc").forever).toBe(false);
+    // Ves 39 is the best for Zul'Farrak (44–54): 5 below, the most it may be and still join.
+    expect(d("zf").best).toEqual({ text: "Ves 5 below", tone: "warn" });
+    // Many dungeons fit Nico's characters: nothing is guessed; a dungeon page still fills it in.
+    expect(p.dungeonId).toBeUndefined();
+    expect(planPage(input(NICO), "nope").dungeonId).toBeUndefined();
+    expect(planPage(input(NICO), "sm-armory").dungeonId).toBe("sm-armory");
   });
 });

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { getViewer } from "@/app/viewer";
+import { getViewer, isAdmin } from "@/app/viewer";
 import { mayEdit, runDungeon } from "@/core/runs";
 import { localDate, localTime } from "@/core/runTime";
 import { planPage } from "@/core/views/runs";
@@ -36,7 +36,7 @@ export default async function EditRunPage({ params }: { params: Promise<{ id: st
       <PlanForm
         page={planPage(input, run.dungeonId)}
         action={editAction.bind(null, id)}
-        postsTo={postsTo(db)}
+        postsTo={postsTo(db, await isAdmin())}
         edit={{
           dungeonId: run.dungeonId,
           date: localDate(run.startsAt, tz),

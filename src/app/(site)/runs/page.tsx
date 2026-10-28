@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { getViewer } from "@/app/viewer";
+import { getViewer, isAdmin } from "@/app/viewer";
 import { parseRunsFilter, RUNS_FILTERS, runsPage } from "@/core/views/runs";
 import { RunCard } from "@/components/runs/RunCard";
 import styles from "@/components/runs/Runs.module.css";
@@ -23,6 +23,8 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
   const filter = parseRunsFilter((await searchParams).show);
   const page = runsPage(runsInput(db, viewer.battleTag, nowSeconds()), filter);
   const settings = getBotSettings(db);
+  // The "once the admin picks a channel" hint is for the admin only (finding 12).
+  const admin = await isAdmin();
 
   return (
     <div className={styles.page}>
@@ -124,7 +126,9 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
               {!settings.runs
                 ? "not posted: the admin turned run posts off"
                 : settings.runsChannel === null
-                  ? "posted once the admin picks a channel for runs"
+                  ? admin
+                    ? "posted once you pick a channel for runs on the Discord page"
+                    : "not posted yet"
                   : `posted in the runs channel${settings.reminders ? `, reminder ${settings.reminderMinutes} min before` : ""}`}
             </span>
           </div>

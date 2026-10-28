@@ -27,9 +27,19 @@ export interface DateFieldProps {
   /** The field's accessible name, e.g. "Other date". */
   label: string;
   placeholder?: string;
+  /** Only the calendar button, the value shown elsewhere (Plan's day chips, WEB-49). */
+  buttonOnly?: boolean;
 }
 
-export function DateField({ value, onChange, min, name, label, placeholder = "Pick a day" }: DateFieldProps) {
+export function DateField({
+  value,
+  onChange,
+  min,
+  name,
+  label,
+  placeholder = "Pick a day",
+  buttonOnly = false,
+}: DateFieldProps) {
   const own = useId();
   const [open, setOpen] = useState(false);
   const start = value || min || new Date().toISOString().slice(0, 10);
@@ -114,9 +124,11 @@ export function DateField({ value, onChange, min, name, label, placeholder = "Pi
   return (
     <div className={styles.wrap}>
       <div className={styles.field}>
-        <span className={value ? styles.value : styles.placeholder} id={`${own}-value`}>
-          {value ? dayLabel(value) : placeholder}
-        </span>
+        {!buttonOnly && (
+          <span className={value ? styles.value : styles.placeholder} id={`${own}-value`}>
+            {value ? dayLabel(value) : placeholder}
+          </span>
+        )}
         <button
           ref={buttonRef}
           type="button"

@@ -14,12 +14,15 @@ export interface DropdownOption {
   label: string;
   /** Dim text after the label, e.g. a level range. */
   meta?: string;
-  /** Right-side hint, e.g. "fits". */
+  /** Right-side hint, e.g. "fits"; its tone colours it (fresh or stale text). */
   hint?: string;
+  hintTone?: "good" | "warn";
   /** Why the option can't be picked; it stays visible with this reason. */
   disabled?: string;
   /** Options with the same group follow each other under its header. */
   group?: string;
+  /** A dungeon's wings: while searching, the other wings follow the first match ("Other … wings"). */
+  family?: string;
 }
 
 export interface DropdownProps {
@@ -270,7 +273,11 @@ export function Dropdown({
               {option.meta !== undefined && <span className={styles.meta}> · {option.meta}</span>}
               {option.disabled !== undefined && <span className={styles.reason}>{option.disabled}</span>}
             </span>
-            {option.hint !== undefined && <span className={styles.hint}>{option.hint}</span>}
+            {option.hint !== undefined && (
+              <span className={styles.hint} data-tone={option.hintTone}>
+                {option.hint}
+              </span>
+            )}
           </div>
         ));
         return group === undefined ? (
