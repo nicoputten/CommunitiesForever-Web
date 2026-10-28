@@ -76,7 +76,8 @@ Small **icons** for the new card types, in the style of the existing recap icons
 A friendly competition inside the group: who hunts the most Alliance this week? Stories: web WEB-58 and WEB-59, addon CF-54 to CF-56, bot BOT-15. The group plays Horde, but every screen must also work for an Alliance character (then the enemy is Horde). Use the boards' existing look; this is the group's own scoreboard, not a tournament site: proud, a bit cheeky, readable at a glance.
 
 ### How it works (so the screens make sense)
-- **Points per world kill**, by the victim's level compared with yours:
+- The points are called **DoomPoints PvP**. The group's dailies and weeklies (a separate design) give **DoomPoints PvE**. Wherever DoomPoints show for a friend or character, the two stand side by side, for example "DoomPoints · PvE 34 · PvP 1,210". They're never added up and never ranked together. The ladder ranks by PvP only, but **leave room for the PvE number** next to it (in the ranking rows, the character card and the `/ladder` embed).
+- **DoomPoints PvP per world kill**, by the victim's level compared with yours:
   - 4 or more levels below: 0
   - around your level (3 below to 2 above): 1
   - 3 or more above: 2
@@ -94,9 +95,9 @@ A friendly competition inside the group: who hunts the most Alliance this week? 
   - **Class weekly** (different per own class): for example "Warriors: 10 Paladins". +20.
   - **Weekly bounty** (changes every week, the big one): for example "Every Alliance class at least once", "25 kills in Arathi Highlands", "A spree of 10". +30.
 - **Views:**
-  - **This week:** points, which reset on the weekly reset day
+  - **This week:** DoomPoints PvP, which reset on the weekly reset day
   - **Last week**
-  - **Lifetime:** the game's honorable kills and the PvP rank, plus all-time points on the site
+  - **Lifetime:** the game's honorable kills and the PvP rank, plus all-time DoomPoints PvP on the site
   - **Duels:** wins and losses, a head-to-head grid between friends, and on the site an Elo-like duel rating
   - **Battlegrounds:** wins, losses and kills per battleground
 - The ladder ranks **friends** (the sum of their characters). Each friend expands to their characters.
@@ -115,7 +116,7 @@ Sample data for every screen:
 - **Ranking rows:**
   - place, with gold, silver and bronze for the top 3
   - the friend, with the class discs of their characters
-  - points, kills, a solo share
+  - DoomPoints PvP (with the PvE number beside it, smaller), kills, a solo share
   - movement since last week (▲2, ▼1, new)
   - expanded: each character (class colour, level, PvP rank with insignia, points, kills)
 - **Goals panel**, prominent, next to or above the ranking:
@@ -126,7 +127,7 @@ Sample data for every screen:
   - for each goal, who has done it (class discs) and progress ("1/3")
 - **Duels:** a head-to-head grid of the friends (wins–losses per pair, the reigning champion highlighted), the Elo per friend, this week's duels.
 - **Battlegrounds:** Warsong Gulch, Arathi Basin and Alterac Valley as cards with wins, losses and kills this week, and the battleground ranking.
-- **Lifetime:** honorable kills and rank (Horde: Scout … High Warlord; Alliance: Private … Grand Marshal, with the insignia), all-time points.
+- **Lifetime:** honorable kills and rank (Horde: Scout … High Warlord; Alliance: Private … Grand Marshal, with the insignia), all-time DoomPoints PvP.
 - States:
   - empty: "Nobody has drawn blood yet"
   - only one friend with data
@@ -141,10 +142,10 @@ Sample data for every screen:
   - on the right, a **goals panel for the character you are on**: today's Hunt, Class hunt, Daily and Duel, and this week's Streak, Class weekly and Weekly bounty, with progress (for example "Human Warlock 1/3") and the points each gives
   
   Use the widget kit and the "what WoW supports" board (no web-only effects).
-- The **character card** (Friends tab) gets a PvP line: lifetime honorable kills, rank with insignia, this week's points and place. Or the **PvP Virgin** badge.
+- The **character card** (Friends tab) gets a PvP line: lifetime honorable kills, rank with insignia, this week's DoomPoints (PvE and PvP side by side) and place. Or the **PvP Virgin** badge.
 - The **Activity** tab: a killing-spree chip (5 and 10) on an entry.
 
 ### Discord
-- `/ladder` reply (ephemeral embed): the top 5 friends of this week with points and movement, the asker's own place, and today's Hunt and the week's bounty. Options `view: week | lastweek | lifetime | duels | battlegrounds`; show each view.
-- The weekly recap's **Ladder of the week** line: the winner and the top 3 ("Ada took the ladder with 214 points; Bob and Cy close behind").
+- `/ladder` reply (ephemeral embed): the top 5 friends of this week with DoomPoints PvP and movement, the asker's own place, and today's Hunt and the week's bounty. Options `view: week | lastweek | lifetime | duels | battlegrounds`; show each view.
+- The weekly recap's **Ladder of the week** line: the winner and the top 3 ("Ada took the ladder with 214 DoomPoints PvP; Bob and Cy close behind").
 - Small icons: a ladder or podium, a crosshair for the Hunt, a bounty poster, crossed swords for duels, a flame for a spree, and a PvP Virgin badge.
