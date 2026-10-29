@@ -86,7 +86,9 @@ describe("the recap", () => {
     expect(r.headline.id).toBe("season");
     expect(r.headline.text).not.toMatch(/\{/);
     expect(r.challenge.text).not.toMatch(/\{/);
-    expect(r.numbers).toEqual({ levels: 21, friendsPlayed: 4, runs: 2, newCharacters: 1 });
+    expect(r.numbers).toMatchObject({ levels: 21, friendsPlayed: 4, runs: 2, newCharacters: 1 });
+    expect(r.numbers.honorKills).toEqual(expect.any(Number));
+    expect(r.numbers.battlegrounds).toEqual(expect.any(Number));
   });
 
   it("is the same on a re-run", () => {

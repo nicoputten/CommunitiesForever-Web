@@ -116,7 +116,8 @@ describe("feats", () => {
     expect(mount).toMatchObject({ riding: 75, place: 2 });
     // The most special card: the watch-list item, over the first epic and rank 7.
     expect(third.card).toBe(third.milestones[4]!.card);
-    expect(third.milestones[1]!.card).toBeUndefined();
+    // WEB-66: every feat has a card now; a battleground win is a strip.
+    expect(third.milestones[1]!.card).toEqual(expect.any(String));
 
     // 50 more deaths in the next upload's feed: 100 in all.
     const before = held();

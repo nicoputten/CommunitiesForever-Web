@@ -812,6 +812,20 @@
   --card-badge-line: #7a5a22; /* feat cards: rank badge outline */
   --card-steel: #2e3a55; /* feat cards: Arcanite blade body */
   --card-arcanite: #9fd3ff; /* feat cards: Arcanite blade edge */
+  /* Bot images (WEB-66, boards bot-visual-recap, bot-visual-daily, bot-visual-feats) */
+  --card-strip-h: 240px; /* bot-visual-feats: the strip card */
+  --size-card-strip-icon: 140px; /* bot-visual-feats: the strip card's icon */
+  --size-card-strip-box: 200px; /* bot-visual-feats: the strip card's icon column */
+  --card-zone-h: 450px; /* bot-visual-recap: the zone crop */
+  --card-board-h: 560px; /* bot-visual-daily: the board image */
+  --fs-card-board-head: 34px; /* bot-visual-daily: DOOMSDAY */
+  --fs-card-board-name: 30px; /* bot-visual-daily: a friend's name */
+  --fs-card-board-col: 16px; /* bot-visual-daily: a column's label */
+  --size-card-board-box: 44px; /* bot-visual-daily: a goal's box */
+  --card-pve: #3ba55d; /* bot-visual-daily: a PvE goal done */
+  --card-pvp: #e0625a; /* bot-visual-daily: a PvP goal done */
+  --card-open-line: rgba(174, 182, 195, 0.35); /* bot-visual-daily: an open goal */
+  --r-card-box: 8px; /* bot-visual-daily: a goal's box */
   --card-blood: #f08a80; /* feat cards: crossed swords on 10,000 kills */
 
   /* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live cards in the fresh green. */

@@ -264,6 +264,7 @@ export function buildRecap(week: Week, history: History): Recap {
     };
   }
 
+  const totals = v2Totals(week);
   const recap: Recap = {
     week: week.number,
     start: week.start,
@@ -275,6 +276,9 @@ export function buildRecap(week: Week, history: History): Recap {
       friendsPlayed: friendsPlayed(week).size,
       runs: runs(week).filter((r) => r.kind === "party" || r.kind === "raid").length,
       newCharacters: newCharacters(week).length,
+      // WEB-66: the header's PvP numbers.
+      honorKills: totals.kills,
+      battlegrounds: totals.bgGames,
     },
     cards: recapCards,
     challenge: { id: challenge.id, text: fill(c.text, { ...challenge.facts, site: week.siteName }) },
