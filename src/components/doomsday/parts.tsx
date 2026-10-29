@@ -94,9 +94,9 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function GoalCard({ goal }: { goal: GoalCardView }) {
+export function GoalCard({ goal, week = false }: { goal: GoalCardView; week?: boolean }) {
   return (
-    <div className={styles.goal} data-done={goal.done} data-testid="goal">
+    <div className={styles.goal} data-done={goal.done} data-week={week || undefined} data-testid="goal">
       <span className={`${styles.kind} ${goal.track === "pve" ? styles.pve : styles.pvp}`}>{goal.kind}</span>
       <span className={styles.goalTitle}>
         {goal.title}
@@ -120,6 +120,7 @@ export function GoalCard({ goal }: { goal: GoalCardView }) {
         </span>
       )}
       <span className={styles.goalMeta}>{goal.done ? goal.doneText : goal.worth}</span>
+      {goal.closest !== undefined && <span className={styles.closest}>{goal.closest}</span>}
     </div>
   );
 }
