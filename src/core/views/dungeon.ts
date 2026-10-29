@@ -25,6 +25,7 @@ import { byLevel, type CharacterView } from "./characters";
 import type { Continent } from "./mapMarkers";
 import { joinNames } from "./text";
 import type { RunsInput } from "./runs";
+import { UNKNOWN_CHARACTER } from "./text";
 
 // The dungeon page (WEB-42, board `dungeon-page`, decided with Nico 2026-10-28): one page per dungeon a group runs
 // (`RUNNABLE_DUNGEONS`: Scarlet Monastery as its four wings), who fits per role, the runs planned here and in the
@@ -165,7 +166,7 @@ function names(input: RunsInput): Names {
 }
 
 function fitCharacter(c: CharacterView, over?: string): FitCharacter {
-  const v: FitCharacter = { guid: c.guid, name: c.name ?? c.guid };
+  const v: FitCharacter = { guid: c.guid, name: c.name ?? UNKNOWN_CHARACTER };
   if (c.level !== undefined) v.level = c.level;
   const token = classInfo(c.classFile)?.textToken;
   if (token !== undefined) v.colorToken = token;
@@ -233,7 +234,7 @@ function plannedView(input: RunsInput, n: Names, run: RunRecord): PlannedRunView
   const lead = run.answers.find((a) => sameBattleTag(a.battleTag, run.organiser) && a.answer === "in");
   const c = n.character(lead?.guid);
   if (c !== undefined) {
-    v.lead = { name: c.name ?? c.guid };
+    v.lead = { name: c.name ?? UNKNOWN_CHARACTER };
     const token = classInfo(c.classFile)?.textToken;
     if (token !== undefined) v.lead.colorToken = token;
   }

@@ -38,6 +38,7 @@ import { cutoffAt } from "./cutoff";
 import { discordLinks, runAnswers, runs } from "./db/schema";
 import { getBotSettings } from "./discord";
 import { loadState } from "./uploads";
+import { UNKNOWN_CHARACTER } from "@/core/views/text";
 
 // Planned runs (WEB-40): stored on the site, planned and answered from the Runs pages and through the bot
 // (docs/BOT-API.md). Every change writes a bot event when the admin's Runs switch is on (WEB-39).
@@ -60,6 +61,7 @@ function answerFrom(row: AnswerRow): RunAnswer {
   if (row.waitlisted && row.answer === "maybe") a.answer = "reserve";
   if (row.movedUp) a.movedUp = true;
   if (row.note !== null) a.note = row.note;
+  if (row.name !== null) a.name = row.name;
   return a;
 }
 
@@ -121,7 +123,10 @@ export function getRun(db: Db, id: number, kind: "run" | "ask" = "run"): StoredR
 
 function writeAnswers(db: Db, runId: number, answers: readonly RunAnswer[]): void {
   db.delete(runAnswers).where(eq(runAnswers.runId, runId)).run();
+  // WEB-69: keep each character's name as known now, so it still shows if the character later leaves the data.
+  const data = loadState(db)?.data;
   for (const a of answers) {
+    const name = (a.guid === undefined ? undefined : runCharacter(data, a.guid)?.name) ?? a.name;
     db.insert(runAnswers)
       .values({
         runId,
@@ -135,6 +140,7 @@ function writeAnswers(db: Db, runId: number, answers: readonly RunAnswer[]): voi
         waitlisted: false,
         movedUp: a.movedUp === true,
         note: a.note ?? null,
+        name: name ?? null,
       })
       .run();
   }
@@ -220,7 +226,9 @@ export function runPayload(db: Db, run: StoredRun, now: number, data = loadState
     ...(run.note === undefined ? {} : { note: run.note }),
     organiser: {
       ...person(run.organiser),
-      ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+      ...(lead?.guid === undefined
+        ? {}
+        : { character: runCharacter(data, lead.guid)?.name ?? lead.name ?? UNKNOWN_CHARACTER }),
       ...(lead?.guid === undefined ? {} : characterFacts(data, lead.guid)),
     },
     source: run.source,
@@ -245,7 +253,7 @@ function answersPayload(data: Dataset | undefined, run: StoredRun, ids: Map<stri
     .sort((a, b) => a.answeredAt - b.answeredAt)
     .map((a) => ({
       ...person(a.battleTag),
-      ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.guid }),
+      ...(a.guid === undefined ? {} : { character: runCharacter(data, a.guid)?.name ?? a.name ?? UNKNOWN_CHARACTER }),
       // A reserve stays "maybe" with `reserve` for bots from before WEB-47 (optional fields within v1).
       answer: a.answer === "reserve" ? "maybe" : a.answer,
       role: a.role,
@@ -700,7 +708,7 @@ export function couldFill(data: Dataset | undefined, run: StoredRun, open: Recor
     .map((c) => ({ c, fit: levelFit(c.level, range.min, range.max) }));
   const show = ({ c, fit }: (typeof candidates)[number]) => ({
     name: displayName(data, c.owner!),
-    character: c.name ?? c.guid,
+    character: c.name ?? UNKNOWN_CHARACTER,
     ...characterFacts(data, c.guid),
     fit: { kind: fit.kind, label: fit.label },
   });
@@ -852,7 +860,9 @@ export function askPayload(db: Db, ask: StoredRun, now: number, data = loadState
       typicalLevels: dungeon?.typicalLevels ?? { min: 1, max: 60 },
     },
     from: { name: displayName(data, ask.organiser), ...(fromId === undefined ? {} : { discordId: fromId }) },
-    ...(lead?.guid === undefined ? {} : { character: runCharacter(data, lead.guid)?.name ?? lead.guid }),
+    ...(lead?.guid === undefined
+      ? {}
+      : { character: runCharacter(data, lead.guid)?.name ?? lead.name ?? UNKNOWN_CHARACTER }),
     ...(lead === undefined ? {} : { role: GAME_ROLE[lead.role] }),
     ...(ask.note === undefined ? {} : { note: ask.note }),
     source: ask.source,

@@ -988,3 +988,9 @@ Decided with Nico (2026-10-29, for addon CF-63). An answer item from the game ma
 ### WEB-68 Test posts with pictures
 Nico (2026-10-29, "Yes, fix now"): the Discord page's test posts still showed the old text board. The site draws sample pictures with the same renderer as the real ones and the bot's own made-up names (Test Friend, Another Test, Testy McTestface): the daily board, a big and a strip feat card, the recap's award header and zone crop, at fixed ids `sample-<name>` behind the bot token. The `test` event carries their ids per kind (`images`, optional within v1; `docs/BOT-API.md`). The bot reads them in its own follow-up.
 - Done (this PR): `src/core/cards/samples.ts`, `cardFor`'s `sample-` ids, the test action's `images`.
+
+### WEB-69 Never a raw GUID for a character
+Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "You lead as ·". The character had left the data: the uploader's own newest record decides their characters (`src/core/merge.ts`), so a retail character added by a retail upload is removed by the next Forever upload, while the run kept its GUID.
+- Each answer keeps its character's name when the site knows it (`run_answers.name`, migration 0025), refreshed on every write; a character the site no longer has shows by that name, else "Unknown character" (`UNKNOWN_CHARACTER`), on the site and in the bot's payload. Every other place that fell back to a GUID uses it too.
+- The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
+- Done (this PR).

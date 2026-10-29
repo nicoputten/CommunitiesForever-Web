@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as dungeonsRoute } from "@/app/api/bot/v1/dungeons/route";
@@ -528,5 +529,28 @@ describe("moving up and reminders", () => {
     cancelRun(db, (made as { id: number }).id, ADMIN, true, NOW);
     expect(eventTypes(before)).toEqual(["runCancelled"]);
     updateBotSettings(db, { reminders: true }, ADMIN, NOW);
+  });
+});
+
+// WEB-69 (live v0.6.1): an answer keeps its character's name, so a character that later leaves the data (a retail one,
+// dropped by its owner's newer record) still shows by name, never as its raw GUID.
+describe("a character that leaves the data", () => {
+  it("keeps its name with the answer, for the site and the bot", () => {
+    const db = getDb();
+    const made = planRunFor(
+      db,
+      { dungeonId: "wc", startsAt: NOW + 60 * 60, organiser: ADMIN, source: "discord", leadGuid: VES },
+      NOW,
+    ) as { id: number };
+    const row = db.select().from(runAnswers).where(eq(runAnswers.runId, made.id)).get()!;
+    expect(row.name).toBe("Ves Doombringer");
+    // The character is gone from the data: only its GUID is left on the answer.
+    db.update(runAnswers).set({ guid: "Player-6842-00018D02" }).where(eq(runAnswers.runId, made.id)).run();
+    const payload = runPayload(db, getRun(db, made.id)!, NOW) as { answers: { character?: string }[] };
+    expect(payload.answers[0]!.character).toBe("Ves Doombringer");
+    db.update(runAnswers).set({ name: null }).where(eq(runAnswers.runId, made.id)).run();
+    const without = runPayload(db, getRun(db, made.id)!, NOW) as { answers: { character?: string }[] };
+    expect(without.answers[0]!.character).toBe("Unknown character");
+    cancelRun(db, made.id, ADMIN, true, NOW);
   });
 });
