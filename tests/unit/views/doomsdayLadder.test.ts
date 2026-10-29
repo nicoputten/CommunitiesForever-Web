@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PersonView } from "@/core/views/characters";
-import { featsView } from "@/core/views/doomsdayFeats";
+import { featsView, type FeatView } from "@/core/views/doomsdayFeats";
 import { ladderView, parseLadderScope, pvpView } from "@/core/views/doomsdayLadder";
 import { doomsdaySample } from "../../fixtures/doomsday/sampleSnapshot";
 
@@ -159,7 +159,9 @@ describe("pvpView", () => {
 describe("featsView", () => {
   it("lists the group's feats newest first, without those from before tracking", () => {
     const view = featsView(sample(), undefined, "nico", ZONE);
-    expect(view.group.map((f) => [f.title.before + (f.title.epic ?? ""), f.meta, f.firstInGroup])).toEqual([
+    expect(
+      (view.group as FeatView[]).map((f) => [f.title.before + (f.title.epic ?? ""), f.meta, f.firstInGroup]),
+    ).toEqual([
       ["Stone Guard, a.k.a. Mailbox Menace", "today 20:14 · rank 6", true],
       ["First epic: Robes of the Exalted", "today 19:31 · chest · item level 66", true],
       ["Epic mount · riding 150", "yesterday", true],
@@ -185,6 +187,39 @@ describe("featsView", () => {
       ["Duel wins: 10", "7 / 10", false],
       ["First epic item", "not yet", false],
     ]);
+  });
+
+  it("folds an upload's new characters into one line, never a feat (WEB-65)", () => {
+    const s = sample();
+    const at = NOW - 3600;
+    const joined = (id: string, name: string, level?: number, friendKey = "nico", when = at) =>
+      s.feats.push({
+        id,
+        kind: "newCharacter",
+        friendKey,
+        character: { guid: `g-${id}`, name, ...(level === undefined ? {} : { level }) },
+        at: when,
+        title: "New character",
+        firstInGroup: false,
+        alreadyHad: false,
+      });
+    joined("n1", "Frida Snowmantle", 41);
+    joined("n2", "Wren Ashvale", 19);
+    joined("n3", "Grosh Bonechewer");
+    joined("m1", "Morra Duskweaver", 33, "mira");
+    const view = featsView(s, undefined, "nico", ZONE);
+    const lines = view.group.filter((f) => "newCharacters" in f);
+    expect(lines.map((f) => f.newCharacters)).toEqual([
+      {
+        badge: "+3",
+        title: "3 new characters",
+        line: "Frida Snowmantle 41, Wren Ashvale 19, Grosh Bonechewer · today 20:00",
+      },
+      { badge: "+1", title: "1 new character", line: "Morra Duskweaver 33 · today 20:00" },
+    ]);
+    // Not counted as feats.
+    expect(view.ownCount).toBe(4);
+    expect(view.own.map((f) => f.title)).not.toContain("New character");
   });
 
   it("shows another friend's feats when picked", () => {

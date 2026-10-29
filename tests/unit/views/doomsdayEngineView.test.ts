@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
 import { doomsdayPage } from "@/core/views/doomsday";
-import { featsView } from "@/core/views/doomsdayFeats";
+import { featsView, type FeatView } from "@/core/views/doomsdayFeats";
 import { ladderView, pvpView } from "@/core/views/doomsdayLadder";
 
 // WEB-59 on the engine's own snapshot (WEB-58), not the made-up sample: a friend with goal records but nothing done
@@ -85,11 +85,12 @@ describe("doomsdayPage on the engine's snapshot", () => {
     expect(ladder.resets).toMatch(/^week resets Sunday 19:00 · in /);
     expect(pvpView(snapshot, undefined, "Ada#1001").name).toBe("Ada");
     const feats = featsView(snapshot, undefined, "Ada#1001", "Europe/Paris");
-    expect(feats.group.map((f) => [f.icon, f.title])).toEqual([
+    const group = feats.group as FeatView[];
+    expect(group.map((f) => [f.icon, f.title])).toEqual([
       ["epic", { before: "First epic: ", epic: "Robes of the Exalted" }],
       ["rank", { before: "Stone Guard, a.k.a. Mailbox Menace" }],
     ]);
-    expect(feats.group[1]?.rank).toBe(6);
+    expect(group[1]?.rank).toBe(6);
     expect(feats.ownCount).toBe(2);
   });
 });

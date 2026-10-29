@@ -38,6 +38,27 @@ export interface FeatView {
   firstInGroup: boolean;
 }
 
+/**
+ * New characters from one upload, as one line, never a feat card nor counted as a feat (WEB-65, board
+ * live-test-site-fixes): "4 new characters", "Frida Snowmantle 41, Wren Ashvale 19 · today 12:02".
+ */
+export interface NewCharactersView {
+  key: string;
+  newCharacters: {
+    /** "+4". */
+    badge: string;
+    /** "4 new characters", "1 new character". */
+    title: string;
+    /** "Frida Snowmantle 41, Wren Ashvale 19 · today 12:02". */
+    line: string;
+  };
+}
+
+export type GroupFeatView = FeatView | NewCharactersView;
+
+/** The feat kind of a character joining the group (src/core/doomsday/feats.ts). */
+const NEW_CHARACTER = "newCharacter";
+
 export interface OwnFeatView {
   key: string;
   title: string;
@@ -47,7 +68,7 @@ export interface OwnFeatView {
 }
 
 export interface FeatsView {
-  group: FeatView[];
+  group: GroupFeatView[];
   friends: { key: string; name: string; href: string; current: boolean }[];
   /** "Your feats", "Mira's feats". */
   ownTitle: string;
@@ -95,6 +116,42 @@ function featView(f: FeatRecord, now: number, timeZone: string): FeatView {
 
 export const GROUP_FEATS = 30;
 
+/** The group's feats, newest first, with each upload's new characters folded into one line. */
+function groupFeats(byNewest: readonly FeatRecord[], now: number, timeZone: string): GroupFeatView[] {
+  const out: GroupFeatView[] = [];
+  const lines = new Map<string, FeatRecord[]>();
+  for (const f of byNewest) {
+    if (f.alreadyHad) continue;
+    if (f.kind !== NEW_CHARACTER) {
+      out.push(featView(f, now, timeZone));
+      continue;
+    }
+    // One upload: the same friend at the same time.
+    const key = `new:${f.friendKey}:${f.at}`;
+    const same = lines.get(key);
+    if (same !== undefined) {
+      same.push(f);
+      continue;
+    }
+    const group = [f];
+    lines.set(key, group);
+    out.push({ key, newCharacters: { badge: "", title: "", line: "" } });
+  }
+  for (const item of out) {
+    if (!("newCharacters" in item)) continue;
+    const group = lines.get(item.key)!;
+    const names = group.map((f) =>
+      f.character.level === undefined ? f.character.name : `${f.character.name} ${f.character.level}`,
+    );
+    item.newCharacters = {
+      badge: `+${group.length}`,
+      title: `${group.length} new character${group.length === 1 ? "" : "s"}`,
+      line: `${names.join(", ")} · ${when(group[0]!.at, now, timeZone)}`,
+    };
+  }
+  return out.slice(0, GROUP_FEATS);
+}
+
 export function featsView(
   s: DoomsdaySnapshot,
   friendKey: string | undefined,
@@ -108,7 +165,8 @@ export function featsView(
   const picked =
     ordered.find((f) => f.friendKey === friendKey) ?? ordered.find((f) => f.friendKey === viewerKey) ?? ordered[0];
   const byNewest = [...s.feats].sort((a, b) => b.at - a.at);
-  const mine = byNewest.filter((f) => f.friendKey === picked?.friendKey);
+  // A new character is never counted as a feat (WEB-65).
+  const mine = byNewest.filter((f) => f.friendKey === picked?.friendKey && f.kind !== NEW_CHARACTER);
   const own: OwnFeatView[] = mine.map((f) => ({
     key: f.id,
     title: f.title,
@@ -128,10 +186,7 @@ export function featsView(
   }
   const you = picked !== undefined && picked.friendKey === viewerKey;
   return {
-    group: byNewest
-      .filter((f) => !f.alreadyHad)
-      .slice(0, GROUP_FEATS)
-      .map((f) => featView(f, s.now, timeZone)),
+    group: groupFeats(byNewest, s.now, timeZone),
     friends: ordered.map((f) => ({
       key: f.friendKey,
       name: f.name,
