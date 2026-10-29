@@ -54,6 +54,10 @@ test("phone map: peek, design values", async ({ page }) => {
   await openScreen(page, "/?continent=eastern-kingdoms");
   await mapSettled(page);
   await expect(sheet(page)).toHaveAttribute("data-snap", "peek");
+  // WEB-65 (board live-test-phone): the map's app bar shows the shield only; the link keeps the site's name.
+  const brand = page.getByRole("banner").getByRole("link", { name: "Doombringers" });
+  await expect(brand).toBeVisible();
+  expect((await brand.boundingBox())!.width).toBeLessThanOrEqual(48);
   await expectStyles(sheet(page), {
     "background-color": "var(--surface-sheet-peek)",
     "border-top-left-radius": "var(--r-sheet)",

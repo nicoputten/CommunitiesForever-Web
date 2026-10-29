@@ -112,7 +112,8 @@ test.describe("phone", () => {
     await expect(page).toHaveURL(/sort=level&dir=asc$/);
     await sheet.getByRole("group", { name: "Class" }).getByRole("button", { name: "Warlock" }).click();
     await expect(page).toHaveURL(/class=warlock&sort=level&dir=asc$/);
-    await sheet.getByRole("button", { name: "Done" }).click();
+    await expect(sheet.getByRole("button", { name: "Show 2 characters" })).toBeVisible();
+    await sheet.getByRole("button", { name: "Show 2 characters" }).click();
     await expect(sheet).toBeHidden();
     await expect(page.getByRole("button", { name: "Filters & sort · 1" })).toBeVisible();
     await expect(page.getByRole("main").locator("a span[class*=name]:visible")).toHaveText([

@@ -65,7 +65,31 @@
   align-items: center;
 }
 
+/* Clear and Show N characters (board live-test-phone): the main button twice as wide. */
+.actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.clear {
+  flex: 1;
+  min-height: var(--size-touch);
+  border: var(--border) solid var(--line-neutral);
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.clear:disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
 .done {
+  flex: 2;
   min-height: var(--size-touch);
   border: 0;
   border-radius: var(--r-btn);

@@ -148,12 +148,28 @@ test("doomsday: design values", async ({ page }) => {
     color: "var(--gold-bright)",
   });
   const tabs = page.getByRole("navigation", { name: "Doomsday" });
-  await expectStyles(tabs.getByRole("link", { name: "Today" }), {
-    "font-family": "var(--font-display)",
-    color: "var(--gold-pale)",
-    "min-height": "var(--size-touch)",
-  });
-  await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
+  if (isPhone(page)) {
+    // WEB-65 (board live-test-phone): pill chips, no scrollbar, a 48 px fade.
+    await expectStyles(tabs.getByRole("link", { name: "Today" }), {
+      "font-family": "var(--font-ui)",
+      "border-radius": "var(--r-pill)",
+      "border-top-color": "var(--gold)",
+      "background-color": "var(--tint-pressed)",
+      color: "var(--text-strong)",
+      "min-height": "var(--size-touch)",
+    });
+    await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-chip)" });
+    await expectStyles(tabs, { "scrollbar-width": "none" });
+    const fade = await tabs.evaluate((el) => getComputedStyle(el.parentElement!, "::after").width);
+    expect(fade).toBe("48px");
+  } else {
+    await expectStyles(tabs.getByRole("link", { name: "Today" }), {
+      "font-family": "var(--font-display)",
+      color: "var(--gold-pale)",
+      "min-height": "var(--size-touch)",
+    });
+    await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
+  }
 
   const goal = page.getByTestId("goal").filter({ hasText: "Finish 5 quests in one zone" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });

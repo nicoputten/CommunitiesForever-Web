@@ -21,6 +21,10 @@ export interface RosterSheetProps {
   professions: readonly ProfessionOption[];
   /** Applies a change at once (a new URL). */
   onChange: (next: RosterQuery) => void;
+  /** Characters shown with the current filters: "Show 11 characters". */
+  count: number;
+  /** The table's sheet also sorts and groups (WEB-22); the cards' sheet only filters (WEB-65). */
+  sort?: boolean;
 }
 
 const toggle = <T,>(list: readonly T[], value: T): T[] =>
@@ -32,22 +36,25 @@ const DIRS = [
 ] as const;
 
 /**
- * The roster table's filters, sort and grouping on a phone (WEB-22, no board, decided with Nico): one button opens a
- * bottom sheet, a native modal <dialog> (focus trap, Escape) without drag. Every choice applies at once.
+ * The roster's filters on a phone: one button opens a bottom sheet, a native modal <dialog> (focus trap, Escape)
+ * without drag; every choice applies at once. The table's also sorts and groups (WEB-22, no board, decided with
+ * Nico); the cards' replaces the four filter menus (WEB-65, board live-test-phone). Clear, and Show N characters.
  */
-export function RosterSheet({ query, professions, onChange }: RosterSheetProps) {
+export function RosterSheet({ query, professions, onChange, count, sort = false }: RosterSheetProps) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const count =
+  const active =
     query.classes.length +
     query.roles.length +
     (query.level === undefined ? 0 : 1) +
     (query.profession === undefined ? 0 : 1);
+  const name = sort ? "Filters & sort" : "Filters";
 
   return (
     <>
       <span className={styles.open}>
-        <FilterChip aria-haspopup="dialog" active={count > 0} onClick={() => dialog.current?.showModal()}>
-          Filters &amp; sort{count > 0 ? ` · ${count}` : ""}
+        <FilterChip aria-haspopup="dialog" active={active > 0} onClick={() => dialog.current?.showModal()}>
+          {name}
+          {active > 0 ? ` · ${active}` : ""}
         </FilterChip>
       </span>
       <dialog
@@ -61,7 +68,7 @@ export function RosterSheet({ query, professions, onChange }: RosterSheetProps) 
       >
         <div className={styles.body}>
           <h2 id="roster-sheet-title" className={styles.title}>
-            Filters &amp; sort
+            {name}
           </h2>
 
           <Group legend="Class">
@@ -110,32 +117,46 @@ export function RosterSheet({ query, professions, onChange }: RosterSheetProps) 
               </FilterChip>
             ))}
           </Group>
-          <Group legend="Sort">
-            {TABLE_SORTS.map((s) => (
-              <FilterChip
-                key={s.value}
-                pressed={query.sort === s.value}
-                onClick={() => onChange({ ...query, sort: s.value, dir: defaultSortDir(s.value) })}
-              >
-                {s.label}
-              </FilterChip>
-            ))}
-          </Group>
-          <div className={styles.row}>
-            <Segmented<SortDir>
-              label="Order"
-              options={DIRS}
-              value={query.dir}
-              onChange={(dir) => onChange({ ...query, dir })}
-            />
-            <FilterChip pressed={query.group} onClick={() => onChange({ ...query, group: !query.group })}>
-              Group by friend
-            </FilterChip>
-          </div>
+          {sort && (
+            <>
+              <Group legend="Sort">
+                {TABLE_SORTS.map((s) => (
+                  <FilterChip
+                    key={s.value}
+                    pressed={query.sort === s.value}
+                    onClick={() => onChange({ ...query, sort: s.value, dir: defaultSortDir(s.value) })}
+                  >
+                    {s.label}
+                  </FilterChip>
+                ))}
+              </Group>
+              <div className={styles.row}>
+                <Segmented<SortDir>
+                  label="Order"
+                  options={DIRS}
+                  value={query.dir}
+                  onChange={(dir) => onChange({ ...query, dir })}
+                />
+                <FilterChip pressed={query.group} onClick={() => onChange({ ...query, group: !query.group })}>
+                  Group by friend
+                </FilterChip>
+              </div>
+            </>
+          )}
 
-          <button type="button" className={styles.done} onClick={() => dialog.current?.close()}>
-            Done
-          </button>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.clear}
+              disabled={active === 0}
+              onClick={() => onChange({ ...query, classes: [], roles: [], level: undefined, profession: undefined })}
+            >
+              Clear
+            </button>
+            <button type="button" className={styles.done} onClick={() => dialog.current?.close()}>
+              Show {count} {count === 1 ? "character" : "characters"}
+            </button>
+          </div>
         </div>
       </dialog>
     </>
