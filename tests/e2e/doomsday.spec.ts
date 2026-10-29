@@ -35,7 +35,7 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(
     page.getByRole("heading", { name: /^Your goals · \w{3} (morning|afternoon|evening|night)$/ }),
   ).toBeVisible();
-  await expect(page.getByText(/^\d of 4 done$/)).toBeVisible();
+  await expect(page.getByText(/^\d of 5 done$/)).toBeVisible();
   await expect(page.getByText(/^resets \w{3} \d\d:\d\d · in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
   await expect(page.getByTestId("goal")).toHaveCount(4);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
