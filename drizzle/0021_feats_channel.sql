@@ -1,0 +1,1 @@
+ALTER TABLE `bot_settings` ADD `feats_channel` text;

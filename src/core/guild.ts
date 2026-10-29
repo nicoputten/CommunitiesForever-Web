@@ -77,10 +77,12 @@ export function guildOptions(
   stored: readonly StoredGuildItem[],
   picked: string | null,
   reported: boolean,
+  /** The label of "nothing picked": "Not set", or a box's "Default · # doombringers" (WEB-58). */
+  unset = "Not set",
 ): PickOption[] {
   if (!reported) return [];
   const mark = (name: string) => (kind === "channel" ? `# ${name}` : `@${name}`);
-  const options: PickOption[] = [{ value: "", label: "Not set" }];
+  const options: PickOption[] = [{ value: "", label: unset }];
   for (const item of stored) if (item.present) options.push({ value: item.id, label: mark(item.name) });
   if (picked !== null && !options.some((o) => o.value === picked)) {
     const old = stored.find((i) => i.id === picked);
