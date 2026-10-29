@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.5.0 (2026-10-29)
+
 ### Doomsday
 Daily and weekly goals with points, a streak, feats and a ladder, in the game, on the site and in Discord. Goals are suggestions with points: skip any of them, nothing is locked. PvE and PvP are always side by side and never added together.
 - **A new page, Doomsday** (`/doomsday`, or `/doom`), after Runs:
@@ -14,7 +16,7 @@ Daily and weekly goals with points, a streak, feats and a ladder, in the game, o
 - **Roster:** each friend's PvE and PvP points this week and their streak, or "No Doomsday data yet".
 - **Feats:** every milestone is now a feat, and new ones join them: honorable kills, a new highest PvP rank with our title, duel wins, a first battleground win, 100 deaths, the first epic, mounts, the first catch, Jack of all trades and the profession watch list (Arcanite Reaper, Mooncloth, the Fishing Extravaganza and more). Special ones get a card image.
 - **Discord:** the bot gets the daily board at each reset (kept up to date after uploads), the weekly ladder on Sunday, a `/doomsday` look-up and a Doomsday section in the weekly recap. The board and ladder posts start switched off; the admin turns them on at launch.
-- **From the game:** the site keeps the coming addon's PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's goals. The reset time reaches the game through the uploader. There is no "Share my activity" any more: activity an older addon stopped sharing shows again.
+- **From the game:** the site keeps the new addon's (v0.8.0-beta1) PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's goals. The reset time reaches the game through the uploader. There is no "Share my activity" any more: activity an older addon stopped sharing shows again.
 
 ### Weekly recap
 - 21 new cards from the PvP, loot and play data (Warmonger, Battlemaster, Loot goblin, Duelist, Social butterfly, Bloodbath zone, Battleground of the week, Deadliest zone, Biggest group night, Rank race, Revenge, Duel rivals, Most deaths, Fell to their death, Died by fire, Untouchable, Big spender, Purple rain, Marathon, Night owl, Early bird), PvP and danger headlines, and five new challenges. Gold is never shown as an amount.

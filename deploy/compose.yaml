@@ -3,7 +3,7 @@
 services:
   web:
     # A release tag (README step 9). `latest` works too, but a tag makes updates and rollbacks explicit.
-    image: ghcr.io/nicoputten/communitiesforever-web:v0.4.1
+    image: ghcr.io/nicoputten/communitiesforever-web:v0.5.0
     restart: unless-stopped
     # The dataset's owner: TrueNAS's `apps` user and group (568). The image's files are world-readable, so any UID
     # works as long as it may write the dataset.
@@ -33,7 +33,7 @@ services:
   # asks the site and Discord, and keeps nothing. It runs as the image's own non-root user.
   bot:
     # Its own release tags, updated apart from the site's.
-    image: ghcr.io/nicoputten/communitiesforever-discord:v0.2.1
+    image: ghcr.io/nicoputten/communitiesforever-discord:v0.3.0
     restart: unless-stopped
     # The bot stops within 10 s on SIGTERM.
     stop_grace_period: 15s
