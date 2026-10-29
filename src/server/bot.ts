@@ -9,7 +9,7 @@ import {
   type Milestone,
   type MilestonesEvent,
 } from "@/core/bot";
-import { cardRank, type FeatFields, hasCard } from "@/core/doomsday/feats";
+import { featCardScore, type FeatFields } from "@/core/doomsday/feats";
 import type { Db } from "./db";
 import { botEvents, botTokens } from "./db/schema";
 import { getBotSettings } from "./discord";
@@ -107,11 +107,12 @@ export function recordMilestones(
     .values({ type: "milestones", data, createdAt: upload.uploadedAt, uploadId: upload.id })
     .returning({ id: botEvents.id })
     .get();
+  // WEB-66: every feat but a new character has a card; the post's one card is the most special.
   let best: { card: string; rank: number } | undefined;
   reached.forEach((m, n) => {
-    if (!hasCard({ kind: m.kind, fields: m as FeatFields, level: m.character.level })) return;
+    const rank = featCardScore({ kind: m.kind, fields: m as FeatFields, firstInGroup: m.firstInGroup === true });
+    if (rank < 0) return;
     m.card = `milestone-${id}-${n}`;
-    const rank = cardRank({ kind: m.kind, fields: m as FeatFields });
     if (best === undefined || rank > best.rank) best = { card: m.card, rank };
   });
   if (best !== undefined) {

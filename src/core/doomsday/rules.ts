@@ -992,3 +992,72 @@ export function elo(results: readonly DuelResult[]): Record<string, number> {
   }
   return rating;
 }
+
+/**
+ * Each goal's short label, at most 10 characters, for a column title where the full text doesn't fit (the bot's board
+ * image, WEB-66). The addon's own (addon PR #123, `Doomsday.SHORT_LABELS`, DOOMSDAY.md "Short labels (CF-61)"): the
+ * same everywhere. The Hunt is "Hunt".
+ */
+export const SHORT_LABELS: Readonly<Record<string, string>> = {
+  "d.quests10": "10 quests",
+  "d.quests20": "20 quests",
+  "d.zone5": "5 in zone",
+  "d.zones3": "3 zones",
+  "d.shared3": "3 shared",
+  "d.level": "Level",
+  "d.altLevel": "Alt level",
+  "d.ilvl": "Item level",
+  "d.cleanLevel": "Clean lvl",
+  "d.dungeon": "Dungeon",
+  "d.dungeonFriend": "Group run",
+  "d.bosses3": "3 bosses",
+  "d.skill5": "Skills",
+  "d.secondary": "Secondary",
+  "d.fish20": "20 fish",
+  "d.chars2": "2 chars",
+  "d.groupFriend": "Group up",
+  "d.trade": "Trade",
+  "d.rare": "Rare loot",
+  "d.earlyBird": "Early bird",
+  "w.days3": "3 days",
+  "w.days5": "5 days",
+  "w.chars3": "3 chars",
+  "w.levels3": "3 levels",
+  "w.altLevels2": "Alt 2 lvls",
+  "w.quests50": "50 quests",
+  "w.zones5": "5 zones",
+  "w.dungeons3": "3 dungeons",
+  "w.dungeonsDiff3": "3 distinct",
+  "w.dungeonFriends2": "Trio run",
+  "w.fullClear": "Full clear",
+  "w.skill25": "25 skill",
+  "w.cap": "Skill cap",
+  "w.newProf": "New prof",
+  "w.ilvl3": "Item lvl+3",
+  "w.friends3": "3 friends",
+  "w.rare5": "5 rares",
+  "w.session2h": "2h session",
+  "w.discover5": "Discover 5",
+  "w.craftTrade": "Craft gift",
+  "p.frontLine": "Front line",
+  "p.punchUp": "Punch up",
+  "p.loneWolf": "Lone wolf",
+  "p.untouchable": "Untouched",
+  "p.variety": "Variety",
+  "p.ranked": "Ranked",
+  "b.zone25": "Zone 25",
+  "b.allClasses": "Classes",
+  "b.allRaces": "Races",
+  "b.ranked5": "5 ranked",
+  "b.kills50": "50 kills",
+  "b.spree10": "Spree 10",
+  "b.hunt3": "3 hunts",
+  "b.duels3": "3 duels",
+  "b.days5": "Kill days",
+};
+
+/** A goal's short label; the Hunt is "Hunt", a goal from a newer addon "New goal". */
+export function shortLabel(id: string): string {
+  if (id.startsWith("hunt")) return "Hunt";
+  return SHORT_LABELS[id] ?? "New goal";
+}

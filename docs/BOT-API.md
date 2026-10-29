@@ -546,7 +546,8 @@ The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot
 | `news` | one finished sentence; the bot shows it as is. At the reset: the goals in full and "5 points each". During the day: "Mira finished all dailies first (23:13). Ada and Tok are 1 away." With `final`: "Day over: 14 goals done. Mira first at 23:13, longest streak Tok with 7. New board at 19:00." Plus "2 friends without addon data" when `withoutData` has any |
 | `label` | now the day by its reset: the weekday plus the part of the day of the reset hour, 05–11 "morning", 12–16 "afternoon", 17–22 "evening", 23–04 "night" ("Wed evening") |
 | `span` | "Wed 19:00 → Thu 19:00", realm time |
-| `goals[].shortLabel` | the goal's column label in the picture, at most 10 characters ("3 quests", "Hunt") |
+| `goals[].shortLabel` | the goal's column label in the picture, at most 10 characters ("3 shared", "Hunt"): the addon's own short labels (CF-61) |
+| `goals` | now also the Hunt, as `{ slot: "hunt", id: "hunt" }` between the PvE dailies and the Skirmish, titled after every Hunt the friends have; a friend's row marks it done when any of their Hunts is done (before WEB-66 a row's Hunt came as `skirmish`) |
 | `friends[].goalCount` | the goals on the friend's grid: the 3 PvE dailies, the Hunt and the Skirmish, and the Duel slot |
 | `friends[].doneCount` | now counts the same goals, the Duel slot included (done after its first duel) |
 | `friends[].pvpVirgin` | now: no PvP point ever (duel points included) **and** no honorable kill ever, on any character |
@@ -554,6 +555,7 @@ The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot
 - The embed: title "Doomsday · <label>" (" · final" with `final`), `news` as description, the picture, and the buttons "Open the board ↗" (`doomsday.url`) and "My goals" (the bot's `doomsday` look-up, for whoever clicks).
 - The look-up `doomsday` gains `span`, and its `label` changes the same way.
 - Clock times in `news` are realm time.
+- The picture: "DOOMSDAY", "<label> · <state>" (just started, the time of the last change, or final), one column per goal with its short label under PvE or PvP, one row per friend with Doomsday data (at most 6, the most goals done first): the name struck through when all PvE dailies are done and the crown after the first to finish, 44 px boxes, "PvP Virgin" across the PvP columns, Today as PvE · PvP and the streak. The footer says when it resets, or at the end who finished first and the goals done.
 
 ### Feats (the `milestones` event)
 

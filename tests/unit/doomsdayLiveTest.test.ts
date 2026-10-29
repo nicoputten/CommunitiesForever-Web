@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { clockAt, doomsdayDay, gridCount, partOfDay, resetsText } from "@/core/doomsday/rules";
+import { featCardScore, featCardSize } from "@/core/doomsday/feats";
+import { boardNews, type BoardData } from "@/core/doomsday/posts";
+import { clockAt, doomsdayDay, GOALS, gridCount, partOfDay, resetsText, shortLabel } from "@/core/doomsday/rules";
 
 // WEB-66 (Nico's live test of 2026-10-29): the day named by its reset, clock times within the day, the grid's count.
 
@@ -49,5 +51,109 @@ describe("N of M done", () => {
     expect(gridCount(goals, 2)).toEqual({ done: 3, total: 6 });
     // Both Hunts of a friend with characters on both factions: 7.
     expect(gridCount([...goals, {}], 1).total).toBe(7);
+  });
+});
+
+describe("short labels (WEB-66)", () => {
+  it('has one of at most 10 characters for every goal, the Hunt\'s "Hunt"', () => {
+    for (const g of GOALS) expect(shortLabel(g.id).length, g.id).toBeLessThanOrEqual(10);
+    expect(GOALS.filter((g) => shortLabel(g.id) === "New goal").map((g) => g.id)).toEqual([]);
+    expect(shortLabel("hunt:NightElf:DRUID")).toBe("Hunt");
+  });
+});
+
+describe("which card a feat gets (WEB-66)", () => {
+  it("is big for the special feats and anything first in the group, a strip for the rest, none for a new character", () => {
+    expect(featCardSize({ kind: "pvpRank", fields: { rank: 6 } })).toBe("big");
+    expect(featCardSize({ kind: "pvpRank", fields: { rank: 5 } })).toBe("strip");
+    expect(featCardSize({ kind: "honorKills", fields: { kills: 1000 } })).toBe("big");
+    expect(featCardSize({ kind: "honorKills", fields: { kills: 100 } })).toBe("strip");
+    expect(featCardSize({ kind: "mount", fields: {} })).toBe("big");
+    expect(featCardSize({ kind: "firstCatch", fields: {} })).toBe("strip");
+    expect(featCardSize({ kind: "firstCatch", fields: {}, firstInGroup: true })).toBe("big");
+    expect(featCardSize({ kind: "newCharacter", fields: {} })).toBeUndefined();
+  });
+
+  it("picks the most special for the post: big, then first in the group, then the rarer", () => {
+    const strip = featCardScore({ kind: "level", fields: { level: 30 } });
+    const firstStrip = featCardScore({ kind: "firstCatch", fields: {}, firstInGroup: true });
+    const mount = featCardScore({ kind: "mount", fields: {} });
+    const epic = featCardScore({ kind: "firstEpic", fields: {} });
+    expect(firstStrip).toBeGreaterThan(mount);
+    expect(epic).toBeGreaterThan(strip);
+    expect(featCardScore({ kind: "newCharacter", fields: {} })).toBe(-1);
+  });
+});
+
+describe("the board's news line (WEB-66)", () => {
+  const board: BoardData = {
+    day: 1,
+    week: 1,
+    label: "Wed evening",
+    span: "Wed 19:00 → Thu 19:00",
+    start: START,
+    end: END,
+    goals: [
+      { slot: "pve1", id: "d.level", title: "Gain a level", track: "pve", points: 5, shortLabel: "Level" },
+      {
+        slot: "skirmish",
+        id: "p.loneWolf",
+        title: "Lone wolf: 3 solo kills",
+        track: "pvp",
+        points: 5,
+        shortLabel: "Lone wolf",
+      },
+    ],
+    friends: [
+      {
+        name: "Mira",
+        goals: [],
+        doneCount: 4,
+        goalCount: 6,
+        crossedOut: true,
+        today: { pve: 15, pvp: 0 },
+        week: { pve: 15, pvp: 0 },
+        streak: 4,
+        best: 4,
+        pvpVirgin: false,
+      },
+      ...["Ada", "Tok"].map((name) => ({
+        name,
+        goals: [
+          { slot: "pve1", id: "x", done: true },
+          { slot: "pve2", id: "x", done: true },
+        ],
+        doneCount: 2,
+        goalCount: 6,
+        crossedOut: false,
+        today: { pve: 10, pvp: 0 },
+        week: { pve: 10, pvp: 0 },
+        streak: 1,
+        best: 1,
+        pvpVirgin: false,
+      })),
+    ],
+    withoutData: ["Sanne", "Jorrit"],
+    crown: { name: "Mira", at: START + 4 * 3600 + 13 * 60 },
+    yesterdayCrown: null,
+  };
+
+  it("names the goals at the reset", () => {
+    expect(boardNews(board, "start", PARIS)).toBe(
+      "New day, new doom. PvE Gain a level. PvP Lone wolf: 3 solo kills. 5 points each. 2 friends without addon data.",
+    );
+  });
+
+  it("says who finished first and who is 1 away during the day", () => {
+    expect(boardNews(board, "update", PARIS)).toBe(
+      "Mira finished all dailies first (23:13). Ada and Tok are 1 away. 2 friends without addon data.",
+    );
+  });
+
+  it("sums up the day at the end", () => {
+    const summary = { goalsDone: 14, hunt: null, longestStreak: { name: "Tok", days: 7 } };
+    expect(boardNews({ ...board, withoutData: [] }, "final", PARIS, summary)).toBe(
+      "Day over: 14 goals done. Mira first at 23:13, longest streak Tok with 7. New board at 19:00.",
+    );
   });
 });

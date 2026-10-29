@@ -1,5 +1,6 @@
 import { doomsdaySnapshot, type DoomsdayInput, prepare, periodTotals, scheduleAt } from "./engine";
-import { crown, dayOf, dayStart, doomsdayDay, elo, gridCount, weekOf, weekStart } from "./rules";
+import { joinNames } from "../views/text";
+import { clockAt, crown, dayOf, dayStart, doomsdayDay, elo, gridCount, shortLabel, weekOf, weekStart } from "./rules";
 import type { DoomsdaySnapshot, FriendGoal, GoalRef } from "./snapshot";
 
 // What the bot gets about Doomsday (WEB-58, docs/BOT-API.md "Doomsday"): the daily board, the weekly ladder, the
@@ -12,6 +13,8 @@ export interface BotGoal {
   title: string;
   track: "pve" | "pvp";
   points: number;
+  /** WEB-66: the column title in the board image, at most 10 characters (the addon's short labels). */
+  shortLabel: string;
   unknown?: true;
   hunt?: Record<string, string>;
 }
@@ -54,8 +57,6 @@ export interface BoardData {
   yesterdayCrown: { name: string } | null;
 }
 
-const DAY_SLOTS = ["pve1", "pve2", "pve3", "skirmish"];
-
 /** The day's name and span in realm time: the bot posts one message for everyone (WEB-66). */
 function dayOfBoard(snap: DoomsdaySnapshot): { label: string; span: string } {
   const d = doomsdayDay(snap.schedule.dayStart, snap.schedule.nextReset, snap.schedule.timeZone);
@@ -64,13 +65,22 @@ function dayOfBoard(snap: DoomsdaySnapshot): { label: string; span: string } {
 const WEEK_SLOTS = ["week1", "week2", "week3", "bounty"];
 
 function botGoal(ref: GoalRef, slot: string, points: number): BotGoal {
-  const g: BotGoal = { slot, id: ref.id, title: ref.title, track: ref.track, points };
+  const g: BotGoal = { slot, id: ref.id, title: ref.title, track: ref.track, points, shortLabel: shortLabel(ref.id) };
   if (!ref.known) g.unknown = true;
   return g;
 }
 
 function slotsOf(goals: readonly FriendGoal[], slots: readonly string[]) {
   return goals.map((g, i) => ({ g, slot: slots[i] ?? `extra${i}` }));
+}
+
+/** A day's goals by their kind (WEB-66): the PvE dailies pve1 to pve3, the Hunt(s) `hunt`, the Skirmish `skirmish`. */
+function daySlotsOf(goals: readonly FriendGoal[]) {
+  let pve = 0;
+  return goals.map((g) => ({
+    g,
+    slot: g.goal.slot === "hunt" ? "hunt" : g.goal.slot === "skirmish" ? "skirmish" : `pve${++pve}`,
+  }));
 }
 
 function friendGoal(g: FriendGoal, slot: string): BotFriendGoal {
@@ -87,7 +97,7 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
   const nameOf = (key: string) => snap.friends.find((f) => f.friendKey === key)?.name ?? "A friend";
   const active = snap.friends.filter((f) => f.status === "active" && f.today !== undefined);
   const friends = active.map((f) => {
-    const goals = slotsOf(f.today!.goals, DAY_SLOTS)
+    const goals = daySlotsOf(f.today!.goals)
       .filter(({ g }) => g.doneAt !== undefined || g.swappedFrom !== undefined || g.progress !== undefined)
       .map(({ g, slot }) => friendGoal(g, slot));
     return {
@@ -119,13 +129,84 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
     ...dayOfBoard(snap),
     start: snap.schedule.dayStart,
     end: snap.schedule.nextReset,
-    goals: snap.todayGoals.map((ref, i) => botGoal(ref, DAY_SLOTS[i] ?? `extra${i}`, 5)),
+    goals: dayColumns(snap),
     friends,
     withoutData: snap.friends.filter((f) => f.status !== "active").map((f) => f.name),
     crown: snap.crown !== undefined ? { name: nameOf(snap.crown.friendKey), at: snap.crown.at } : null,
     yesterdayCrown: yesterday !== undefined ? { name: nameOf(yesterday.friend) } : null,
   };
 }
+
+/**
+ * The day's columns: the PvE dailies, the Hunt (when anyone has one; titled after every Hunt the friends have), the
+ * Skirmish.
+ */
+function dayColumns(snap: DoomsdaySnapshot): BotGoal[] {
+  const pve = snap.todayGoals.filter((g) => g.slot !== "skirmish");
+  const skirmish = snap.todayGoals.filter((g) => g.slot === "skirmish");
+  const hunts = [
+    ...new Set(
+      snap.friends.flatMap((f) =>
+        (f.today?.goals ?? []).filter((g) => g.goal.slot === "hunt").map((g) => g.goal.title),
+      ),
+    ),
+  ];
+  return [
+    ...pve.map((ref, i) => botGoal(ref, `pve${i + 1}`, 5)),
+    ...(hunts.length > 0
+      ? [{ slot: "hunt", id: "hunt", title: hunts.join(" or "), track: "pvp" as const, points: 5, shortLabel: "Hunt" }]
+      : []),
+    ...skirmish.map((ref) => botGoal(ref, "skirmish", 5)),
+  ];
+}
+
+/** "Ada and Tok are 1 away." / "2 friends without addon data." */
+const be = (names: readonly string[]) => (names.length === 1 ? "is" : "are");
+
+/**
+ * The board's one line of news (WEB-66, board `bot-visual-daily`), in realm time: at the reset the goals in full,
+ * during the day who finished first and who is 1 away, at the end the day's summary. Plus how many friends have no
+ * addon data.
+ */
+export function boardNews(
+  data: BoardData,
+  kind: "start" | "update" | "final",
+  timeZone: string,
+  summary?: ReturnType<typeof boardSummary>,
+): string {
+  const at = (t: number) => clockAt(t, data.start, timeZone);
+  const parts: string[] = [];
+  if (kind === "start") {
+    const titles = (track: "pve" | "pvp") => data.goals.filter((g) => g.track === track).map((g) => g.title);
+    parts.push(`New day, new doom. PvE ${titles("pve").join(" · ")}. PvP ${titles("pvp").join(" · ")}. 5 points each.`);
+  } else if (kind === "final") {
+    const first = data.crown !== null ? `${data.crown.name} first at ${at(data.crown.at)}` : undefined;
+    const streak =
+      summary?.longestStreak !== null && summary?.longestStreak !== undefined
+        ? `longest streak ${summary.longestStreak.name} with ${summary.longestStreak.days}`
+        : undefined;
+    const middle = [first, streak].filter((x) => x !== undefined).join(", ");
+    const resetAt = doomsdayDay(data.start, data.end, timeZone).span.split(" → ")[1]!.split(" ")[1];
+    parts.push(
+      `Day over: ${summary?.goalsDone ?? 0} goals done.${middle !== "" ? ` ${capitalized(middle)}.` : ""} New board at ${resetAt}.`,
+    );
+  } else {
+    if (data.crown !== null) parts.push(`${data.crown.name} finished all dailies first (${at(data.crown.at)}).`);
+    const oneAway = data.friends
+      .filter((f) => !f.crossedOut && f.goals.filter((g) => g.slot.startsWith("pve") && g.done).length === 2)
+      .map((f) => f.name);
+    if (oneAway.length > 0) parts.push(`${joinNames(oneAway)} ${be(oneAway)} 1 away.`);
+    if (parts.length === 0) {
+      const done = data.friends.reduce((n, f) => n + f.goals.filter((g) => g.done).length, 0);
+      parts.push(`${done} ${done === 1 ? "goal" : "goals"} done so far.`);
+    }
+  }
+  const without = data.withoutData.length;
+  if (without > 0) parts.push(`${without} ${without === 1 ? "friend" : "friends"} without addon data.`);
+  return parts.join(" ");
+}
+
+const capitalized = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** The day's summary on the final board update: goals done by everyone, the Hunt race, the longest streak. */
 export function boardSummary(snap: DoomsdaySnapshot): {
@@ -254,7 +335,7 @@ export function lookupData(snap: DoomsdaySnapshot, friendKey: string) {
   if (f === undefined) return undefined;
   if (f.status !== "active" || f.today === undefined || f.week === undefined) return { friend: f.name, noData: true };
   const goals = [
-    ...slotsOf(f.today.goals, DAY_SLOTS).map(({ g, slot }) => ({ g, slot, weekly: false })),
+    ...daySlotsOf(f.today.goals).map(({ g, slot }) => ({ g, slot, weekly: false })),
     ...slotsOf(f.week.goals, WEEK_SLOTS).map(({ g, slot }) => ({ g, slot, weekly: true })),
   ].map(({ g, slot }) => ({ ...botGoal(g.goal, slot, g.points), ...friendGoal(g, slot) }));
   const place = (track: "pve" | "pvp") => {

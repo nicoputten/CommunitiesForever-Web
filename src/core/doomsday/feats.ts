@@ -566,6 +566,42 @@ export function hasCard(f: { kind: FeatKind; fields: FeatFields; level?: number 
 }
 
 /**
+ * Every feat gets a card (WEB-66, board `bot-visual-feats`; Nico's live test, 2026-10-29): big (800 × 400) for PvP
+ * rank 6 and up, level 60, epic items, mounts, the watch list's items, Jack of all trades, 1,000+ honorable kills and
+ * anything "First in the group"; a strip (800 × 240) for every other feat. A new character is never a feat card.
+ */
+export function featCardSize(f: {
+  kind: FeatKind;
+  fields: FeatFields;
+  firstInGroup?: boolean;
+}): "big" | "strip" | undefined {
+  if (f.kind === "newCharacter") return undefined;
+  if (f.firstInGroup === true) return "big";
+  switch (f.kind) {
+    case "pvpRank":
+      return (f.fields.rank ?? 0) >= RANK_CARD_FROM ? "big" : "strip";
+    case "honorKills":
+      return (f.fields.kills ?? 0) >= 1000 ? "big" : "strip";
+    case "maxLevel":
+    case "firstEpic":
+    case "mount":
+    case "epicMount":
+    case "notableItem":
+    case "jackOfAllTrades":
+      return "big";
+    default:
+      return "strip";
+  }
+}
+
+/** The post's one card: big beats strip, "First in the group" beats the rest, then the rarer kind (cardRank). */
+export function featCardScore(f: { kind: FeatKind; fields: FeatFields; firstInGroup?: boolean }): number {
+  const size = featCardSize(f);
+  if (size === undefined) return -1;
+  return (size === "big" ? 1000 : 0) + (f.firstInGroup === true ? 500 : 0) + cardRank(f);
+}
+
+/**
  * How special a feat's card is, higher first (Nico, 2026-10-28): rank 14, 10,000 kills, Jack of all trades, the
  * Extravaganza won, other watch-list items, epic mount, first epic, ranks 13 to 6, level 60, profession 300.
  */

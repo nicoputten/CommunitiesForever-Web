@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { and, eq, isNull } from "drizzle-orm";
+import { cardFor } from "@/server/cards";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { boardData, lookupData, recapSection } from "@/core/doomsday/posts";
 import { dayStart, draw } from "@/core/doomsday/rules";
@@ -198,6 +199,13 @@ describe("Doomsday's bot events", () => {
     });
     expect((board!.data.friends as { name: string }[]).map((f) => f.name)).toEqual(["Ada", "Nico"]);
     expect(board!.data.withoutData).toEqual(["Bob"]);
+    // WEB-66: the news line and the board image, which the bot fetches by its id.
+    expect(board!.data.news).toMatch(/^New day, new doom\. PvE .+\. 5 points each\. 1 friend without addon data\.$/);
+    expect(board!.data.image).toMatch(new RegExp(`^doomsday-${DAY}-[0-9a-f]{6}$`));
+    expect((board!.data.goals as { shortLabel: string }[]).every((g) => g.shortLabel.length <= 10)).toBe(true);
+    const spec = cardFor(db, String(board!.data.image), T + 120, "wow.example.test");
+    expect(spec).toMatchObject({ kind: "board", title: "Tue evening · just started", footer: "resets Wed 19:00" });
+    expect(cardFor(db, `doomsday-${DAY}-000000`, T + 120)).toBeUndefined();
 
     // Two uploads before the bot polls: only the newest update is handed out.
     upload(db, file(200, { nico: dayLua(DAY, { [d1!]: T + 100 }), ada: dayLua(DAY, {}) }), ADMIN, T + 200, ADMIN);
