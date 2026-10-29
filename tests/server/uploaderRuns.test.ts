@@ -109,7 +109,32 @@ describe("runs for the uploader", () => {
     ]);
     expect(body.runs[1]!.url).toBe(`https://wow.example/runs/${armory}`);
     expect(body.runs[0]!.id).toBe(`r-${started}`);
-    sameShape(body, example("runs"), ["note", "guid", "name", "fit", "reserve"]);
+    sameShape(body, example("runs"), [
+      "note",
+      "guid",
+      "name",
+      "fit",
+      "reserve",
+      "classFile",
+      "level",
+      "realm",
+      "seenAt",
+    ]);
+    // WEB-66 (addon CF-62): the site's URL and the group's friends, the token's owner left out, never a BattleTag.
+    const extra = body as unknown as {
+      site: string;
+      friends: { name: string; chars: { name: string; level?: number }[] }[];
+    };
+    expect(extra.site).toBe("https://wow.example");
+    const names = extra.friends.map((f) => f.name);
+    expect(names).toEqual([...names].sort((x, y) => x.localeCompare(y, "en")));
+    expect(names).not.toContain("Nico");
+    expect(names).toContain("Bob");
+    expect(JSON.stringify(extra.friends)).not.toMatch(/#\d|Player-/);
+    for (const f of extra.friends) {
+      const levels = f.chars.map((c) => c.level ?? 0);
+      expect(levels).toEqual([...levels].sort((x, y) => y - x));
+    }
     // Asked again without a change: the same list, the same updatedAt.
     expect(await (await get(token)).json()).toEqual(body);
   });

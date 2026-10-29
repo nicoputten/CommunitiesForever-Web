@@ -69,6 +69,7 @@ describe("runs for the uploader", () => {
       reminderMinutes: 30,
       received: [],
       asks: [],
+      site: "https://wow.example",
       runs: [
         {
           id: "r-7",
