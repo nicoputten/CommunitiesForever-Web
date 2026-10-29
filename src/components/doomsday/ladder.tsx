@@ -138,8 +138,13 @@ export function PvpDetails({ view }: { view: PvpView }) {
             <div>
               <div className={styles.rankName}>{r.rankText}</div>
               <div className={base.meta}>
-                {r.rank > 0 ? "a.k.a. " : ""}
-                <span className={styles.aka}>{r.title}</span> · {r.name}
+                {r.title !== "" && (
+                  <>
+                    {r.rank > 0 ? "a.k.a. " : ""}
+                    <span className={styles.aka}>{r.title}</span> ·{" "}
+                  </>
+                )}
+                {r.name}
               </div>
             </div>
           </div>
