@@ -524,3 +524,58 @@ New kinds, sorted after the existing ones (then by name):
 `professionCap` at 300 gains `title` for Cooking ("Head Chef"), First Aid ("Field Medic") and Fishing ("Fish Whisperer").
 
 Card images (`cards/milestone-<event>-<n>.png`, 800 × 400) also for `honorKills` 10,000, `pvpRank` 6 to 14 (14 its own image), `firstEpic`, `epicMount`, `jackOfAllTrades` and every `notableItem`.
+
+## Visual posts (WEB-66)
+The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot-visual-daily`, `bot-visual-feats`; Nico's brief `docs/DESIGN-BRIEF-LIVE-TEST.md` part 5), agreed with the bot before the site builds it (2026-10-29). Everything is optional within v1. An older site leaves the fields out, and the bot then posts as before (text, without images). Images come from `GET cards/<id>.png` (see "Card images") with the bot token; ids are `[a-z0-9-]` only. The bot attaches them as files (`attachment://`). Images and texts carry no legends or notes. The recap's icons and their colours are the bot's own (the 128 px PNGs live in the bot repo).
+
+### New and changed card images
+
+| id | Size | What |
+|---|---|---|
+| `doomsday-<day>-<hash>` | 800 × 560 | the day's board picture. `hash` (6 hex characters) changes only when the picture changes |
+| `milestone-<event>-<n>` | 800 × 400 or 800 × 240 | now **every** feat except `newCharacter`: big or strip (the site chooses) |
+| `recap-<week>-header` | 1200 × 400 | the award header with the winner's class disc (as before; without an award: the busiest zone, else the headline) |
+| `recap-<week>-zone` | 800 × 450 (was 800 × 400) | the zone crop with "Map: Syrio, CC BY-SA 4.0", for a recap with Zone of the week (`S1`) or Bloodbath zone (`S13`) |
+
+### Doomsday board
+`doomsdayBoard` and `doomsdayBoardUpdate` gain:
+
+| Field | |
+|---|---|
+| `image` | the board picture's id. It is new only when the picture changed, so the bot re-attaches only on a new id (at most every 5 minutes; `final` is never held back). Left out when the picture couldn't be drawn: the bot falls back to the text table, without the legend line |
+| `news` | one finished sentence; the bot shows it as is. At the reset: the goals in full and "5 points each". During the day: "Mira finished all dailies first (23:13). Ada and Tok are 1 away." With `final`: "Day over: 14 goals done. Mira first at 23:13, longest streak Tok with 7. New board at 19:00." Plus "2 friends without addon data" when `withoutData` has any |
+| `label` | now the day by its reset: the weekday plus the part of the day of the reset hour, 05–11 "morning", 12–16 "afternoon", 17–22 "evening", 23–04 "night" ("Wed evening") |
+| `span` | "Wed 19:00 → Thu 19:00", realm time |
+| `goals[].shortLabel` | the goal's column label in the picture, at most 10 characters ("3 quests", "Hunt") |
+| `friends[].goalCount` | the goals on the friend's grid: the 3 PvE dailies, the Hunt and the Skirmish, and the Duel slot |
+| `friends[].doneCount` | now counts the same goals, the Duel slot included (done after its first duel) |
+| `friends[].pvpVirgin` | now: no PvP point ever (duel points included) **and** no honorable kill ever, on any character |
+
+- The embed: title "Doomsday · <label>" (" · final" with `final`), `news` as description, the picture, and the buttons "Open the board ↗" (`doomsday.url`) and "My goals" (the bot's `doomsday` look-up, for whoever clicks).
+- The look-up `doomsday` gains `span`, and its `label` changes the same way.
+- Clock times in `news` are realm time.
+
+### Feats (the `milestones` event)
+
+| Field | |
+|---|---|
+| `milestones[].card` | now on every feat except `newCharacter`: big (800 × 400) for PvP rank 6 and up, level 60, epic items, mounts, watch-list items, 1,000+ honorable kills and any feat with `firstInGroup`; strip (800 × 240) for the rest |
+| `milestones[].headline` | the feat's short name ("Stone Guard", "First catch") |
+| `milestones[].line` | one finished sentence ("Rank 6, a.k.a. Mailbox Menace. First Doombringer to get there.") |
+| `card` (on `data`) | the one card for the post: the most special feat's (big beats strip, then `firstInGroup`, then the rarer kind) |
+
+- `newCharacter` stays a kind, without a card. The bot groups those into one line "+3 new characters: Grosh Bonechewer 60, …" from `character.level`, and they are not counted as feats.
+- The post: the list grouped by character (class icon and name in class colour first), then the one card, with the footer "N feats from one upload" when there are several. "Test post from the site's Discord page · not real" only on test posts.
+
+### Recap
+The `recap` event (and `recap/latest`) gains:
+
+| Field | |
+|---|---|
+| `numbers.honorKills`, `numbers.battlegrounds`, `numbers.feats` | for the header's six inline fields, with `levels`, `friendsPlayed` and `runs` |
+| `award.classFile` | the winner's class, for the embed's colour |
+| `award.image` | the award header's id (`recap-<week>-header`) |
+| `cards[].image` | the zone crop's id (`recap-<week>-zone`) on a card with a map (`S1`, `S13`) |
+| `url` | the site's page for "The full week ↗": the Doomsday page's Week tab (Nico, 2026-10-29) |
+
+- The layout (one message, the header embed, an embed per card, Doomsday, the challenge, the link buttons) is the bot's, as `bot-visual-recap` shows. If an image fails, the embeds go out without it.
