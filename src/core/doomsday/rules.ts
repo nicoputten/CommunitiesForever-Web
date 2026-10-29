@@ -1061,3 +1061,26 @@ export function shortLabel(id: string): string {
   if (id.startsWith("hunt")) return "Hunt";
   return SHORT_LABELS[id] ?? "New goal";
 }
+
+/**
+ * Bosses per dungeon for `w.fullClear`, by the instance name the feed stores. Source: the addon's `Goals.BOSSES`
+ * (src/core/Goals.lua, from the game's DungeonEncounter table, Classic Era, checked 2026-10-28). Dungeons with wings or
+ * optional bosses (Scarlet Monastery, Blackrock Spire, Dire Maul, Stratholme, Scholomance, Blackfathom Deeps, Sunken
+ * Temple) and Forever's new dungeons wait for counts from launch, as in the addon; no progress shows for them.
+ */
+export const DUNGEON_BOSSES: Readonly<Record<string, number>> = {
+  "Ragefire Chasm": 4,
+  "Wailing Caverns": 8,
+  "The Deadmines": 7,
+  Deadmines: 7,
+  "Shadowfang Keep": 8,
+  "The Stockade": 5,
+  "Stormwind Stockade": 5,
+  Gnomeregan: 5,
+  "Razorfen Kraul": 6,
+  "Razorfen Downs": 6,
+  Uldaman: 8,
+  "Zul'Farrak": 8,
+  Maraudon: 8,
+  "Blackrock Depths": 21,
+};

@@ -84,6 +84,7 @@ Nine new five-player dungeons next to the Vanilla ones ([Blizzard: Explore the N
 
 - The beta Group Finder (API-FINDINGS V46, Oct 18) listed 29 dungeon activities: the Vanilla ones plus the first four above. The addon takes its runtime ranges from it (`Dungeons.applyGroupFinder`).
 - Inside Ruins of Lordaeron, `GetInstanceInfo()` names it "Ruins of Lordaeron" (instanceID 2999). Confirmed (beta client).
+- Bosses per dungeon (for Doomsday's "Clear every boss of a dungeon"): the site uses the addon's `Goals.BOSSES` (from the game's DungeonEncounter table, Classic Era, checked 2026-10-28) as `DUNGEON_BOSSES` in `src/core/doomsday/rules.ts`. Dungeons with wings or optional bosses and Forever's new dungeons have no count until launch; no progress shows for them.
 - Boss loot reworked: unique boss items at least Rare quality. Unverified ([mmonster](https://mmonster.co/wow-forever/guides/articles/forever-vs-classic)).
 
 ## Raids
