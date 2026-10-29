@@ -3,7 +3,15 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import type { ReactElement, ReactNode } from "react";
 import { MAP_CREDIT, type Crop } from "@/core/cards/mapCrop";
-import { cardSize, type CardSpec, type Disc, type FeatCardSpec, type FeatIcon } from "@/core/cards/models";
+import {
+  cardSize,
+  type CardSpec,
+  type Disc,
+  type FeatCardSpec,
+  type FeatIcon,
+  type StripCardSpec,
+  type BoardCardSpec,
+} from "@/core/cards/models";
 import { px, tok } from "@/core/cards/palette";
 
 // The card images (WEB-41d): CardSpecs (src/core/cards/models.ts) drawn with Next's built-in `next/og` (Satori and
@@ -59,7 +67,7 @@ function Frame({ children, width, height }: { children: ReactNode; width: number
   );
 }
 
-function Footer({ host, credit }: { host: string; credit?: boolean }) {
+function Footer({ host, credit, right }: { host: string; credit?: boolean; right?: string }) {
   return (
     <div
       style={{
@@ -81,7 +89,11 @@ function Footer({ host, credit }: { host: string; credit?: boolean }) {
         </svg>
         {host}
       </div>
-      {credit === true ? <div style={{ display: "flex" }}>{MAP_CREDIT}</div> : <div style={{ display: "flex" }} />}
+      {credit === true ? (
+        <div style={{ display: "flex" }}>{MAP_CREDIT}</div>
+      ) : (
+        <div style={{ display: "flex" }}>{right ?? ""}</div>
+      )}
     </div>
   );
 }
@@ -329,6 +341,34 @@ function FeatIconSvg({ icon, rank, size }: { icon: FeatIcon; rank?: number; size
         <path d="M26 26c2 4 2 8 0 12" fill="none" stroke={tok("--gold")} strokeWidth={1.6} />
       </>
     ),
+    // WEB-66, in the same style: a level (an arrow up in a ring) and a skull (100 deaths).
+    level: (
+      <>
+        <circle cx={32} cy={32} r={24} fill={fill} stroke={line} strokeWidth={2.2} />
+        <path
+          d="M20 36l12-12 12 12M20 46l12-12 12 12"
+          fill="none"
+          stroke={line}
+          strokeWidth={2.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </>
+    ),
+    skull: (
+      <>
+        <path
+          d="M14 30c0-12 8-20 18-20s18 8 18 20c0 6-3 10-6 12v8H20v-8c-3-2-6-6-6-12z"
+          fill={fill}
+          stroke={line}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+        />
+        <circle cx={24} cy={31} r={4} fill={tok("--gold")} />
+        <circle cx={40} cy={31} r={4} fill={tok("--gold")} />
+        <path d="M27 50v-6M32 50v-6M37 50v-6" stroke={line} strokeWidth={2} strokeLinecap="round" />
+      </>
+    ),
     pole: (
       <>
         <path d="M10 56L50 8" stroke={line} strokeWidth={3} strokeLinecap="round" />
@@ -380,27 +420,7 @@ function FeatCard({ spec, width, height }: { spec: FeatCardSpec; width: number; 
           size={px("--size-card-icon")}
         />
       </div>
-      {spec.firstInGroup ? (
-        <div
-          style={{
-            display: "flex",
-            position: "absolute",
-            right: PAD * 0.65,
-            top: PAD * 0.6,
-            padding: `${PAD / 5}px ${PAD * 0.3}px`,
-            borderRadius: PAD,
-            background: tok("--card-pill-bg"),
-            border: `1.5px solid ${tok("--gold")}`,
-            color: tok("--gold-pale"),
-            fontSize: px("--fs-card-pill"),
-            fontWeight: 600,
-            letterSpacing: px("--fs-card-pill") * 0.1,
-            textTransform: "uppercase",
-          }}
-        >
-          First in the group
-        </div>
-      ) : null}
+      {spec.firstInGroup ? <FirstPill /> : null}
       <div
         style={{
           display: "flex",
@@ -452,11 +472,324 @@ function FeatCard({ spec, width, height }: { spec: FeatCardSpec; width: number; 
   );
 }
 
+/** The "First in the group" pill, top right. */
+function FirstPill() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        position: "absolute",
+        right: PAD * 0.65,
+        top: PAD * 0.6,
+        padding: `${PAD / 5}px ${PAD * 0.3}px`,
+        borderRadius: PAD,
+        background: tok("--card-pill-bg"),
+        border: `1.5px solid ${tok("--gold")}`,
+        color: tok("--gold-pale"),
+        fontSize: px("--fs-card-pill"),
+        fontWeight: 600,
+        letterSpacing: px("--fs-card-pill") * 0.1,
+        textTransform: "uppercase",
+      }}
+    >
+      First in the group
+    </div>
+  );
+}
+
+/** A strip feat card (WEB-66, board `bot-visual-feats`, 800 × 240): the icon at 140 px left, the texts right. */
+function StripCard({ spec, width, height }: { spec: StripCardSpec; width: number; height: number }) {
+  const box = px("--size-card-strip-box");
+  const frame = `inset 0 0 0 2px ${tok("--card-frame")}`;
+  return (
+    <Frame width={width} height={height}>
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width,
+          height,
+          boxShadow: frame,
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: box,
+          height,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundImage: `radial-gradient(circle at 50% 50%, ${tok("--card-feat-glow")}, transparent 62%)`,
+        }}
+      >
+        <FeatIconSvg
+          icon={spec.icon}
+          {...(spec.rank !== undefined ? { rank: spec.rank } : {})}
+          size={px("--size-card-strip-icon")}
+        />
+      </div>
+      {spec.firstInGroup ? <FirstPill /> : null}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          position: "absolute",
+          left: box,
+          top: 0,
+          right: PAD * 0.75,
+          height,
+          gap: PAD / 8,
+        }}
+      >
+        <Overline>Feat unlocked</Overline>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: SC,
+            fontSize: px("--fs-card-award"),
+            lineHeight: 1.05,
+            color: tok("--gold-pale"),
+            textShadow: `0 0 ${PAD * 0.75}px ${tok("--card-feat-glow")}`,
+          }}
+        >
+          {spec.title}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: NAME,
+            fontSize: px("--fs-card-feat-name"),
+            color: tok(spec.nameColour),
+          }}
+        >
+          {spec.name}
+        </div>
+        <div style={{ display: "flex", fontSize: px("--fs-card-feat-line"), color: tok("--text-muted") }}>
+          {spec.line}
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
+const CHECK = "M6 12.5l4 4 8-9";
+const CROWN = "M2 12h12l1-8-4 3-3-5-3 5-4-3z";
+const FLAME = "M8 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-5 0-7z";
+
+/**
+ * The daily Doomsday board (WEB-66, board `bot-visual-daily`, 800 × 560), readable at 300 px on a phone: one row per
+ * friend, 44 px boxes (PvE done green, PvP done red, open as an outline), "PvP Virgin" across the PvP columns.
+ */
+function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number; height: number }) {
+  const box = px("--size-card-board-box");
+  const pad = PAD * 0.6;
+  const nameW = 180;
+  const colW = box + 32;
+  const todayW = 100;
+  const rowH = box + 14;
+  const pvpCols = spec.columns.map((c, i) => (c.track === "pvp" ? i : -1)).filter((i) => i >= 0);
+  const head = (label: string, w: number) => (
+    <div
+      style={{
+        display: "flex",
+        width: w,
+        justifyContent: "center",
+        fontSize: px("--fs-card-pill"),
+        letterSpacing: px("--fs-card-pill") * 0.12,
+        textTransform: "uppercase",
+        color: tok("--text-dim"),
+      }}
+    >
+      {label}
+    </div>
+  );
+  return (
+    <Frame width={width} height={height}>
+      <div style={{ display: "flex", flexDirection: "column", padding: `${pad}px ${pad}px 0`, width, gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <svg width={40} height={40} viewBox="0 0 26 26" fill="none">
+            <path d={SHIELD} stroke={tok("--gold")} strokeWidth={1.6} />
+            <circle cx={13} cy={13} r={3.4} fill={tok("--gold-bright")} />
+          </svg>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                display: "flex",
+                fontFamily: SC,
+                fontSize: px("--fs-card-board-head"),
+                letterSpacing: px("--fs-card-board-head") * 0.08,
+                color: tok("--gold-bright"),
+              }}
+            >
+              Doomsday
+            </div>
+            <div style={{ display: "flex", fontSize: px("--fs-card-feat-line"), color: tok("--text") }}>
+              {spec.title}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-end", marginTop: 10, paddingBottom: 6 }}>
+          <div style={{ display: "flex", width: nameW }} />
+          {spec.columns.map((c, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: colW }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: px("--fs-card-pill"),
+                  fontWeight: 600,
+                  color: tok(c.track === "pve" ? "--card-pve" : "--card-pvp"),
+                }}
+              >
+                {c.track === "pve" ? "PvE" : "PvP"}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: px("--fs-card-board-col"),
+                  color: tok("--text-strong"),
+                  textAlign: "center",
+                }}
+              >
+                {c.label}
+              </div>
+            </div>
+          ))}
+          {head("Today", todayW)}
+          {head("Streak", 70)}
+        </div>
+        {spec.rows.map((r, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              height: rowH,
+              borderTop: `1px solid ${tok("--line-box")}`,
+              position: "relative",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", width: nameW, gap: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontFamily: NAME,
+                  fontSize: px("--fs-card-board-name"),
+                  color: r.struck ? tok("--text-dim") : tok("--text-strong"),
+                  textDecoration: r.struck ? "line-through" : "none",
+                }}
+              >
+                {r.name}
+              </div>
+              {r.crown ? (
+                <svg width={26} height={26} viewBox="0 0 16 16">
+                  <path d={CROWN} fill={tok("--gold-bright")} />
+                </svg>
+              ) : null}
+            </div>
+            {spec.columns.map((c, j) => {
+              const done = r.done[j] === true;
+              const colour = tok(c.track === "pve" ? "--card-pve" : "--card-pvp");
+              return (
+                <div key={j} style={{ display: "flex", width: colW, justifyContent: "center" }}>
+                  {r.virgin && c.track === "pvp" ? (
+                    <div style={{ display: "flex", width: box, height: box }} />
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: box,
+                        height: box,
+                        borderRadius: px("--r-card-box"),
+                        background: done ? colour : "transparent",
+                        border: done ? "none" : `2px solid ${tok("--card-open-line")}`,
+                      }}
+                    >
+                      {done ? (
+                        <svg width={box * 0.6} height={box * 0.6} viewBox="0 0 24 24" fill="none">
+                          <path d={CHECK} stroke={tok("--text-strong")} strokeWidth={3} strokeLinecap="round" />
+                        </svg>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {r.virgin && pvpCols.length > 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  left: nameW + pvpCols[0]! * colW + 4,
+                  width: pvpCols.length * colW - 8,
+                  height: box,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: px("--r-card-box"),
+                  border: `2px dashed ${tok("--card-open-line")}`,
+                  fontSize: px("--fs-card-pill"),
+                  fontWeight: 600,
+                  letterSpacing: px("--fs-card-pill") * 0.08,
+                  textTransform: "uppercase",
+                  color: tok("--text-muted"),
+                }}
+              >
+                PvP Virgin
+              </div>
+            ) : null}
+            <div
+              style={{
+                display: "flex",
+                width: todayW,
+                justifyContent: "center",
+                fontSize: px("--fs-card-feat-line"),
+                fontWeight: 600,
+              }}
+            >
+              <span style={{ color: tok("--card-pve") }}>{r.today.pve}</span>
+              <span style={{ color: tok("--text-dim"), margin: "0 6px" }}>·</span>
+              <span style={{ color: tok("--card-pvp") }}>{r.today.pvp ?? 0}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                width: 70,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                fontSize: px("--fs-card-feat-line"),
+                color: tok("--text-strong"),
+              }}
+            >
+              <svg width={18} height={22} viewBox="0 0 16 18">
+                <path d={FLAME} fill={tok("--stale")} />
+              </svg>
+              {r.streak}
+            </div>
+          </div>
+        ))}
+      </div>
+      <Footer host={spec.host} right={spec.footer} />
+    </Frame>
+  );
+}
+
 function card(spec: CardSpec): ReactNode {
   const { width, height } = cardSize(spec);
   switch (spec.kind) {
+    case "board":
+      return <BoardCard spec={spec} width={width} height={height} />;
     case "feat":
       return <FeatCard spec={spec} width={width} height={height} />;
+    case "strip":
+      return <StripCard spec={spec} width={width} height={height} />;
     case "milestone":
     case "award": {
       const award = spec.kind === "award";

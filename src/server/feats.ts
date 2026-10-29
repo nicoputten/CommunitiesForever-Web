@@ -143,7 +143,11 @@ function post(f: HeldFeat, after: Dataset, original: Milestone | undefined): Mil
     m = { kind: f.kind, character, ...f.fields } as Milestone;
   }
   const profession = m.kind === "professionCap" ? m.profession : undefined;
-  m.text = featText({ kind: f.kind, fields: f.fields, ...(profession !== undefined ? { profession } : {}) }, name).text;
+  const t = featText({ kind: f.kind, fields: f.fields, ...(profession !== undefined ? { profession } : {}) }, name);
+  m.text = t.text;
+  // WEB-66: the short name and one sentence for the bot's post.
+  m.headline = t.title;
+  m.line = [t.line, t.flavour].filter((x) => x !== undefined && x !== "").join(". ");
   if (f.firstInGroup) m.firstInGroup = true;
   return m;
 }

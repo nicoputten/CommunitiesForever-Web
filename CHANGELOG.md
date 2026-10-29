@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Discord, more visual (with the bot's next release): the daily Doomsday board is a picture with a line of news, edited as the day goes on and closed with a summary at the reset. Every feat gets a card, a big one for the special feats and a slim strip for the rest; new characters are one line instead of a feat. The weekly recap gets its header numbers (honorable kills, battlegrounds, levels, friends, dungeon runs, feats), the winner's class colour, the map of the Bloodbath zone too, and a link to the week.
 - Doomsday: a lost duel or any other PvP point now ends "PvP Virgin" too. A character without a PvP rank says "No rank yet · 12 kills" unless its friend is still a PvP Virgin. "N of M done" counts exactly the goals on the grid, the Duel slot included. The day is named by its reset ("Wed evening"), times after midnight show their weekday ("done at Thu 00:04"), and the countdown says when ("resets Thu 19:00 · in 6 h 51 m").
 
 ## v0.5.0 (2026-10-29)

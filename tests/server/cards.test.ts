@@ -9,7 +9,18 @@ import { botEvents } from "@/server/db/schema";
 import { runDueRecap } from "@/server/recap";
 import { upload } from "@/server/uploads";
 import type { Milestone } from "@/core/bot";
-import { type CardSpec, featCard, milestoneCard, recapHeader, whereisCard, zoneCard } from "@/core/cards/models";
+import {
+  boardCard,
+  type CardSpec,
+  cardSize,
+  featCard,
+  milestoneCard,
+  recapHeader,
+  stripCard,
+  whereisCard,
+  zoneCard,
+} from "@/core/cards/models";
+import type { BoardData } from "@/core/doomsday/posts";
 import { renderCard } from "@/server/cards/render";
 
 // WEB-41d: every card kind renders to a PNG of its size with the bundled fonts. CARDS_OUT=<dir> writes them out to
@@ -26,6 +37,110 @@ const mira = {
   spec: "Frost",
   owner: "Mira",
 };
+// A Wednesday 19:00 Paris board with five friends (made-up names).
+const BOARD_START = Date.parse("2026-10-28T18:00:00Z") / 1000;
+const BOARD: BoardData = {
+  day: 20754,
+  week: 2965,
+  label: "Wed evening",
+  span: "Wed 19:00 → Thu 19:00",
+  start: BOARD_START,
+  end: BOARD_START + 86400,
+  goals: [
+    { slot: "pve1", id: "d.level", title: "Gain a level", track: "pve", points: 5, shortLabel: "Level" },
+    {
+      slot: "pve2",
+      id: "d.shared3",
+      title: "Share 3 quests with a friend",
+      track: "pve",
+      points: 5,
+      shortLabel: "3 shared",
+    },
+    {
+      slot: "pve3",
+      id: "d.skill5",
+      title: "Earn 5 profession skill points",
+      track: "pve",
+      points: 5,
+      shortLabel: "Skills",
+    },
+    { slot: "hunt", id: "hunt", title: "The Hunt: Night Elf Druid", track: "pvp", points: 5, shortLabel: "Hunt" },
+    {
+      slot: "skirmish",
+      id: "p.loneWolf",
+      title: "Lone wolf: 3 solo kills",
+      track: "pvp",
+      points: 5,
+      shortLabel: "Lone wolf",
+    },
+  ],
+  friends: [
+    {
+      name: "Mira",
+      goals: ["pve1", "pve2", "pve3", "hunt"].map((slot) => ({ slot, id: "x", done: true })),
+      doneCount: 4,
+      goalCount: 6,
+      crossedOut: true,
+      today: { pve: 15, pvp: 11 },
+      week: { pve: 40, pvp: 20 },
+      streak: 4,
+      best: 6,
+      pvpVirgin: false,
+    },
+    {
+      name: "Tok",
+      goals: ["pve1", "pve2", "pve3"].map((slot) => ({ slot, id: "x", done: true })),
+      doneCount: 3,
+      goalCount: 6,
+      crossedOut: true,
+      today: { pve: 15, pvp: null },
+      week: { pve: 30, pvp: null },
+      streak: 7,
+      best: 7,
+      pvpVirgin: true,
+    },
+    {
+      name: "Ada",
+      goals: ["pve1", "pve2", "skirmish"].map((slot) => ({ slot, id: "x", done: true })),
+      doneCount: 3,
+      goalCount: 6,
+      crossedOut: false,
+      today: { pve: 10, pvp: 3 },
+      week: { pve: 20, pvp: 9 },
+      streak: 3,
+      best: 5,
+      pvpVirgin: false,
+    },
+    {
+      name: "Bob",
+      goals: [{ slot: "pve1", id: "x", done: true }],
+      doneCount: 1,
+      goalCount: 6,
+      crossedOut: false,
+      today: { pve: 5, pvp: 1 },
+      week: { pve: 5, pvp: 1 },
+      streak: 1,
+      best: 2,
+      pvpVirgin: false,
+    },
+    {
+      name: "Lia",
+      goals: [],
+      doneCount: 0,
+      goalCount: 6,
+      crossedOut: false,
+      today: { pve: 0, pvp: 0 },
+      week: { pve: 0, pvp: 0 },
+      streak: 0,
+      best: 3,
+      pvpVirgin: false,
+    },
+  ],
+  withoutData: ["Sanne"],
+  crown: { name: "Mira", at: BOARD_START + 4 * H + 13 * 60 },
+  yesterdayCrown: null,
+};
+
 const char = (classFile: string, name: string) => ({ guid: "G", name, classFile, level: 60, ownerName: "Mira" });
 
 const SPECS: Record<string, CardSpec> = {
@@ -64,6 +179,26 @@ const SPECS: Record<string, CardSpec> = {
   ),
   "recap-header-headline": recapHeader({ dates: "20–26 Oct", headline: "A quiet week in Azeroth" }, HOST),
   "zone-of-the-week": zoneCard("Hillsbrad Foothills", 4, HOST)!,
+  // WEB-66: the Bloodbath zone crop, the strip feat cards and the daily board image.
+  "zone-bloodbath": zoneCard("Stranglethorn Vale", 4, HOST, { kills: 87 })!,
+  ...stripSpecs(),
+  "board-during": boardCard(BOARD, BOARD.start + 18 * H + 10 * 60, "Europe/Paris", HOST),
+  "board-start": boardCard(
+    {
+      ...BOARD,
+      friends: BOARD.friends.map((f) => ({ ...f, goals: [], today: { pve: 0, pvp: f.pvpVirgin ? null : 0 } })),
+      crown: null,
+    },
+    BOARD.start + 60,
+    "Europe/Paris",
+    HOST,
+  ),
+  "board-final": boardCard(
+    { ...BOARD, final: true, summary: { goalsDone: 14, hunt: null, longestStreak: { name: "Tok", days: 7 } } },
+    BOARD.end - 60,
+    "Europe/Paris",
+    HOST,
+  ),
   // WEB-56: the feat cards of the board doomsday-feat-cards, and the ones drawn in its style.
   ...featSpecs(),
   whereis: whereisCard(
@@ -77,6 +212,24 @@ const SPECS: Record<string, CardSpec> = {
     HOST,
   )!,
 };
+
+function stripSpecs(): Record<string, CardSpec> {
+  const strip = (name: string, m: object, who: { name: string; classFile: string }) =>
+    [name, stripCard({ character: { guid: "G", name: who.name }, ...m } as Milestone, who)!] as const;
+  const lia = { name: "Lia Thornwhisper", classFile: "DRUID" };
+  return Object.fromEntries([
+    strip("strip-first-catch", { kind: "firstCatch" }, { name: "Mira Sunstrider", classFile: "MAGE" }),
+    strip("strip-first-blood", { kind: "honorKills", kills: 1 }, { name: "Bob Example", classFile: "ROGUE" }),
+    strip("strip-level-30", { kind: "level", level: 30, from: 28 }, lia),
+    strip("strip-profession", { kind: "professionCap", skillLine: "197", profession: "Tailoring", rank: 225 }, lia),
+    strip("strip-deaths", { kind: "deaths100", deaths: 100 }, { name: "Ada Nightshade", classFile: "WARLOCK" }),
+    strip(
+      "strip-rank-3",
+      { kind: "pvpRank", rank: 3, rankName: "Sergeant", title: "Lowbie Botherer", firstInGroup: true },
+      lia,
+    ),
+  ]);
+}
 
 function featSpecs(): Record<string, CardSpec> {
   const ada = { name: "Ada Nightshade", classFile: "WARLOCK", classLabel: "Warlock", race: "Undead" };
@@ -131,7 +284,8 @@ describe("card images", () => {
       expect(png.subarray(1, 4).toString("latin1")).toBe("PNG");
       const width = png.readUInt32BE(16);
       const height = png.readUInt32BE(20);
-      expect([width, height]).toEqual(name.startsWith("recap-header") ? [1200, 400] : [800, 400]);
+      const size = cardSize(spec);
+      expect([width, height]).toEqual([size.width, size.height]);
       if (process.env.CARDS_OUT) {
         mkdirSync(process.env.CARDS_OUT, { recursive: true });
         writeFileSync(path.join(process.env.CARDS_OUT, `${name}.png`), png);

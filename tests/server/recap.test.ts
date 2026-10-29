@@ -89,6 +89,12 @@ describe("the recap job", () => {
     expect(body).not.toHaveProperty("past");
     expect(body).not.toHaveProperty("cycles");
     expect(JSON.stringify(body)).not.toContain("#");
+    // WEB-66: what the bot's visual recap needs besides the texts.
+    expect(r!.numbers).toMatchObject({ feats: expect.any(Number), honorKills: expect.any(Number) });
+    if (r!.award !== undefined) expect(r!.award.image).toBe("recap-1-header");
+    const map = r!.cards.find((c) => c.id === "S1" || c.id === "S13");
+    if (map !== undefined) expect(map.image).toBe("recap-1-zone");
+    if (process.env.AUTH_URL !== undefined) expect(r!.url).toMatch(/\/doomsday\/week$/);
   });
 
   it("catches up after downtime with one recap, and posts nothing while the Weekly recap is off", () => {
