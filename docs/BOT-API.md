@@ -313,13 +313,13 @@ Common rules:
 
 ```json
 {
-  "posts": { "doomsdayBoard": true, "doomsdayLadder": true },
+  "posts": { "doomsdayBoard": false, "doomsdayLadder": false },
   "channels": { "doomsday": null },
   "doomsday": { "reset": "19:00", "timeZone": "Europe/Paris", "url": "https://wow.example.org/doomsday" }
 }
 ```
 
-- `posts.doomsdayBoard`, `posts.doomsdayLadder`: the admin's switches on the Discord page. Off means no such events are made.
+- `posts.doomsdayBoard`, `posts.doomsdayLadder`: the admin's switches on the Discord page. Off means no such events are made. Both are **off until the admin turns them on** (Nico, 2026-10-28), so deploying the site never makes the bot post a board at the next reset by itself.
 - `channels.doomsday`: the Doomsday channel; `null` means the posts channel (`channels.posts`).
 - Planned (WEB-58 part 2): `channels.feats`, the channel for feats (the `milestones` event); `null` means the posts channel. On the reorganised Discord page `channels.posts` is "Default channel".
 - `doomsday.reset`: the reset in realm time (`HH:MM`); `timeZone`: the realm's IANA time zone. A change takes effect from the next reset. `url`: the site's Doomsday page, for "Open the board ↗" and the ladder's link.
