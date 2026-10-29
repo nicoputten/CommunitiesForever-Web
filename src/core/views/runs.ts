@@ -157,7 +157,7 @@ export interface RunsPage {
   yourAnswers: YourAnswerView[];
   /** Asking now (WEB-51): the open asks, newest first. */
   asks: AskCardView[];
-  /** Upcoming runs at all (the empty state when none). */
+  /** Upcoming runs at all, cancelled ones still ahead included (the empty state when none). */
   anyUpcoming: boolean;
   timeZone: string;
 }
@@ -490,7 +490,7 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
         status: yourStatus(ctx, r),
       })),
     asks: asksNow(ctx),
-    anyUpcoming: upcoming.length > 0,
+    anyUpcoming: listed.length > 0,
     timeZone: tz,
   };
   if (hiddenRuns.length > 0 && filter !== "all") {
