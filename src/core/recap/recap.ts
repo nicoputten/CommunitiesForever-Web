@@ -13,6 +13,7 @@ import {
   zonesByFriend,
 } from "./facts";
 import { fill, hash, nextPhrasing, seeded } from "./phrasing";
+import { v2Totals } from "./cardsV2";
 import { CARD_TEXTS, CHALLENGE_TEXTS, CLOSING_TEXTS, HEADLINE_TEXTS } from "./texts";
 import type { Candidate, CardDef, Cycles, History, PastWeek, Recap, RecapCard, Slot, Week } from "./types";
 
@@ -77,7 +78,16 @@ export function rotate(
 }
 
 /** The headline's kind and facts: the week's biggest story, in this order. */
-export function headlineFor(week: Week, quiet: boolean): { id: string; facts: Record<string, string | number> } {
+/** WEB-57: the PvP headline (kills >= 200, one zone >= 40% of them) and the danger one (deaths >= 25, at least 1.5x the
+ * average of the last 4 weeks). */
+export const PVP_HEADLINE_KILLS = 200;
+export const DANGER_DEATHS = 25;
+
+export function headlineFor(
+  week: Week,
+  quiet: boolean,
+  history: History = { weeks: [], cycles: {} },
+): { id: string; facts: Record<string, string | number> } {
   const levels = [...levelGains(week).values()].reduce((a, b) => a + b, 0);
   const hit60 = Object.values(week.after)
     .filter(
@@ -93,6 +103,16 @@ export function headlineFor(week: Week, quiet: boolean): { id: string; facts: Re
   if (week.number % 10 === 0) return { id: "season", facts: { weeks: week.number } };
   if (week.number === 1) return { id: "first", facts: {} };
   if (hit60 !== undefined) return { id: at60 > 1 ? "club" : "sixty", facts: { character: hit60.name } };
+  const t = v2Totals(week);
+  if (t.kills >= PVP_HEADLINE_KILLS && t.topKillZone !== undefined && t.topKillZone.kills >= 0.4 * t.kills) {
+    return { id: "pvp", facts: { zone: t.topKillZone.zone, kills: t.kills } };
+  }
+  const past = history.weeks
+    .filter((w) => w.number >= week.number - 4 && w.number < week.number)
+    .map((w) => w.values.deaths)
+    .filter((v): v is number => v !== undefined);
+  const average = past.length > 0 ? past.reduce((a, b) => a + b, 0) / past.length : 0;
+  if (t.deaths >= DANGER_DEATHS && t.deaths >= 1.5 * average) return { id: "danger", facts: { deaths: t.deaths } };
   if (quiet) return { id: "quiet", facts: {} };
   if (alts >= 2) return { id: "alts", facts: { alts } };
   if (dungeonRuns >= 5) return { id: "dungeons", facts: { runs: dungeonRuns } };
@@ -102,10 +122,20 @@ export function headlineFor(week: Week, quiet: boolean): { id: string; facts: Re
 }
 
 /** The challenges that fit the week, in order of preference. */
-export function challengesFor(week: Week): { id: string; facts: Record<string, string | number> }[] {
+export function challengesFor(
+  week: Week,
+  happened: { headline?: string; cards?: string[] } = {},
+): { id: string; facts: Record<string, string | number> }[] {
   const out: { id: string; facts: Record<string, string | number> }[] = [];
   const chars = Object.values(week.after);
   if (week.number % 10 === 0) out.push({ id: "nextSeason", facts: {} });
+  // WEB-57: the PvP challenges, after the week that calls for them (boards `bot-recap-v2-cards`).
+  const t = v2Totals(week);
+  if (happened.headline === "danger") out.push({ id: "noDeaths", facts: {} });
+  if (happened.headline === "pvp") out.push({ id: "kills25", facts: {} });
+  if (t.bgGames >= 3) out.push({ id: "bgGroup", facts: {} });
+  if (t.topKillZones.includes("Hillsbrad Foothills")) out.push({ id: "tarrenMill", facts: {} });
+  if (happened.cards?.includes("F15")) out.push({ id: "duelEveryone", facts: {} });
   if (chars.some((c) => levelOf(c) > 0 && levelOf(c) < 10)) out.push({ id: "everyoneTo10", facts: {} });
   const group = groupFit(week);
   if (group !== undefined) {
@@ -193,7 +223,7 @@ export function buildRecap(week: Week, history: History): Recap {
     cycles = r.cycles;
   }
 
-  const headline = headlineFor(week, quiet);
+  const headline = headlineFor(week, quiet, history);
   const h = phrase(cycles, `headline:${headline.id}`, HEADLINE_TEXTS[headline.id]!, week.number);
   cycles = h.cycles;
 
@@ -202,7 +232,7 @@ export function buildRecap(week: Week, history: History): Recap {
       .filter((w) => w.number >= week.number - COOLDOWN_WEEKS && w.number < week.number)
       .map((w) => w.challenge),
   );
-  const options = challengesFor(week);
+  const options = challengesFor(week, { headline: headline.id, cards: cards.map((f) => f.def.id) });
   const challenge = options.find((c) => !lastChallenges.has(c.id)) ?? options[options.length - 1]!;
   const c = phrase(cycles, `challenge:${challenge.id}`, CHALLENGE_TEXTS[challenge.id]!, week.number);
   cycles = c.cycles;
@@ -212,6 +242,8 @@ export function buildRecap(week: Week, history: History): Recap {
 
   const values: Record<string, number> = {};
   for (const f of found) values[f.def.id] = f.candidate.value;
+  // WEB-57: the week's deaths, for the danger headline's 4-week average.
+  values.deaths = v2Totals(week).deaths;
   const past: PastWeek = {
     number: week.number,
     cards: cards.map((f) => f.def.id),

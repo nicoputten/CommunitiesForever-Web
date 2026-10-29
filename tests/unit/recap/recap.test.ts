@@ -4,15 +4,15 @@ import { fill, nextPhrasing } from "@/core/recap/phrasing";
 import { buildRecap, challengesFor, COOLDOWN_WEEKS } from "@/core/recap/recap";
 import { CARD_TEXTS, CHALLENGE_TEXTS, CLOSING_TEXTS, HEADLINE_TEXTS } from "@/core/recap/texts";
 import type { Cycles, History } from "@/core/recap/types";
-import { EMPTY, HISTORY, NO_HISTORY, RICH } from "./sample";
+import { EMPTY, HISTORY, NO_HISTORY, RICH, RICH_V2 } from "./sample";
 
 // WEB-41: the cards, the rotation, the phrasing cycle and the texts (the `bot-recap` board, Nico 2026-10-27).
 
 describe("the catalogue", () => {
-  it("has the 43 cards of the board, without the 5 that wait for the addon", () => {
+  it("has the 64 cards of the boards (43 of WEB-41, 21 of recap v2), without the one that waits for the addon", () => {
     const ids = CARDS.map((c) => c.id);
-    expect(ids).toHaveLength(43);
-    expect(new Set(ids).size).toBe(43);
+    expect(ids).toHaveLength(64);
+    expect(new Set(ids).size).toBe(64);
     for (const later of LATER) expect(ids).not.toContain(later);
   });
 
@@ -22,8 +22,8 @@ describe("the catalogue", () => {
       expect(n, card.id).toBeGreaterThanOrEqual(3);
       expect(n, card.id).toBeLessThanOrEqual(5);
     }
-    expect(Object.keys(HEADLINE_TEXTS)).toHaveLength(10);
-    expect(Object.keys(CHALLENGE_TEXTS)).toHaveLength(12);
+    expect(Object.keys(HEADLINE_TEXTS)).toHaveLength(12);
+    expect(Object.keys(CHALLENGE_TEXTS)).toHaveLength(17);
   });
 
   it("uses no pronouns in any text", () => {
@@ -39,7 +39,7 @@ describe("the catalogue", () => {
 
 describe("every card", () => {
   it.each(CARDS.map((c) => [c.id, c] as const))("%s finds its example in a busy week, with a score", (_id, card) => {
-    const found = card.find(RICH, HISTORY);
+    const found = card.find(RICH_V2, HISTORY);
     expect(found).toBeDefined();
     expect(found!.score).toBeGreaterThan(0);
   });
@@ -49,7 +49,7 @@ describe("every card", () => {
   });
 
   it.each(CARDS.map((c) => [c.id, c] as const))("%s fills every phrasing from its facts", (id, card) => {
-    const facts = { ...card.find(RICH, HISTORY)!.facts, site: RICH.siteName };
+    const facts = { ...card.find(RICH_V2, HISTORY)!.facts, site: RICH.siteName };
     for (const p of CARD_TEXTS[id]!) {
       expect(fill(p.title, facts), `${id}: ${p.title}`).not.toMatch(/\{\w+\}/);
       expect(fill(p.text, facts), `${id}: ${p.text}`).not.toMatch(/\{\w+\}/);

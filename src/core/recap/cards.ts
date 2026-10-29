@@ -19,11 +19,11 @@ import {
   weekdayOfDay,
   zonesByFriend,
 } from "./facts";
+import { v2Cards } from "./cardsV2";
 import type { Candidate, CardDef, History, RecapChar, Week } from "./types";
 
-// The recap's card catalogue (WEB-41, the `bot-recap` board): 48 cards, of which 43 are built here. Later (Nico,
-// 2026-10-27): A7 Social butterfly, S11 Biggest group night, F5 Road trip, F7 Night owl, F8 Early bird, which need
-// data the addon doesn't record yet. Each card finds its best example in the week, or nothing when the week doesn't
+// The recap's card catalogue (WEB-41, the `bot-recap` board; WEB-57's new cards in cardsV2.ts). Later (Nico,
+// 2026-10-27): F5 Road trip, which needs data the addon doesn't record. Each card finds its best example in the week, or nothing when the week doesn't
 // meet its threshold. The score is the card's value against its average in earlier weeks, times a weight for how
 // much the card is worth showing.
 
@@ -964,7 +964,20 @@ export function classLabel(classFile: string): string {
   return classFile.charAt(0) + classFile.slice(1).toLowerCase();
 }
 
-export const CARDS: readonly CardDef[] = [...AWARDS, ...STATS, ...PROGRESS, ...SOCIAL, ...FUN];
+const V2 = v2Cards({ found, owner });
 
-/** The cards that wait for an addon story (Nico, 2026-10-27). */
-export const LATER = ["A7", "S11", "F5", "F7", "F8"] as const;
+export const CARDS: readonly CardDef[] = [
+  ...AWARDS,
+  ...V2.awards,
+  ...STATS,
+  ...V2.stats,
+  ...PROGRESS,
+  ...V2.progress,
+  ...SOCIAL,
+  ...V2.social,
+  ...FUN,
+  ...V2.fun,
+];
+
+/** The cards that wait for data the addon doesn't record (Nico, 2026-10-27); A7, S11, F7 and F8 came with WEB-57. */
+export const LATER = ["F5"] as const;
