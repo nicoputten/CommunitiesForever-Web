@@ -24,7 +24,7 @@ Agreed with Nico (2026-10-29). Boards: `bot-visual-recap`, `bot-visual-daily`, `
 - **PvP Virgin:** a friend stays a PvP Virgin only with 0 all-time PvP points across all characters, duel points included, **and** no honorable kill ever (Nico: "no points and no kill"). Any PvP point or any kill ends it, everywhere: the roster, the Doomsday board, the ladder, the bot (`pvpVirgin`, `pvp: null`).
 - **Rank title:** a character without a rank shows "Conscientious Objector" only while its friend is a PvP Virgin (the rule above). Otherwise "No rank yet · N kills" (N: the character's honorable kills).
 - **Goal count:** "N of M done" counts exactly the goals on the grid: the 3 PvE dailies, the Hunt and/or the Skirmish (6 on a day with both), and the Duel slot, done after its first duel. The same count goes to the bot (`doneCount`, new `goalCount`).
-- **The day label follows the reset:** a Doomsday day runs from reset to reset and is named after its start, the weekday plus the part of the day of the reset hour: 05–11 "morning", 12–16 "afternoon", 17–21 "evening", 22–04 "night" (Nico: part of day by reset). With the default reset that is "Wed evening", with the span "Wed 19:00 → Thu 19:00". Times after midnight carry their weekday ("done Thu 00:04"), and the countdown reads "resets Thu 19:00 · in 6 h 51 m". All of these are realm time, the same on the site, in the bot and in the addon's chat lines.
+- **The day label follows the reset:** a Doomsday day runs from reset to reset and is named after its start, the weekday plus the part of the day of the reset hour: 05–11 "morning", 12–16 "afternoon", 17–22 "evening", 23–04 "night" (Nico). With the default reset that is "Wed evening", with the span "Wed 19:00 → Thu 19:00". Times after midnight carry their weekday ("done Thu 00:04"), and the countdown reads "resets Thu 19:00 · in 6 h 51 m". The site shows these in the viewer's own time zone (as WEB-59); the bot and the addon's chat lines in realm time (Nico, 2026-10-29). One core helper in `src/core/doomsday/rules.ts` makes the name and the span for the site and the bot alike.
 
 **Images (brief part 5), drawn by the existing card renderer (`src/server/cards`, Satori), same fonts, night background, gold frame, footer "wow.vestras.nl":**
 - **Daily board, 800 × 560** (`BV2Daily`):
@@ -34,23 +34,26 @@ Agreed with Nico (2026-10-29). Boards: `bot-visual-recap`, `bot-visual-daily`, `
   - footer: "resets Thu 19:00" at the start, "resets in 5 h 50 m" during the day, "Mira first at 23:13 · 14 goals done" when final
   - Friends without Doomsday data are left out of the image.
 - **`shortLabel`** on every daily goal of the catalogue (max 10 characters, one or two words: "Level", "3 quests", "Skills", "Hunt", "Lone wolf"), in `src/core/doomsday/rules.ts` and in `DOOMSDAY.md`. A test checks the length and that every daily goal has one.
+- **The board picture's id changes only when the picture does** (`doomsday-<day>-<hash>`), so the bot re-attaches it only then, at most every 5 minutes.
 - **The board's news line**, one sentence, made by the site:
   - at the reset: the goals in full and "5 points each"
   - during the day: who finished first and who is 1 away ("Mira finished all dailies first (23:13). Ada and Tok are 1 away.")
   - final: "Day over: 14 goals done. Mira first at 23:13, longest streak Tok with 7. New board at 19:00."
   - "2 friends without addon data" when there are any
+- **For the screens (WEB-65), agreed with its worker:** `PvpDetails.characters[].hk` (lifetime honorable kills), weekly `progress` for every weekly the engine can tell (with `detail`, e.g. the dungeon's name), `FeatRecord.character.level`, and a core `gridCount` for "N of M done", used by the site and the bot alike.
 - **Feat cards** (`BV3Feats`): every feat gets a card.
   - Big, 800 × 400 (the existing feat card): PvP rank 6 and up, level 60, epic items, mounts, the watch list's items, 1,000+ honorable kills, and any feat that is "First in the group".
   - Strip, 800 × 240 (new): every other feat. The recap icon at 140 px on the left, "FEAT UNLOCKED", the title (Marcellus SC 46 px), the character in class colour and one line, the "First in the group" badge top right when it applies.
   - Several feats in one upload: one card, the most special one. Big beats strip, then "First in the group", then the rarer kind.
-  - New characters are never a feat or a card: one line per upload, "+3 new characters: Grosh Bonechewer 60, …".
+  - Every feat gets a `headline` ("Stone Guard") and a `line` (one finished sentence) for the bot.
+  - New characters are never a feat or a card: the bot makes one line per upload, "+3 new characters: Grosh Bonechewer 60, …", from the character's level.
 - **Recap images** (`BV1Recap`):
   - the award header, 1200 × 400, with the winner's class disc
   - the zone crop, 800 × 450, with "Map: Syrio, CC BY-SA 4.0", for Zone of the week and Bloodbath zone
-  - the icon thumbnails: the 128 px PNGs of Nico's `doombot-recap-icons` set (Nico sends it; it goes in `design/cards/recap-icons/` and is served as `cards/icon-<name>.png`), one per recap card and per feat kind for the strip card
-  - each card gets its colour (the icon's), the award the winner's class colour
+  - the recap's icon thumbnails and their colours are the bot's (the 128 px set lives in the bot repo); the strip feat card draws the same icon, so the site gets that set too (from Nico's `doombot-recap-icons`, in `src/server/cards/icons/`)
+  - the award gets the winner's class (`classFile`) for its colour
   - the header's six numbers: honorable kills, battlegrounds, levels, friends played, dungeon runs, feats
-  - the links: "The full week ↗" goes to the Doomsday page's Week tab (Nico), "Doomsday ladder ↗" to the ladder
+  - "The full week ↗" goes to the Doomsday page's Week tab (Nico): the recap's `url`
 - If an image can't be drawn, its id answers 404 and the bot posts without it.
 
 **Tests:**
