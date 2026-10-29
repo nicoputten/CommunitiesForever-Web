@@ -10,7 +10,7 @@ test.beforeEach(async ({ context, baseURL }) => {
   await signInAs(context, baseURL!, E2E.admin);
 });
 
-const ACCOUNT = `Account ${E2E.admin}`;
+const ACCOUNT = /^Account /;
 
 test.describe("app shell", () => {
   test("shows the brand, navigation, data age and user", async ({ page }) => {
@@ -62,13 +62,15 @@ test.describe("app shell", () => {
     await trigger.click();
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
     const panel = page.locator(`[id="${await trigger.getAttribute("aria-controls")}"]`);
-    await expect(panel.getByText("Admin", { exact: true }).first()).toBeVisible();
     await expect(panel.getByRole("link", { name: "Admin" })).toHaveAttribute("href", "/admin");
     await expect(panel.getByRole("button", { name: "Sign out" })).toBeVisible();
-    // On phone, Upload moves from the bar into the menu.
-    const menuUpload = panel.getByRole("link", { name: "Uploader" });
-    if (isPhone(page)) await expect(menuUpload).toBeVisible();
-    else await expect(menuUpload).toBeHidden();
+    // WEB-65 (avatar menu): Uploader and Discord in the menu everywhere, Admin with the owner's badge, the display
+    // name and never the BattleTag.
+    await expect(panel.getByRole("link", { name: "Uploader" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Discord" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Admin" }).getByText("Owner")).toBeVisible();
+    await expect(trigger).not.toContainText("#");
+    await expect(panel).not.toContainText("#");
     await page.keyboard.press("Escape");
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
     await expect(trigger).toBeFocused();

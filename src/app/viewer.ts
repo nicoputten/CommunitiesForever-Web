@@ -1,8 +1,9 @@
 import type { Viewer } from "@/components/shell/viewer";
-import { isOwner, mayAdmin, mayUpload, roleOf } from "@/core/access";
+import { battleTagKey, isOwner, mayAdmin, mayUpload, roleOf } from "@/core/access";
 import { adminBattleTag, loadAccessList } from "@/server/access";
 import { auth } from "@/server/auth";
 import { getDb } from "@/server/db";
+import { displayNames } from "@/server/uploads";
 
 // The signed-in user as the shell shows them: BattleTag from the session, role read from the database per request
 // (WEB-06), so a block or guest list change shows at once.
@@ -11,10 +12,13 @@ import { getDb } from "@/server/db";
 export async function getViewer(): Promise<Viewer | undefined> {
   const battleTag = (await auth())?.user?.name ?? undefined;
   if (battleTag === undefined) return undefined;
-  const list = loadAccessList(getDb(), adminBattleTag());
+  const db = getDb();
+  const list = loadAccessList(db, adminBattleTag());
   const role = roleOf(battleTag, list);
   if (role === undefined) return undefined;
-  return { battleTag, role, mayUpload: mayUpload(battleTag, list), owner: isOwner(battleTag, list) };
+  // Before a friend's first upload there is no display name yet: the part before the "#".
+  const displayName = displayNames(db).get(battleTagKey(battleTag)) ?? battleTag.split("#")[0]!;
+  return { battleTag, displayName, role, mayUpload: mayUpload(battleTag, list), owner: isOwner(battleTag, list) };
 }
 
 /** The admin guard for admin-only pages (/dev/components). */

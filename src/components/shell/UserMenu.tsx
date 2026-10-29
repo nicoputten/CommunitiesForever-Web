@@ -5,10 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { motionOn, setMotion, subscribeMotion } from "@/components/atmosphere/motion";
 import { AdminIcon, ChatIcon, MotionIcon, SignOutIcon, UploadIcon } from "@/components/ui/icons";
+import badges from "@/components/admin/CoAdmins.module.css";
 import type { Viewer } from "./viewer";
 import styles from "./UserMenu.module.css";
-
-const ROLE_NAMES = { admin: "Admin", member: "Member", guest: "Guest" } as const;
 
 export interface UserMenuProps {
   viewer: Viewer;
@@ -16,8 +15,9 @@ export interface UserMenuProps {
 }
 
 /**
- * The signed-in user: avatar and BattleTag, opening a panel with Discord (WEB-39), Admin (admin only, WEB-18), the
- * Motion switch and sign out (and Upload on phone).
+ * The signed-in user (WEB-65, board live-test-site-fixes): avatar and display name with ▾ (never the BattleTag),
+ * opening a panel with Uploader, Discord (WEB-39), Admin with the Owner or Admin badge (admins only, WEB-18), the
+ * Motion switch, and Sign out under a divider.
  * A disclosure, not an ARIA menu: a short list reached with Tab; Escape and a click outside close it.
  */
 export function UserMenu({ viewer, signOut }: UserMenuProps) {
@@ -65,22 +65,21 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
         onClick={() => setOpen((o) => !o)}
       >
         <span aria-hidden="true" className={styles.avatar}>
-          {Array.from(viewer.battleTag)[0]?.toUpperCase()}
+          {Array.from(viewer.displayName)[0]?.toUpperCase()}
         </span>
         {/* The name comes from the visible text ("Account" for screen readers only), so it contains what is shown. */}
         <span className={styles.tag}>
           <span className="visually-hidden">Account </span>
-          {viewer.battleTag}
+          {viewer.displayName}
+        </span>
+        <span aria-hidden="true" className={styles.caret}>
+          ▾
         </span>
       </button>
       <div id={panelId} className={styles.panel} hidden={!open}>
-        <div className={styles.who}>
-          <span className={styles.whoTag}>{viewer.battleTag}</span>
-          <span className={styles.role}>{ROLE_NAMES[viewer.role]}</span>
-        </div>
         <ul className={styles.items}>
           {viewer.mayUpload && (
-            <li className={styles.phoneOnly}>
+            <li>
               <Link href="/uploader" className={styles.item}>
                 <UploadIcon className={styles.icon} />
                 Uploader
@@ -98,6 +97,9 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
               <Link href="/admin" className={styles.item} aria-current={pathname === "/admin" ? "page" : undefined}>
                 <AdminIcon className={styles.icon} />
                 Admin
+                <span className={`${viewer.owner ? badges.owner : badges.admin} ${styles.badge}`}>
+                  {viewer.owner ? "Owner" : "Admin"}
+                </span>
               </Link>
             </li>
           )}
@@ -116,7 +118,7 @@ export function UserMenu({ viewer, signOut }: UserMenuProps) {
               </span>
             </button>
           </li>
-          <li>
+          <li className={styles.divided}>
             <form action={signOut}>
               <button type="submit" className={styles.item}>
                 <SignOutIcon className={styles.icon} />
