@@ -1,6 +1,6 @@
 import { nowSeconds } from "@/app/clock";
 import { cleanLabel } from "@/core/uploader";
-import { uploaderRuns } from "@/core/uploaderRuns";
+import { gameFriends, uploaderRuns } from "@/core/uploaderRuns";
 import { doomsdayResetNow, effectiveTimeZone, getBotSettings } from "@/server/discord";
 import { receivedIds } from "@/server/gameItems";
 import { listRuns, openAsks } from "@/server/runs";
@@ -31,6 +31,7 @@ export function GET(req: Request): Response {
     siteUrl: siteUrl(req),
     received: receivedIds(db, caller.battleTag),
     doomsday: doomsdayResetNow(getBotSettings(db), now),
+    friends: gameFriends(data, caller.battleTag),
     now,
   });
   return Response.json(body, { headers: { "Cache-Control": "no-store" } });

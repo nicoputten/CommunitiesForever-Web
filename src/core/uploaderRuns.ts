@@ -1,5 +1,6 @@
 import { battleTagKey, sameBattleTag } from "./access";
 import { levelFit } from "./levelFit";
+import type { Dataset } from "./model";
 import { offsetSeconds } from "./runTime";
 import { PAST_AFTER_SECONDS, phase, runDungeon, type RunRecord, type RunSource, type SlotRole } from "./runs";
 
@@ -85,6 +86,48 @@ export interface UploaderRuns {
   asks: GameAsk[];
   /** WEB-58 (optional): Doomsday's reset and the realm's clock. */
   doomsday?: UploaderDoomsday;
+  /** WEB-66 (optional, addon CF-62): the site's base URL, for the addon's "Copy website link". */
+  site?: string;
+  /** WEB-66 (optional, addon CF-62): the group's friends the site knows, the token's owner left out. */
+  friends?: GameFriend[];
+}
+
+/** A friend for the addon's Friends tab: display name and characters only, never a BattleTag or GUID. */
+export interface GameFriend {
+  name: string;
+  chars: { name: string; classFile?: string; level?: number }[];
+}
+
+/** At most this many friends, characters per friend, and characters in a name (addon CF-62). */
+export const UPLOADER_MAX_FRIENDS = 50;
+export const UPLOADER_MAX_FRIEND_CHARS = 20;
+const FRIEND_NAME_MAX = 24;
+const CHAR_NAME_MAX = 40;
+
+/**
+ * Every person in the merged data but the token's owner, by name, with their characters highest level first (WEB-66,
+ * addon CF-62: friends "known from the website" before they're online). `changedAt` is the newest record among them,
+ * so the list's changes move `updatedAt`.
+ */
+export function gameFriends(data: Dataset | undefined, owner: string): { friends: GameFriend[]; changedAt: number } {
+  if (data === undefined) return { friends: [], changedAt: 0 };
+  const people = Object.values(data.people)
+    .filter((p) => !sameBattleTag(p.battleTag, owner))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, "en") || a.key.localeCompare(b.key))
+    .slice(0, UPLOADER_MAX_FRIENDS);
+  const friends = people.map((p) => ({
+    name: p.displayName.slice(0, FRIEND_NAME_MAX),
+    chars: Object.values(data.characters)
+      .filter((c) => c.owner === p.key && c.name !== undefined)
+      .sort((a, b) => (b.level ?? 0) - (a.level ?? 0) || a.name!.localeCompare(b.name!, "en"))
+      .slice(0, UPLOADER_MAX_FRIEND_CHARS)
+      .map((c) => ({
+        name: c.name!.slice(0, CHAR_NAME_MAX),
+        ...(c.classFile !== undefined && /^[A-Z]+$/.test(c.classFile) ? { classFile: c.classFile } : {}),
+        ...(c.level !== undefined && c.level >= 1 && c.level <= 60 ? { level: c.level } : {}),
+      })),
+  }));
+  return { friends, changedAt: Math.max(0, ...people.map((p) => p.version ?? 0)) };
 }
 
 /**
@@ -120,6 +163,8 @@ export interface UploaderRunsInput {
   received?: readonly string[];
   /** WEB-58: the Doomsday reset in force now and when it took effect, and the realm's offset. */
   doomsday?: UploaderDoomsday;
+  /** WEB-66: the group's friends (gameFriends) and when that list last changed. */
+  friends?: { friends: GameFriend[]; changedAt: number };
   now: number;
 }
 
@@ -210,12 +255,18 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
     });
   return {
     v: UPLOADER_RUNS_VERSION,
-    updatedAt: Math.max(changedAt(input.runs, input.asks ?? [], now), input.doomsday?.changedAt ?? 0),
+    updatedAt: Math.max(
+      changedAt(input.runs, input.asks ?? [], now),
+      input.doomsday?.changedAt ?? 0,
+      input.friends?.changedAt ?? 0,
+    ),
     reminderMinutes: input.reminderMinutes,
     received: [...(input.received ?? [])],
     runs,
     asks,
     ...(input.doomsday !== undefined ? { doomsday: { ...input.doomsday } } : {}),
+    site: base,
+    ...(input.friends !== undefined ? { friends: input.friends.friends } : {}),
   };
 
   function answersOf(r: RunRecord): GameAnswer[] {
