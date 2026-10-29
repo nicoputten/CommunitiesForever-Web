@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Co-admins · dialogs & states</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.opt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.opt:last-child{border-bottom:0}
+.opt b{display:block;font-weight:500;font-size:14px;color:#E6E1D6}
+.opt span.d{display:block;font-size:12px;color:#8E98A8;margin-top:2px;line-height:1.45}
+.swh{display:inline-flex;align-items:center;justify-content:center;width:52px;height:44px;flex:none}
+.sw{position:relative;width:40px;height:22px;border-radius:11px;background:#D4AF6A;flex:none;display:block}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#0B0F14}
+.sw.off{background:#2A3446}
+.sw.off:after{right:auto;left:3px;background:#8E98A8}
+.ok{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(127,217,154,.12);color:#9BE3B0;white-space:nowrap}
+.no{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(174,182,195,.1);color:#8E98A8;white-space:nowrap}
+.warn{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(240,167,116,.16);color:#F6C29C;white-space:nowrap}
+.adm{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid rgba(212,175,106,.35);color:#D4AF6A;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.new{font-size:10px;padding:2px 7px;border-radius:999px;background:#D4AF6A;color:#0B0F14;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-left:8px;vertical-align:3px}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bh .bt{display:flex;align-items:center;gap:10px}
+.bd{font-size:13px;color:#8E98A8;line-height:1.5;margin-top:-4px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.hint{font-size:12px;color:#8E98A8;line-height:1.45}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 28px}
+.lr{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.av{width:30px;height:30px;border-radius:50%;background:#2A3446;color:#F0D08E;font:600 12px/30px Inter,sans-serif;text-align:center}
+.tm{display:inline-flex;align-items:center;gap:6px}
+.tm span.seg{display:inline-flex;align-items:center;justify-content:center;width:56px;min-height:44px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font:500 18px Inter,sans-serif;color:#F3EBDA;font-variant-numeric:tabular-nums}
+.tm span.c{font:600 18px Inter,sans-serif;color:#8E98A8}
+.pend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:rgba(240,167,116,.08);border:1px solid rgba(240,167,116,.35);font-size:13px;color:#F6C29C}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.jump{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:2;padding:10px 0;background:rgba(7,12,21,.92);border-bottom:1px solid rgba(212,175,106,.12)}
+.jump a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:999px;font-size:13px;color:#AEB6C3;text-decoration:none;border:1px solid rgba(174,182,195,.18)}
+.jump a.act{color:#F3EBDA;border-color:#D4AF6A;background:rgba(212,175,106,.14)}
+.jump .sep{width:1px;background:rgba(212,175,106,.25);margin:4px 6px}
+.sect{display:flex;align-items:center;gap:14px;margin-top:8px}
+.sect h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E;white-space:nowrap}
+.sect i{flex:1;height:1px;background:linear-gradient(90deg,rgba(212,175,106,.45),rgba(212,175,106,0))}
+.sect span{font-size:12px;color:#8E98A8}
+code{color:#F3DFAE;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.tok{font-family:ui-monospace,Menlo,monospace;font-size:14px;color:#F3DFAE;background:#0B1220;border:1px dashed rgba(212,175,106,.5);border-radius:10px;padding:12px 14px;word-break:break-all}
+.lbl{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#D4AF6A;margin-bottom:10px}
+.cap{font-size:13px;color:#AEB6C3;line-height:1.5}
+.dim{opacity:.55}
+.mt td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.05);color:#E6E1D6;font-size:13px;vertical-align:top}
+/* phone */
+.ph{width:375px;box-sizing:border-box;border-radius:28px;border:1px solid rgba(212,175,106,.3);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.ph .g2{grid-template-columns:minmax(0,1fr)}
+.ph .lr{grid-template-columns:34px minmax(0,1fr) auto}
+.ph .lr .dn{display:none}
+.ph .sel{min-width:0}
+.ph .box{padding:16px}
+.ph .btn{width:100%}
+.ph .opt.tk{grid-template-columns:minmax(0,1fr)}
+.ph .opt.tk>div:last-child{display:grid!important;grid-template-columns:1fr 1fr}
+
+.ar{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ar:last-child{border-bottom:0}
+.ar .n{font-size:14px;color:#F3EBDA;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ar .s{font-size:12px;color:#8E98A8;margin-top:2px}
+.ar .bt2{font:12px ui-monospace,Menlo,monospace;color:#AEB6C3}
+.av2{width:34px;height:34px;border-radius:50%;background:#2A3446;color:#F0D08E;font:600 13px/34px Inter,sans-serif;text-align:center}
+.av2.own{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.4),rgba(255,255,255,0) 55%),#D4AF6A;color:#0B0F14;box-shadow:0 0 0 2px #070C15,0 0 0 3px #F0D08E}
+.b-own{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:linear-gradient(90deg,#F0D08E,#D4AF6A);color:#0B0F14}
+.b-adm{font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid rgba(212,175,106,.6);color:#F3DFAE;background:rgba(212,175,106,.1)}
+.b-gst{font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:rgba(111,176,224,.14);color:#A8D2F0}
+.b-on{font:600 10px/1 Inter,sans-serif;padding:4px 7px;border-radius:999px;background:rgba(127,217,154,.14);color:#9BE3B0}
+.lg{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;line-height:1.4;color:#C9CFD9}
+.lg:last-child{border-bottom:0}
+.lg b{color:#F3EBDA;font-weight:600}
+.lg .t{font-size:12px;color:#7E8898;white-space:nowrap}
+.lg .av2{width:26px;height:26px;font-size:11px;line-height:26px}
+.lgd{font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898;padding:10px 0 2px}
+.oo{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#D4AF6A}
+.ownbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:12px;background:rgba(212,175,106,.08);border:1px solid rgba(212,175,106,.35);font-size:14px;color:#F3DFAE}
+.dz{border-color:rgba(218,55,60,.45)!important;background:linear-gradient(180deg,rgba(218,55,60,.07),rgba(12,18,30,.85))!important}
+.dz .bt{color:#F59A9C}
+.inp{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#6E7888;flex:1;min-width:0}
+.scrim{position:relative;border-radius:18px;padding:40px;background:rgba(3,6,12,.7);display:flex;justify-content:center}
+.dlg{width:460px;max-width:100%;box-sizing:border-box;border-radius:16px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 30px 80px rgba(0,0,0,.6);padding:24px;display:flex;flex-direction:column;gap:14px}
+.dlg h3{margin:0;font:22px Marcellus,serif;color:#F3EBDA}
+.dlg p{margin:0;font-size:14px;line-height:1.55;color:#AEB6C3}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.ph .ar{grid-template-columns:34px minmax(0,1fr)}
+.ph .ar .btn{grid-column:1 / -1}
+.ph .dlg{width:100%;border-radius:18px 18px 0 0}
+.ph .dlg .acts{flex-direction:column-reverse}
+
+</style>
+</helmet>
+<div style="min-height: 100%; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; padding: 40px 48px; box-sizing: border-box">
+  <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Co-admins · dialogs, states &amp; safety rules</h1>
+  <div class="cap" style="margin-top: 6px; max-width: 1000px">Admins help run the group but can never break things or lock anyone out. The owner (Ada here) is fixed on the server.</div>
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px 40px; margin-top: 28px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">1 · Make admin · confirm</div><div class="scrim"><div class="dlg" role="dialog" aria-modal="true"><h3>Make Mira an admin?</h3><p>Mira can manage guests, blocks, Discord posts and runs, but not the bot token, the launch reset or other admins.</p><div class="hint">It shows up in Admin changes. You can remove it any time.</div><div class="acts"><button class="btn ghost">Cancel</button><button class="btn pri">Make admin</button></div></div></div></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">2 · Remove admin · confirm</div><div class="scrim"><div class="dlg" role="dialog" aria-modal="true"><h3>Remove Bob as admin?</h3><p>Bob stays a member and can still sign in. Guests, blocks, Discord posts and runs go back to you and the other admins.</p><div class="acts"><button class="btn ghost">Cancel</button><button class="btn danger">Remove admin</button></div></div></div></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">3 · No admins yet (only the owner)</div><section class="box" id="admins" style="border-color: rgba(212,175,106,.5)">
+      <div class="bh"><h3 class="bt">Admins</h3><div style="display: flex; gap: 8px; align-items: center"><span class="hint">1 owner</span></div></div>
+      <div class="bd">Admins help run the group: guests, blocks, Discord posts and runs. They can’t touch the bot token, the launch reset or other admins.</div>
+      <div class="pend" style="background: rgba(212,175,106,.06); border-color: rgba(212,175,106,.3); color: #F3DFAE">No admins yet. You run everything alone, which is fine. Make a friend an admin to share the guest list, blocks, Discord posts and runs.</div>
+      <div><div class="ar"><span class="av2 own">A</span><div style="min-width: 0"><div class="n">Ada<span class="b-own"><svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#0B0F14"></path></svg>Owner</span></div><div class="s"><span class="bt2">Ada#2101</span> · Last seen just now</div><div class="s">Set on the server</div></div><span></span></div><div class="ar"><span class="av2">M</span><div style="min-width: 0"><div class="n">Mira<span class="b-on">● online</span></div><div class="s"><span class="bt2">Mira#1188</span> · Last seen 2 h ago</div><div class="s">Member</div></div><button class="btn sec">Make admin</button></div><div class="ar"><span class="av2">B</span><div style="min-width: 0"><div class="n">Bob</div><div class="s"><span class="bt2">Bob#2002</span> · Last seen yesterday</div><div class="s">Member</div></div><button class="btn sec">Make admin</button></div><div class="ar"><span class="av2">T</span><div style="min-width: 0"><div class="n">Tok</div><div class="s"><span class="bt2">Tok#3307</span> · Last seen 11 h ago</div><div class="s">Member</div></div><button class="btn sec">Make admin</button></div></div>
+      <div class="hint">Friends show up here after their first sign-in. The owner is set on the server and can’t be changed here.</div>
+    </section></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">4 · Removing an admin who is signed in right now</div><div class="scrim"><div class="dlg" role="dialog" aria-modal="true"><h3>Remove Mira as admin?</h3><p>Mira stays a member and can still sign in. Guests, blocks, Discord posts and runs go back to you and the other admins.</p><div class="pend"><span class="b-on">● online</span><span>Mira is signed in right now. It takes effect at once: Mira’s next admin click is refused and the page reloads without the admin boxes. Nothing Mira already saved is undone.</span></div><div class="acts"><button class="btn ghost">Cancel</button><button class="btn danger">Remove admin</button></div></div></div><div style="height: 14px"></div><div class="box" style="gap: 12px">
+      <div class="pend" style="background: rgba(174,182,195,.06); border-color: rgba(174,182,195,.25); color: #C9CFD9"><span>Ada removed your admin role. This page now shows what members see.</span><a href="#" style="margin-left: auto">OK</a></div>
+      <div class="cap">What Mira sees after the next click on the admin page. The click itself (here: Unblock Sela#6620) is refused, not half done.</div>
+    </div></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">5 · An admin opens an owner-only action through an old link</div><div class="box" style="align-items: center; text-align: center; padding: 40px 28px; gap: 14px">
+      <span style="width: 56px; height: 56px; border-radius: 50%; background: rgba(212,175,106,.12); border: 1px solid rgba(212,175,106,.45); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 16 16" aria-label="owner only" style="flex: none"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#D4AF6A"></path></svg></span>
+      <div style="font: 24px Marcellus, serif; color: #F3EBDA">Only the owner can do this</div>
+      <div class="cap" style="max-width: 420px">“Start fresh from launch” is kept for Ada, the owner. Nothing was changed.</div>
+      <a href="#" class="btn sec">Back to Admin</a>
+    </div></div>
+    <div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">6 · Server refuses a stale button</div><div class="box" style="gap: 10px">
+      <div class="pend"><span>Admins and the owner can’t be blocked. Remove Bob as admin first.</span></div>
+      <div class="cap">If a stale page still shows a Block button on an admin, the server refuses it with this line. Same for “Make admin” from an admin, revoking someone else’s uploader, or the bot token.</div>
+    </div></div>
+  </div>
+  <div style="margin-top: 36px"><div style="display: flex; flex-direction: column; gap: 10px"><div class="lab" style="color: #D4AF6A">Safety rules</div><section class="box"><div class="g2" style="gap: 0 40px"><div class="opt"><div><b>The owner is set on the server</b><span class="d">One BattleTag in the server config. The site has no button that changes, demotes or blocks the owner.</span></div><span></span></div><div class="opt"><div><b>Admins can’t lock anyone out</b><span class="d">No blocking the owner or another admin. No removing admins. No touching the bot token or uploaders of others.</span></div><span></span></div><div class="opt"><div><b>Nothing silent</b><span class="d">Every admin action goes in Admin changes, which nobody can edit or clear.</span></div><span></span></div><div class="opt"><div><b>Mistakes stay small</b><span class="d">Blocks unblock, guests re-add, runs can be re-planned. Start fresh has an Undo for 7 days and is owner only.</span></div><span></span></div><div class="opt"><div><b>Hidden, not greyed</b><span class="d">Owner-only controls are left out for admins. The server checks every action again, so an old link only gets “Only the owner can do this”.</span></div><span></span></div><div class="opt"><div><b>Removal is instant</b><span class="d">Removing an admin works even while they’re signed in; their next admin click is refused.</span></div><span></span></div></div></section></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1830}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -150,7 +150,7 @@ Boards `doomsday-phone` and `roster-cards-doomsday`.
 - As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
 
 ### WEB-64 Co-admins
-Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Board: from `docs/DESIGN-PROMPT-ADMINS.md` (not designed yet; build after the boards are in).
+Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Boards: `admin-coadmins` (owner view), `admin-as-admin`, `admin-coadmin-states`, `admin-phone` and `discord-page-coadmins` (designed 2026-10-29). From the design: nobody, the owner included, can block an admin directly; remove the admin role first (the Members list shows "Can't be blocked" on those rows).
 
 - **Two levels:**
   - **Owner:** the BattleTag in `ADMIN_BATTLETAG` (server setting), as now. Never demoted or removed through the site. No screen, action or API offers it, and the server refuses it.
