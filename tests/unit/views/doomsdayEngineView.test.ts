@@ -44,7 +44,7 @@ describe("doomsdayPage on the engine's snapshot", () => {
   it("renders the viewer's day, the board and the friend without the addon", () => {
     const page = doomsdayPage({ snapshot: doomsdaySnapshot(input), viewerKey: "Ada#1001", timeZone: "Europe/Paris" });
     expect(page.header.sub).toBe("Daily goals, feats and a ladder.");
-    expect(page.today?.resets).toMatch(/^resets in \d+ h \d+ m$/);
+    expect(page.today?.resets).toMatch(/^resets \w{3} \d\d:\d\d · in \d+ h \d+ m$/);
     expect(page.today?.pve.length).toBeGreaterThan(0);
     expect(page.board.columns.length).toBeGreaterThan(0);
     const ada = page.board.rows.find((r) => r.name === "Ada");

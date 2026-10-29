@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Doomsday: a lost duel or any other PvP point now ends "PvP Virgin" too. A character without a PvP rank says "No rank yet · 12 kills" unless its friend is still a PvP Virgin. "N of M done" counts exactly the goals on the grid, the Duel slot included. The day is named by its reset ("Wed evening"), times after midnight show their weekday ("done at Thu 00:04"), and the countdown says when ("resets Thu 19:00 · in 6 h 51 m").
 
 ## v0.5.0 (2026-10-29)
 

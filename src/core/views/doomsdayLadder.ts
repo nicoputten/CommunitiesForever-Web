@@ -182,17 +182,30 @@ export interface PvpView {
   firstWins?: string;
 }
 
-function rankView(c: NonNullable<FriendDoomsday["pvp"]>["characters"][number]): PvpRankView | undefined {
+/**
+ * A character's rank. Without one: "Conscientious Objector" only while its friend is a PvP Virgin, otherwise "No rank
+ * yet · 12 kills" (live test 2026-10-29).
+ */
+function rankView(
+  c: NonNullable<FriendDoomsday["pvp"]>["characters"][number],
+  virgin: boolean,
+): PvpRankView | undefined {
   const rank = c.highestRank ?? c.rank;
   if (rank === undefined) return undefined;
   const now = c.rank ?? rank;
   const name = rankName(now, c.faction);
+  const kills = c.hk ?? 0;
   const view: PvpRankView = {
     guid: c.guid,
     name: c.name,
     rank: now,
-    rankText: name === undefined ? "No rank yet" : `${name} · rank ${now}`,
-    title: PVP_RANKS[now]?.title ?? "",
+    rankText:
+      name !== undefined
+        ? `${name} · rank ${now}`
+        : virgin
+          ? "No rank yet"
+          : `No rank yet · ${kills} ${kills === 1 ? "kill" : "kills"}`,
+    title: now > 0 || virgin ? (PVP_RANKS[now]?.title ?? "") : "",
   };
   if (c.classFile !== undefined) view.classFile = c.classFile;
   return view;
@@ -254,7 +267,9 @@ export function pvpView(s: DoomsdaySnapshot, friendKey: string | undefined, view
     detail: `${pvp.week.solo} solo · ${pvp.week.skulls} ${pvp.week.skulls === 1 ? "skull" : "skulls"}`,
     approx: pvp.week.approx === true,
   };
-  view.ranks = pvp.characters.map(rankView).filter((r): r is PvpRankView => r !== undefined);
+  view.ranks = pvp.characters
+    .map((c) => rankView(c, picked.pvpVirgin))
+    .filter((r): r is PvpRankView => r !== undefined);
   const most = Math.max(1, ...pvp.byZone.map((z) => z.kills));
   view.byZone = pvp.byZone.map((z) => ({ zone: z.zone, kills: z.kills, percent: Math.round((z.kills / most) * 100) }));
 

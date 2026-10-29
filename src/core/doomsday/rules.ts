@@ -75,6 +75,78 @@ export function dayLabel(n: number): string {
   return `${WEEKDAY_SHORT[(n + 4) % 7]} ${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
 }
 
+/**
+ * The part of the day of an hour (Nico, live test 2026-10-29): 05–11 morning, 12–16 afternoon, 17–22 evening, 23–04
+ * night.
+ */
+export function partOfDay(hour: number): string {
+  if (hour >= 5 && hour <= 11) return "morning";
+  if (hour >= 12 && hour <= 16) return "afternoon";
+  if (hour >= 17 && hour <= 22) return "evening";
+  return "night";
+}
+
+interface Clock {
+  weekday: string;
+  hour: number;
+  time: string;
+  date: string;
+}
+
+function clock(at: number, timeZone: string): Clock {
+  const p: Record<string, string> = {};
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    weekday: "short",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(at * 1000));
+  for (const x of parts) p[x.type] = x.value;
+  return {
+    weekday: WEEKDAY_SHORT.find((w) => w === p.weekday) ?? p.weekday ?? "",
+    hour: Number(p.hour),
+    time: `${p.hour}:${p.minute}`,
+    date: `${p.year}-${p.month}-${p.day}`,
+  };
+}
+
+/**
+ * A Doomsday day by its reset (live test 2026-10-29): the weekday and the part of the day it starts, "Wed evening", and
+ * its span "Wed 19:00 → Thu 19:00". In the zone given: the viewer's on the site, the realm's in the bot.
+ */
+export function doomsdayDay(dayStart: number, nextReset: number, timeZone: string): { name: string; span: string } {
+  const a = clock(dayStart, timeZone);
+  const b = clock(nextReset, timeZone);
+  return { name: `${a.weekday} ${partOfDay(a.hour)}`, span: `${a.weekday} ${a.time} → ${b.weekday} ${b.time}` };
+}
+
+/** A clock time within a Doomsday day: "23:13", or with its weekday after midnight, "Thu 00:04". */
+export function clockAt(at: number, dayStart: number, timeZone: string): string {
+  const c = clock(at, timeZone);
+  return c.date === clock(dayStart, timeZone).date ? c.time : `${c.weekday} ${c.time}`;
+}
+
+/** "resets Thu 19:00 · in 6 h 51 m". */
+export function resetsText(nextReset: number, now: number, timeZone: string): string {
+  const c = clock(nextReset, timeZone);
+  return `resets ${c.weekday} ${c.time} · in ${duration(nextReset - now)}`;
+}
+
+/**
+ * "N of M done" (live test 2026-10-29): exactly the goals on the grid, the PvE dailies, the Hunt and the Skirmish,
+ * plus the Duel slot, done after its first duel. The Duel slot still never counts for crossing out or the streak.
+ */
+export function gridCount(goals: readonly { doneAt?: number }[], duels: number): { done: number; total: number } {
+  return {
+    done: goals.filter((g) => g.doneAt !== undefined).length + (duels > 0 ? 1 : 0),
+    total: goals.length + 1,
+  };
+}
+
 /** "3 h 12 m", "12 m", "0 m". */
 export function duration(seconds: number): string {
   const minutes = Math.max(0, Math.floor(seconds / 60));
