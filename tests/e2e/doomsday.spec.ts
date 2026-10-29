@@ -32,13 +32,24 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: /^Your goals · \w{3} \d+ \w{3}$/ })).toBeVisible();
-  await expect(page.getByText(/^\d of 4 done$/)).toBeVisible();
-  await expect(page.getByText(/^resets in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", { name: /^Your goals · \w{3} (morning|afternoon|evening|night)$/ }),
+  ).toBeVisible();
+  await expect(page.getByText(/^\d of 5 done$/)).toBeVisible();
+  await expect(page.getByText(/^resets \w{3} \d\d:\d\d · in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
   await expect(page.getByTestId("goal")).toHaveCount(4);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
   await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
-  await expect(page.getByText("Goals are suggestions with points. Skip any of them; nothing is locked.")).toBeVisible();
+  // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click.
+  const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
+  await expect(tip).toBeHidden();
+  await page
+    .getByRole("region", { name: /^Your goals/ })
+    .getByRole("button", { name: "More info" })
+    .click();
+  await expect(tip).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(tip).toBeHidden();
 
   // The board: Femke a PvP Virgin, Sanne without the addon (on the phone one card per friend, WEB-61).
   if (isPhone(page)) {

@@ -8,6 +8,9 @@ import { EmblemIcon, FishIcon, MountIcon, PotIcon, RankInsignia, SkullIcon, Swor
 import base from "./Doomsday.module.css";
 import styles from "./Ladder.module.css";
 
+/** Friends the duel grid fits in its card; more scroll in their own box (WEB-65, bug 7). */
+const DUEL_FIT = 8;
+
 // The Doomsday page's Ladder, PvP and Feats pieces (WEB-60, boards doomsday-ladder and doomsday-feats). Server
 // components: rows open with <details>, friends are picked with links.
 
@@ -138,8 +141,13 @@ export function PvpDetails({ view }: { view: PvpView }) {
             <div>
               <div className={styles.rankName}>{r.rankText}</div>
               <div className={base.meta}>
-                {r.rank > 0 ? "a.k.a. " : ""}
-                <span className={styles.aka}>{r.title}</span> · {r.name}
+                {r.title !== "" && (
+                  <>
+                    {r.rank > 0 ? "a.k.a. " : ""}
+                    <span className={styles.aka}>{r.title}</span> ·{" "}
+                  </>
+                )}
+                {r.name}
               </div>
             </div>
           </div>
@@ -174,11 +182,18 @@ export function PvpDetails({ view }: { view: PvpView }) {
           )}
         </div>
         {view.duels !== undefined && view.duels.grid.names.length > 1 && (
-          <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Duels between friends">
+          <div
+            className={styles.tableWrap}
+            tabIndex={view.duels.grid.names.length > DUEL_FIT ? 0 : undefined}
+            role="region"
+            aria-label="Duels between friends"
+            data-many={view.duels.grid.names.length > DUEL_FIT || undefined}
+            style={{ "--cols": view.duels.grid.names.length } as CSSProperties}
+          >
             <table className={styles.duels}>
               <thead>
                 <tr>
-                  <th scope="col">wins–losses vs</th>
+                  <th scope="col">row vs column</th>
                   {view.duels.grid.names.map((n) => (
                     <th key={n.key} scope="col">
                       {n.name}
@@ -190,16 +205,26 @@ export function PvpDetails({ view }: { view: PvpView }) {
                 {view.duels.grid.names.map((row, i) => (
                   <tr key={row.key}>
                     <th scope="row">{row.name}</th>
-                    {view.duels!.grid.cells[i]!.map((c, j) => (
-                      <td key={j} data-result={c?.result} data-self={i === j}>
-                        {c?.text}
-                      </td>
-                    ))}
+                    {view.duels!.grid.cells[i]!.map((c, j) =>
+                      c !== undefined ? (
+                        <td key={j} data-result={c.result}>
+                          {c.text}
+                        </td>
+                      ) : (
+                        <td key={j} data-empty={i === j ? "self" : "none"}>
+                          <span aria-hidden="true">{i === j ? "—" : "·"}</span>
+                          {i !== j && <span className="visually-hidden">no duels</span>}
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+        {view.duels?.grid.readAcross !== undefined && view.duels.grid.names.length > 1 && (
+          <p className={styles.readAcross}>{view.duels.grid.readAcross}</p>
         )}
         {view.duels?.elo !== undefined && (
           <div className={styles.elo}>
@@ -214,11 +239,10 @@ export function PvpDetails({ view }: { view: PvpView }) {
             <span className={base.meta}>{view.duels.elo.place}</span>
           </div>
         )}
-        <p className={base.note}>Site and Discord only; the addon shows wins and losses.</p>
       </section>
 
       <section className={`${base.card} ${styles.dashed}`} aria-label="Battlegrounds">
-        <span className={base.meta}>Battlegrounds · separate, never in the week&apos;s kills</span>
+        <span className={base.meta}>Battlegrounds</span>
         {view.battlegrounds.length === 0 && <p className={base.note}>No battlegrounds yet.</p>}
         {view.battlegrounds.map((b) => (
           <div key={b.name} className={styles.bg}>
@@ -249,6 +273,20 @@ export function GroupFeats({ feats }: { feats: FeatsView["group"] }) {
   return (
     <>
       {feats.map((f) => {
+        if ("newCharacters" in f) {
+          const n = f.newCharacters;
+          return (
+            <div key={f.key} className={styles.newCharacters} data-testid="new-characters">
+              <span className={styles.newBadge} aria-hidden="true">
+                {n.badge}
+              </span>
+              <div>
+                <div className={styles.newTitle}>{n.title}</div>
+                <div className={styles.newLine}>{n.line}</div>
+              </div>
+            </div>
+          );
+        }
         const Glyph = f.icon === "rank" ? undefined : GLYPHS[f.icon];
         return (
           <div key={f.key} className={styles.feat} data-testid="feat">
@@ -295,7 +333,6 @@ export function OwnFeats({ view }: { view: FeatsView }) {
           </div>
         ))}
       </div>
-      <p className={base.note}>Locked feats show progress, never pressure.</p>
     </>
   );
 }

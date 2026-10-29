@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
 import { doomsdayPage } from "@/core/views/doomsday";
-import { featsView } from "@/core/views/doomsdayFeats";
+import { featsView, type FeatView } from "@/core/views/doomsdayFeats";
 import { ladderView, pvpView } from "@/core/views/doomsdayLadder";
 
 // WEB-59 on the engine's own snapshot (WEB-58), not the made-up sample: a friend with goal records but nothing done
@@ -43,8 +43,8 @@ const input: DoomsdayInput = {
 describe("doomsdayPage on the engine's snapshot", () => {
   it("renders the viewer's day, the board and the friend without the addon", () => {
     const page = doomsdayPage({ snapshot: doomsdaySnapshot(input), viewerKey: "Ada#1001", timeZone: "Europe/Paris" });
-    expect(page.header.sub).toMatch(/^Daily goals at 19:00,/);
-    expect(page.today?.resets).toMatch(/^resets in \d+ h \d+ m$/);
+    expect(page.header.sub).toBe("Daily goals, feats and a ladder.");
+    expect(page.today?.resets).toMatch(/^resets \w{3} \d\d:\d\d · in \d+ h \d+ m$/);
     expect(page.today?.pve.length).toBeGreaterThan(0);
     expect(page.board.columns.length).toBeGreaterThan(0);
     const ada = page.board.rows.find((r) => r.name === "Ada");
@@ -85,11 +85,12 @@ describe("doomsdayPage on the engine's snapshot", () => {
     expect(ladder.resets).toMatch(/^week resets Sunday 19:00 · in /);
     expect(pvpView(snapshot, undefined, "Ada#1001").name).toBe("Ada");
     const feats = featsView(snapshot, undefined, "Ada#1001", "Europe/Paris");
-    expect(feats.group.map((f) => [f.icon, f.title])).toEqual([
+    const group = feats.group as FeatView[];
+    expect(group.map((f) => [f.icon, f.title])).toEqual([
       ["epic", { before: "First epic: ", epic: "Robes of the Exalted" }],
       ["rank", { before: "Stone Guard, a.k.a. Mailbox Menace" }],
     ]);
-    expect(feats.group[1]?.rank).toBe(6);
+    expect(group[1]?.rank).toBe(6);
     expect(feats.ownCount).toBe(2);
   });
 });

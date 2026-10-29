@@ -55,9 +55,7 @@ export default async function AdminPage({
   const ownerName = view.ownerName ?? "the owner";
   return (
     <div className={styles.page}>
-      <PageTitle sub="Who may sign in, who helps run the group, and what changed. Members come from the uploads, guests from your list.">
-        Admin
-      </PageTitle>
+      <PageTitle sub="Who may sign in, who helps run the group, and what changed.">Admin</PageTitle>
       {!owner && <OwnerBar owner={view.ownerName} />}
       {refused !== undefined && <RefusedLine>{refused}</RefusedLine>}
       <div className={styles.columns}>
@@ -73,12 +71,7 @@ export default async function AdminPage({
                 : `Who helps run the group. Only the owner (${ownerName}) appoints or removes admins.`
             }
           >
-            {owner && view.admins.every((a) => a.rank !== "admin") && (
-              <PanelEmpty>
-                No admins yet. You run everything alone, which is fine. Make a friend an admin to share the guest list,
-                blocks, Discord posts and runs.
-              </PanelEmpty>
-            )}
+            {owner && view.admins.every((a) => a.rank !== "admin") && <PanelEmpty>No admins yet.</PanelEmpty>}
             <ul className={rows.list}>
               {view.admins.map((a) => (
                 <li key={a.battleTag} className={rows.row} data-testid="admin-row">
@@ -117,9 +110,7 @@ export default async function AdminPage({
               ))}
             </ul>
             <p className={co.hint}>
-              {owner
-                ? "Friends show up here after their first sign-in. The owner is set on the server and can't be changed here."
-                : "The owner is set on the server."}
+              {owner ? "Friends show up here after their first sign-in." : "The owner is set on the server."}
             </p>
           </AdminPanel>
           <AdminPanel
@@ -185,7 +176,7 @@ export default async function AdminPage({
           >
             <AddGuestForm action={addGuestAction} />
             {view.guests.length === 0 ? (
-              <PanelEmpty>No guests. Add a BattleTag to let someone in who isn&apos;t in the community.</PanelEmpty>
+              <PanelEmpty>No guests.</PanelEmpty>
             ) : (
               <ul className={rows.list}>
                 {view.guests.map((g) => (
@@ -248,7 +239,12 @@ export default async function AdminPage({
           </AdminPanel>
         </div>
         <div className={styles.side}>
-          <AdminPanel id="admin-log" title="Admin changes" aside={`last ${view.log.length} · newest first`}>
+          <AdminPanel
+            id="admin-log"
+            title="Admin changes"
+            sub="Owner and admins see the same log. Nobody can edit or clear it."
+            aside={`last ${view.log.length} · newest first`}
+          >
             <AdminLog lines={view.log} />
           </AdminPanel>
           {owner && (

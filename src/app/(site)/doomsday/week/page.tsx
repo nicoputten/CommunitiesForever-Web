@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import styles from "@/components/doomsday/Doomsday.module.css";
 import { DoomsdayFrame, GoalCard, Points } from "@/components/doomsday/parts";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { SUGGESTIONS } from "@/core/views/doomsday";
 import { doomsdayData } from "../data";
 import { NoDoomsday } from "../NoData";
 
 export const metadata: Metadata = { title: "Doomsday · Week" };
 
-/** Doomsday, Week (WEB-59, board doomsday-phone "Week tab"): the 3 weeklies and the Weekly bounty. */
+/**
+ * Doomsday, Week (WEB-59, board doomsday-phone "Week tab"): the 3 weeklies and the Weekly bounty, each with its
+ * progress and who else is closest (WEB-65, board live-test-site-fixes), on a phone too.
+ */
 export default async function DoomsdayWeekPage() {
   const page = await doomsdayData();
   if (page === undefined) return <NoDoomsday />;
@@ -19,6 +23,7 @@ export default async function DoomsdayWeekPage() {
           <h2 id="dd-week" className={styles.cardTitle}>
             Your weeklies
           </h2>
+          <InfoTip>{SUGGESTIONS}</InfoTip>
           {week?.points !== undefined && <Points points={week.points} />}
           <span className={styles.spacer} />
           {week !== undefined && <span className={styles.resets}>{week.resets}</span>}
@@ -31,11 +36,10 @@ export default async function DoomsdayWeekPage() {
         ) : (
           <div className={`${styles.goals} ${styles.goals4}`}>
             {week.goals.map((g) => (
-              <GoalCard key={g.key} goal={g} />
+              <GoalCard key={g.key} goal={g} week />
             ))}
           </div>
         )}
-        <p className={styles.note}>{SUGGESTIONS}</p>
       </section>
     </DoomsdayFrame>
   );

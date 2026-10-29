@@ -64,7 +64,6 @@ export function AdminLog({ lines }: { lines: LogLine[] }) {
         })}
       </ol>
       <div className={styles.logFoot}>
-        <span className={styles.hint}>Owner and admins see the same log. Nobody can edit or clear it.</span>
         {lines.length > SHOWN && (
           <button type="button" className={styles.cancel} onClick={() => setAll(!all)} aria-expanded={all}>
             {all ? `Show the last ${SHOWN}` : `Show all ${lines.length}`}

@@ -39,11 +39,8 @@ describe("doomsdayPage header", () => {
     expect(header.streak).toEqual({ current: 6, best: 11 });
   });
 
-  it("names the reset in the viewer's zone", () => {
-    expect(page().header.sub).toMatch(/^Daily goals at 19:00,/);
-    expect(doomsdayPage({ snapshot: sample(), timeZone: "Europe/London" }).header.sub).toMatch(
-      /^Daily goals at 18:00,/,
-    );
+  it("says what the page is in a few words (player copy only, WEB-65)", () => {
+    expect(page().header.sub).toBe("Daily goals, feats and a ladder.");
   });
 
   it("has no numbers for a viewer without Doomsday data", () => {
@@ -63,9 +60,10 @@ describe("doomsdayPage header", () => {
 describe("doomsdayPage today", () => {
   it("lists the viewer's goals with checks, times and progress", () => {
     const today = page().today!;
-    expect(today.title).toBe("Your goals · Thu 19 Nov");
-    expect(today.doneText).toBe("3 of 5 done");
-    expect(today.resets).toBe("resets in 22 h 0 m");
+    expect(today.title).toBe("Your goals · Thu evening");
+    // The grid: 3 PvE dailies, the Hunt, the Skirmish and the Duel slot (done: a duel today).
+    expect(today.doneText).toBe("4 of 6 done");
+    expect(today.resets).toBe("resets Fri 19:00 · in 22 h 0 m");
     expect(today.pve.map((g) => [g.kind, g.title, g.done, g.doneText ?? g.progress?.text])).toEqual([
       ["PvE daily", "Finish 10 quests", true, "done at 19:12"],
       ["PvE daily", "Run a dungeon with a friend", true, "done at 19:55"],
@@ -191,6 +189,33 @@ describe("doomsdayPage week", () => {
       ["PvE weekly", "Group with 3 different friends", "done at Mon 22:10", "+15 PvE"],
       ["PvP bounty", "Bounty: a kill of every enemy class", "5 / 8", "+15 PvP"],
     ]);
+  });
+});
+
+describe("doomsdayPage week: who is closest (WEB-65)", () => {
+  it("names the friends done first, then the furthest along, at most two; nobody who hasn't started", () => {
+    const s = sample();
+    const nico = s.friends.find((f) => f.friendKey === "nico")!;
+    const column = nico.week!.goals[0]!.columnId;
+    const set = (key: string, goal: { doneAt?: number; progress?: { value: number; target: number } }) => {
+      const f = s.friends.find((x) => x.friendKey === key)!;
+      f.week = { goals: [{ ...nico.week!.goals[0]!, ...goal, columnId: column }] };
+    };
+    set("mira", { doneAt: NOW - 3600, progress: { value: 3, target: 3 } });
+    set("bob", { progress: { value: 2, target: 3 } });
+    set("femke", { progress: { value: 1, target: 3 } });
+    set("jorrit", { progress: { value: 0, target: 3 } });
+    const goals = page(s).week!.goals;
+    expect(goals[0]!.closest).toBe("Mira 3/3 done · Bob 2/3");
+    // Nobody else on the other weeklies: no line.
+    expect(goals[1]!.closest).toBeUndefined();
+  });
+
+  it("adds what the progress is about to the count", () => {
+    const s = sample();
+    const goal = s.friends.find((f) => f.friendKey === "nico")!.week!.goals[0]!;
+    goal.progress = { value: 4, target: 6, detail: "Deadmines" };
+    expect(page(s).week!.goals[0]!.progress?.text).toBe("4 / 6 · Deadmines");
   });
 });
 

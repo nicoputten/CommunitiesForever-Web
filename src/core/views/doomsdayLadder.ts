@@ -151,6 +151,8 @@ export interface DuelGridView {
   names: { key: string; name: string }[];
   /** cells[row][column]: "4–2" with the row friend's result; undefined on the diagonal or without duels. */
   cells: ({ text: string; result: "won" | "lost" | "even" } | undefined)[][];
+  /** "Read across: Mira beat Tok 2–1.": the clearest win in the grid, how to read it (WEB-65, bug 7). */
+  readAcross?: string;
 }
 
 export interface PvpView {
@@ -180,17 +182,30 @@ export interface PvpView {
   firstWins?: string;
 }
 
-function rankView(c: NonNullable<FriendDoomsday["pvp"]>["characters"][number]): PvpRankView | undefined {
+/**
+ * A character's rank. Without one: "Conscientious Objector" only while its friend is a PvP Virgin, otherwise "No rank
+ * yet · 12 kills" (live test 2026-10-29).
+ */
+function rankView(
+  c: NonNullable<FriendDoomsday["pvp"]>["characters"][number],
+  virgin: boolean,
+): PvpRankView | undefined {
   const rank = c.highestRank ?? c.rank;
   if (rank === undefined) return undefined;
   const now = c.rank ?? rank;
   const name = rankName(now, c.faction);
+  const kills = c.hk ?? 0;
   const view: PvpRankView = {
     guid: c.guid,
     name: c.name,
     rank: now,
-    rankText: name === undefined ? "No rank yet" : `${name} · rank ${now}`,
-    title: PVP_RANKS[now]?.title ?? "",
+    rankText:
+      name !== undefined
+        ? `${name} · rank ${now}`
+        : virgin
+          ? "No rank yet"
+          : `No rank yet · ${kills} ${kills === 1 ? "kill" : "kills"}`,
+    title: now > 0 || virgin ? (PVP_RANKS[now]?.title ?? "") : "",
   };
   if (c.classFile !== undefined) view.classFile = c.classFile;
   return view;
@@ -200,16 +215,25 @@ function rankView(c: NonNullable<FriendDoomsday["pvp"]>["characters"][number]): 
 function duelGrid(s: DoomsdaySnapshot): DuelGridView {
   const duelists = s.friends.filter((f) => f.pvp !== undefined && f.pvp.duels.vs.some((v) => v.won + v.lost > 0));
   const names = duelists.map((f) => ({ key: f.friendKey, name: f.name }));
+  // The example under the grid: the biggest lead, then the most duels, then the first in grid order.
+  let best: { lead: number; duels: number; text: string } | undefined;
   const cells = duelists.map((row) =>
     duelists.map((col) => {
       if (row.friendKey === col.friendKey) return undefined;
       const vs = row.pvp!.duels.vs.find((v) => v.friendKey === col.friendKey);
       if (vs === undefined || vs.won + vs.lost === 0) return undefined;
       const result: "won" | "lost" | "even" = vs.won > vs.lost ? "won" : vs.won < vs.lost ? "lost" : "even";
-      return { text: `${vs.won}–${vs.lost}`, result };
+      const text = `${vs.won}–${vs.lost}`;
+      const lead = vs.won - vs.lost;
+      const duels = vs.won + vs.lost;
+      if (lead > 0 && (best === undefined || lead > best.lead || (lead === best.lead && duels > best.duels)))
+        best = { lead, duels, text: `Read across: ${row.name} beat ${col.name} ${text}.` };
+      return { text, result };
     }),
   );
-  return { names, cells };
+  const grid: DuelGridView = { names, cells };
+  if (best !== undefined) grid.readAcross = best.text;
+  return grid;
 }
 
 export function pvpView(s: DoomsdaySnapshot, friendKey: string | undefined, viewerKey: string | undefined): PvpView {
@@ -243,7 +267,9 @@ export function pvpView(s: DoomsdaySnapshot, friendKey: string | undefined, view
     detail: `${pvp.week.solo} solo · ${pvp.week.skulls} ${pvp.week.skulls === 1 ? "skull" : "skulls"}`,
     approx: pvp.week.approx === true,
   };
-  view.ranks = pvp.characters.map(rankView).filter((r): r is PvpRankView => r !== undefined);
+  view.ranks = pvp.characters
+    .map((c) => rankView(c, picked.pvpVirgin))
+    .filter((r): r is PvpRankView => r !== undefined);
   const most = Math.max(1, ...pvp.byZone.map((z) => z.kills));
   view.byZone = pvp.byZone.map((z) => ({ zone: z.zone, kills: z.kills, percent: Math.round((z.kills / most) * 100) }));
 

@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-29): no open stories. Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release; the next ideas are in the backlog below.
+Build order (2026-10-29): E9, the live test of 29 Oct: WEB-65 (site fixes) and WEB-66 (rules and bot images) side by side, with the bot's BOT-20 on WEB-66's contract (WEB-66: Nico's brief parts 2 and 5; no designer notes or legends in any image or text). Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -13,6 +13,7 @@ Build order (2026-10-29): no open stories. Doomsday (E8, `docs/STORIES-COMPLETED
 - Works at 375 px (phone) and 1440 px (desktop canvas); page max-width 1280.
 - Empty, loading and error states of the screen are part of the story.
 - Playwright test for the main flow at desktop and phone size; screenshots of both in the PR next to the board.
+- **Player-facing copy only** (Nico, 2026-10-29, after the live test): every visible string is short copy for a player. No design notes, no legends, no explanations of how the system works or why. An explanation that helps a player goes into the ⓘ tooltip (WEB-65); otherwise it goes nowhere. Before each PR, check the rendered pages for sentences that explain rules or the design, and list every new visible string in the PR for Nico.
 
 ## E3 Access and hosting
 
@@ -41,3 +42,64 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Final emblem and logo for the site.
 - Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).
+
+## E9 Live test fixes (2026-10-29)
+Nico tested the live site read-only on 29 Oct 2026. The brief is `docs/DESIGN-BRIEF-LIVE-TEST.md`, with the boards `live-test-findings`, `live-test-site-fixes` and `live-test-phone` (the bot's are `bot-visual-*`). Where `docs/DOOMSDAY.md` disagrees on the PvP Virgin rule or the day label, the brief is newer and wins. Bugs 1, 2, 4 and 5 are data rules: the engine worker builds them, and WEB-65 shows the results. Nothing here changes live settings or data.
+
+### WEB-65 Live-test site fixes
+Boards `live-test-site-fixes` (desktop) and `live-test-phone` (375 px). Decided with Nico, 2026-10-29: the answers below.
+- **Part 1: leaked notes and the tooltip.**
+  - Every string in the brief's Part 1 table is removed, shortened or moved into a tooltip, as the table says.
+  - The Professions recipe search is hidden until it works.
+  - Beyond the table:
+    - Doomsday loses "movement since last week", "Columns: 3 PvE dailies · Hunt · Skirmish", "Tap a friend for the split per character." and the rank table's subtitle.
+    - The heatmap legend goes into a ⓘ.
+    - The page subtitle becomes "Daily goals, feats and a ladder."
+    - Day one becomes "Day one of Doomsday · Your first goals are below."
+    - The Admin and Discord pages' explanatory lines move into ⓘ tooltips on their box titles; short status lines ("No guests.") stay.
+  - **One tooltip component**, reused everywhere:
+    - an 18 px gold-outlined ⓘ in a 44 × 44 tap area
+    - opens on hover, focus or tap; closes on Esc, a tap outside or blur
+    - panel at most 280 px wide
+    - `aria-describedby`, `aria-label="More info"`, a visible focus ring
+    - on a phone it opens below the icon, inside the screen
+- **Part 2: bugs.**
+  - The screens show the engine's results for bugs 1 (PvP Virgin only at 0 all-time PvP points), 2 (no rank yet: "No rank yet · N kills"; "Conscientious Objector" only for a PvP Virgin), 4 (the goal count matches the cards shown, the duel slot done after its first duel) and 5 (the day named by its start: "Wed evening", "Wed 19:00 → Thu 19:00", "done Thu 00:04", "resets Thu 19:00 · in 6 h 51 m").
+  - The day name follows the reset hour: 05–11 morning, 12–16 afternoon, 17–22 evening, 23–04 night.
+  - 3: "Past" is a start time before now. A cancelled run whose start is still ahead stays in its week group, struck through with CANCELLED, until its start time has passed.
+  - 6: map markers show no age badge under 1 day. Older sightings stay faded on the data-age scale, and the tip says "here 6 d ago · seen 42 min ago". Zone labels never sit under a marker: they move aside or fade under it.
+  - 7: the duel grid:
+    - friends as rows and columns, "row vs column" in the corner
+    - "—" on the diagonal, "·" for empty cells
+    - scores never wrap; green when the row friend leads, red when behind
+    - no scrollbar in the card up to 8 friends, its own scroll box beyond that
+    - "Read across: Mira beat Tok 2–1" from the real data
+- **Part 3: UX.**
+  - **The avatar menu:**
+    - the trigger shows your display name with ▾, never the BattleTag
+    - items: Uploader, Discord, Admin (owner and admins, with an OWNER or ADMIN badge), and Sign out under a divider
+    - every item 44 px; keyboard and Esc work
+    - on desktop, Uploader and Discord also stay in the top bar
+  - **Roster:**
+    - no BattleTags on the friend cards; the subtitle is "3 characters"
+    - the cards flow in CSS columns without holes
+    - level-band chips show full dungeon names, wrap onto more rows, and are never cut off
+  - **Map:** the Roll call has one scroll area, and "Unknown whereabouts" collapses into one row ("4 not sighted yet ▸").
+  - **Doomsday Week:** every weekly has a progress bar and a number (with a detail such as "· Deadmines" where the engine gives one), and a line names who is closest ("Mira 5/5 done · Bob 4/5").
+  - **Feats:** new characters are one grouped line per upload ("+4 new characters: Frida Snowmantle 41, …"), never a feat card and never counted as a feat.
+- **Part 4: phone (375 px).**
+  - The map's app bar shows the shield only.
+  - The Doomsday tabs:
+    - pill chips that scroll sideways without a scrollbar
+    - a 48 px fade at the right edge
+    - the active tab in view
+  - The roster's filters become the search field plus one "Filters · N" button. It opens a bottom sheet with chip groups (Class, Role, Level, Profession), "Clear", and "Show N characters".
+  - The avatar menu works the same on a phone.
+- Done when:
+  - none of the Part 1 strings (and the extra ones above) is on the site, checked in the templates and in the rendered HTML
+  - unit tests cover the cancelled-run grouping, the goal count, the day label and the duel grid's lead colours
+  - 375 px has no horizontal page scroll, and every control is at least 44 px
+  - no BattleTag shows outside Admin and the owner/admin Linked friends list
+  - every new visible string is listed in the PR
+  - as every UI story: design checks, Playwright, screenshots after Nico's OK
+

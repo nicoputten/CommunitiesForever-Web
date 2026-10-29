@@ -94,12 +94,15 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("“Bring water and food”")).toBeVisible();
 
-  // The organiser deletes it: cancelled, under Past.
+  // The organiser deletes it: cancelled, struck through in its week until its start time (WEB-65, bug 3).
   await page.getByRole("button", { name: "Delete run" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByText("Cancelled by Nico")).toBeVisible();
   await page.goto("/runs?show=all");
-  await expect(page.getByRole("link", { name: `Tomorrow ${name} · Nico Cancelled` })).toBeVisible();
+  const cancelled = page.locator(`article:has(a#run-${runId})`);
+  await expect(cancelled).toHaveAttribute("data-cancelled", "true");
+  await expect(cancelled.getByText("Cancelled", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: `Tomorrow ${name} · Nico Cancelled` })).toHaveCount(0);
 });
 
 test("the roster shows the next run and a band's planned runs (WEB-45)", async ({ page, context, baseURL }) => {

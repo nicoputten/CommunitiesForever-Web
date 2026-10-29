@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { InfoTip } from "@/components/ui/InfoTip";
 import styles from "./Admin.module.css";
 
 /**
  * One admin page panel (WEB-18, no board): the upload board's history panel with a section heading. WEB-64: a count
- * or hint and a tag ("Owner & admins") at the end of the heading line; `strong` for the Admins box's gold line.
+ * or hint and a tag ("Owner & admins") at the end of the heading line; `strong` for the Admins box's gold line. WEB-65:
+ * `sub`, what the panel is for, is the ⓘ next to the title (player copy only).
  */
 export function AdminPanel({
   id,
@@ -26,9 +28,9 @@ export function AdminPanel({
         <h2 id={id} className={styles.title}>
           {title}
         </h2>
+        {sub !== undefined && <InfoTip>{sub}</InfoTip>}
         {aside !== undefined && <span className={styles.aside}>{aside}</span>}
       </div>
-      {sub !== undefined && <p className={styles.sub}>{sub}</p>}
       {children}
     </section>
   );

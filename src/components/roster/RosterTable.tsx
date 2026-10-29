@@ -64,9 +64,7 @@ export function RosterTable({ query, characters, friends, people, ownKey, now }:
               <tr>
                 <th scope="rowgroup" colSpan={columns.length} className={styles.friend}>
                   <span className={styles.friendName}>{f.person.displayName}</span>
-                  <span className={styles.friendTag}>
-                    {[f.person.battleTag, countText(f)].filter((p) => p !== undefined).join(" · ")}
-                  </span>
+                  <span className={styles.friendTag}>{countText(f)}</span>
                   <DataAgeBadge {...dataAgeProps(f.person)} now={now} />
                 </th>
               </tr>

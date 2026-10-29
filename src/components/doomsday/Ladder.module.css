@@ -215,19 +215,28 @@ details[open] > .head .caret {
   color: var(--text-strong);
 }
 
-.tableWrap {
+/* The duel grid (WEB-65, bug 7, board live-test-site-fixes): up to 8 friends fit the card; beyond, its own scroll box. */
+.tableWrap[data-many] {
   overflow-x: auto;
 }
 
 .duels {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--fs-body-sm);
 }
 
+.tableWrap[data-many] .duels {
+  min-width: calc((var(--cols) + 1) * var(--size-duel-cell));
+}
+
 .duels th {
-  padding: var(--s-2);
+  padding: var(--s-2) var(--s-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border-bottom: var(--border) solid var(--line-control);
   font-size: var(--fs-overline);
   font-weight: var(--fw-semibold);
@@ -237,8 +246,15 @@ details[open] > .head .caret {
   text-align: center;
 }
 
-.duels thead th:first-child {
+.duels thead th:first-child,
+.duels tbody th {
+  width: var(--size-duel-name);
   text-align: left;
+}
+
+/* "row vs column" wraps rather than cut off. */
+.duels thead th:first-child {
+  white-space: normal;
 }
 
 .duels tbody th {
@@ -252,10 +268,11 @@ details[open] > .head .caret {
 }
 
 .duels td {
-  padding: var(--s-2-5) var(--s-2);
+  padding: var(--s-2) var(--s-1);
   border-bottom: var(--border) solid var(--line-row);
   font-weight: var(--fw-semibold);
   text-align: center;
+  white-space: nowrap;
   color: var(--text-chip);
 }
 
@@ -267,8 +284,19 @@ details[open] > .head .caret {
   color: var(--pvp-text);
 }
 
-.duels td[data-self="true"] {
-  background: var(--surface-row);
+.duels td[data-empty] {
+  font-weight: var(--fw-regular);
+  color: var(--duel-none);
+}
+
+.duels td[data-empty="self"] {
+  color: var(--duel-self);
+}
+
+.readAcross {
+  margin: var(--s-1-5) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
 }
 
 .elo {
@@ -287,7 +315,8 @@ details[open] > .head .caret {
   color: var(--gold-pale);
 }
 
-.dashed {
+/* section.: wins over .card (Doomsday.module.css) whatever order the CSS loads in. */
+section.dashed {
   border-style: dashed;
 }
 
@@ -317,6 +346,35 @@ details[open] > .head .caret {
   .feats {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* New characters from one upload: a line, not a feat card (WEB-65, board live-test-site-fixes). */
+.newCharacters {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-3-5);
+  font-size: var(--fs-body-sm);
+}
+
+.newBadge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--size-new-badge);
+  height: var(--size-new-badge);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-chip-on);
+  color: var(--gold);
+}
+
+.newTitle {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.newLine {
+  color: var(--text-dim);
 }
 
 .feat {
@@ -442,7 +500,7 @@ details[open] > .head .caret {
     display: block;
   }
 
-  .phoneHidden {
+  section.phoneHidden {
     display: none;
   }
 

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, ne } from "drizzle-orm";
 import { MAP_ZONES, mapZone, recapChar } from "@/core/recap/input";
 import { buildRecap } from "@/core/recap/recap";
 import type { History, Recap, RecapChar, Week, WeekSighting } from "@/core/recap/types";
@@ -9,7 +9,7 @@ import type { Db } from "./db";
 import { recapSection } from "@/core/doomsday/posts";
 import { cutoffAt } from "./cutoff";
 import { doomsdayInput } from "./doomsdayEngine";
-import { feedDays, recaps, recapStart, sightings } from "./db/schema";
+import { feats, feedDays, recaps, recapStart, sightings } from "./db/schema";
 import { effectiveTimeZone, getBotSettings } from "./discord";
 import { loadState } from "./uploads";
 
@@ -197,12 +197,53 @@ export function runDueRecap(db: Db, now: number, siteName: string): Recap | unde
   const input = doomsdayInput(db, moment);
   const doomsday = input !== undefined ? recapSection(input, start, moment) : undefined;
   if (doomsday !== undefined) recap.doomsday = doomsday;
+  dressForBot(db, recap, number, start, moment, week.after);
   db.insert(recaps)
     .values({ week: sequence, start, end: moment, computedAt: now, data: recap, snapshot: week.after })
     .onConflictDoNothing()
     .run();
   if (getBotSettings(db).recap) enqueueBotEvent(db, "recap", postedRecap(recap), now);
   return recap;
+}
+
+/** The site's base URL (AUTH_URL), for the recap's link; empty when unset. */
+function siteBase(): string {
+  try {
+    return new URL(process.env.AUTH_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * WEB-66 (docs/BOT-API.md "Visual posts"): what the bot's visual recap needs besides the texts: the week's feats, the
+ * award winner's class, the image ids (the award header, the zone crop of S1 or S13) and the page for "The full week".
+ */
+function dressForBot(
+  db: Db,
+  recap: Recap,
+  number: number,
+  start: number,
+  end: number,
+  snapshot: Record<string, RecapChar>,
+): void {
+  recap.numbers.feats = db
+    .select({ guid: feats.guid })
+    .from(feats)
+    .where(and(gte(feats.at, start), lt(feats.at, end), eq(feats.alreadyHad, false), ne(feats.kind, "newCharacter")))
+    .all().length;
+  if (recap.award !== undefined) {
+    const winner = recap.award.friends[0];
+    const classFile = Object.values(snapshot)
+      .filter((c) => c.owner === winner)
+      .sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0]?.classFile;
+    if (classFile !== undefined) recap.award.classFile = classFile;
+    recap.award.image = `recap-${number}-header`;
+  }
+  const map = recap.cards.find((c) => c.id === "S13") ?? recap.cards.find((c) => c.id === "S1");
+  if (map !== undefined) map.image = `recap-${number}-zone`;
+  const base = siteBase();
+  if (base !== "") recap.url = `${base}/doomsday/week`;
 }
 
 /** The coming recap as it would be if the week ended now (the admin's preview); not stored. */

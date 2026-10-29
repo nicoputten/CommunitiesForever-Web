@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import styles from "@/components/doomsday/Doomsday.module.css";
 import { Board, DoomsdayFrame, Heatmap } from "@/components/doomsday/parts";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { doomsdayData } from "../data";
 import { NoDoomsday } from "../NoData";
 
@@ -17,7 +18,7 @@ export default async function DoomsdayBoardPage() {
           <h2 id="dd-board" className={styles.cardTitle}>
             The board · everyone, today
           </h2>
-          <span className={styles.meta}>checks appear as uploads and addon sync come in · ✓ with the time</span>
+          <InfoTip>Checks appear as uploads and addon sync come in, with the time.</InfoTip>
         </div>
         <Board view={page.board} />
       </section>
@@ -26,7 +27,7 @@ export default async function DoomsdayBoardPage() {
           <h2 id="dd-heat" className={styles.cardTitle}>
             12 weeks of goals · per friend
           </h2>
-          <span className={styles.meta}>one square per day · darker = more goals done (either track)</span>
+          <InfoTip>One square per day. Darker means more goals done, PvE and PvP together.</InfoTip>
         </div>
         <Heatmap view={page.heatmap} />
       </section>

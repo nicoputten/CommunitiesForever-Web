@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InfoTip } from "@/components/ui/InfoTip";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
@@ -54,7 +55,7 @@ export default async function RunsPage({ searchParams }: { searchParams: Promise
               {f.label}
             </Link>
           ))}
-          <span className={styles.filterNote}>“Can join” = one of your characters fits the level range</span>
+          <InfoTip>“Can join”: one of your characters fits the level range.</InfoTip>
         </nav>
 
         {/* Asking now (WEB-51): open asks above the runs, whatever the filter. */}

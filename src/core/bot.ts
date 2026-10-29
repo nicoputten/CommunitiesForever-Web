@@ -73,8 +73,11 @@ export interface MilestoneExtras {
   text?: string;
   /** No character in the group reached it before. */
   firstInGroup?: true;
-  /** The card image id (`milestone-<event>-<n>`), when the feat has one. */
+  /** The card image id (`milestone-<event>-<n>`): every feat but a new character (WEB-66). */
   card?: string;
+  /** WEB-66: the feat's short name ("Stone Guard", "First catch") and one finished sentence, for the bot's post. */
+  headline?: string;
+  line?: string;
 }
 
 export type Milestone = MilestoneExtras &

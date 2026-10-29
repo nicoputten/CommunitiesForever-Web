@@ -1,0 +1,86 @@
+/* The ⓘ tooltip (WEB-65, board live-test-site-fixes): an 18 px gold-outlined circle in a 44 px tap area; the panel
+   below it, at most 280 px wide, kept inside the screen: centred, or lined up with the icon's left or right edge (data-align from InfoTip.tsx). */
+
+.root {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  margin: calc((var(--size-info) - var(--size-touch)) / 2);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-info);
+  height: var(--size-info);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--gold);
+  font-family: var(--font-name);
+  font-size: var(--fs-info);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.button:hover .icon,
+.button[aria-expanded="true"] .icon {
+  color: var(--gold-bright);
+  border-color: var(--gold-bright);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  left: 50%;
+  transform: translateX(-50%);
+  /* Placed, never moved: no transition (with motion off the site still gives everything --dur-instant). */
+  transition-property: none;
+  z-index: 30;
+  width: max-content;
+  max-width: min(var(--size-tip), calc(100vw - var(--s-4)));
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-tooltip);
+  border: var(--border) solid var(--line-tip);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-ui);
+  font-size: var(--fs-tip);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  color: var(--text);
+}
+
+.panel[data-align="start"] {
+  left: 0;
+  transform: none;
+}
+
+.panel[data-align="end"] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.panel[hidden] {
+  display: none;
+}

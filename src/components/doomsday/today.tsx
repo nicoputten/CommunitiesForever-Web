@@ -1,5 +1,6 @@
 import type { DoomsdayPage } from "@/core/views/doomsday";
 import { SUGGESTIONS } from "@/core/views/doomsday";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { DoomsdayEmblem } from "@/components/ui/icons";
 import styles from "./Doomsday.module.css";
 import { Board, GoalCard, SoFar, Streak } from "./parts";
@@ -15,10 +16,7 @@ export function DayOne() {
         <h2 id="dd-day-one" className={styles.dayOneTitle}>
           Day one of Doomsday
         </h2>
-        <p className={styles.dayOneText}>
-          Your first goals are below. Play as usual; checks appear after your next upload. Nobody has points yet, so the
-          ladder starts Sunday.
-        </p>
+        <p className={styles.dayOneText}>Your first goals are below.</p>
       </div>
     </section>
   );
@@ -33,9 +31,12 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
         <section className={styles.card} aria-labelledby="dd-goals">
           {today === undefined ? (
             <>
-              <h2 id="dd-goals" className={styles.cardTitle}>
-                Your goals
-              </h2>
+              <div className={styles.cardHead}>
+                <h2 id="dd-goals" className={styles.cardTitle}>
+                  Your goals
+                </h2>
+                <InfoTip>{SUGGESTIONS}</InfoTip>
+              </div>
               <p className={styles.note}>
                 No Doomsday data from you yet. Your goals show after an upload with a CommunitiesForever version that
                 shares them.
@@ -47,6 +48,7 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
                 <h2 id="dd-goals" className={styles.cardTitle}>
                   {today.title}
                 </h2>
+                <InfoTip>{SUGGESTIONS}</InfoTip>
                 <span className={styles.meta}>{today.doneText}</span>
                 <span className={styles.spacer} />
                 {/* The phone has it under the tabs. */}
@@ -75,7 +77,6 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
               )}
             </>
           )}
-          <p className={styles.note}>{SUGGESTIONS}</p>
         </section>
         <aside className={styles.card} aria-labelledby="dd-so-far">
           <h2 id="dd-so-far" className={styles.cardTitle}>
@@ -89,7 +90,7 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
           <h2 id="dd-board" className={styles.cardTitle}>
             The board · everyone, today
           </h2>
-          <span className={styles.meta}>checks appear as uploads and addon sync come in · ✓ with the time</span>
+          <InfoTip>Checks appear as uploads and addon sync come in, with the time.</InfoTip>
         </div>
         <Board view={page.board} />
       </section>

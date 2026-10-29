@@ -44,7 +44,7 @@ test("doomsday phone: design values", async ({ page }) => {
   await openScreen(page, "/doomsday");
   // The day's points and the reset under the tabs; the header's stat cards are desktop only.
   await expect(page.getByText("This week", { exact: true }).first()).toBeHidden();
-  await expectStyles(page.getByText(/^resets in /).first(), { color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /).first(), { color: "var(--streak-text)" });
   await expectStyles(page.getByTestId("goal").first(), { "min-height": "var(--size-goal-row)" });
   // The board as one card per friend, with a mark per goal.
   await expect(page.getByRole("region", { name: "The board", exact: true })).toBeHidden();
@@ -116,7 +116,13 @@ test("doomsday pvp: design values", async ({ page }) => {
   await expectStyles(page.getByText("Mailbox Menace"), { color: "var(--gold-pale)" });
   const grid = page.getByRole("table");
   await expectStyles(grid.getByRole("cell", { name: "1–0" }), { color: "var(--pve-text)" });
-  await expectStyles(grid.getByRole("cell", { name: "0–1" }), { color: "var(--pvp-text)" });
+  await expectStyles(grid.getByRole("cell", { name: "0–1" }), { color: "var(--pvp-text)", "white-space": "nowrap" });
+  // WEB-65, bug 7: named corner, "—" against yourself, "·" without duels, fits its card without a scroll box.
+  await expect(grid.getByRole("columnheader", { name: "row vs column" })).toBeVisible();
+  await expectStyles(grid.locator('td[data-empty="self"]').first(), { color: "var(--duel-self)" });
+  const wrap = page.getByRole("region", { name: "Duels between friends" });
+  expect(await wrap.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  await expect(page.getByText(/^Read across: .+ beat .+ \d+–\d+\.$/)).toBeVisible();
   await expectStyles(page.getByText("1,016"), { "font-family": "var(--font-name)", color: "var(--gold-pale)" });
   await expectStyles(page.getByRole("region", { name: "Battlegrounds" }), { "border-style": "dashed" });
 });
@@ -142,12 +148,27 @@ test("doomsday: design values", async ({ page }) => {
     color: "var(--gold-bright)",
   });
   const tabs = page.getByRole("navigation", { name: "Doomsday" });
-  await expectStyles(tabs.getByRole("link", { name: "Today" }), {
-    "font-family": "var(--font-display)",
-    color: "var(--gold-pale)",
-    "min-height": "var(--size-touch)",
-  });
-  await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
+  if (isPhone(page)) {
+    // WEB-65 (board live-test-phone): pill chips, no scrollbar, a 48 px fade.
+    await expectStyles(tabs.getByRole("link", { name: "Today" }), {
+      "font-family": "var(--font-ui)",
+      "border-radius": "var(--r-pill)",
+      "border-top-color": "var(--gold)",
+      "background-color": "var(--tint-pressed)",
+      color: "var(--text-strong)",
+      "min-height": "var(--size-touch)",
+    });
+    await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-chip)" });
+    await expectStyles(tabs, { "scrollbar-width": "none" });
+    expect(await tabs.evaluate((el) => getComputedStyle(el).maskImage)).toContain("48px");
+  } else {
+    await expectStyles(tabs.getByRole("link", { name: "Today" }), {
+      "font-family": "var(--font-display)",
+      color: "var(--gold-pale)",
+      "min-height": "var(--size-touch)",
+    });
+    await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
+  }
 
   const goal = page.getByTestId("goal").filter({ hasText: "Finish 5 quests in one zone" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
@@ -160,7 +181,7 @@ test("doomsday: design values", async ({ page }) => {
   const open = page.getByTestId("goal").filter({ hasText: "Front line" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
   await expectStyles(open.getByText("1 / 5"), { ...DATA, color: "var(--text)" });
-  await expectStyles(page.getByText(/^resets in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
   if (isPhone(page)) return;
@@ -185,6 +206,11 @@ test("doomsday: week and heatmap design values", async ({ page }) => {
   await openScreen(page, "/doomsday/week");
   await expectStyles(page.getByTestId("goal").getByText("PvP bounty"), {
     color: "var(--pvp-text)",
+  });
+  // WEB-65: who else is closest on each weekly, on a phone too.
+  await expectStyles(page.getByTestId("goal").getByText("Bob 4/5 · Mira 3/5"), {
+    "font-size": "var(--fs-meta-sm)",
+    color: "var(--text-dim)",
   });
   await openScreen(page, "/doomsday/board");
   const heat = page.getByRole("img", { name: /goals per day over 12 weeks/ }).first();
@@ -227,4 +253,29 @@ test("doomsday roster chips: design values", async ({ page }) => {
   await expectStyles(chip.getByText("PvE 80"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
+});
+
+// WEB-65: the ⓘ tooltip, the site's one way to explain something (board live-test-site-fixes).
+test("info tip: design values", async ({ page }) => {
+  await openScreen(page, "/doomsday");
+  const goals = page.getByRole("region", { name: /^Your goals/ });
+  const button = goals.getByRole("button", { name: "More info" });
+  await expectStyles(button, { width: "var(--size-touch)", height: "var(--size-touch)" });
+  await expectStyles(button.locator("span"), {
+    width: "var(--size-info)",
+    height: "var(--size-info)",
+    "border-top-color": "var(--gold)",
+  });
+  await button.click();
+  const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
+  await expectStyles(tip, {
+    "background-color": "var(--surface-tooltip)",
+    "border-top-color": "var(--line-tip)",
+    "font-size": "var(--fs-tip)",
+  });
+  // Inside the screen, also on a 375 px phone.
+  const box = (await tip.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await expect(button).toHaveAttribute("aria-describedby", (await tip.getAttribute("id"))!);
 });

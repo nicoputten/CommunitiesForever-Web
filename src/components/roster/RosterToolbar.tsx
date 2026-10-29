@@ -32,6 +32,8 @@ export interface RosterToolbarProps {
   professions: readonly ProfessionOption[];
   /** "4 of 10 characters" while a filter is set. */
   shown?: { count: number; of: number };
+  /** Characters shown now, for the phone sheet's "Show N characters". */
+  count: number;
   /**
    * The table (WEB-22): its headers sort, so no Sort menu; a "Group by friend" chip; on a phone the filters, sort and
    * grouping move into a sheet.
@@ -65,7 +67,7 @@ function Named({ name, children }: { name: string; children: ReactNode }) {
  * Search, filters and sort of the roster (roster-cards board). The state lives in the URL: filters and sort add a
  * history entry (Back undoes them), typing replaces it. Without script the search is a plain GET form.
  */
-export function RosterToolbar({ query, professions, shown, table = false }: RosterToolbarProps) {
+export function RosterToolbar({ query, professions, shown, count, table = false }: RosterToolbarProps) {
   const path = pathFor(table);
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -192,7 +194,14 @@ export function RosterToolbar({ query, professions, shown, table = false }: Rost
         )}
       </div>
 
-      {table && <RosterSheet query={{ ...query, search }} professions={professions} onChange={(next) => go(next)} />}
+      {/* On a phone one button opens the filters as a sheet (WEB-22 table, WEB-65 cards). */}
+      <RosterSheet
+        query={{ ...query, search }}
+        professions={professions}
+        onChange={(next) => go(next)}
+        count={count}
+        sort={table}
+      />
 
       <div className={styles.end}>
         {shown !== undefined && (

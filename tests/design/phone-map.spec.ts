@@ -54,6 +54,10 @@ test("phone map: peek, design values", async ({ page }) => {
   await openScreen(page, "/?continent=eastern-kingdoms");
   await mapSettled(page);
   await expect(sheet(page)).toHaveAttribute("data-snap", "peek");
+  // WEB-65 (board live-test-phone): the map's app bar shows the shield only; the link keeps the site's name.
+  const brand = page.getByRole("banner").getByRole("link", { name: "Doombringers" });
+  await expect(brand).toBeVisible();
+  expect((await brand.boundingBox())!.width).toBeLessThanOrEqual(48);
   await expectStyles(sheet(page), {
     "background-color": "var(--surface-sheet-peek)",
     "border-top-left-radius": "var(--r-sheet)",
@@ -122,7 +126,7 @@ test("phone map: the full roll call with its filters", async ({ page }) => {
   await expect(sheet(page).getByRole("heading", { name: "Roll call" })).toHaveCSS("font-size", "22px");
   await expectStyles(sheet(page).getByRole("heading", { name: "Roll call" }), TYPE.titleLg);
   await expect(sheet(page).getByRole("button", { name: "All", pressed: true })).toBeVisible();
-  await expect(sheet(page).getByText("Unknown whereabouts")).toBeVisible();
+  await expect(sheet(page).getByText("1 not sighted yet")).toBeVisible();
   await shot(page, "full");
   await expectTouchTargets(page);
   await expectAccessible(page, OVERLAP);

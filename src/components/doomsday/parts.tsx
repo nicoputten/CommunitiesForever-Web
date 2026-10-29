@@ -94,9 +94,9 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function GoalCard({ goal }: { goal: GoalCardView }) {
+export function GoalCard({ goal, week = false }: { goal: GoalCardView; week?: boolean }) {
   return (
-    <div className={styles.goal} data-done={goal.done} data-testid="goal">
+    <div className={styles.goal} data-done={goal.done} data-week={week || undefined} data-testid="goal">
       <span className={`${styles.kind} ${goal.track === "pve" ? styles.pve : styles.pvp}`}>{goal.kind}</span>
       <span className={styles.goalTitle}>
         {goal.title}
@@ -120,6 +120,7 @@ export function GoalCard({ goal }: { goal: GoalCardView }) {
         </span>
       )}
       <span className={styles.goalMeta}>{goal.done ? goal.doneText : goal.worth}</span>
+      {goal.closest !== undefined && <span className={styles.closest}>{goal.closest}</span>}
     </div>
   );
 }
@@ -247,16 +248,8 @@ export function Board({ view }: { view: BoardView }) {
 
 /** The board on the phone: one card per friend with a mark per goal (board doomsday-phone "Board"). */
 function BoardCards({ view }: { view: BoardView }) {
-  const pve = view.columns.filter((c) => c.track === "pve").length;
-  const pvpTitles = view.columns
-    .filter((c) => c.track === "pvp")
-    .map((c) => (c.title.startsWith("Hunt") ? "Hunt" : "Skirmish"));
   return (
     <div className={styles.cards}>
-      <p className={styles.note}>
-        Columns: {pve} PvE {pve === 1 ? "daily" : "dailies"}
-        {pvpTitles.map((t) => ` · ${t}`).join("")}
-      </p>
       {view.rows.map((r) => (
         <div key={r.key} className={styles.friendCard} data-dim={r.dim} data-testid="board-card">
           <div className={styles.cardTop}>

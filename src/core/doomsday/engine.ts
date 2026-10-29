@@ -16,6 +16,7 @@ import {
   crown as crownOf,
   dayLabel,
   dayOf,
+  DUNGEON_BOSSES,
   dayStart,
   draw,
   drawWeek,
@@ -235,6 +236,7 @@ interface Friend {
   goals?: DoomsdayInput["goals"][string];
   kills: ScoredKill[];
   deaths: { t: number; char: string }[];
+  /** Any honorable kill or any PvP point (duels included), ever: no PvP Virgin (live test 2026-10-29). */
   killedEver: boolean;
 }
 
@@ -342,6 +344,17 @@ export function prepare(input: DoomsdayInput) {
       kills: f.kills.filter((k) => k.track === "pvp" && k.counted && days(k.day)).length,
     };
   };
+  // Any PvP point ends PvP Virgin too, a duel's included (Nico, live test 2026-10-29).
+  for (const f of friends) {
+    if (!f.killedEver && f.hasRecord) {
+      const all = totals(
+        f,
+        () => true,
+        () => true,
+      );
+      if (all.pvp > 0) f.killedEver = true;
+    }
+  }
   return { s, friends, byKey, active, allDuels, records, owner, duelPoints, killPoints, killApprox, totals };
 }
 
@@ -422,6 +435,115 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     };
   };
 
+  /**
+   * Progress of the PvE weeklies from the friend's feed (WEB-66 follow-up, for the Week tab's bars). A feed day is a
+   * character's realm day; it counts in the Doomsday day of its last activity (`at`), else of its date, so a day split
+   * by the reset can land in the wrong week: `approx` then. Not countable from the feed: w.cap and w.newProf (done or
+   * not), w.session2h (one session's length), w.ilvl3 (item levels aren't in the feed), w.discover5 and w.craftTrade
+   * (not recorded), and w.fullClear for a dungeon without a boss count.
+   */
+  const pveWeekProgress = (f: Friend, inPeriod: (n: number) => boolean) => {
+    const days = input.feed.filter(
+      (d) => d.owner === f.key && inPeriod(d.entry.at !== undefined ? dayOf(d.entry.at, s) : d.day),
+    );
+    const sum = (pick: (d: (typeof days)[number]) => number) => days.reduce((n, d) => n + pick(d), 0);
+    const ownerOf = (guid: string) => input.data.characters[guid]?.owner;
+    const otherFriends = (guids: readonly string[]) =>
+      new Set(guids.map(ownerOf).filter((o): o is string => o !== undefined && o !== f.key)).size;
+    const party = days.flatMap((d) => d.entry.runs.filter((r) => r.kind === "party"));
+    const highest = [...f.chars].sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0]?.guid;
+    return (id: string): FriendGoal["progress"] => {
+      const of = (value: number, target: number, detail?: string) => ({
+        value: Math.min(value, target),
+        target,
+        ...(detail !== undefined ? { detail } : {}),
+      });
+      switch (id) {
+        case "w.days3":
+        case "w.days5":
+          return of(
+            new Set(days.map((d) => (d.entry.at !== undefined ? dayOf(d.entry.at, s) : d.day))).size,
+            id === "w.days3" ? 3 : 5,
+          );
+        case "w.chars3":
+          return of(new Set(days.map((d) => d.guid)).size, 3);
+        case "w.levels3":
+          return of(
+            sum((d) => Math.max(0, (d.entry.levelTo ?? 0) - (d.entry.levelFrom ?? d.entry.levelTo ?? 0))),
+            3,
+          );
+        case "w.altLevels2": {
+          const per = new Map<string, number>();
+          for (const d of days) {
+            if (d.guid === highest) continue;
+            const gained = Math.max(0, (d.entry.levelTo ?? 0) - (d.entry.levelFrom ?? d.entry.levelTo ?? 0));
+            per.set(d.guid, (per.get(d.guid) ?? 0) + gained);
+          }
+          const best = [...per].sort((a, b) => b[1] - a[1])[0];
+          return of(
+            best?.[1] ?? 0,
+            2,
+            best !== undefined && best[1] > 0 ? input.data.characters[best[0]]?.name : undefined,
+          );
+        }
+        case "w.quests50":
+          return of(
+            sum((d) => Object.values(d.entry.quests).reduce((a, b) => a + b, 0)),
+            50,
+          );
+        case "w.zones5":
+          return of(new Set(days.flatMap((d) => Object.keys(d.entry.quests))).size, 5);
+        case "w.dungeons3":
+          return of(party.length, 3);
+        case "w.dungeonsDiff3":
+          return of(new Set(party.map((r) => r.name).filter((n) => n !== undefined)).size, 3);
+        case "w.dungeonFriends2":
+          return of(Math.max(0, ...party.map((r) => otherFriends(r.with))), 2);
+        case "w.fullClear": {
+          // The run closest to a full clear among dungeons with a known boss count: "4 / 6 · Deadmines".
+          const best = party
+            .filter((r) => r.name !== undefined && DUNGEON_BOSSES[r.name] !== undefined)
+            .map((r) => ({ name: r.name!, bosses: r.bosses ?? 0, of: DUNGEON_BOSSES[r.name!]! }))
+            .sort((a, b) => b.bosses / b.of - a.bosses / a.of)[0];
+          return best === undefined ? undefined : of(best.bosses, best.of, best.name);
+        }
+        case "w.skill25": {
+          // Points gained: per character and profession, the highest rank this week above the last rank before it.
+          const before = (guid: string, prof: string) =>
+            input.feed
+              .filter(
+                (d) =>
+                  d.guid === guid && d.day < Math.min(...days.map((x) => x.day)) && d.entry.ranks[prof] !== undefined,
+              )
+              .sort((a, b) => b.day - a.day)[0]?.entry.ranks[prof];
+          const gains = new Map<string, { low: number; high: number }>();
+          for (const d of days) {
+            for (const [prof, rank] of Object.entries(d.entry.ranks)) {
+              const key = `${d.guid}|${prof}`;
+              const g = gains.get(key) ?? { low: before(d.guid, prof) ?? rank, high: rank };
+              g.low = Math.min(g.low, before(d.guid, prof) ?? rank);
+              g.high = Math.max(g.high, rank);
+              gains.set(key, g);
+            }
+          }
+          return of(
+            [...gains.values()].reduce((n, g) => n + Math.max(0, g.high - g.low), 0),
+            25,
+          );
+        }
+        case "w.friends3":
+          return of(otherFriends(days.flatMap((d) => d.entry.groups ?? [])), 3);
+        case "w.rare5":
+          return of(
+            sum((d) => d.entry.loot?.rare ?? 0),
+            5,
+          );
+        default:
+          return undefined;
+      }
+    };
+  };
+
   // --- friends ---
   const out: FriendDoomsday[] = friends.map((f) => {
     const status = !f.hasRecord ? "noAddon" : f.goals === undefined ? "noDoomsday" : "active";
@@ -493,7 +615,11 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
           weekSet.swapped,
           weekRecord?.done ?? {},
           weekZone,
-          killProgress(f, weekDays, weekZone),
+          // The PvP goals' progress from the kills, the PvE weeklies' from the feed (WEB-66 follow-up).
+          (
+            (kills, pve) => (id: string) =>
+              kills(id) ?? pve(id)
+          )(killProgress(f, weekDays, weekZone), pveWeekProgress(f, weekDays)),
         ),
       },
       points: {
@@ -695,6 +821,7 @@ function pvpDetails(
       if (c.pvp?.rank !== undefined) out.rank = c.pvp.rank;
       const h = Math.max(highest(c.guid), c.pvp?.rank ?? 0);
       if (c.pvp?.rank !== undefined || h > 0) out.highestRank = h;
+      if (c.pvp?.hk !== undefined) out.hk = c.pvp.hk;
       return out;
     }),
     duels: {
@@ -735,7 +862,12 @@ function featRecords(input: DoomsdayInput): FeatRecord[] {
         id: `${f.guid}:${f.key}`,
         kind: f.kind,
         friendKey: f.owner,
-        character: { guid: f.guid, name, ...(c?.classFile !== undefined ? { classFile: c.classFile } : {}) },
+        character: {
+          guid: f.guid,
+          name,
+          ...(c?.classFile !== undefined ? { classFile: c.classFile } : {}),
+          ...(f.fields.level !== undefined ? { level: f.fields.level } : {}),
+        },
         at: f.at,
         // Display-ready (WEB-60): "Stone Guard, a.k.a. Mailbox Menace", "First epic: <item>".
         title:

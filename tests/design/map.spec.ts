@@ -135,6 +135,36 @@ test("map: screenshot of Kalimdor", async ({ page }) => {
   await expectScreenshot(page, "map-kalimdor");
 });
 
+/** WEB-65, bug 6: no zone name sits under its own marker or cluster (the visible ones; a fan's hub is its centre). */
+async function expectLabelsClear(page: import("@playwright/test").Page) {
+  const overlaps = await page.evaluate(() => {
+    const hit = (a: DOMRect, b: DOMRect) =>
+      a.width > 0 && b.width > 0 && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    const out: string[] = [];
+    for (const label of document.querySelectorAll<SVGTextElement>("text[data-label][data-occupied]")) {
+      if (getComputedStyle(label).display === "none") continue;
+      const zone = label.getAttribute("data-label");
+      const place = document.querySelector(`[data-place="${zone}"]`);
+      if (place === null) continue;
+      const box = label.getBoundingClientRect();
+      for (const disc of place.querySelectorAll("button > span, a > span, [role=img] > span"))
+        if (hit(box, disc.getBoundingClientRect())) out.push(zone!);
+    }
+    return [...new Set(out)];
+  });
+  expect(overlaps).toEqual([]);
+}
+
+test("map: zone names clear of their markers (WEB-65)", async ({ page }) => {
+  await openScreen(page, "/");
+  await mapSettled(page);
+  await expectLabelsClear(page);
+  await openScreen(page, "/?character=Player-1-0000A001");
+  await expect(page.locator("[data-label][data-focus]")).toBeAttached();
+  await mapSettled(page);
+  await expectLabelsClear(page);
+});
+
 // WEB-26: zoom levels (map-states board), the zoom buttons and the zone name in the top bar.
 
 test("map: zoom buttons", async ({ page }) => {
@@ -238,6 +268,16 @@ test("map: roll call design values", async ({ page }) => {
   await expectStyles(panel.getByText(/Jorrit's data is 9 days old/), { ...TYPE.metaSm, color: "var(--stale-note)" });
   await expectStyles(panel.getByText("1 d", { exact: true }), { ...DATA, color: "var(--text-muted)" });
   await expectStyles(panel.getByText("Sanne has no addon data yet."), { ...TYPE.meta, color: "var(--text-dim)" });
+  // WEB-65: one scroll area for the panel, and the never-sighted characters folded into one 44 px row.
+  // Closed menus scroll too, so only what is shown counts.
+  const scrollers = await panel.evaluate(
+    (el) =>
+      [el, ...el.querySelectorAll("*")].filter(
+        (e) => e.checkVisibility() && /auto|scroll/.test(getComputedStyle(e).overflowY),
+      ).length,
+  );
+  expect(scrollers).toBe(1);
+  await expectStyles(panel.getByText("1 not sighted yet"), { "min-height": "var(--size-touch)", color: "var(--text-dim)" });
   // Zoom buttons left of the panel (board: right 352px).
   const zoomBox = await page.getByRole("button", { name: "Zoom in" }).boundingBox();
   const panelBox = await panel.boundingBox();

@@ -84,6 +84,7 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
       <RosterToolbar
         query={query}
         professions={professionOptions(recordCharacters(data, now))}
+        count={r.characters.length}
         shown={filtered ? { count: r.characters.length, of: r.counts.characters } : undefined}
       />
 

@@ -77,7 +77,7 @@ describe("the dungeon page", () => {
     const page = dungeonPage(input(), "sm-armory")!;
     expect(page.title).toBe("Armory");
     expect(page.eyebrow).toBe("Scarlet Monastery · Tirisfal Glades");
-    expect(page.levels).toBe("Levels 32–42 (typical) · one of four wings, each its own dungeon with its own entrance");
+    expect(page.levels).toBe("Levels 32–42 (typical)");
     expect(page.crumbs).toEqual([
       { label: "Map", href: "/?continent=eastern-kingdoms" },
       { label: "Tirisfal Glades" },

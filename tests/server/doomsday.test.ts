@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { and, eq, isNull } from "drizzle-orm";
+import { cardFor } from "@/server/cards";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { boardData, lookupData, recapSection } from "@/core/doomsday/posts";
 import { dayStart, draw } from "@/core/doomsday/rules";
@@ -118,9 +119,9 @@ describe("the Doomsday engine", () => {
     expect(nico.heatmap!.slice(-2)).toEqual([1, 2]);
     // Elo: one duel, 1000 each before, so +16 / -16.
     expect(nico.pvp!.duels.elo).toMatchObject({ rating: 1016, place: 1 });
-    // Ada never killed anyone: a PvP Virgin, not on the PvP ladder.
-    expect(ada.pvpVirgin).toBe(true);
-    expect(snap.ladders.week.pvp.map((r) => r.name)).toEqual(["Nico"]);
+    // Ada never killed anyone, but lost a duel: that is a PvP point, so no PvP Virgin (live test 2026-10-29).
+    expect(ada.pvpVirgin).toBe(false);
+    expect(snap.ladders.week.pvp.map((r) => r.name)).toEqual(["Nico", "Ada"]);
     // The week began on Sunday: yesterday's daily counts too.
     expect(snap.ladders.week.pve.map((r) => [r.name, r.points])).toEqual([
       ["Nico", 15],
@@ -135,7 +136,13 @@ describe("the Doomsday engine", () => {
     const input = doomsdayInput(db, T + 1200)!;
     expect(recapSection(input, T - 2 * 86400, T + 86400)).toMatchObject({
       mostDevoted: { name: "Nico", days: 2 },
-      points: { pve: [{ name: "Nico", points: 15 }], pvp: [{ name: "Nico", points: 6 }] },
+      points: {
+        pve: [{ name: "Nico", points: 15 }],
+        pvp: [
+          { name: "Nico", points: 6 },
+          { name: "Ada", points: 1 },
+        ],
+      },
       crowns: [],
     });
   });
@@ -182,9 +189,23 @@ describe("Doomsday's bot events", () => {
     runDueDoomsday(db, T + 120);
     const [board] = events("doomsdayBoard");
     expect(events("doomsdayBoard")).toHaveLength(1);
-    expect(board!.data).toMatchObject({ day: DAY, label: "Tue 10 Nov", start: T, end: T + 86400, crown: null });
+    expect(board!.data).toMatchObject({
+      day: DAY,
+      label: "Tue evening",
+      span: "Tue 19:00 → Wed 19:00",
+      start: T,
+      end: T + 86400,
+      crown: null,
+    });
     expect((board!.data.friends as { name: string }[]).map((f) => f.name)).toEqual(["Ada", "Nico"]);
     expect(board!.data.withoutData).toEqual(["Bob"]);
+    // WEB-66: the news line and the board image, which the bot fetches by its id.
+    expect(board!.data.news).toMatch(/^New day, new doom\. PvE .+\. 5 points each\. 1 friend without addon data\.$/);
+    expect(board!.data.image).toMatch(new RegExp(`^doomsday-${DAY}-[0-9a-f]{6}$`));
+    expect((board!.data.goals as { shortLabel: string }[]).every((g) => g.shortLabel.length <= 10)).toBe(true);
+    const spec = cardFor(db, String(board!.data.image), T + 120, "wow.example.test");
+    expect(spec).toMatchObject({ kind: "board", title: "Tue evening · just started", footer: "resets Wed 19:00" });
+    expect(cardFor(db, `doomsday-${DAY}-000000`, T + 120)).toBeUndefined();
 
     // Two uploads before the bot polls: only the newest update is handed out.
     upload(db, file(200, { nico: dayLua(DAY, { [d1!]: T + 100 }), ada: dayLua(DAY, {}) }), ADMIN, T + 200, ADMIN);

@@ -67,7 +67,7 @@ test("roster: design values", async ({ page }) => {
   // The bands (WEB-45): the best band in gold; a click opens its popover (board roster-cards-runs).
   const armory = spread.locator('button[data-band="sm-armory"]');
   await expectStyles(armory, {
-    "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-tiny)",
+    "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-meta)",
     color: "var(--gold-pale)",
   });
   await armory.click();
@@ -118,7 +118,27 @@ test("roster: design values", async ({ page }) => {
   });
 });
 
+test("roster: phone Filters sheet (WEB-65)", async ({ page }) => {
+  test.skip(!isPhone(page), "phone only");
+  await openScreen(page, "/roster");
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Filters" });
+  await expect(sheet).toBeVisible();
+  await expectStyles(sheet.getByRole("button", { name: /^Show \d+ characters$/ }), {
+    "background-color": "var(--gold)",
+    "min-height": "var(--size-touch)",
+  });
+  await expectStyles(sheet.getByRole("button", { name: "Clear" }), {
+    "border-top-color": "var(--line-neutral)",
+    "min-height": "var(--size-touch)",
+  });
+  await expectTouchTargets(page);
+  await expectAccessible(page);
+  await expectScreenshot(page, "roster-sheet");
+});
+
 test("roster: filter menu surface", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its Filters sheet (WEB-65)");
   await openScreen(page, "/roster");
   await page.getByRole("button", { name: "Class" }).click();
   const menu = page.getByRole("menu", { name: "Class" });
@@ -149,29 +169,29 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: band names on narrow bands (WEB-54)", async ({ page }) => {
-  test.skip(isPhone(page), "the phone list always has the full name");
+test("roster: band chips with full names, wrapping (WEB-65)", async ({ page }) => {
+  test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
   const band = (id: string) => bands.locator(`button[data-band="${id}"]`);
-  // At 1440 px: the full name, the short name, and Ragefire Chasm (no short name) cut, with its range and count.
-  await expect(band("sm-library")).toHaveAttribute("data-fit", "full");
-  await expect(band("sm-cathedral")).toHaveAttribute("data-fit", "short");
-  await expect(band("sm-cathedral")).toHaveText("SM Cathedral 35–45 · 3 · 1 run", { useInnerText: true });
-  await expect(band("rfc")).toHaveAttribute("data-fit", "cut");
-  await expect(band("rfc")).toHaveText(/^Rag\w*… 13–18 · 2$/, { useInnerText: true });
-  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18");
-  await expect(band("rfc")).toHaveAttribute("aria-label", /^Rag\w*… 13–18 · 2, Ragefire Chasm$/);
-  // Narrower still: 3 letters, the range goes, the count stays.
-  await bands.locator('li:has(> button[data-band="rfc"])').evaluate((li: HTMLElement) => (li.style.width = "60px"));
-  await expect(band("rfc")).toHaveAttribute("data-fit", "bare");
-  await expect(band("rfc")).toHaveText("Rag… · 2", { useInnerText: true });
-  await expect(band("rfc")).toHaveAttribute("aria-label", "Rag… · 2, Ragefire Chasm 13–18");
+  await expect(band("rfc")).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
+  await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral 35–45 · 3 · 1 run", {
+    useInnerText: true,
+  });
+  await expectStyles(band("rfc"), { "border-radius": "var(--r-btn)", "font-size": "var(--fs-meta)" });
+  // Never cut: every chip shows all of its text, and the chips wrap onto more than one row.
+  const layout = await bands.evaluate((ul) => {
+    const buttons = [...ul.querySelectorAll<HTMLElement>("button[data-band]")];
+    return {
+      cut: buttons.filter((b) => b.scrollWidth > b.clientWidth).map((b) => b.dataset.band),
+      rows: new Set(buttons.map((b) => Math.round(b.getBoundingClientRect().top))).size,
+    };
+  });
+  expect(layout.cut).toEqual([]);
+  expect(layout.rows).toBeGreaterThan(1);
   await expectAccessible(page);
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
-  await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot(
-    "roster-bands-narrow.png",
-  );
+  await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot("roster-bands.png");
 });
 
 test("roster: no matches", async ({ page }) => {

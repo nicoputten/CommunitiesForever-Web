@@ -7,7 +7,8 @@ import styles from "./Doomsday.module.css";
 
 /**
  * The Doomsday tabs. At 375 px the six don't fit and the row scrolls sideways (Nico, 2026-10-29), so the current tab
- * is scrolled into view; `tab` undefined marks none (the error state).
+ * is scrolled into view; `tab` undefined marks none (the error state). On a phone they are pill chips without a
+ * scrollbar, with a fade at the right edge (WEB-65, board live-test-phone).
  */
 export function DoomsdayTabs({ tab }: { tab?: DoomsdayTab }) {
   const nav = useRef<HTMLElement>(null);

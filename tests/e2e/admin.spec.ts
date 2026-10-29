@@ -16,8 +16,8 @@ test("the admin blocks and unblocks a member", async ({ page, context, baseURL, 
   const { member } = mine(info);
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/");
-  await page.getByRole("button", { name: `Account ${E2E.admin}` }).click();
-  await page.getByRole("link", { name: "Admin", exact: true }).click();
+  await page.getByRole("button", { name: /^Account / }).click();
+  await page.getByRole("link", { name: /^Admin/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Admin" })).toBeVisible();
 
   const members = panel(page, "Members");
@@ -79,8 +79,8 @@ test("only the admin sees the admin page", async ({ page, context, baseURL }) =>
   await signInAs(context, baseURL!, "Bob#2002");
   expect((await page.goto("/admin"))?.status()).toBe(404);
   await page.goto("/roster");
-  await page.getByRole("button", { name: "Account Bob#2002" }).click();
-  await expect(page.getByRole("link", { name: "Admin", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /^Account / }).click();
+  await expect(page.getByRole("link", { name: /^Admin/ })).toHaveCount(0);
 });
 
 // WEB-62: the Danger zone asks before starting fresh. Confirming would change the shared database under the other

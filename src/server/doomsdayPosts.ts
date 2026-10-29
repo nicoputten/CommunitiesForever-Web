@@ -1,6 +1,8 @@
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { doomsdaySnapshot } from "@/core/doomsday/engine";
-import { boardData, boardSummary, ladderData } from "@/core/doomsday/posts";
+import { createHash } from "node:crypto";
+import { boardCard } from "@/core/cards/models";
+import { type BoardData, boardData, boardNews, boardSummary, ladderData } from "@/core/doomsday/posts";
 import { EPOCH, weekOf, weekStart } from "@/core/doomsday/rules";
 import { canonical } from "@/core/merge";
 import { enqueueBotEvent } from "./bot";
@@ -8,6 +10,7 @@ import type { Db } from "./db";
 import { botEvents, doomsdayPosts } from "./db/schema";
 import { getBotSettings } from "./discord";
 import { doomsdayInput } from "./doomsdayEngine";
+import { cardHost } from "./cards";
 
 // Doomsday's bot events (WEB-58, docs/BOT-API.md "Doomsday"): the daily board at each reset, its updates after
 // uploads (the latest only), the final update with the day's summary at the next reset, and the weekly ladder on
@@ -47,6 +50,27 @@ function supersede(db: Db, day: number, now: number): void {
   for (const e of pending) db.update(botEvents).set({ postedAt: now }).where(eq(botEvents.id, e.id)).run();
 }
 
+/**
+ * WEB-66 (docs/BOT-API.md "Visual posts"): the board's news line and its image id. The id is the day and a hash of the
+ * picture as it is drawn now, so it changes only when the picture does (the bot re-attaches only on a new id).
+ */
+function visual(
+  data: BoardData,
+  kind: "start" | "update" | "final",
+  timeZone: string,
+  now: number,
+  summary?: ReturnType<typeof boardSummary>,
+): { news: string; image: string } {
+  const spec = boardCard(
+    { ...data, final: kind === "final", ...(summary !== undefined ? { summary } : {}) },
+    now,
+    timeZone,
+    cardHost(),
+  );
+  const hash = createHash("sha256").update(canonical(spec)).digest("hex").slice(0, 6);
+  return { news: boardNews(data, kind, timeZone, summary), image: `doomsday-${data.day}-${hash}` };
+}
+
 /** The minute check: the final update of yesterday's board, today's board, and last week's ladder when due. */
 export function runDueDoomsday(db: Db, now: number): void {
   const settings = getBotSettings(db);
@@ -62,15 +86,18 @@ export function runDueDoomsday(db: Db, now: number): void {
     if (prev !== undefined && prev.finalAt === null) {
       const last = doomsdaySnapshot({ ...input, now: snap.schedule.dayStart - 1 });
       supersede(db, day - 1, now);
+      const data = boardData(input, last);
+      const summary = boardSummary(last);
       enqueueBotEvent(
         db,
         "doomsdayBoardUpdate",
         {
-          ...boardData(input, last),
+          ...data,
+          ...visual(data, "final", input.timeZone, now, summary),
           boardEvent: prev.eventId,
           messageId: boardMessage(db, day - 1),
           final: true,
-          summary: boardSummary(last),
+          summary,
         },
         now,
       );
@@ -81,7 +108,12 @@ export function runDueDoomsday(db: Db, now: number): void {
     }
     if (fresh && day >= EPOCH && post(db, "board", day) === undefined) {
       const data = boardData(input, snap);
-      const eventId = enqueueBotEvent(db, "doomsdayBoard", data, now);
+      const eventId = enqueueBotEvent(
+        db,
+        "doomsdayBoard",
+        { ...data, ...visual(data, "start", input.timeZone, now) },
+        now,
+      );
       db.insert(doomsdayPosts)
         .values({ kind: "board", n: day, eventId, lastData: canonical(data), createdAt: now, finalAt: null })
         .onConflictDoNothing()
@@ -119,7 +151,13 @@ export function updateDoomsdayBoard(db: Db, now: number): boolean {
   enqueueBotEvent(
     db,
     "doomsdayBoardUpdate",
-    { ...data, boardEvent: row.eventId, messageId: boardMessage(db, day), final: false },
+    {
+      ...data,
+      ...visual(data, "update", input.timeZone, now),
+      boardEvent: row.eventId,
+      messageId: boardMessage(db, day),
+      final: false,
+    },
     now,
   );
   db.update(doomsdayPosts)

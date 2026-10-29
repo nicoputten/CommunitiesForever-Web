@@ -5,6 +5,8 @@ export type ViewerRole = "admin" | "member" | "guest";
 
 export interface Viewer {
   battleTag: string;
+  /** What the header shows (WEB-65): the friend's display name, never the BattleTag. */
+  displayName: string;
   role: ViewerRole;
   /** Admin, members, and guests with "may upload" ticked: shows the Upload link. */
   mayUpload: boolean;

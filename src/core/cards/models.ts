@@ -1,7 +1,9 @@
 import type { Milestone } from "../bot";
-import { type FeatFields, featText, hasCard, MAX_PVP_RANK, type Notable } from "../doomsday/feats";
+import { type FeatFields, type FeatKind, featCardSize, featText, MAX_PVP_RANK, type Notable } from "../doomsday/feats";
 import { initials } from "../views/text";
 import { timeAgo } from "../views/age";
+import type { BoardData, boardSummary } from "../doomsday/posts";
+import { clockAt, duration } from "../doomsday/rules";
 import { cropAround, type Crop, inCrop, zoneByName } from "./mapCrop";
 import { type CardToken, classColours } from "./palette";
 
@@ -56,6 +58,8 @@ export type CardSpec =
       host: string;
     }
   | FeatCardSpec
+  | StripCardSpec
+  | BoardCardSpec
   | {
       /** /whereis: where a character was last seen, with earlier sightings (800 × 400). */
       kind: "whereis";
@@ -70,7 +74,71 @@ export type CardSpec =
 
 /** The drawn icons of the feat cards (board doomsday-feat-cards; the ones it lacks drawn in its style, Nico 2026-10-28). */
 export type FeatIcon =
-  "rank" | "epic" | "mount" | "jack" | "reaper" | "kills" | "bar" | "cloth" | "leather" | "fish" | "pole";
+  | "rank"
+  | "epic"
+  | "mount"
+  | "jack"
+  | "reaper"
+  | "kills"
+  | "bar"
+  | "cloth"
+  | "leather"
+  | "fish"
+  | "pole"
+  | "level"
+  | "skull";
+
+/**
+ * The designer's recap icons (Nico's `doombot-recap-icons` set, 128 px; in src/server/cards/icons/), also drawn on the
+ * strip feat cards where one fits.
+ */
+export type RecapIcon =
+  | "recap_pvp"
+  | "recap_deaths"
+  | "recap_fall"
+  | "recap_fire"
+  | "recap_epic"
+  | "recap_mount"
+  | "recap_night_owl"
+  | "recap_early_bird"
+  | "recap_battleground"
+  | "recap_marathon"
+  | "recap_untouchable"
+  | "recap_group";
+
+/** The recap icon a strip feat card draws, when one fits the feat; else the site's drawn icon (featIcon). */
+export function stripImage(kind: FeatKind): RecapIcon | undefined {
+  switch (kind) {
+    case "deaths100":
+      return "recap_deaths";
+    case "honorKills":
+    case "duelWins":
+      return "recap_pvp";
+    case "bgFirstWin":
+      return "recap_battleground";
+    case "firstEpic":
+      return "recap_epic";
+    case "mount":
+    case "epicMount":
+      return "recap_mount";
+    default:
+      return undefined;
+  }
+}
+
+/** A strip feat card (WEB-66, board `bot-visual-feats`, 800 × 240): the icon left, the texts right. */
+export interface StripCardSpec {
+  kind: "strip";
+  icon: FeatIcon;
+  /** The designer's icon, when one fits; drawn instead of `icon`. */
+  image?: RecapIcon;
+  rank?: number;
+  title: string;
+  name: string;
+  nameColour: CardToken;
+  line: string;
+  firstInGroup: boolean;
+}
 
 /** A feat card (WEB-56, 800 × 400): the icon or rank badge left in its glow, the texts right. */
 export interface FeatCardSpec {
@@ -95,9 +163,13 @@ export interface FeatCardSpec {
 }
 
 export function cardSize(spec: CardSpec): { width: number; height: number } {
-  return spec.kind === "award" || spec.kind === "zoneHeader" || spec.kind === "headline"
-    ? { width: 1200, height: 400 }
-    : { width: 800, height: 400 };
+  if (spec.kind === "award" || spec.kind === "zoneHeader" || spec.kind === "headline")
+    return { width: 1200, height: 400 };
+  if (spec.kind === "strip") return { width: 800, height: 240 };
+  if (spec.kind === "board") return { width: 800, height: 560 };
+  // WEB-66: the recap's zone crop is 800 × 450.
+  if (spec.kind === "zone") return { width: 800, height: 450 };
+  return { width: 800, height: 400 };
 }
 
 function disc(name: string, classFile: string | undefined): Disc {
@@ -196,12 +268,29 @@ export function recapHeader(r: RecapHeaderInput, host: string): CardSpec {
 
 const friends = (n: number) => `${n} ${n === 1 ? "friend" : "friends"}`;
 
-/** The Zone of the week card's map. */
-export function zoneCard(zoneName: string, count: number, host: string): CardSpec | undefined {
+/**
+ * The zone crop of a recap card with a map (800 × 450 since WEB-66): Zone of the week with its friends, or Bloodbath
+ * zone with its honorable kills.
+ */
+export function zoneCard(
+  zoneName: string,
+  count: number,
+  host: string,
+  bloodbath?: { kills: number },
+): CardSpec | undefined {
   const zone = zoneByName(zoneName);
-  const crop = zone !== undefined ? cropAround(zone.id, 2, 0.6, [0.45, 0.45]) : undefined;
+  const crop = zone !== undefined ? cropAround(zone.id, 800 / 450, 0.6, [0.45, 0.45]) : undefined;
   if (crop === undefined) return undefined;
-  return { kind: "zone", overline: "Zone of the week", zone: zoneName, stat: friends(count), crop, host };
+  return bloodbath !== undefined
+    ? {
+        kind: "zone",
+        overline: "Bloodbath zone",
+        zone: zoneName,
+        stat: `${bloodbath.kills.toLocaleString("en-US")} honorable kills`,
+        crop,
+        host,
+      }
+    : { kind: "zone", overline: "Zone of the week", zone: zoneName, stat: friends(count), crop, host };
 }
 
 export interface Seen {
@@ -259,6 +348,35 @@ const NOTABLE_ICONS: Readonly<Record<Notable, FeatIcon>> = {
   extravaganzaWon: "pole",
 };
 
+/** The icon of a feat (the drawn icons of the feat cards; WEB-66 adds level and skull for the strip cards). */
+export function featIcon(kind: FeatKind, fields: FeatFields): FeatIcon {
+  switch (kind) {
+    case "pvpRank":
+      return "rank";
+    case "firstEpic":
+      return "epic";
+    case "mount":
+    case "epicMount":
+      return "mount";
+    case "jackOfAllTrades":
+      return "jack";
+    case "notableItem":
+      return NOTABLE_ICONS[fields.notable ?? "arcaniteReaper"];
+    case "firstCatch":
+      return "fish";
+    case "deaths100":
+      return "skull";
+    case "professionCap":
+      return "bar";
+    case "level":
+    case "maxLevel":
+    case "newCharacter":
+      return "level";
+    default:
+      return "kills";
+  }
+}
+
 /** Titles longer than this use the smaller title size (the board's 46 px ones). */
 const LONG_TITLE = 14;
 
@@ -271,35 +389,15 @@ export function featCard(m: Milestone, c: CharacterFacts, host: string): CardSpe
   if (m.kind === "level" || m.kind === "maxLevel" || m.kind === "professionCap" || m.kind === "newCharacter") {
     return undefined;
   }
-  if (!hasCard({ kind: m.kind, fields })) return undefined;
+  if (featCardSize({ kind: m.kind, fields, firstInGroup: m.firstInGroup === true }) !== "big") return undefined;
   const t = featText({ kind: m.kind, fields }, c.name);
   const who = lineage(c);
-  let icon: FeatIcon;
+  const icon = featIcon(m.kind, fields);
   let meta = t.flavour;
-  switch (m.kind) {
-    case "pvpRank":
-      icon = "rank";
-      meta = [who, fields.rank === MAX_PVP_RANK ? "the summit. Please go outside." : undefined]
-        .filter(Boolean)
-        .join(" · ");
-      break;
-    case "firstEpic":
-      icon = "epic";
-      break;
-    case "epicMount":
-      icon = "mount";
-      break;
-    case "jackOfAllTrades":
-      icon = "jack";
-      break;
-    case "honorKills":
-      icon = "kills";
-      break;
-    case "notableItem":
-      icon = NOTABLE_ICONS[fields.notable ?? "arcaniteReaper"];
-      break;
-    default:
-      return undefined;
+  if (m.kind === "pvpRank") {
+    meta = [who, fields.rank === MAX_PVP_RANK ? "the summit. Please go outside." : undefined]
+      .filter(Boolean)
+      .join(" · ");
   }
   const spec: FeatCardSpec = {
     kind: "feat",
@@ -318,4 +416,101 @@ export function featCard(m: Milestone, c: CharacterFacts, host: string): CardSpe
   if (fields.rank !== undefined && m.kind === "pvpRank") spec.rank = fields.rank;
   if (meta !== undefined && meta !== "") spec.meta = meta;
   return spec;
+}
+
+/**
+ * The strip card (WEB-66, 800 × 240) of a feat that has no big card: the icon, FEAT UNLOCKED, the title, the character
+ * in class colour and one line. Undefined for a new character.
+ */
+export function stripCard(m: Milestone, c: CharacterFacts): StripCardSpec | undefined {
+  if (m.kind === "newCharacter") return undefined;
+  const fields: FeatFields =
+    m.kind === "level" || m.kind === "maxLevel"
+      ? { level: m.level }
+      : m.kind === "professionCap"
+        ? { rank: m.rank, ...(m.title !== undefined ? { title: m.title } : {}) }
+        : (m as FeatFields);
+  const profession = m.kind === "professionCap" ? m.profession : undefined;
+  const t = featText({ kind: m.kind, fields, ...(profession !== undefined ? { profession } : {}) }, c.name);
+  const spec: StripCardSpec = {
+    kind: "strip",
+    icon: featIcon(m.kind, fields),
+    title: t.title,
+    name: c.name,
+    nameColour: classColours(c.classFile).text,
+    line: t.flavour !== undefined ? `${t.line} · ${t.flavour}` : t.line,
+    firstInGroup: m.firstInGroup === true,
+  };
+  if (m.kind === "pvpRank" && fields.rank !== undefined) spec.rank = fields.rank;
+  const image = stripImage(m.kind);
+  if (image !== undefined) spec.image = image;
+  return spec;
+}
+
+/** The daily Doomsday board image (WEB-66, board `bot-visual-daily`, 800 × 560). */
+export interface BoardCardSpec {
+  kind: "board";
+  /** "Wed evening · just started", "Wed evening · Thu 13:10", "Wed evening · final". */
+  title: string;
+  columns: { track: "pve" | "pvp"; label: string }[];
+  rows: {
+    name: string;
+    /** All PvE dailies done. */
+    struck: boolean;
+    crown: boolean;
+    done: boolean[];
+    virgin: boolean;
+    today: { pve: number; pvp: number | null };
+    streak: number;
+  }[];
+  /** "resets Thu 19:00", "resets in 5 h 50 m", "Mira first at 23:13 · 14 goals done". */
+  footer: string;
+  host: string;
+}
+
+/** At most this many friends on the board image; it is read at 300 px on a phone (the most goals done first). */
+export const BOARD_ROWS = 6;
+
+/**
+ * The board image of a `doomsdayBoard` or `doomsdayBoardUpdate` event as it was at `at` (its creation), in realm time.
+ * Friends without Doomsday data are left out (the news line counts them).
+ */
+export function boardCard(
+  data: BoardData & { final?: boolean; summary?: ReturnType<typeof boardSummary> },
+  at: number,
+  timeZone: string,
+  host: string,
+): BoardCardSpec {
+  const clock = (t: number) => clockAt(t, data.start, timeZone);
+  const fresh = !data.final && at - data.start < 10 * 60;
+  const state = data.final === true ? "final" : fresh ? "just started" : clock(at);
+  const resetAt = clockAt(data.end, data.start, timeZone);
+  const goalsDone = data.summary?.goalsDone ?? 0;
+  const footer =
+    data.final === true
+      ? [
+          data.crown !== null ? `${data.crown.name} first at ${clock(data.crown.at)}` : undefined,
+          `${goalsDone} goals done`,
+        ]
+          .filter((x) => x !== undefined)
+          .join(" · ")
+      : fresh
+        ? `resets ${resetAt}`
+        : `resets in ${duration(data.end - at)}`;
+  return {
+    kind: "board",
+    title: `${data.label} · ${state}`,
+    columns: data.goals.map((g) => ({ track: g.track, label: g.shortLabel })),
+    rows: data.friends.slice(0, BOARD_ROWS).map((f) => ({
+      name: f.name,
+      struck: f.crossedOut,
+      crown: data.crown?.name === f.name,
+      done: data.goals.map((g) => f.goals.some((x) => x.slot === g.slot && x.done)),
+      virgin: f.pvpVirgin,
+      today: f.today,
+      streak: f.streak,
+    })),
+    footer,
+    host,
+  };
 }

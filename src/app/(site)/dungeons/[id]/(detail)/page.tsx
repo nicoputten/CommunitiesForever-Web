@@ -79,7 +79,6 @@ export default async function DungeonPage({ params }: { params: Promise<{ id: st
             <h2 id="who-fits" className={runs.boxTitle}>
               Who fits
             </h2>
-            <span className={runs.small}>Roles from talents, or set by the player in the addon</span>
           </div>
           {page.noCharacters ? (
             <p className={runs.body}>No characters yet. Who fits shows once friends have uploaded.</p>
@@ -182,7 +181,7 @@ export default async function DungeonPage({ params }: { params: Promise<{ id: st
               Ran here
             </h2>
             {page.ran.length === 0 ? (
-              <p className={runs.body}>Not yet. Runs are marked done when an upload shows a run inside.</p>
+              <p className={runs.body}>Not yet.</p>
             ) : (
               <ul className={styles.planned}>
                 {page.ran.map((r) => (

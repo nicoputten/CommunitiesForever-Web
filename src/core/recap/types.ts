@@ -130,6 +130,10 @@ export interface RecapCard {
   text: string;
   facts: Record<string, string | number>;
   friends: string[];
+  /** WEB-66: the award winner's class (the embed's colour). */
+  classFile?: string;
+  /** WEB-66: the card's image id: the award header, or the zone crop of a card with a map (S1, S13). */
+  image?: string;
 }
 
 export interface RecapDoomsday {
@@ -145,13 +149,24 @@ export interface Recap {
   end: number;
   quiet: boolean;
   headline: { id: string; text: string };
-  numbers: { levels: number; friendsPlayed: number; runs: number; newCharacters: number };
+  numbers: {
+    levels: number;
+    friendsPlayed: number;
+    runs: number;
+    newCharacters: number;
+    /** WEB-66: the header's honorable kills, battleground games and feats of the week. */
+    honorKills?: number;
+    battlegrounds?: number;
+    feats?: number;
+  };
   award?: RecapCard;
   cards: RecapCard[];
   challenge: { id: string; text: string };
   closing: string;
   /** The Doomsday section (WEB-58, docs/BOT-API.md "Recap: doomsday"); left out when nobody has Doomsday data. */
   doomsday?: RecapDoomsday;
+  /** WEB-66: the site's page for "The full week ↗" (the Doomsday page's Week tab). */
+  url?: string;
   /** What the next recaps need from this one; stored with it (WEB-41c). */
   past: PastWeek;
   cycles: Cycles;

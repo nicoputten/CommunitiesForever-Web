@@ -50,22 +50,19 @@
   display: none;
 }
 
-.who {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: var(--s-1);
-  padding: var(--s-2) var(--s-2-5) var(--s-2-5);
-  border-bottom: var(--border) solid var(--line);
+.caret {
+  color: var(--gold);
 }
 
-.whoTag {
-  font-size: var(--fs-body-sm);
-  color: var(--text-strong);
+/* Sign out, under a divider (live-test-site-fixes). */
+.divided {
+  margin-top: var(--s-1);
+  padding-top: var(--s-1);
+  border-top: var(--border) solid var(--line);
 }
 
-.role {
-  font-size: var(--fs-meta-sm);
-  color: var(--text-dim);
+.badge {
+  margin-left: auto;
 }
 
 .items {
@@ -113,10 +110,6 @@
   color: var(--gold);
 }
 
-.phoneOnly {
-  display: none;
-}
-
 @media (max-width: 767px) {
   /* Only the avatar shows; the BattleTag stays in the accessible name (as .visually-hidden in globals.css). */
   .tag {
@@ -138,7 +131,7 @@
     height: var(--size-avatar-phone);
   }
 
-  .phoneOnly {
-    display: block;
+  .caret {
+    display: none;
   }
 }

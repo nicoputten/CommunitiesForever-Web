@@ -75,6 +75,78 @@ export function dayLabel(n: number): string {
   return `${WEEKDAY_SHORT[(n + 4) % 7]} ${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
 }
 
+/**
+ * The part of the day of an hour (Nico, live test 2026-10-29): 05–11 morning, 12–16 afternoon, 17–22 evening, 23–04
+ * night.
+ */
+export function partOfDay(hour: number): string {
+  if (hour >= 5 && hour <= 11) return "morning";
+  if (hour >= 12 && hour <= 16) return "afternoon";
+  if (hour >= 17 && hour <= 22) return "evening";
+  return "night";
+}
+
+interface Clock {
+  weekday: string;
+  hour: number;
+  time: string;
+  date: string;
+}
+
+function clock(at: number, timeZone: string): Clock {
+  const p: Record<string, string> = {};
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    weekday: "short",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(at * 1000));
+  for (const x of parts) p[x.type] = x.value;
+  return {
+    weekday: WEEKDAY_SHORT.find((w) => w === p.weekday) ?? p.weekday ?? "",
+    hour: Number(p.hour),
+    time: `${p.hour}:${p.minute}`,
+    date: `${p.year}-${p.month}-${p.day}`,
+  };
+}
+
+/**
+ * A Doomsday day by its reset (live test 2026-10-29): the weekday and the part of the day it starts, "Wed evening", and
+ * its span "Wed 19:00 → Thu 19:00". In the zone given: the viewer's on the site, the realm's in the bot.
+ */
+export function doomsdayDay(dayStart: number, nextReset: number, timeZone: string): { name: string; span: string } {
+  const a = clock(dayStart, timeZone);
+  const b = clock(nextReset, timeZone);
+  return { name: `${a.weekday} ${partOfDay(a.hour)}`, span: `${a.weekday} ${a.time} → ${b.weekday} ${b.time}` };
+}
+
+/** A clock time within a Doomsday day: "23:13", or with its weekday after midnight, "Thu 00:04". */
+export function clockAt(at: number, dayStart: number, timeZone: string): string {
+  const c = clock(at, timeZone);
+  return c.date === clock(dayStart, timeZone).date ? c.time : `${c.weekday} ${c.time}`;
+}
+
+/** "resets Thu 19:00 · in 6 h 51 m". */
+export function resetsText(nextReset: number, now: number, timeZone: string): string {
+  const c = clock(nextReset, timeZone);
+  return `resets ${c.weekday} ${c.time} · in ${duration(nextReset - now)}`;
+}
+
+/**
+ * "N of M done" (live test 2026-10-29): exactly the goals on the grid, the PvE dailies, the Hunt and the Skirmish,
+ * plus the Duel slot, done after its first duel. The Duel slot still never counts for crossing out or the streak.
+ */
+export function gridCount(goals: readonly { doneAt?: number }[], duels: number): { done: number; total: number } {
+  return {
+    done: goals.filter((g) => g.doneAt !== undefined).length + (duels > 0 ? 1 : 0),
+    total: goals.length + 1,
+  };
+}
+
 /** "3 h 12 m", "12 m", "0 m". */
 export function duration(seconds: number): string {
   const minutes = Math.max(0, Math.floor(seconds / 60));
@@ -920,3 +992,95 @@ export function elo(results: readonly DuelResult[]): Record<string, number> {
   }
   return rating;
 }
+
+/**
+ * Each goal's short label, at most 10 characters, for a column title where the full text doesn't fit (the bot's board
+ * image, WEB-66). The addon's own (addon PR #123, `Doomsday.SHORT_LABELS`, DOOMSDAY.md "Short labels (CF-61)"): the
+ * same everywhere. The Hunt is "Hunt".
+ */
+export const SHORT_LABELS: Readonly<Record<string, string>> = {
+  "d.quests10": "10 quests",
+  "d.quests20": "20 quests",
+  "d.zone5": "5 in zone",
+  "d.zones3": "3 zones",
+  "d.shared3": "3 shared",
+  "d.level": "Level",
+  "d.altLevel": "Alt level",
+  "d.ilvl": "Item level",
+  "d.cleanLevel": "Clean lvl",
+  "d.dungeon": "Dungeon",
+  "d.dungeonFriend": "Group run",
+  "d.bosses3": "3 bosses",
+  "d.skill5": "Skills",
+  "d.secondary": "Secondary",
+  "d.fish20": "20 fish",
+  "d.chars2": "2 chars",
+  "d.groupFriend": "Group up",
+  "d.trade": "Trade",
+  "d.rare": "Rare loot",
+  "d.earlyBird": "Early bird",
+  "w.days3": "3 days",
+  "w.days5": "5 days",
+  "w.chars3": "3 chars",
+  "w.levels3": "3 levels",
+  "w.altLevels2": "Alt 2 lvls",
+  "w.quests50": "50 quests",
+  "w.zones5": "5 zones",
+  "w.dungeons3": "3 dungeons",
+  "w.dungeonsDiff3": "3 distinct",
+  "w.dungeonFriends2": "Trio run",
+  "w.fullClear": "Full clear",
+  "w.skill25": "25 skill",
+  "w.cap": "Skill cap",
+  "w.newProf": "New prof",
+  "w.ilvl3": "Item lvl+3",
+  "w.friends3": "3 friends",
+  "w.rare5": "5 rares",
+  "w.session2h": "2h session",
+  "w.discover5": "Discover 5",
+  "w.craftTrade": "Craft gift",
+  "p.frontLine": "Front line",
+  "p.punchUp": "Punch up",
+  "p.loneWolf": "Lone wolf",
+  "p.untouchable": "Untouched",
+  "p.variety": "Variety",
+  "p.ranked": "Ranked",
+  "b.zone25": "Zone 25",
+  "b.allClasses": "Classes",
+  "b.allRaces": "Races",
+  "b.ranked5": "5 ranked",
+  "b.kills50": "50 kills",
+  "b.spree10": "Spree 10",
+  "b.hunt3": "3 hunts",
+  "b.duels3": "3 duels",
+  "b.days5": "Kill days",
+};
+
+/** A goal's short label; the Hunt is "Hunt", a goal from a newer addon "New goal". */
+export function shortLabel(id: string): string {
+  if (id.startsWith("hunt")) return "Hunt";
+  return SHORT_LABELS[id] ?? "New goal";
+}
+
+/**
+ * Bosses per dungeon for `w.fullClear`, by the instance name the feed stores. Source: the addon's `Goals.BOSSES`
+ * (src/core/Goals.lua, from the game's DungeonEncounter table, Classic Era, checked 2026-10-28). Dungeons with wings or
+ * optional bosses (Scarlet Monastery, Blackrock Spire, Dire Maul, Stratholme, Scholomance, Blackfathom Deeps, Sunken
+ * Temple) and Forever's new dungeons wait for counts from launch, as in the addon; no progress shows for them.
+ */
+export const DUNGEON_BOSSES: Readonly<Record<string, number>> = {
+  "Ragefire Chasm": 4,
+  "Wailing Caverns": 8,
+  "The Deadmines": 7,
+  Deadmines: 7,
+  "Shadowfang Keep": 8,
+  "The Stockade": 5,
+  "Stormwind Stockade": 5,
+  Gnomeregan: 5,
+  "Razorfen Kraul": 6,
+  "Razorfen Downs": 6,
+  Uldaman: 8,
+  "Zul'Farrak": 8,
+  Maraudon: 8,
+  "Blackrock Depths": 21,
+};

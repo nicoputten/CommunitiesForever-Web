@@ -69,6 +69,19 @@ export const CARD_TOKENS = {
   "--card-steel": "#2e3a55",
   "--card-arcanite": "#9fd3ff",
   "--card-blood": "#f08a80",
+  "--card-strip-h": "240px",
+  "--size-card-strip-icon": "140px",
+  "--size-card-strip-box": "200px",
+  "--card-zone-h": "450px",
+  "--card-board-h": "560px",
+  "--fs-card-board-head": "34px",
+  "--fs-card-board-name": "30px",
+  "--fs-card-board-col": "16px",
+  "--size-card-board-box": "44px",
+  "--card-pve": "#3ba55d",
+  "--card-pvp": "#e0625a",
+  "--card-open-line": "rgba(174, 182, 195, 0.35)",
+  "--r-card-box": "8px",
 } as const;
 
 export type CardToken = keyof typeof CARD_TOKENS;

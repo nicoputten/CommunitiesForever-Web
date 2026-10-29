@@ -51,11 +51,8 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
     await expect(band).toHaveAttribute("aria-label", new RegExp(label));
     await expect(band).toHaveAttribute("aria-label", new RegExp(name));
   }
-  // A narrow band keeps its name, cut on desktop (WEB-54); the phone list has it whole.
-  await expect(bands.locator('button[data-band="rfc"]')).toHaveText(
-    isPhone(page) ? "Ragefire Chasm 13–18 · 2" : /^Rag\w*… 13–18 · 2$/,
-    { useInnerText: true },
-  );
+  // Full names everywhere, never cut (WEB-65).
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
@@ -117,6 +114,7 @@ test("a band opens its popover: who fits, missing roles, Plan a run (WEB-45)", a
 });
 
 test("filters by class and role from the menus, and Back undoes it", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its Filters sheet (WEB-65)");
   await page.goto("/roster");
   await page.getByRole("button", { name: "Class" }).click();
   await page.getByRole("menuitemcheckbox", { name: "Warlock" }).click();
@@ -130,8 +128,10 @@ test("filters by class and role from the menus, and Back undoes it", async ({ pa
   await expect(page.getByRole("menu", { name: "Class" })).toBeHidden();
   await expect(page.getByRole("button", { name: "Class · 2" })).toBeFocused();
   await expect(rowNames(page, "Femke")).toHaveText(["Lia Thornwhisper", "Zul Kazrek"]);
-  await expect(panel(page, "Femke")).toContainText("Femke#3307 · 2 characters");
-  await expect(panel(page, "Nico")).toContainText(`${E2E.admin} · 1 of 3 characters`);
+  // WEB-65: display names only; the BattleTag is on Admin.
+  await expect(panel(page, "Femke")).toContainText("2 characters");
+  await expect(panel(page, "Femke")).not.toContainText("#");
+  await expect(panel(page, "Nico")).toContainText("1 of 3 characters");
 
   await page.getByRole("button", { name: "Role" }).click();
   await page.getByRole("menuitemcheckbox", { name: "Healer" }).click();
@@ -146,12 +146,15 @@ test("filters by class and role from the menus, and Back undoes it", async ({ pa
 test("filters by level with the keyboard, and shows no matches", async ({ page }) => {
   await page.goto("/roster?level=60");
   await expect(rowNames(page, "Mira")).toHaveText(["Mira Sunstrider"]);
-  await page.getByRole("button", { name: "Level 60" }).focus();
-  await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("menuitemradio", { name: "60" })).toBeFocused();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/roster$/);
+  // The menus are desktop only; the phone has its Filters sheet (WEB-65).
+  if (!isPhone(page)) {
+    await page.getByRole("button", { name: "Level 60" }).focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("menuitemradio", { name: "60" })).toBeFocused();
+    await page.keyboard.press("Home");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/roster$/);
+  }
 
   await page.goto("/roster?q=nobody");
   await expect(page.getByRole("heading", { name: "No characters match" })).toBeVisible();
@@ -209,13 +212,21 @@ test("phone: rows stack and the filters stay usable", async ({ page }) => {
     .boundingBox();
   expect(row!.width).toBeLessThanOrEqual(375);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-  await page.getByRole("button", { name: "Profession" }).click();
-  const menu = page.getByRole("menu", { name: "Profession" });
-  await expect(menu).toBeVisible();
-  const m = await menu.boundingBox();
-  expect(m!.x).toBeGreaterThanOrEqual(0);
-  expect(m!.x + m!.width).toBeLessThanOrEqual(375);
-  await page.getByRole("menuitemradio", { name: "Tailoring" }).click();
+  // WEB-65 (board live-test-phone): the search and one Filters button; the menus are in a bottom sheet.
+  await expect(page.getByRole("button", { name: "Class" })).toBeHidden();
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Filters" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("group", { name: "Sort" })).toHaveCount(0);
+  await expect(sheet.getByRole("button", { name: "Clear" })).toBeDisabled();
+  await sheet.getByRole("group", { name: "Profession" }).getByRole("button", { name: "Tailoring" }).click();
   await expect(page).toHaveURL(/prof=tailoring$/);
+  await expect(sheet.getByRole("button", { name: "Show 3 characters" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Show 3 characters" }).click();
+  await expect(sheet).toBeHidden();
   await expect(page.getByText("3 of 10 characters")).toBeVisible();
+  await page.getByRole("button", { name: "Filters · 1" }).click();
+  await sheet.getByRole("button", { name: "Clear" }).click();
+  await expect(page).toHaveURL(/\/roster$/);
+  await expect(sheet.getByRole("button", { name: "Show 10 characters" })).toBeVisible();
 });

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { capitalize } from "@/core/views/text";
-import type { MapMarker } from "@/core/views/mapMarkers";
+import { seenFact, type MapMarker } from "@/core/views/mapMarkers";
 import { ClassDisc } from "@/components/ui/ClassDisc";
 import { classStyle } from "./Markers";
 import styles from "./CharacterCard.module.css";
@@ -43,7 +43,7 @@ export function CharacterCard({ marker: m }: { marker: MapMarker }) {
         <div>
           <dt>Seen</dt>
           <dd>
-            {capitalize(m.seenAgo)}
+            {capitalize(seenFact(m))}
             {m.age === "live" && <span className={styles.fresh} aria-label="new" role="img" />}
           </dd>
         </div>
