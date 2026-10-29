@@ -51,6 +51,8 @@ export interface StreakView {
 export interface DoomsdayHeader {
   /** "Daily goals at 19:00, feats for bragging, and a ladder per track. Suggestions, never rules." */
   sub: string;
+  /** "resets in 11 h 30 m" (the phone shows it under the tabs). */
+  resets: string;
   /** The viewer's own numbers; undefined without Doomsday data. */
   today?: PointsView;
   week?: PointsView;
@@ -177,8 +179,37 @@ export interface DoomsdayPage {
   soFar: SoFarView;
   board: BoardView;
   heatmap: HeatmapView;
-  /** Nobody has done a goal yet this day (the first day state, WEB-61). */
+  /** Day one of Doomsday: nobody has a point yet, in either track, ever (board doomsday-phone, WEB-61). */
   firstDay: boolean;
+}
+
+/** The roster card's Doomsday chip (board roster-cards-doomsday, WEB-61). */
+export type DoomsdayChip =
+  | { kind: "points"; week: PointsView; streak?: number; pvpVirgin: boolean }
+  /** Has the addon, but no Doomsday data yet: never 0 as if known (Nico, 2026-10-29). */
+  | { kind: "none" };
+
+/**
+ * The roster's chips per friend key: this week's points per track and the streak. Friends without the addon get none
+ * (their card says so already); no Doomsday data at all (undefined snapshot) gives no chips anywhere.
+ */
+export function doomsdayChips(s: DoomsdaySnapshot | undefined): Map<string, DoomsdayChip> {
+  const chips = new Map<string, DoomsdayChip>();
+  for (const f of s?.friends ?? []) {
+    if (f.status === "noAddon") continue;
+    if (f.status !== "active" || f.points === undefined) {
+      chips.set(f.friendKey, { kind: "none" });
+      continue;
+    }
+    const chip: DoomsdayChip = {
+      kind: "points",
+      week: { pve: f.points.week.pve, pvp: f.points.week.pvp, approx: f.points.approx?.pvp === true },
+      pvpVirgin: f.pvpVirgin,
+    };
+    if (f.streak !== undefined) chip.streak = f.streak.current;
+    chips.set(f.friendKey, chip);
+  }
+  return chips;
 }
 
 const KIND: Record<GoalSlot, string> = {
@@ -369,6 +400,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
 
   const header: DoomsdayHeader = {
     sub: `Daily goals at ${localTime(s.schedule.nextReset, timeZone)}, feats for bragging, and a ladder per track. Suggestions, never rules.`,
+    resets: `resets in ${countdown(s.schedule.nextReset, s.now)}`,
   };
   if (me?.status === "active" && me.points !== undefined) {
     header.today = pointsView(me.points.today, approx(me));
@@ -383,7 +415,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
     heatmap: {
       rows: orderFriends(active, viewerKey).map((f) => heatmapRow(f, s)),
     },
-    firstDay: active.every((f) => doneCount(f) === 0),
+    firstDay: active.every((f) => (f.points?.allTime.pve ?? 0) + (f.points?.allTime.pvp ?? 0) === 0),
   };
   const noAddon = s.friends.filter((f) => f.status !== "active").map((f) => f.name);
   if (noAddon.length > 0) {

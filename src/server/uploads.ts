@@ -14,6 +14,7 @@ import {
 import { diff, type UploadSummary } from "@/core/diff";
 import { readGameItems, type GameItem } from "@/core/gameItems";
 import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
+import { datasetSince, feedsSince, goalsSince } from "@/core/cutoff";
 import { readAllGoals, type PersonGoals } from "@/core/doomsday/record";
 import { readFeeds, type PersonFeed } from "@/core/feed";
 import { LuaParseError, parseLua } from "@/core/lua";
@@ -27,6 +28,7 @@ import { recordFeats } from "./feats";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
+import { cutoffAt } from "./cutoff";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
@@ -76,6 +78,17 @@ type Read =
   | { ok: true; data: Dataset; feeds: PersonFeed[]; goals: PersonGoals[]; gameItems: GameItem[] }
   | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
 
+/** WEB-62: an upload read after the launch cut-off loses what dates from before it (src/core/cutoff.ts). */
+function since(result: Read, cutoff: number): Read {
+  if (!result.ok || cutoff === 0) return result;
+  return {
+    ...result,
+    data: datasetSince(result.data, cutoff),
+    feeds: feedsSince(result.feeds, cutoff),
+    goals: goalsSince(result.goals, cutoff),
+  };
+}
+
 function read(bytes: Uint8Array): Read {
   try {
     const chunk = parseLua(new TextDecoder().decode(bytes));
@@ -121,7 +134,7 @@ export function upload(
   const known = findBySha(db, sha256, user);
   if (known !== undefined && !retry(known)) return withOwner(known, file);
 
-  const result = read(file);
+  const result = since(read(file), cutoffAt(db));
   let events = false;
   const stored = db.transaction((tx): UploadResult => {
     const again = findBySha(tx, sha256, user);
@@ -395,6 +408,9 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     const counts: RebuildResult = { ok: 0, rejected: 0 };
     tx.delete(members).run();
     clearHistory(tx);
+    // WEB-62: uploads from before the launch cut-off count only for who may sign in (members); the rest are read
+    // without what dates from before it. Their rows (status, summary) stay as they were.
+    const cutoff = cutoffAt(tx);
     for (const { id } of ids) {
       const row = tx
         .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy, uploadedAt: uploads.uploadedAt })
@@ -402,7 +418,16 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
         .where(eq(uploads.id, id))
         .get();
       if (row === undefined) continue;
-      const result = read(gunzipSync(row.raw));
+      const beta = row.uploadedAt < cutoff;
+      const result = beta ? read(gunzipSync(row.raw)) : since(read(gunzipSync(row.raw)), cutoff);
+      if (beta) {
+        if (result.ok && checkFile(row.uploadedBy, result.data, community, admin) === undefined) {
+          const fileCommunity = result.data.community.id ?? null;
+          if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
+          addMembers(tx, result.data, id);
+        }
+        continue;
+      }
       if (!result.ok) {
         counts.rejected++;
         tx.update(uploads)

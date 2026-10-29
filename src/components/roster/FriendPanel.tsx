@@ -1,4 +1,6 @@
 import type { CharacterView, PersonView } from "@/core/views/characters";
+import type { DoomsdayChip } from "@/core/views/doomsday";
+import { RosterChip } from "@/components/doomsday/RosterChip";
 import { DataAgeBadge, dataAgeProps } from "@/components/ui/DataAgeBadge";
 import { CharacterRow } from "./CharacterRow";
 import styles from "./FriendPanel.module.css";
@@ -12,10 +14,12 @@ export interface FriendPanelProps {
   /** All their characters, before the filter. */
   total: number;
   now: number;
+  /** This week's Doomsday points and streak (WEB-61); none without Doomsday at all. */
+  doomsday?: DoomsdayChip;
 }
 
 /** A friend and their characters (roster-cards board); a friend without the addon gets the no-addon box. */
-export function FriendPanel({ person, characters, total, now }: FriendPanelProps) {
+export function FriendPanel({ person, characters, total, now, doomsday }: FriendPanelProps) {
   const count = !person.hasAddon
     ? "in the group"
     : characters.length < total
@@ -32,6 +36,7 @@ export function FriendPanel({ person, characters, total, now }: FriendPanelProps
           <h2 className={styles.name}>{person.displayName}</h2>
           <p className={styles.tag}>{tag}</p>
         </div>
+        {doomsday !== undefined && <RosterChip chip={doomsday} />}
         <DataAgeBadge {...dataAgeProps(person)} now={now} />
       </div>
       {person.hasAddon ? (

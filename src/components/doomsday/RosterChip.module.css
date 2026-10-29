@@ -1,0 +1,55 @@
+/* The Doomsday chip on a roster card (WEB-61, board roster-cards-doomsday). */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+  padding: var(--s-1-5) var(--s-2-5);
+  border-radius: var(--r-pill);
+  background: var(--surface-dd-chip);
+  border: var(--border) solid var(--line-control);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--line-chip-on);
+}
+
+.pve {
+  color: var(--pve-text);
+}
+
+.pvp {
+  color: var(--pvp-text);
+}
+
+.virgin {
+  color: var(--swap-text);
+}
+
+.streak {
+  color: var(--streak-text);
+}
+
+.flame {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  vertical-align: -2px;
+}
+
+.none {
+  border-color: var(--line-neutral);
+  font-weight: var(--fw-regular);
+  color: var(--text-dim);
+}
+
+@media (max-width: 767px) {
+  .chip {
+    min-height: var(--size-touch);
+  }
+}

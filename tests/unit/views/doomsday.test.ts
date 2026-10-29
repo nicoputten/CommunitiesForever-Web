@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DoomsdaySnapshot } from "@/core/doomsday/snapshot";
 import type { PersonView } from "@/core/views/characters";
-import { countdown, doomsdayPage } from "@/core/views/doomsday";
+import { countdown, doomsdayChips, doomsdayPage } from "@/core/views/doomsday";
 import { doomsdaySample } from "@/server/doomsdaySample";
 
 // 2026-11-19 20:00 UTC, a Thursday: 21:00 in Paris, two hours after the 19:00 reset.
@@ -212,10 +212,48 @@ describe("doomsdayPage heatmap", () => {
 });
 
 describe("doomsdayPage first day", () => {
-  it("is the first day while nobody has done a goal", () => {
+  it("is day one while nobody has a point yet, ever", () => {
     const s = sample();
-    for (const f of s.friends) for (const g of f.today?.goals ?? []) delete g.doneAt;
+    delete s.crown;
+    for (const f of s.friends) {
+      for (const g of f.today?.goals ?? []) delete g.doneAt;
+      delete f.today?.finishedAt;
+      if (f.points !== undefined) f.points.allTime = { pve: 0, pvp: 0 };
+    }
     expect(page(s).firstDay).toBe(true);
+    expect(page(s).soFar.empty).toBe(true);
     expect(page().firstDay).toBe(false);
+  });
+
+  it("is not day one on a later morning before anyone did a goal", () => {
+    const s = sample();
+    delete s.crown;
+    for (const f of s.friends) {
+      for (const g of f.today?.goals ?? []) delete g.doneAt;
+      delete f.today?.finishedAt;
+    }
+    expect(page(s).firstDay).toBe(false);
+    expect(page(s).soFar.empty).toBe(true);
+  });
+});
+
+describe("doomsdayChips", () => {
+  it("gives this week's points per track and the streak, a quiet chip without data, none without the addon", () => {
+    const s = sample();
+    s.friends.find((f) => f.friendKey === "jorrit")!.status = "noDoomsday";
+    const chips = doomsdayChips(s);
+    expect(chips.get("nico")).toEqual({
+      kind: "points",
+      week: { pve: 85, pvp: 240, approx: false },
+      streak: 6,
+      pvpVirgin: false,
+    });
+    expect(chips.get("femke")).toMatchObject({ kind: "points", pvpVirgin: true });
+    expect(chips.get("jorrit")).toEqual({ kind: "none" });
+    expect(chips.has("sanne")).toBe(false);
+  });
+
+  it("gives no chips before any Doomsday data", () => {
+    expect(doomsdayChips(undefined).size).toBe(0);
   });
 });

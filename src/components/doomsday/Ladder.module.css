@@ -431,3 +431,22 @@ details[open] > .head .caret {
   min-height: var(--size-touch);
   color: var(--gold);
 }
+
+/* The phone: a PvE | PvP switch, one track at a time (WEB-61, board doomsday-phone). */
+.phoneSwitch {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .phoneSwitch {
+    display: block;
+  }
+
+  .phoneHidden {
+    display: none;
+  }
+
+  .bar {
+    gap: var(--s-2-5);
+  }
+}

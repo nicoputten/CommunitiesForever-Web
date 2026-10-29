@@ -112,37 +112,48 @@ Boards `doomsday-phone` and `roster-cards-doomsday`.
 - The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
 - As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
 
-### WEB-62 Launch cut-off: start fresh from launch
-Decided with Nico (2026-10-28). At launch (2026-11-04) every beta character is gone from the game. The beta and Forever are different clients, so every friend's SavedVariables start empty, and the addon needs no change. The site must forget the beta **without deleting anything**: uploads stay the single source of truth (Nico rejected a delete-style reset earlier for that reason). After the web engine's WEB-58; ready before launch, so Nico can press it on launch day.
-- **The setting:** a **Danger zone** box at the bottom of the admin page, "Start fresh from launch".
-  - It shows the cut-off moment, plus what's kept and what's hidden.
-  - Typing `LAUNCH` confirms it; Undo removes the cut-off.
-  - It's stored in one settings row (the moment in UTC, who set it, when).
-- **Rebuild from the cut-off:** the rebuild ignores uploads received before the cut-off. Characters, people, members, locations, sightings, presence, the activity feed, Doomsday goals and points are derived only from uploads after it. Raw uploads are never deleted or changed.
-- **No beta characters sneaking back:** a character whose `lastPlayed` (and `updatedAt`) is before the cut-off is ignored, even when a newer upload carries it. Belt and braces: the launch client's files are empty anyway.
-- **Kept untouched:** accounts and sign-in access, guests and blocks, Discord links, time zones, bot settings and token, uploader devices and tokens, last-seen times.
-  - Members are derived from uploads, so anyone allowed to sign in before the cut-off stays allowed until their first launch upload.
-- **Hidden, not deleted** (shown nowhere, kept in the database):
-  - planned runs and their answers
-  - asks and game items
-  - recaps
-  - feats and Doomsday history from before the cut-off
-- **Restarted:**
-  - **Recap:** numbering restarts, so the first recap after the cut-off is week 1 (`recap_start` moves to the cut-off).
-  - **Feats:** "First in the group" counts from the cut-off.
-- **No posts about the reset.** The rebuild makes no feat events, as with the site's first upload today. Nothing is posted about the reset itself, and old beta posts stay in Discord.
-- **Undo:** removing the cut-off and rebuilding brings everything back as it was.
-- **Tests:**
-  - a fixture with beta uploads before and launch uploads after the cut-off
-  - a beta character carried in a launch-era upload is ignored
-  - runs, recaps and feats are hidden and come back on Undo
-  - kept tables are untouched
-  - no events are made
-- **Manual (in the PR):** on a copy of the live database, set the cut-off, check the roster is empty but sign-in, Discord links and settings work, then Undo.
-- The mistaken account from earlier needs no script: the cut-off clears its beta data too, and the block list handles it after launch.
+### WEB-63 Clean-up before the Doomsday release
+Agreed with Nico, 2026-10-29: everything on the list below. Built after WEB-57 is merged. WEB-64 (co-admins) touches the admin page, the Discord page, `viewer`, `mayAdmin` and the access code, so nothing here changes those before WEB-64 is merged; the items below don't need to. No behaviour changes for users; one PR, one commit per item.
+
+**Dependencies**
+- gitleaks-action v2 → v3 (Dependabot #69, closed by this PR).
+- ESLint 10 with `eslint-config-next`: the `src/core` layering rule still fails on a forbidden import (a test proves it), and lint passes unchanged otherwise.
+- TypeScript 7: kept only if `tsc`, the build and every test pass. If not, it stays on 6 with the reason in `docs/ARCHITECTURE.md`.
+- npm audit: the 4 moderate findings come from an old esbuild inside drizzle-kit (a dev tool; the latest drizzle-kit has it too). They are recorded as accepted in `docs/ARCHITECTURE.md`, with when to check again, instead of a forced breaking downgrade.
+- `allowScripts` covers esbuild's postinstall, so CI's install-scripts warning is gone.
+
+**Tests and CI**
+- The three flaky checks get fixed at the cause, not with retries:
+  - roster-table "design values": styles were read while the page re-rendered
+  - upload "nothing new": the accessibility scan ran before the `<title>` was there
+  - phone-map "the tapped character in the half sheet"
+  
+  Each passes 20 runs in a row locally.
+- **Real Doomsday test data:**
+  - the design sample (`tests/design/sample.ts`) uploads `goals`, `pvpKills`, PvP ranks and feats, so the engine computes Doomsday from uploads
+  - `DOOMSDAY_SAMPLE`, `src/server/doomsdaySample.ts` and the Playwright config lines go
+  - `/dev/doomsday` keeps its four states (day one, only you, loading, error) from the engine's own output
+  - The Doomsday screenshots change only where the real numbers differ from the made-up ones, after Nico's OK.
+- The Doomsday e2e checks run in the project before the upload tests add uploaders (as roster, professions and character do), so they no longer depend on test order.
+
+**Code**
+- One helper in `src/core` for weekday and month names and for `ordinal()`. Today they are copied in five and three files. Same output everywhere; the existing tests prove it.
+
+**Repo**
+- `AGENTS.md` (written by `next dev`, Next's pointer to its bundled docs) is committed, so the tree stays clean.
+
+**Docs**
+- Done stories (WEB-57, WEB-59, WEB-60, WEB-61 and any other done) move to `docs/STORIES-COMPLETED.md`. `docs/STORIES.md` keeps open stories only, with a current build order.
+- `docs/ARCHITECTURE.md`, `docs/BOT-API.md`, `docs/UPLOADER-API.md`, `docs/RECAP.md` and `docs/DESIGN.md` match the code.
+- `design/README.md` marks superseded boards as superseded and names the board that replaces each:
+  - `discord-settings` and `discord-settings-runs` by `discord-page*`
+  - the `doomsday-*` boards' 09:00 reset by 19:00
+- `CHANGELOG.md` `## Unreleased` reads as release notes for the Doomsday release: grouped, no story numbers, no duplicates.
+
+Done when: `npm run lint`, `npm test`, `npm run build`, `npm run test:design` and `npm run test:e2e` pass, CI is green twice in a row, and the docs PR items above are checked off in the PR.
 
 ### WEB-64 Co-admins
-Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Board: from `docs/DESIGN-PROMPT-ADMINS.md` (not designed yet; build after the boards are in).
+Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Boards: `admin-coadmins` (owner view), `admin-as-admin`, `admin-coadmin-states`, `admin-phone` and `discord-page-coadmins` (designed 2026-10-29). From the design: nobody, the owner included, can block an admin directly; remove the admin role first (the Members list shows "Can't be blocked" on those rows).
 
 - **Two levels:**
   - **Owner:** the BattleTag in `ADMIN_BATTLETAG` (server setting), as now. Never demoted or removed through the site. No screen, action or API offers it, and the server refuses it.
