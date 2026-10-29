@@ -1060,3 +1060,9 @@
     min-width: var(--size-touch);
   }
 }
+
+/* A cancelled run still ahead stays in its week, struck through (WEB-65, bug 3). */
+.run[data-cancelled] .runName {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}

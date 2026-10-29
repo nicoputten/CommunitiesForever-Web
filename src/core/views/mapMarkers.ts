@@ -35,11 +35,14 @@ export interface MapMarker {
   zoneName: string;
   /** Set when the sighting was inside a dungeon or raid of this zone. */
   dungeonName?: string;
+  /** When the character was in this zone (the sighting); its age fades the marker. */
   seenAt: number;
-  /** "2 h ago". */
+  /** When the character was last seen anywhere (played, or this sighting if newer), "2 h ago". */
   seenAgo: string;
+  /** "6 d": the sighting, when it is a day or more older than the last time seen (WEB-65, bug 6). */
+  hereAgo?: string;
   age: DataAge;
-  /** "2d" next to the marker: every sighting that is not new (Nico, 2026-10-26). */
+  /** "2d" next to the marker: last seen a day ago or more (WEB-65, bug 6; was every sighting not new). */
   ageTag?: string;
   /** The phone's character sheet (WEB-28): "1 h" for the next-character button. */
   seenShort: string;
@@ -67,12 +70,19 @@ export interface MapPlace {
   dungeons: string[];
 }
 
+/** The card's "Seen": "42 min ago", or "here 6 d ago · seen 42 min ago" when the place is older (WEB-65, bug 6). */
+export function seenFact(m: MapMarker): string {
+  return m.hereAgo === undefined ? m.seenAgo : `here ${m.hereAgo} ago · seen ${m.seenAgo}`;
+}
+
 /** "Lia Thornwhisper, level 37 Priest, Stranglethorn Vale, seen 1 h ago": a marker's accessible name. */
 export function markerLabel(m: MapMarker): string {
   const who = m.name ?? (m.ownerName === undefined ? "Unknown character" : `A character of ${m.ownerName}`);
   const what = [m.level === undefined ? undefined : `level ${m.level}`, m.className].filter(Boolean).join(" ");
   const where = m.dungeonName === undefined ? m.zoneName : `${m.dungeonName}, ${m.zoneName}`;
-  return [who, what || undefined, where, `seen ${m.seenAgo}`].filter(Boolean).join(", ");
+  return [who, what || undefined, where, m.hereAgo === undefined ? `seen ${m.seenAgo}` : seenFact(m)]
+    .filter(Boolean)
+    .join(", ");
 }
 
 /** "2 characters in Westfall, including 1 in The Deadmines". */

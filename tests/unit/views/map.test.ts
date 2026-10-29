@@ -74,9 +74,19 @@ describe("world map", () => {
     });
   });
 
-  it("tags every sighting that is not new with its age in days", () => {
+  it("tags a character last seen a day ago or more with its age in days", () => {
     expect(place("barrens")!.markers[0]?.ageTag).toBe("3d");
     expect(place("stonetalon")!.markers[0]).toMatchObject({ age: "week", ageTag: "9d" });
+  });
+
+  it("keeps where and when apart: an old place, seen today, has no tag but says both (WEB-65, bug 6)", () => {
+    const d = sample();
+    const guid = place("stonetalon")!.markers[0]!.guid;
+    d.characters[guid]!.lastPlayed = NOW - 42 * 60;
+    const m = worldMap(d, NOW).places.find((p) => p.zone === "stonetalon")!.markers[0]!;
+    expect(m).toMatchObject({ age: "week", seenAgo: "42 min ago", hereAgo: "9 d", seenShort: "42 min" });
+    expect(m.ageTag).toBeUndefined();
+    expect(markerLabel(m)).toMatch(/, here 9 d ago · seen 42 min ago$/);
   });
 
   it("names the dungeon of a sighting inside one", () => {

@@ -8,6 +8,9 @@ import { EmblemIcon, FishIcon, MountIcon, PotIcon, RankInsignia, SkullIcon, Swor
 import base from "./Doomsday.module.css";
 import styles from "./Ladder.module.css";
 
+/** Friends the duel grid fits in its card; more scroll in their own box (WEB-65, bug 7). */
+const DUEL_FIT = 8;
+
 // The Doomsday page's Ladder, PvP and Feats pieces (WEB-60, boards doomsday-ladder and doomsday-feats). Server
 // components: rows open with <details>, friends are picked with links.
 
@@ -174,11 +177,18 @@ export function PvpDetails({ view }: { view: PvpView }) {
           )}
         </div>
         {view.duels !== undefined && view.duels.grid.names.length > 1 && (
-          <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Duels between friends">
+          <div
+            className={styles.tableWrap}
+            tabIndex={view.duels.grid.names.length > DUEL_FIT ? 0 : undefined}
+            role="region"
+            aria-label="Duels between friends"
+            data-many={view.duels.grid.names.length > DUEL_FIT || undefined}
+            style={{ "--cols": view.duels.grid.names.length } as CSSProperties}
+          >
             <table className={styles.duels}>
               <thead>
                 <tr>
-                  <th scope="col">wins–losses vs</th>
+                  <th scope="col">row vs column</th>
                   {view.duels.grid.names.map((n) => (
                     <th key={n.key} scope="col">
                       {n.name}
@@ -190,16 +200,26 @@ export function PvpDetails({ view }: { view: PvpView }) {
                 {view.duels.grid.names.map((row, i) => (
                   <tr key={row.key}>
                     <th scope="row">{row.name}</th>
-                    {view.duels!.grid.cells[i]!.map((c, j) => (
-                      <td key={j} data-result={c?.result} data-self={i === j}>
-                        {c?.text}
-                      </td>
-                    ))}
+                    {view.duels!.grid.cells[i]!.map((c, j) =>
+                      c !== undefined ? (
+                        <td key={j} data-result={c.result}>
+                          {c.text}
+                        </td>
+                      ) : (
+                        <td key={j} data-empty={i === j ? "self" : "none"}>
+                          <span aria-hidden="true">{i === j ? "—" : "·"}</span>
+                          {i !== j && <span className="visually-hidden">no duels</span>}
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+        {view.duels?.grid.readAcross !== undefined && view.duels.grid.names.length > 1 && (
+          <p className={styles.readAcross}>{view.duels.grid.readAcross}</p>
         )}
         {view.duels?.elo !== undefined && (
           <div className={styles.elo}>

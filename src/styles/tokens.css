@@ -444,6 +444,12 @@
   --size-marker: 30px; /* map: character marker (hit area --size-touch) */
   --size-cluster: 36px; /* map: cluster, 2–5 */
   --size-cluster-many: 38px; /* map-states: cluster of 6 or more */
+  --label-drop: calc(
+    var(--size-cluster-many) / 2 + var(--s-1-5)
+  ); /* map: a zone's name below its marker (live-test-site-fixes, WEB-65) */
+  --label-drop-zone: calc(
+    var(--size-marker) / 2 + var(--s-1) + var(--fs-meta-sm) * var(--lh-tight) + var(--s-1-5) * 2
+  ); /* map: the same, below a name tag at zone zoom */
   --size-cluster-ring: 4px; /* map: class ring around the count */
   --size-badge: 18px; /* map: dungeon badge */
   --size-badge-icon: 11px;
@@ -829,6 +835,10 @@
      Horde red, never added together. */
   --pve-text: #9be3b0; /* the PvE track */
   --pvp-text: #f08a80; /* the PvP track */
+  --duel-self: #3a4456; /* live-test-site-fixes: the duel grid's "—", a friend against themself (WEB-65) */
+  --duel-none: #56627a; /* live-test-site-fixes: the duel grid's "·", no duels yet */
+  --size-duel-name: 26%; /* the duel grid's name column, so 8 friends fit a 375 px phone */
+  --size-duel-cell: 48px; /* the duel grid's narrowest column past 8 friends, then it scrolls */
   --size-emblem-dd: 56px; /* doomsday-today: the sun over the shield next to the title */
   --size-goals-aside: 340px; /* doomsday-today: Today so far */
   --surface-goal: #0e1626; /* doomsday-today: a goal */

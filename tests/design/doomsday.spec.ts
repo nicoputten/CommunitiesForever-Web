@@ -116,7 +116,13 @@ test("doomsday pvp: design values", async ({ page }) => {
   await expectStyles(page.getByText("Mailbox Menace"), { color: "var(--gold-pale)" });
   const grid = page.getByRole("table");
   await expectStyles(grid.getByRole("cell", { name: "1–0" }), { color: "var(--pve-text)" });
-  await expectStyles(grid.getByRole("cell", { name: "0–1" }), { color: "var(--pvp-text)" });
+  await expectStyles(grid.getByRole("cell", { name: "0–1" }), { color: "var(--pvp-text)", "white-space": "nowrap" });
+  // WEB-65, bug 7: named corner, "—" against yourself, "·" without duels, fits its card without a scroll box.
+  await expect(grid.getByRole("columnheader", { name: "row vs column" })).toBeVisible();
+  await expectStyles(grid.locator('td[data-empty="self"]').first(), { color: "var(--duel-self)" });
+  const wrap = page.getByRole("region", { name: "Duels between friends" });
+  expect(await wrap.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  await expect(page.getByText(/^Read across: .+ beat .+ \d+–\d+\.$/)).toBeVisible();
   await expectStyles(page.getByText("1,016"), { "font-family": "var(--font-name)", color: "var(--gold-pale)" });
   await expectStyles(page.getByRole("region", { name: "Battlegrounds" }), { "border-style": "dashed" });
 });

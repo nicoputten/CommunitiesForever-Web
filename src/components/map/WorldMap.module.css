@@ -219,6 +219,15 @@
 
 .label[data-occupied] {
   fill: var(--label-occupied);
+  /* WEB-65, bug 6: a zone with characters shows its name below their marker, never under it. --unit (MapStage) turns
+     screen pixels into world units; --label-top lifts the name's top edge to the anchor first. */
+  transform: scale(calc(1 / var(--zoom, 1)))
+    translateY(calc(var(--label-drop) * var(--unit, 1) + var(--label-top, 0px)));
+}
+
+/* At zone zoom a lone marker has its name tag below it: the zone's name goes below that. */
+[data-level="zone"] .label[data-occupied] {
+  --label-drop: var(--label-drop-zone);
 }
 
 .label[data-occupied="live"] {
