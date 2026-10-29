@@ -62,6 +62,12 @@ View them: `npm run design`, then open http://localhost:4400.
 | `admin-coadmin-states` | `CoAdminStates.dc.html` | Co-admin confirm dialogs and states: Make/Remove admin, no admins yet, removing an online admin, "Only the owner can do this", the server refusing an outdated button, the safety rules (WEB-64) |
 | `admin-phone` | `AdminPhone-coadmins.dc.html` | The Admins box and log at 375 px, owner and admin view, the Make admin confirm as a bottom sheet (WEB-64) |
 | `discord-page-coadmins` | `DiscordPage-coadmins.dc.html` | The reorganised Discord page as an admin sees it: post settings usable, the bot card without token controls ("The bot token is managed by the owner.") (WEB-64) |
+| `live-test-findings` | `LT01Findings.dc.html` | Live test of 29 Oct: every finding (leaked design notes, 7 bugs, UX, phone) with its decision (WEB-65) |
+| `live-test-site-fixes` | `LT02SiteFixes.dc.html` | Live test fixes on desktop, before and after: tooltips instead of notes, avatar menu, roster, map, Doomsday week, duel grid (WEB-65) |
+| `live-test-phone` | `LT03Phone.dc.html` | Live test fixes at 375 px: map header, Doomsday sub-tab chips, roster Filters bottom sheet, avatar menu (WEB-65) |
+| `bot-visual-recap` | `BV1Recap.dc.html` | DoomBot weekly recap as real Discord embeds: header with fields, award image, map crop, icon thumbnails, Doomsday, challenge, link buttons (WEB-66, bot BOT-20) |
+| `bot-visual-daily` | `BV2Daily.dc.html` | DoomBot daily Doomsday board as an 800 × 560 image in one embed, edited during the day (WEB-66, bot BOT-20) |
+| `bot-visual-feats` | `BV3Feats.dc.html` | DoomBot feat posts: every feat a card, big 800 × 400 or the new strip 800 × 240, grouped per upload (WEB-66, bot BOT-20) |
 
 Superseded boards stay as they were, marked in the table with the board that replaces them (WEB-63, 2026-10-29); build from the newer one.
 
@@ -72,3 +78,5 @@ The Doomsday boards (2026-10-28, from `docs/DESIGN-PROMPT-DOOMSDAY.md`) are one 
 The `discord-page*` boards (2026-10-28, from the web engine's prompt for WEB-58) reorganise the Discord page and add the Doomsday settings. They replace `discord-settings` and `discord-settings-runs` for the page's layout; those two stay as they were. Their BattleTags (only in Linked friends) are the same made-up ones as on `discord-settings-runs`. The Doomsday reset default on them is 19:00, as `docs/DOOMSDAY.md` says; the 09:00 on the `doomsday-*` boards is the outdated one.
 
 The co-admin boards (2026-10-29, from `docs/DESIGN-PROMPT-ADMINS.md`) are new boards: no admin-page board existed, so `admin-coadmins` follows the live /admin page. Its Danger zone shows WEB-62's box as built. All BattleTags on them are made up.
+
+The live-test boards (2026-10-29, canvas "Doombringers v2", section "Live test · 29 Oct") come with Nico's brief `docs/DESIGN-BRIEF-LIVE-TEST.md`, which says what to change. One real account name on `live-test-findings` was replaced by a made-up one before committing.
