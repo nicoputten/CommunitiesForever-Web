@@ -10,6 +10,7 @@ SavedVariables files in the game's format (`CommunitiesForeverDB = { ["global"] 
 - **Three consecutive days** of the same uploader's file (evenings of 2026-10-24, 25 and 26, 20:00 UTC). Upload them in order:
   - Day 2 brings level ups, skill gains, item level gains, newer sightings and a new character (Tok Ironhide).
   - Day 3 brings more of the same and is the design checks' sample exactly.
+  - Every day has the friends' Doomsday data (goals over twelve weeks, kills, a duel, PvP ranks; WEB-63), so the Doomsday page has something to show; day 3 adds Ves Doombringer's first epic and a new PvP rank (feats).
   - Ages on the site count from those dates.
 - **Same community** in every file: `settings.clubId` `40000001`, `clubName` "Doombringers".
 - **Your own sign-in:** replace `YourName#1234` with your BattleTag (one line, `["battleTag"] = "YourName#1234"` under `["self"]`).

@@ -1,3 +1,4 @@
+import { WEEKDAY_SHORT } from "../names";
 // The recap week (WEB-41): the recap comes every week at a weekday and time in the admin's time zone (default Sunday
 // 13:00, the Discord page). Moments are Unix seconds (UTC); the local time is turned into UTC per week, so a daylight
 // saving change moves nothing locally: the recap stays at 13:00 on the admin's clock. A week runs from the previous
@@ -14,8 +15,6 @@ interface LocalTime {
   hour: number;
   minute: number;
 }
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** The wall clock in a time zone at a moment. */
 export function localTime(timeZone: string, at: number): LocalTime {
@@ -34,7 +33,7 @@ export function localTime(timeZone: string, at: number): LocalTime {
     year: Number(get("year")),
     month: Number(get("month")),
     day: Number(get("day")),
-    weekday: WEEKDAYS.indexOf(get("weekday")),
+    weekday: WEEKDAY_SHORT.indexOf(get("weekday")),
     hour: Number(get("hour")),
     minute: Number(get("minute")),
   };

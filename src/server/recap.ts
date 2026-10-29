@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt } from "drizzle-orm";
 import { MAP_ZONES, mapZone, recapChar } from "@/core/recap/input";
 import { buildRecap } from "@/core/recap/recap";
 import type { History, Recap, RecapChar, Week, WeekSighting } from "@/core/recap/types";
@@ -6,7 +6,10 @@ import { nextRecapMoment, recapMomentAtOrBefore, type RecapSchedule } from "@/co
 import { adminBattleTag } from "./access";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
-import { feedDays, feedSharing, recaps, recapStart, sightings } from "./db/schema";
+import { recapSection } from "@/core/doomsday/posts";
+import { cutoffAt } from "./cutoff";
+import { doomsdayInput } from "./doomsdayEngine";
+import { feedDays, recaps, recapStart, sightings } from "./db/schema";
 import { effectiveTimeZone, getBotSettings } from "./discord";
 import { loadState } from "./uploads";
 
@@ -32,12 +35,52 @@ interface StoredRecap {
   snapshot: Record<string, RecapChar>;
 }
 
+/**
+ * WEB-62: recaps that start before the launch cut-off are hidden (kept), and the numbering restarts after it: the
+ * stored `week` is an internal sequence, the recap's own `data.week` is the number posted. This is the last sequence
+ * number before the cut-off (0 without one).
+ */
+export function recapBase(db: Db): number {
+  const cutoff = cutoffAt(db);
+  if (cutoff === 0) return 0;
+  return (
+    db
+      .select({ week: recaps.week })
+      .from(recaps)
+      .where(lt(recaps.start, cutoff))
+      .orderBy(desc(recaps.week))
+      .limit(1)
+      .get()?.week ?? 0
+  );
+}
+
+/** The recaps shown (after the cut-off), oldest first. */
 export function storedRecaps(db: Db): StoredRecap[] {
-  return db.select().from(recaps).orderBy(asc(recaps.week)).all();
+  return db
+    .select()
+    .from(recaps)
+    .where(gt(recaps.week, recapBase(db)))
+    .orderBy(asc(recaps.week))
+    .all();
 }
 
 export function latestRecap(db: Db): StoredRecap | undefined {
-  return db.select().from(recaps).orderBy(desc(recaps.week)).limit(1).get();
+  return db
+    .select()
+    .from(recaps)
+    .where(gt(recaps.week, recapBase(db)))
+    .orderBy(desc(recaps.week))
+    .limit(1)
+    .get();
+}
+
+/** A shown recap by the number it was posted with. */
+export function recapByNumber(db: Db, number: number): StoredRecap | undefined {
+  return db
+    .select()
+    .from(recaps)
+    .where(eq(recaps.week, number + recapBase(db)))
+    .get();
 }
 
 /** What the next recap needs from the earlier ones. */
@@ -73,18 +116,11 @@ export function assembleWeek(
     const rc = recapChar(c);
     if (rc !== undefined) after[rc.guid] = rc;
   }
-  const sharing = new Map(
-    db
-      .select()
-      .from(feedSharing)
-      .all()
-      .map((r) => [r.owner, r.shared]),
-  );
   const friends = Object.values(state?.data.people ?? {})
     .filter((p) => p.hasRecord)
-    .map((p) => ({ key: p.key, name: p.displayName, shares: sharing.get(p.key) ?? true }))
+    // WEB-57: each friend's own time zone, else the admin's (Night owl, Early bird, Marathon).
+    .map((p) => ({ key: p.key, name: p.displayName, timeZone: effectiveTimeZone(db, p.key) }))
     .sort((a, b) => a.key.localeCompare(b.key));
-  const shares = new Set(friends.filter((f) => f.shares).map((f) => f.key));
 
   const inWeek = (day: number, at: number | null) => {
     const t = at ?? day * DAY + DAY / 2;
@@ -96,7 +132,7 @@ export function assembleWeek(
     .where(and(gte(feedDays.day, Math.floor(start / DAY) - 1), lt(feedDays.day, Math.ceil(end / DAY) + 1)))
     .orderBy(asc(feedDays.day), asc(feedDays.guid))
     .all()
-    .filter((d) => shares.has(d.owner) && inWeek(d.day, d.at))
+    .filter((d) => inWeek(d.day, d.at))
     .map((d) => ({ day: d.day, guid: d.guid, owner: d.owner, entry: d.data }));
 
   const all = sightingsBetween(db, 0, end);
@@ -144,18 +180,25 @@ export function postedRecap(recap: Recap): Omit<Recap, "past" | "cycles"> {
  */
 export function runDueRecap(db: Db, now: number, siteName: string): Recap | undefined {
   db.insert(recapStart).values({ id: 1, startedAt: now }).onConflictDoNothing().run();
-  const startedAt = db.select().from(recapStart).where(eq(recapStart.id, 1)).get()!.startedAt;
+  // WEB-62: after the launch cut-off the first recap is the first moment after it.
+  const startedAt = Math.max(db.select().from(recapStart).where(eq(recapStart.id, 1)).get()!.startedAt, cutoffAt(db));
   const schedule = recapSchedule(db);
   const moment = recapMomentAtOrBefore(schedule, now);
   const latest = latestRecap(db);
   if (latest !== undefined ? latest.end >= moment : moment <= startedAt) return undefined;
 
   const start = latest?.end ?? recapMomentAtOrBefore(schedule, moment - 1);
-  const number = (latest?.week ?? 0) + 1;
+  const number = (latest?.data.week ?? 0) + 1;
+  const sequence =
+    (db.select({ week: recaps.week }).from(recaps).orderBy(desc(recaps.week)).limit(1).get()?.week ?? 0) + 1;
   const week = assembleWeek(db, number, start, moment, latest?.snapshot ?? {}, siteName);
   const recap = buildRecap(week, historyOf(storedRecaps(db)));
+  // WEB-58: the Doomsday section, from the same week.
+  const input = doomsdayInput(db, moment);
+  const doomsday = input !== undefined ? recapSection(input, start, moment) : undefined;
+  if (doomsday !== undefined) recap.doomsday = doomsday;
   db.insert(recaps)
-    .values({ week: number, start, end: moment, computedAt: now, data: recap, snapshot: week.after })
+    .values({ week: sequence, start, end: moment, computedAt: now, data: recap, snapshot: week.after })
     .onConflictDoNothing()
     .run();
   if (getBotSettings(db).recap) enqueueBotEvent(db, "recap", postedRecap(recap), now);
@@ -169,7 +212,7 @@ export function previewRecap(db: Db, now: number, siteName: string): Recap {
   const start = latest?.end ?? recapMomentAtOrBefore(schedule, now);
   const week = assembleWeek(
     db,
-    (latest?.week ?? 0) + 1,
+    (latest?.data.week ?? 0) + 1,
     start,
     Math.max(now, start + 1),
     latest?.snapshot ?? {},

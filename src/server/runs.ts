@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, lte } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
 import { battleTagKey, sameBattleTag } from "@/core/access";
 import type { Dataset } from "@/core/model";
 import {
@@ -31,8 +31,10 @@ import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
 import { OUTCOME_SECONDS } from "@/core/runOutcome";
 import { ASK_EXPIRE_SECONDS } from "@/core/gameItems";
+import { logChange } from "./admins";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
+import { cutoffAt } from "./cutoff";
 import { discordLinks, runAnswers, runs } from "./db/schema";
 import { getBotSettings } from "./discord";
 import { loadState } from "./uploads";
@@ -91,8 +93,16 @@ export function listRuns(db: Db): StoredRun[] {
   return listKind(db, "run");
 }
 
+/** WEB-62: runs and asks that start before the launch cut-off are hidden everywhere (kept in the database). */
+const sinceCutoff = (db: Db) => gte(runs.startsAt, cutoffAt(db));
+
 function listKind(db: Db, kind: "run" | "ask"): StoredRun[] {
-  const rows = db.select().from(runs).where(eq(runs.kind, kind)).orderBy(asc(runs.startsAt), asc(runs.id)).all();
+  const rows = db
+    .select()
+    .from(runs)
+    .where(and(eq(runs.kind, kind), sinceCutoff(db)))
+    .orderBy(asc(runs.startsAt), asc(runs.id))
+    .all();
   const answers = db.select().from(runAnswers).all();
   return rows.map((row) => runFrom(row, answers.filter((a) => a.runId === row.id).map(answerFrom)));
 }
@@ -102,7 +112,7 @@ export function getRun(db: Db, id: number, kind: "run" | "ask" = "run"): StoredR
   const row = db
     .select()
     .from(runs)
-    .where(and(eq(runs.id, id), eq(runs.kind, kind)))
+    .where(and(eq(runs.id, id), eq(runs.kind, kind), sinceCutoff(db)))
     .get();
   if (row === undefined) return undefined;
   return runFrom(row, db.select().from(runAnswers).where(eq(runAnswers.runId, id)).all().map(answerFrom));
@@ -279,7 +289,7 @@ export function writeDueRunEvents(db: Db, now: number): number {
   const due = db
     .select()
     .from(runs)
-    .where(and(eq(runs.kind, "run"), isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60)))
+    .where(and(eq(runs.kind, "run"), isNull(runs.cancelledAt), lte(runs.startsAt, now + minutes * 60), sinceCutoff(db)))
     .all()
     .filter((r) => r.remindedAt === null || (r.startingAt === null && r.startsAt <= now));
   for (const row of due) {
@@ -497,6 +507,10 @@ export function cancelRun(
   if (!mayDelete(run, battleTag, isAdmin)) return "not_allowed";
   if (run.cancelledAt !== undefined) return "already_cancelled";
   db.update(runs).set({ cancelledAt: now, cancelledBy: battleTag, updatedAt: now }).where(eq(runs.id, runId)).run();
+  // An admin deleting someone else's run goes in the admin changes log (WEB-64).
+  if (!mayEdit(run, battleTag)) {
+    logChange(db, battleTag, "runDeleted", now, run.organiser, runDungeon(run.dungeonId)?.name ?? run.dungeonId);
+  }
   const after = getRun(db, runId)!;
   runEvent(db, "runCancelled", after, now, {
     by: displayName(loadState(db)?.data, battleTag),
@@ -574,6 +588,7 @@ export function markDidntHappen(db: Db, now: number): number {
         isNull(runs.cancelledAt),
         isNull(runs.outcome),
         lte(runs.startsAt, now - OUTCOME_SECONDS),
+        sinceCutoff(db),
       ),
     )
     .all();
@@ -802,7 +817,7 @@ function writeExpiredAsks(db: Db, now: number): number {
   const due = db
     .select({ id: runs.id })
     .from(runs)
-    .where(and(eq(runs.kind, "ask"), isNull(runs.expiredAt), lte(runs.expiresAt, now)))
+    .where(and(eq(runs.kind, "ask"), isNull(runs.expiredAt), lte(runs.expiresAt, now), sinceCutoff(db)))
     .all();
   for (const { id } of due) {
     db.update(runs).set({ expiredAt: now }).where(eq(runs.id, id)).run();

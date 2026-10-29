@@ -97,6 +97,9 @@ export const NOTICES = {
   "test-sent": "Test post sent. The bot posts it in the channel for posts within a few seconds.",
   "test-run-sent":
     "Test run post sent. The bot posts it in the runs channel within a few seconds; nothing was planned.",
+  // WEB-64: an admin whose role the owner removed, after their next admin click; an owner-only action by an admin.
+  "admin-removed": "Your admin role was removed. This page now shows what members see.",
+  "owner-only": "Only the owner can do this. Nothing was changed.",
 } as const;
 
 export type Notice = keyof typeof NOTICES;
@@ -106,7 +109,7 @@ export function parseNotice(value: unknown): Notice | undefined {
 }
 
 export function noticeOk(notice: Notice): boolean {
-  return notice !== "cancelled" && notice !== "taken" && notice !== "failed" && notice !== "expired";
+  return !["cancelled", "taken", "failed", "expired", "admin-removed", "owner-only"].includes(notice);
 }
 
 // --- linked friends (admin) ---------------------------------------------------------------------------------------
@@ -158,9 +161,25 @@ export interface BotSettings {
   reminderMinutes: ReminderMinutes;
   askNow: boolean;
   markDone: boolean;
+  /** Doomsday (WEB-58): the daily board and the weekly ladder posts, and their channel (null: the posts channel). */
+  doomsdayBoard: boolean;
+  doomsdayLadder: boolean;
+  doomsdayChannel: string | null;
+  /** Feats (the `milestones` event, WEB-56); null: the default channel (`postsChannel`). WEB-58 part 2. */
+  featsChannel: string | null;
+  /** The Doomsday reset in seconds after realm midnight (19:00 = 68400). */
+  doomsdayReset: number;
+  /** The reset before the last change and when it was changed: a change applies from the next reset. */
+  doomsdayResetPrevious: number | null;
+  doomsdayResetChangedAt: number | null;
+  /** The realm's IANA time zone. */
+  realmTimeZone: string;
 }
 
-/** Before the admin changed anything: everything on, recap Sunday 13:00 (WEB-41), reminders 30 minutes before. */
+/**
+ * Before the admin changed anything: every post on but Doomsday's board and ladder, recap Sunday 13:00 (WEB-41),
+ * reminders 30 minutes before.
+ */
 export const DEFAULT_BOT_SETTINGS: BotSettings = {
   milestones: true,
   runs: true,
@@ -175,12 +194,37 @@ export const DEFAULT_BOT_SETTINGS: BotSettings = {
   reminderMinutes: 30,
   askNow: true,
   markDone: true,
+  // Off until the admin turns them on at launch (Nico, 2026-10-28): deploying never posts a board by itself.
+  doomsdayBoard: false,
+  doomsdayLadder: false,
+  doomsdayChannel: null,
+  featsChannel: null,
+  doomsdayReset: 68400,
+  doomsdayResetPrevious: null,
+  doomsdayResetChangedAt: null,
+  realmTimeZone: "Europe/Paris",
 };
 
-export const SWITCHES = ["milestones", "runs", "recap", "reminders", "askNow", "markDone"] as const;
+export const SWITCHES = [
+  "milestones",
+  "runs",
+  "recap",
+  "reminders",
+  "askNow",
+  "markDone",
+  "doomsdayBoard",
+  "doomsdayLadder",
+] as const;
 export type SwitchName = (typeof SWITCHES)[number];
 
-export const PICKS = ["postsChannel", "recapChannel", "runsChannel", "mentionRole"] as const;
+export const PICKS = [
+  "postsChannel",
+  "recapChannel",
+  "runsChannel",
+  "mentionRole",
+  "doomsdayChannel",
+  "featsChannel",
+] as const;
 export type PickName = (typeof PICKS)[number];
 
 /** Recap times: every full hour. */
@@ -195,11 +239,64 @@ export function reminderLabel(minutes: number): string {
   return minutes < 60 ? `${minutes} minutes before` : `${minutes / 60} hour${minutes === 60 ? "" : "s"} before`;
 }
 
+const SETTING_NAMES: Record<string, string> = {
+  milestones: "feat posts",
+  runs: "run posts",
+  recap: "the weekly recap",
+  reminders: "run reminders",
+  askNow: "Ask now from the game",
+  markDone: "marking runs done from uploads",
+  doomsdayBoard: "the daily board",
+  doomsdayLadder: "the weekly ladder",
+  postsChannel: "the default channel",
+  recapChannel: "the recap channel",
+  runsChannel: "the runs channel",
+  doomsdayChannel: "the Doomsday channel",
+  featsChannel: "the feats channel",
+  mentionRole: "the role for new runs",
+  reminderMinutes: "the reminder time",
+  recapAt: "the recap time",
+  doomsdayReset: "the Doomsday reset",
+  realmTimeZone: "the realm time zone",
+};
+
+/**
+ * A settings change as the admin changes log says it (WEB-64): "turned on the daily board", "changed the Doomsday
+ * reset to 20:00". `name` names a channel or role by its id.
+ */
+export function settingChangeText(field: string, change: Partial<BotSettings>, name: (id: string) => string): string {
+  const what = SETTING_NAMES[field] ?? field;
+  const value = Object.values(change)[0];
+  if (typeof value === "boolean") return `turned ${value ? "on" : "off"} ${what}`;
+  if (field === "doomsdayReset" && change.doomsdayReset !== undefined) {
+    return `changed ${what} to ${resetLabel(change.doomsdayReset)}`;
+  }
+  if (field === "recapAt") return `changed ${what} to ${recapLabel(change.recapDay ?? 0, change.recapTime ?? "")}`;
+  if (field === "reminderMinutes" && change.reminderMinutes !== undefined) {
+    return `changed ${what} to ${reminderLabel(change.reminderMinutes)}`;
+  }
+  if (value === null) return `cleared ${what}`;
+  if (field === "mentionRole") return `changed ${what} to @${name(String(value))}`;
+  if (field.endsWith("Channel")) return `changed ${what} to # ${name(String(value))}`;
+  return `changed ${what} to ${String(value)}`;
+}
+
+/** "19:00" for a reset in seconds after midnight. */
+export function resetLabel(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
 /**
  * One field from the settings form as a change to the settings; undefined for anything that isn't a valid value
- * (the form is untrusted input). Switches take "true"/"false", picks a snowflake or "" (none), the recap "day|HH:MM".
+ * (the form is untrusted input). Switches take "true"/"false", picks a snowflake or "" (none), the recap "day|HH:MM",
+ * the Doomsday reset "HH:MM", the realm time zone one of `zones`.
  */
-export function settingChange(field: string, value: string): Partial<BotSettings> | undefined {
+export function settingChange(
+  field: string,
+  value: string,
+  zones: ReadonlySet<string> = new Set(),
+): Partial<BotSettings> | undefined {
   if ((SWITCHES as readonly string[]).includes(field)) {
     if (value !== "true" && value !== "false") return undefined;
     return { [field]: value === "true" } as Partial<BotSettings>;
@@ -214,6 +311,11 @@ export function settingChange(field: string, value: string): Partial<BotSettings
       ? { reminderMinutes: minutes as ReminderMinutes }
       : undefined;
   }
+  if (field === "doomsdayReset") {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+    return match ? { doomsdayReset: Number(match[1]) * 3600 + Number(match[2]) * 60 } : undefined;
+  }
+  if (field === "realmTimeZone") return isTimeZone(value, zones) ? { realmTimeZone: value } : undefined;
   if (field === "recapAt") {
     const match = /^([0-6])\|(\d\d:00)$/.exec(value);
     if (!match || !RECAP_TIMES.includes(match[2]!)) return undefined;
@@ -235,6 +337,11 @@ export function botSettingsFrom(row: Partial<Record<keyof BotSettings, unknown>>
   if ((REMINDER_MINUTES as readonly unknown[]).includes(row.reminderMinutes)) {
     s.reminderMinutes = row.reminderMinutes as ReminderMinutes;
   }
+  const seconds = (v: unknown) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v < 86400;
+  if (seconds(row.doomsdayReset)) s.doomsdayReset = row.doomsdayReset as number;
+  if (seconds(row.doomsdayResetPrevious)) s.doomsdayResetPrevious = row.doomsdayResetPrevious as number;
+  if (typeof row.doomsdayResetChangedAt === "number") s.doomsdayResetChangedAt = row.doomsdayResetChangedAt;
+  if (typeof row.realmTimeZone === "string" && row.realmTimeZone !== "") s.realmTimeZone = row.realmTimeZone;
   return s;
 }
 

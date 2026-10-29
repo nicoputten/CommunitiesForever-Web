@@ -8,7 +8,8 @@ import { getDb } from "@/server/db";
 import { botEvents } from "@/server/db/schema";
 import { runDueRecap } from "@/server/recap";
 import { upload } from "@/server/uploads";
-import { type CardSpec, milestoneCard, recapHeader, whereisCard, zoneCard } from "@/core/cards/models";
+import type { Milestone } from "@/core/bot";
+import { type CardSpec, featCard, milestoneCard, recapHeader, whereisCard, zoneCard } from "@/core/cards/models";
 import { renderCard } from "@/server/cards/render";
 
 // WEB-41d: every card kind renders to a PNG of its size with the bundled fonts. CARDS_OUT=<dir> writes them out to
@@ -63,6 +64,8 @@ const SPECS: Record<string, CardSpec> = {
   ),
   "recap-header-headline": recapHeader({ dates: "20–26 Oct", headline: "A quiet week in Azeroth" }, HOST),
   "zone-of-the-week": zoneCard("Hillsbrad Foothills", 4, HOST)!,
+  // WEB-56: the feat cards of the board doomsday-feat-cards, and the ones drawn in its style.
+  ...featSpecs(),
   whereis: whereisCard(
     { name: "Bob Example", classFile: "ROGUE" },
     [
@@ -74,6 +77,48 @@ const SPECS: Record<string, CardSpec> = {
     HOST,
   )!,
 };
+
+function featSpecs(): Record<string, CardSpec> {
+  const ada = { name: "Ada Nightshade", classFile: "WARLOCK", classLabel: "Warlock", race: "Undead" };
+  const bob = { name: "Bob Example", classFile: "ROGUE", classLabel: "Rogue", race: "Troll" };
+  const feat = (name: string, kind: Milestone["kind"], fields: object, who = ada, first = false) =>
+    [
+      name,
+      featCard(
+        {
+          kind,
+          character: { guid: "G", name: who.name },
+          ...fields,
+          ...(first ? { firstInGroup: true } : {}),
+        } as Milestone,
+        who,
+        HOST,
+      )!,
+    ] as const;
+  return Object.fromEntries([
+    feat("feat-rank-6", "pvpRank", { rank: 6, rankName: "Stone Guard", title: "Mailbox Menace" }, ada, true),
+    feat("feat-rank-9", "pvpRank", { rank: 9, rankName: "Centurion", title: "Queue Dweller" }),
+    feat("feat-rank-14", "pvpRank", { rank: 14, rankName: "High Warlord", title: "Grass: Untouched" }, bob),
+    feat(
+      "feat-first-epic",
+      "firstEpic",
+      { item: { id: 1, name: "Robes of the Exalted", slot: "Chest", level: 60 } },
+      { ...mira },
+      true,
+    ),
+    feat("feat-epic-mount", "epicMount", { riding: 150, level: 60, place: 3 }, { ...mira }, true),
+    feat("feat-jack", "jackOfAllTrades", {
+      professions: ["Cooking", "First Aid", "Fishing", "Blacksmithing", "Mining"],
+    }),
+    feat("feat-kills-10000", "honorKills", { kills: 10000 }),
+    feat("feat-arcanite-reaper", "notableItem", { notable: "arcaniteReaper", item: { id: 12784 } }, bob, true),
+    feat("feat-arcanite-bar", "notableItem", { notable: "arcaniteTransmute", item: { id: 12360 } }),
+    feat("feat-mooncloth", "notableItem", { notable: "mooncloth", item: { id: 14342 } }),
+    feat("feat-devilsaur", "notableItem", { notable: "devilsaur", item: { id: 15063 } }),
+    feat("feat-extravaganza-joined", "notableItem", { notable: "extravaganzaJoined", item: { id: 19807 } }),
+    feat("feat-extravaganza-won", "notableItem", { notable: "extravaganzaWon", item: { id: 19970 } }, bob, true),
+  ]);
+}
 
 describe("card images", () => {
   it.each(Object.entries(SPECS))(

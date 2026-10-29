@@ -1,5 +1,7 @@
 import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
+import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
+import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
@@ -260,6 +262,17 @@ export const botSettings = sqliteTable("bot_settings", {
   reminderMinutes: integer("reminder_minutes").notNull(),
   askNow: integer("ask_now", { mode: "boolean" }).notNull(),
   markDone: integer("mark_done", { mode: "boolean" }).notNull(),
+  /** Doomsday (WEB-58); defaults for rows from before it. */
+  doomsdayBoard: integer("doomsday_board", { mode: "boolean" }).notNull().default(false),
+  doomsdayLadder: integer("doomsday_ladder", { mode: "boolean" }).notNull().default(false),
+  doomsdayChannel: text("doomsday_channel"),
+  /** Feats; null: the default (posts) channel. */
+  featsChannel: text("feats_channel"),
+  /** Seconds after realm midnight. */
+  doomsdayReset: integer("doomsday_reset").notNull().default(68400),
+  doomsdayResetPrevious: integer("doomsday_reset_previous"),
+  doomsdayResetChangedAt: integer("doomsday_reset_changed_at"),
+  realmTimeZone: text("realm_time_zone").notNull().default("Europe/Paris"),
   /** Unix seconds and the admin's BattleTag. */
   updatedAt: integer("updated_at").notNull(),
   updatedBy: text("updated_by").notNull(),
@@ -373,12 +386,81 @@ export const feedDays = sqliteTable(
   (t) => [uniqueIndex("feed_days_day_guid_unique").on(t.day, t.guid)],
 );
 
-/** Whether each person shares their activity ("Share my activity", CF-22), from their newest record seen. */
-export const feedSharing = sqliteTable("feed_sharing", {
+/**
+ * Doomsday goals as each friend's addon recorded them (addon CF-56, WEB-55): per person, Doomsday day or week; the
+ * copy with the newer `at` wins; on an equal one the stored copy stays.
+ */
+export const doomsdayGoals = sqliteTable(
+  "doomsday_goals",
+  {
+    /** Person key of the goals' owner. */
+    owner: text("owner").notNull(),
+    /** `day` or `week`. */
+    period: text("period").$type<"day" | "week">().notNull(),
+    /** Doomsday day or week number (docs/DOOMSDAY.md "Schedule"). */
+    n: integer("n").notNull(),
+    /** When the addon last changed it, when known. */
+    at: integer("at"),
+    sourceUpload: integer("source_upload").notNull(),
+    data: text("data", { mode: "json" }).$type<GoalRecord>().notNull(),
+  },
+  (t) => [uniqueIndex("doomsday_goals_owner_period_n_unique").on(t.owner, t.period, t.n)],
+);
+
+/** Per person: the streak, best, pool version and reset from the goals with the newest `at` seen (WEB-55). */
+export const doomsdayStatus = sqliteTable("doomsday_status", {
   owner: text("owner").primaryKey(),
-  shared: integer("shared", { mode: "boolean" }).notNull(),
+  streak: integer("streak"),
+  best: integer("best"),
+  pool: integer("pool"),
+  reset: integer("reset"),
+  /** The newest `at` of the goals it came with. */
+  at: integer("at"),
   sourceUpload: integer("source_upload").notNull(),
 });
+
+/**
+ * Every character's feats (WEB-56, src/server/feats.ts), derived from the uploads in order and rebuilt with them: one
+ * row per character and key ("honorKills:100"). `alreadyHad`: held from the data's first arrival, never posted.
+ */
+export const feats = sqliteTable(
+  "feats",
+  {
+    guid: text("guid").notNull(),
+    key: text("key").notNull(),
+    kind: text("kind").$type<FeatKind>().notNull(),
+    /** Person key of the character's owner at the time. */
+    owner: text("owner").notNull(),
+    /** The upload that brought it, and when it was accepted (Unix seconds). */
+    uploadId: integer("upload_id").notNull(),
+    at: integer("at").notNull(),
+    alreadyHad: integer("already_had", { mode: "boolean" }).notNull(),
+    firstInGroup: integer("first_in_group", { mode: "boolean" }).notNull(),
+    fields: text("fields", { mode: "json" }).$type<FeatFields>().notNull(),
+  },
+  (t) => [uniqueIndex("feats_guid_key_unique").on(t.guid, t.key)],
+);
+
+/**
+ * Doomsday's bot posts (WEB-58, src/server/doomsdayPosts.ts): the board of each Doomsday day and the ladder of each
+ * week, once. Not derived: a rebuild never posts again.
+ */
+export const doomsdayPosts = sqliteTable(
+  "doomsday_posts",
+  {
+    kind: text("kind").$type<"board" | "ladder">().notNull(),
+    /** The Doomsday day (board) or week (ladder). */
+    n: integer("n").notNull(),
+    /** The doomsdayBoard or doomsdayLadder event. */
+    eventId: integer("event_id").notNull(),
+    /** The board as last sent (canonical JSON), so an upload that changes nothing sends no update. */
+    lastData: text("last_data"),
+    createdAt: integer("created_at").notNull(),
+    /** When the final update went out. */
+    finalAt: integer("final_at"),
+  },
+  (t) => [primaryKey({ columns: [t.kind, t.n] })],
+);
 
 /** Every sighting of every upload (the `locations` table keeps only the newest per character). */
 export const sightings = sqliteTable(
@@ -443,6 +525,44 @@ export const recaps = sqliteTable("recaps", {
   data: text("data", { mode: "json" }).$type<Recap>().notNull(),
   /** The characters at `end`: the next week's start. */
   snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
+});
+
+/** The admins the owner appointed (WEB-64). Not derived: a rebuild or the launch cut-off never touches them. */
+export const admins = sqliteTable("admins", {
+  /** battleTagKey(). */
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  /** The owner's BattleTag, and when (Unix seconds). */
+  addedBy: text("added_by").notNull(),
+  addedAt: integer("added_at").notNull(),
+});
+
+/**
+ * Admin changes (WEB-64): who changed what and when, shown to the owner and admins. Nobody can edit or clear it; only
+ * the newest 500 are kept. `target` and `detail` are text for the line ("Bob", "the Doomsday reset to 20:00").
+ */
+export const adminLog = sqliteTable("admin_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  at: integer("at").notNull(),
+  /** The BattleTag who did it. */
+  by: text("by").notNull(),
+  /** What kind of change (adminAppointed, blocked, guestAdded, discordSetting, runDeleted, cutoff, botToken, …). */
+  action: text("action").notNull(),
+  target: text("target"),
+  detail: text("detail"),
+});
+
+/**
+ * The launch cut-off (WEB-62): one row (id 1) while it is set. The rebuild reads only uploads from after `at`; runs,
+ * asks and recaps from before it are hidden, never deleted. Not derived: Undo removes the row and rebuilds.
+ */
+export const launchCutoff = sqliteTable("launch_cutoff", {
+  id: integer("id").primaryKey(),
+  /** The moment (Unix seconds, UTC). */
+  at: integer("at").notNull(),
+  /** The admin's BattleTag, and when they set it. */
+  setBy: text("set_by").notNull(),
+  setAt: integer("set_at").notNull(),
 });
 
 /** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */

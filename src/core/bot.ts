@@ -1,4 +1,5 @@
 import type { UploadSummary } from "./diff";
+import type { FeatFields, FeatKind } from "./doomsday/feats";
 import { MAX_LEVEL } from "./gamedata";
 import type { Dataset } from "./model";
 import { base64url } from "./uploader";
@@ -66,24 +67,50 @@ export interface MilestoneCharacter {
   ownerName?: string;
 }
 
-export type Milestone =
+/** What every milestone may carry since WEB-56 (feats, docs/BOT-API.md "Feats"): all optional within v1. */
+export interface MilestoneExtras {
+  /** The feat's line, finished ("First blood: Ves Doombringer"). */
+  text?: string;
+  /** No character in the group reached it before. */
+  firstInGroup?: true;
+  /** The card image id (`milestone-<event>-<n>`), when the feat has one. */
+  card?: string;
+}
+
+export type Milestone = MilestoneExtras &
   /** Reached 10, 20, … 50: one milestone for the highest mark crossed (18 → 31 is "30"). */
-  | { kind: "level"; character: MilestoneCharacter; level: number; from: number }
-  /** Reached the level cap: its own kind, never also a "level" one. */
-  | { kind: "maxLevel"; character: MilestoneCharacter; level: number; from: number }
-  /**
-   * A profession's rank rose to the cap of its training rank (75/75, 150/150, …): raising the cap alone is not one
-   * (decided with Nico, 2026-10-27).
-   */
-  | { kind: "professionCap"; character: MilestoneCharacter; skillLine: string; profession?: string; rank: number }
-  /** A character the group didn't know before (or knew only by name). */
-  | { kind: "newCharacter"; character: MilestoneCharacter };
+  (
+    | { kind: "level"; character: MilestoneCharacter; level: number; from: number }
+    /** Reached the level cap: its own kind, never also a "level" one. */
+    | { kind: "maxLevel"; character: MilestoneCharacter; level: number; from: number }
+    /**
+     * A profession's rank rose to the cap of its training rank (75/75, 150/150, …): raising the cap alone is not one
+     * (decided with Nico, 2026-10-27). `title` at 300 for Cooking, First Aid and Fishing (WEB-56).
+     */
+    | {
+        kind: "professionCap";
+        character: MilestoneCharacter;
+        skillLine: string;
+        profession?: string;
+        rank: number;
+        title?: string;
+      }
+    /** A character the group didn't know before (or knew only by name). */
+    | { kind: "newCharacter"; character: MilestoneCharacter }
+    /** The feats of WEB-56, with their fields (src/core/doomsday/feats.ts). */
+    | ({
+        kind: Exclude<FeatKind, "level" | "maxLevel" | "professionCap" | "newCharacter">;
+        character: MilestoneCharacter;
+      } & FeatFields)
+  );
 
 /** The payload of a `milestones` event: everything one accepted upload reached. */
 export interface MilestonesEvent {
   uploadId: number;
   uploadedAt: number;
   milestones: Milestone[];
+  /** WEB-56: the one card image for a post of several feats (the most special one's). */
+  card?: string;
 }
 
 /** The highest multiple of LEVEL_STEP in (from, to], or undefined. */
@@ -92,7 +119,43 @@ function levelMark(from: number, to: number): number | undefined {
   return mark > from && mark > 0 ? mark : undefined;
 }
 
-const KIND_ORDER: Record<Milestone["kind"], number> = { maxLevel: 0, level: 1, professionCap: 2, newCharacter: 3 };
+/** Existing kinds first (WEB-38), then the feats of WEB-56; by name within a kind. */
+const KIND_ORDER: Record<FeatKind, number> = {
+  maxLevel: 0,
+  level: 1,
+  professionCap: 2,
+  newCharacter: 3,
+  honorKills: 4,
+  pvpRank: 5,
+  duelWins: 6,
+  bgFirstWin: 7,
+  deaths100: 8,
+  firstEpic: 9,
+  mount: 10,
+  epicMount: 11,
+  firstCatch: 12,
+  jackOfAllTrades: 13,
+  notableItem: 14,
+};
+
+/** Sorts milestones as the event lists them. */
+export function sortMilestones(list: Milestone[]): Milestone[] {
+  const name = (m: Milestone) => m.character.name ?? m.character.guid;
+  return list.sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || name(a).localeCompare(name(b), "en"));
+}
+
+/** Who a milestone is about, as the site knows the character after the upload. */
+export function milestoneCharacter(after: Dataset, guid: string): MilestoneCharacter {
+  const c = after.characters[guid];
+  const m: MilestoneCharacter = { guid };
+  if (c === undefined) return m;
+  if (c.name !== undefined) m.name = c.name;
+  if (c.classFile !== undefined) m.classFile = c.classFile;
+  if (c.level !== undefined) m.level = c.level;
+  const owner = c.owner === undefined ? undefined : after.people[c.owner];
+  if (owner !== undefined) m.ownerName = owner.displayName;
+  return m;
+}
 
 /**
  * The milestones of an accepted upload, from its summary and the merged data after it: level marks, the level cap,
@@ -100,17 +163,7 @@ const KIND_ORDER: Record<Milestone["kind"], number> = { maxLevel: 0, level: 1, p
  * milestones of their own. The caller skips the site's first upload (decided with Nico, 2026-10-27).
  */
 export function milestones(summary: UploadSummary, after: Dataset): Milestone[] {
-  const who = (guid: string): MilestoneCharacter => {
-    const c = after.characters[guid];
-    const m: MilestoneCharacter = { guid };
-    if (c === undefined) return m;
-    if (c.name !== undefined) m.name = c.name;
-    if (c.classFile !== undefined) m.classFile = c.classFile;
-    if (c.level !== undefined) m.level = c.level;
-    const owner = c.owner === undefined ? undefined : after.people[c.owner];
-    if (owner !== undefined) m.ownerName = owner.displayName;
-    return m;
-  };
+  const who = (guid: string) => milestoneCharacter(after, guid);
   const fresh = new Set(summary.newCharacters.filter((c) => c.hasRecord).map((c) => c.guid));
   const out: Milestone[] = [];
   for (const guid of fresh) out.push({ kind: "newCharacter", character: who(guid) });
@@ -129,6 +182,5 @@ export function milestones(summary: UploadSummary, after: Dataset): Milestone[] 
     if (gain.profession !== undefined) m.profession = gain.profession;
     out.push(m);
   }
-  const name = (m: Milestone) => m.character.name ?? m.character.guid;
-  return out.sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || name(a).localeCompare(name(b), "en"));
+  return sortMilestones(out);
 }

@@ -83,6 +83,21 @@ export interface UploaderRuns {
   runs: GameRun[];
   /** WEB-51 (optional): the open asks; addons from before it ignore them. */
   asks: GameAsk[];
+  /** WEB-58 (optional): Doomsday's reset and the realm's clock. */
+  doomsday?: UploaderDoomsday;
+}
+
+/**
+ * The Doomsday reset in force (seconds after realm midnight) and since when (0: never changed); the addon (CF-56)
+ * syncs it to friends without the uploader, the newest `changedAt` winning. The realm zone's UTC offset now, and its
+ * next change (daylight saving) with the offset after it, for an addon that can't read the game clock.
+ */
+export interface UploaderDoomsday {
+  reset: number;
+  changedAt: number;
+  offset?: number;
+  offsetUntil?: number;
+  offsetAfter?: number;
 }
 
 const SOURCE: Record<RunSource, GameSource> = { website: "site", discord: "discord", game: "game" };
@@ -103,6 +118,8 @@ export interface UploaderRunsInput {
   siteUrl: string;
   /** The token owner's game items the site has, newest first (at most 200). */
   received?: readonly string[];
+  /** WEB-58: the Doomsday reset in force now and when it took effect, and the realm's offset. */
+  doomsday?: UploaderDoomsday;
   now: number;
 }
 
@@ -193,11 +210,12 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
     });
   return {
     v: UPLOADER_RUNS_VERSION,
-    updatedAt: changedAt(input.runs, input.asks ?? [], now),
+    updatedAt: Math.max(changedAt(input.runs, input.asks ?? [], now), input.doomsday?.changedAt ?? 0),
     reminderMinutes: input.reminderMinutes,
     received: [...(input.received ?? [])],
     runs,
     asks,
+    ...(input.doomsday !== undefined ? { doomsday: { ...input.doomsday } } : {}),
   };
 
   function answersOf(r: RunRecord): GameAnswer[] {

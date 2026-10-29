@@ -8,4 +8,6 @@ export interface Viewer {
   role: ViewerRole;
   /** Admin, members, and guests with "may upload" ticked: shows the Upload link. */
   mayUpload: boolean;
+  /** WEB-64: the owner (ADMIN_BATTLETAG); `role` "admin" covers the owner and the admins they appointed. */
+  owner?: boolean;
 }

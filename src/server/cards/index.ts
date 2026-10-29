@@ -3,6 +3,7 @@ import type { Milestone, MilestonesEvent } from "@/core/bot";
 import {
   type CardSpec,
   type CharacterFacts,
+  featCard,
   milestoneCard,
   recapHeader,
   whereisCard,
@@ -12,14 +13,14 @@ import { classLabel } from "@/core/recap/cards";
 import { recapChar } from "@/core/recap/input";
 import { recapDates } from "@/core/recap/when";
 import type { Db } from "../db";
-import { botEvents, recaps, sightings } from "../db/schema";
-import { recapSchedule } from "../recap";
+import { botEvents, sightings } from "../db/schema";
+import { recapByNumber, recapSchedule } from "../recap";
 import { loadState } from "../uploads";
 
 // Which card image an id names (WEB-41d, docs/BOT-API.md "Card images"), from what the site has stored:
 // - `recap-<week>-header`: the recap's header (the award winner, else the busiest zone, else the headline)
 // - `recap-<week>-zone`: the Zone of the week card's map, when the recap has that card
-// - `milestone-<event>-<n>`: the n-th milestone of a `milestones` event, when it is worth an image
+// - `milestone-<event>-<n>`: the n-th milestone of a `milestones` event, when it is worth an image (feats: WEB-56)
 // - `whereis-<guid>`: where a character was last seen (for /whereis)
 // Undefined for anything else, so the route answers 404.
 
@@ -50,7 +51,8 @@ function facts(db: Db, guid: string): CharacterFacts | undefined {
 }
 
 function recapCard(db: Db, week: number, which: string, host: string): CardSpec | undefined {
-  const row = db.select().from(recaps).where(eq(recaps.week, week)).get();
+  // The number the recap was posted with (WEB-62: it restarts after the launch cut-off).
+  const row = recapByNumber(db, week);
   if (row === undefined) return undefined;
   const r = row.data;
   const zoneCardFacts = r.cards.find((c) => c.id === "S1")?.facts;
@@ -98,7 +100,7 @@ function milestone(db: Db, eventId: number, n: number, host: string): CardSpec |
   const c: CharacterFacts = known ?? { name: m.character.name ?? "A character" };
   if (known === undefined && m.character.classFile !== undefined) c.classFile = m.character.classFile;
   if (c.owner === undefined && m.character.ownerName !== undefined) c.owner = m.character.ownerName;
-  return milestoneCard(m, c, host);
+  return featCard(m, c, host) ?? milestoneCard(m, c, host);
 }
 
 function whereis(db: Db, guid: string, now: number, host: string): CardSpec | undefined {

@@ -1,5 +1,6 @@
-/* The Discord page (board `discord-settings-runs`, WEB-39): the link card and time zone for everyone; what the bot
-   posts and the linked friends side by side (1.15 : 1), then Runs, for the admin. One column below 900 px. */
+/* The Discord page, reorganised (boards `discord-page`, `-states`, `-phone`, WEB-58): a sticky jump bar, "For you"
+   (link and time zone side by side) and "For the group" (the bot, Feats and Weekly recap side by side, Runs,
+   Doomsday, Linked friends). Two-column grids become one column below 900 px; buttons go full width on a phone. */
 
 .page {
   display: flex;
@@ -17,19 +18,6 @@
 .headText {
   flex: 1 1 var(--size-uploader-main);
   min-width: 0;
-}
-
-.columns {
-  display: grid;
-  grid-template-columns: minmax(0, var(--size-discord-main)) minmax(0, 1fr);
-  gap: var(--s-5);
-  align-items: start;
-}
-
-@media (max-width: 899px) {
-  .columns {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* --- boxes ------------------------------------------------------------------------------------------------------ */
@@ -196,49 +184,204 @@ a.ghost {
   opacity: var(--opacity-disabled);
 }
 
-/* --- the link card ---------------------------------------------------------------------------------------------- */
+/* --- the jump bar and sections --------------------------------------------------------------------------------- */
 
-.link {
+.jump {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-4-5);
-  padding: var(--s-5) var(--s-5-5);
-  border-radius: var(--r-panel);
-  border: var(--border) solid var(--line-link);
+  gap: var(--s-1-5);
+  padding: var(--s-1) 0;
+  background: var(--surface-jump);
+  border-bottom: var(--border) solid var(--line-jump);
+}
+
+.jumpItem {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 36 px to the eye, a 44 px hit area (Nico, 2026-10-29). */
+.jumpLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  color: var(--text-muted);
+  font-size: var(--fs-body-sm);
+  text-decoration: none;
+}
+
+.jumpLong,
+.jumpShort {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-jump-chip);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-jump-chip);
+  white-space: nowrap;
+}
+
+.jumpShort {
+  display: none;
+}
+
+.jumpLink:hover .jumpLong,
+.jumpLink:hover .jumpShort,
+.jumpLink:focus-visible .jumpLong,
+.jumpLink:focus-visible .jumpShort {
+  color: var(--text-strong);
+  border-color: var(--gold);
+  background: var(--tint-active);
+}
+
+.jumpSep {
+  align-self: stretch;
+  width: var(--border);
+  margin: var(--s-2) var(--s-1-5);
+  background: var(--line-jump-sep);
+}
+
+.sect {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3-5);
+  margin-top: var(--s-2);
+}
+
+.sectTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+  white-space: nowrap;
+}
+
+.sectLine {
+  flex: 1;
+  height: var(--border);
+  background: var(--sect-rule);
+}
+
+.sectNote {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3-5) var(--s-7);
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.boxTags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.adminTag,
+.newTag {
+  border-radius: var(--r-pill);
+  font-size: var(--fs-meta-sm);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.adminTag {
+  padding: var(--s-0-75) var(--s-2);
+  border: var(--border) solid var(--line-strong);
+  color: var(--gold);
+  letter-spacing: var(--ls-section);
+}
+
+.newTag {
+  margin-left: var(--s-2);
+  padding: var(--s-0-5) var(--s-1-5);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-section);
+  vertical-align: middle;
+}
+
+.lead {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-dim);
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.adminNote {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.test {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+/* --- Your Discord and the Doomsday box ------------------------------------------------------------------------- */
+
+.boxLink {
+  border-color: var(--line-link);
   background: radial-gradient(circle at 10% 0%, var(--tint-active), var(--surface-pair) 60%);
 }
 
-.linkAvatar,
-.linkAvatarNone {
+.boxDoomsday {
+  border-color: var(--line-doomsday-box);
+  background: var(--surface-doomsday-box);
+}
+
+.linked {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3-5);
+}
+
+.linkAvatar {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--size-link-avatar);
-  height: var(--size-link-avatar);
+  width: var(--size-discord-avatar);
+  height: var(--size-discord-avatar);
   border-radius: var(--r-pill);
+  background: var(--discord-avatar);
+  color: var(--on-discord-avatar);
   font-size: var(--fs-section);
   font-weight: var(--fw-semibold);
 }
 
-.linkAvatar {
-  background: var(--discord-avatar);
-  color: var(--on-discord-avatar);
-}
-
-.linkAvatarNone {
-  background: var(--avatar);
-  color: var(--gold);
-}
-
-.linkIcon {
-  width: var(--size-tab-icon);
-  height: var(--size-tab-icon);
-}
-
-.linkText {
-  flex: 1 1 var(--size-uploader-main);
+.linkedText {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
@@ -247,9 +390,98 @@ a.ghost {
 
 .linkTitle {
   font-family: var(--font-name);
-  font-size: var(--fs-title);
+  font-size: var(--fs-name-card);
   font-weight: var(--fw-regular);
   color: var(--text-strong);
+}
+
+/* The reset time: hours and minutes (board `discord-page`). */
+.time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  margin-top: var(--s-1-5);
+}
+
+.timeSegment {
+  width: var(--size-time-segment);
+  min-height: var(--size-touch);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--input-bg);
+  color: var(--text-strong);
+  font-family: var(--font-ui);
+  font-size: var(--fs-time-segment);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.timeColon {
+  font-size: var(--fs-time-segment);
+  font-weight: var(--fw-semibold);
+  color: var(--text-dim);
+}
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-top: var(--s-1-5);
+}
+
+.waitingText {
+  font-size: var(--fs-body-sm);
+  color: var(--gold-pale);
+}
+
+/* --- the bot token row ------------------------------------------------------------------------------------------ */
+
+.tokenBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding-bottom: var(--s-2-5);
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.tokenHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-4);
+  align-items: center;
+}
+
+.tokenButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+@media (max-width: 599px) {
+  .tokenHead {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jump {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .jumpLong {
+    display: none;
+  }
+
+  .jumpShort {
+    display: inline-flex;
+  }
+
+  .buttons,
+  .test,
+  .tokenButtons {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* --- options (switches) ----------------------------------------------------------------------------------------- */
@@ -336,19 +568,6 @@ a.ghost {
 
 /* --- picks (dropdowns) ------------------------------------------------------------------------------------------ */
 
-.picks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-3-5);
-  padding-top: var(--s-1-5);
-}
-
-@media (max-width: 599px) {
-  .picks {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 .pickList {
   display: flex;
   flex-direction: column;
@@ -370,18 +589,6 @@ a.ghost {
 
 .hint {
   margin-top: var(--s-1-5);
-}
-
-.runsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-2) var(--s-8);
-}
-
-@media (max-width: 899px) {
-  .runsGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* --- linked friends --------------------------------------------------------------------------------------------- */
@@ -447,7 +654,7 @@ a.ghost {
   min-width: 0;
 }
 
-/* --- bot token (not on the board, DESIGN.md §11; the uploader page's token style) -------------------------------- */
+/* --- the new token, shown once (board `discord-page-states` 2; the uploader page's token style) ------------------ */
 
 .shown {
   display: flex;
@@ -491,11 +698,6 @@ a.ghost {
   font-size: var(--fs-body-sm);
   font-weight: var(--fw-semibold);
   cursor: pointer;
-}
-
-.statusOnline {
-  background: var(--done-tint);
-  color: var(--fresh-text);
 }
 
 /* --- the next recap (WEB-41c, /discord/recap; the board's example embed in the site's style) -------------------- */

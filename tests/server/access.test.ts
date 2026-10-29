@@ -243,12 +243,12 @@ describe("admin page (WEB-18)", () => {
     expect(listGuests(db)).toHaveLength(1);
   });
 
-  it("writes last seen at most once an hour", () => {
+  it("writes last seen at most once every 5 minutes (WEB-64: online)", () => {
     touchLastSeen(db, "Bob#2002", 1000);
-    touchLastSeen(db, "bob#2002", 1000 + 3599);
+    touchLastSeen(db, "bob#2002", 1000 + 299);
     expect(listLastSeen(db).get("bob#2002")).toBe(1000);
-    touchLastSeen(db, "Bob#2002", 1000 + 3600);
-    expect(listLastSeen(db).get("bob#2002")).toBe(4600);
+    touchLastSeen(db, "Bob#2002", 1000 + 300);
+    expect(listLastSeen(db).get("bob#2002")).toBe(1300);
   });
 
   it("lists members with the upload that added them, guests and blocks", () => {
@@ -257,10 +257,10 @@ describe("admin page (WEB-18)", () => {
     block(db, "Bob#2002", ADMIN, 1200, ADMIN);
     touchLastSeen(db, ADMIN, 1300);
     const view = loadAdminView(db, 1300 + 7200, ADMIN);
-    expect(view.members.map((m) => [m.battleTag, m.isAdmin, m.blocked, m.seen])).toEqual([
-      [ADMIN, true, false, "Last seen 2 h ago"],
-      ["Ada#1001", false, false, "Not seen yet"],
-      ["Bob#2002", false, true, "Not seen yet"],
+    expect(view.members.map((m) => [m.battleTag, m.rank, m.blocked, m.seen])).toEqual([
+      [ADMIN, "owner", false, "Last seen 2 h ago"],
+      ["Ada#1001", undefined, false, "Not seen yet"],
+      ["Bob#2002", undefined, true, "Not seen yet"],
     ]);
     expect(view.members[1]?.added).toEqual({ text: "Added by Nico's upload", uploadId: 1, at: 1000 });
     expect(view.guests).toMatchObject([{ battleTag: "Gwen#4004", mayUpload: false, added: "Added by Nico" }]);

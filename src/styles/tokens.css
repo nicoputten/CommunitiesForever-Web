@@ -656,7 +656,6 @@
   /* Discord page (WEB-39): the discord-settings-runs board */
   --discord-avatar: #5865f2; /* discord-settings-runs: the linked account's disc */
   --on-discord-avatar: #ffffff;
-  --size-link-avatar: 48px; /* discord-settings-runs: "Your Discord is linked" disc */
   --size-switch-w: 40px; /* discord-settings-runs: on/off switch (hit area --size-touch) */
   --size-switch-h: 22px;
   --size-switch-knob: 16px;
@@ -665,7 +664,22 @@
   --size-select-min: 200px;
   --size-friend-lead: 34px; /* discord-settings-runs: linked friends avatar column */
   --size-friend-disc: 30px;
-  --size-discord-main: 1.15fr; /* discord-settings-runs: "What the bot posts" : "Linked friends" */
+  /* the Discord page, reorganised (WEB-58): boards discord-page, -states, -phone */
+  --size-discord-avatar: 44px; /* discord-page: "Linked as …" disc */
+  --surface-jump: rgba(7, 12, 21, 0.92); /* discord-page: the sticky jump bar */
+  --line-jump: rgba(212, 175, 106, 0.12); /* discord-page: under the jump bar */
+  --line-jump-chip: rgba(174, 182, 195, 0.18); /* discord-page: a jump bar chip */
+  --line-jump-sep: rgba(212, 175, 106, 0.25); /* discord-page: between "For you" and the admin's chips */
+  --size-jump-chip: 36px; /* discord-page: chip height to the eye; the link's hit area is --size-touch (Nico) */
+  --sect-rule: linear-gradient(90deg, rgba(212, 175, 106, 0.45), rgba(212, 175, 106, 0)); /* discord-page */
+  --line-doomsday-box: rgba(212, 175, 106, 0.5); /* discord-page: the Doomsday box */
+  --surface-doomsday-box: radial-gradient(
+    circle at 95% 0%,
+    rgba(240, 208, 142, 0.1),
+    rgba(12, 18, 30, 0.85) 55%
+  ); /* discord-page: the Doomsday box */
+  --size-time-segment: 56px; /* discord-page: the reset's hours and minutes */
+  --fs-time-segment: 18px;
   --line-link: rgba(212, 175, 106, 0.45); /* discord-settings-runs: the link card and the Runs box */
 
   /* Runs (WEB-40): the runs, run-detail, run-create and runs-phone boards */
@@ -776,6 +790,26 @@
   --card-land-line: rgba(126, 136, 152, 0.45);
   --card-zone: #6b634f; /* cards: the highlighted zone (the references' olive gold) */
   --card-label-bg: rgba(7, 12, 21, 0.75); /* cards: "2 h ago" pills on the map */
+  /* feat cards (WEB-56): board doomsday-feat-cards */
+  --fs-card-feat-title: 58px; /* feat cards: "Stone Guard" (Marcellus SC; long titles use --fs-card-award) */
+  --fs-card-feat-name: 30px; /* feat cards: the character (Marcellus) */
+  --fs-card-feat-line: 24px; /* feat cards: "a.k.a. Mailbox Menace" */
+  --fs-card-feat-meta: 22px; /* feat cards: the flavour line */
+  --fs-card-pill: 15px; /* feat cards: FIRST IN THE GROUP */
+  --size-card-icon: 190px; /* feat cards: the drawn icon or rank badge */
+  --size-card-icon-box: 330px; /* feat cards: the glow panel left of the text */
+  --card-feat-glow: rgba(240, 208, 142, 0.35); /* feat cards: halo behind the icon, title shadow */
+  --card-frame: rgba(212, 175, 106, 0.45); /* feat cards: 2 px inner frame */
+  --card-frame-special: rgba(240, 208, 142, 0.25); /* feat cards: rank 14's second, 6 px frame */
+  --card-pill-bg: rgba(212, 175, 106, 0.2); /* feat cards: First in the group */
+  --epic: #c27bff; /* feat cards: epic item purple (title, icon line) */
+  --epic-deep: #2a1438; /* feat cards: epic icon fill */
+  --card-epic-glow: rgba(194, 123, 255, 0.35); /* feat cards: halo behind the first epic */
+  --card-icon-fill: #121b2a; /* feat cards: icon body */
+  --card-badge-line: #7a5a22; /* feat cards: rank badge outline */
+  --card-steel: #2e3a55; /* feat cards: Arcanite blade body */
+  --card-arcanite: #9fd3ff; /* feat cards: Arcanite blade edge */
+  --card-blood: #f08a80; /* feat cards: crossed swords on 10,000 kills */
 
   /* Asking now (WEB-51, boards asks-now, asks-now-phone, asks-now-states): live cards in the fresh green. */
   --size-ask-edge: 3px; /* the live left edge of an ask */
@@ -790,4 +824,71 @@
   --retry-line: rgba(240, 167, 116, 0.4);
   --retry-text: #f6d6bd;
   --size-ask-note: 300px; /* "None of your characters fit …" */
+
+  /* Doomsday (WEB-59, boards doomsday-today, doomsday-feats, doomsday-phone): PvE in the fresh green, PvP in the
+     Horde red, never added together. */
+  --pve-text: #9be3b0; /* the PvE track */
+  --pvp-text: #f08a80; /* the PvP track */
+  --size-emblem-dd: 56px; /* doomsday-today: the sun over the shield next to the title */
+  --size-goals-aside: 340px; /* doomsday-today: Today so far */
+  --surface-goal: #0e1626; /* doomsday-today: a goal */
+  --line-goal: rgba(174, 182, 195, 0.14);
+  --line-goal-done: rgba(127, 217, 154, 0.35);
+  --strike-done: rgba(155, 227, 176, 0.7); /* doomsday-today: the line through a done goal */
+  --size-goal-bar: 6px; /* doomsday-today: progress bar */
+  --streak-text: #f6c29c; /* doomsday-today: streak and the reset countdown */
+  --streak-flame: #f0a774;
+  --swap-text: #afc6ff; /* doomsday-today: the swap mark; doomsday-ladder: "new", PvP Virgin */
+  --virgin-tint: rgba(141, 176, 255, 0.12);
+  --virgin-line: rgba(141, 176, 255, 0.35);
+  --first-tint: rgba(212, 175, 106, 0.2); /* doomsday-today: the crown pill, "First in the group" */
+  --first-line: rgba(212, 175, 106, 0.5);
+  --crown-line: #b88a3a; /* doomsday-today: the crown's outline */
+  --row-you: rgba(212, 175, 106, 0.05); /* doomsday-today: the viewer's board row */
+  --size-board-goal: 108px; /* doomsday-today: a goal column of the board */
+  --size-board-friend: 190px;
+  --size-avatar-board: 28px; /* doomsday-today: friend avatar on the board */
+  --size-avatar-mini: 22px; /* doomsday-today: friend avatar in Today so far */
+  --fs-avatar-mini: 9px;
+  --size-heat: 13px; /* doomsday-feats: a heatmap day */
+  --r-heat: 3px;
+  --size-heat-name: 80px;
+  --size-heat-best: 90px;
+  --heat-0: #1a2333; /* doomsday-feats: no goal that day */
+  --heat-1: rgba(212, 175, 106, 0.34);
+  --heat-2: rgba(212, 175, 106, 0.5);
+  --heat-3: rgba(212, 175, 106, 0.66);
+  --heat-4: rgba(212, 175, 106, 0.82);
+  --heat-5: rgba(212, 175, 106, 0.98);
+  /* Doomsday Ladder, PvP and Feats (WEB-60, boards doomsday-ladder, doomsday-feats) */
+  --size-ladder-place: 28px; /* doomsday-ladder: the place column */
+  --size-ladder-points: 70px;
+  --size-ladder-move: 46px;
+  --fs-ladder-place: 18px; /* doomsday-ladder: the place (Marcellus) */
+  --fs-kills: 40px; /* doomsday-ladder: kills this week (Marcellus) */
+  --size-insignia: 30px; /* doomsday-ladder: the rank insignia */
+  --size-zone-name: 160px; /* doomsday-ladder: kills by zone, the zone column */
+  --size-bg-col: 54px; /* doomsday-ladder: battlegrounds, W / L / kills columns */
+  --size-feats-aside: 500px; /* doomsday-feats: Your feats */
+  --size-feat-icon: 44px; /* doomsday-feats: the icon box of a feat */
+  --size-feat-glyph: 24px;
+  --feat-icon-bg: radial-gradient(circle at 40% 35%, #1e2e48, #0a1322); /* doomsday-feats: the icon box */
+  --line-feat-own: rgba(212, 175, 106, 0.45); /* doomsday-feats: a feat you have */
+  --line-feat-locked: rgba(174, 182, 195, 0.1); /* doomsday-feats: a feat not reached yet */
+  /* Co-admins (WEB-64, boards admin-coadmins, admin-as-admin, admin-coadmin-states, admin-phone) */
+  --owner-badge: linear-gradient(90deg, var(--gold-bright), var(--gold)); /* admin-coadmins: the Owner badge */
+  --line-admin-badge: rgba(212, 175, 106, 0.6); /* admin-coadmins: the Admin badge */
+  --guest-badge: rgba(111, 176, 224, 0.14); /* admin-coadmins: the Guest badge */
+  --guest-text: #a8d2f0;
+  --line-admins-box: rgba(212, 175, 106, 0.5); /* admin-coadmins: the Admins box */
+  --size-crown-badge: 10px; /* admin-coadmins: the crown in the Owner badge */
+  --size-crown-log: 11px; /* admin-coadmins: the crown on an owner-only log line */
+  --size-dialog: 460px; /* admin-coadmin-states: Make admin, Remove admin */
+  /* Doomsday on the phone (WEB-61, board doomsday-phone) */
+  --size-goal-row: 52px; /* doomsday-phone: a goal row */
+  --size-mark: 30px; /* doomsday-phone: a goal's mark on a friend's board card */
+  --mark-pve: rgba(127, 217, 154, 0.16); /* doomsday-phone: a PvE goal done */
+  --mark-pvp: rgba(240, 138, 128, 0.14); /* doomsday-phone: a PvP goal done */
+  --surface-dd-chip: rgba(12, 18, 30, 0.9); /* roster-cards-doomsday: the Doomsday chip */
+  --size-emblem-day-one: 40px; /* doomsday-phone: the emblem on "Day one of Doomsday" and the phone title */
 }

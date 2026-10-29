@@ -589,3 +589,342 @@ Found by Nico (2026-10-28): on the roster's dungeon bands (`DungeonBands`), a na
 - Cause: a dungeon without a short name (Ragefire Chasm, The Drowned City) rendered no short-name span, so the "short" step showed only the range and count.
 - Agreed with Nico (2026-10-28): once the range has gone, the name gets the freed room back (whole short name, else the longest cut that fits), so "Rag… · 2" is the narrowest label; " · 1 run" stays with the count.
 - Done (PR #94): `DungeonBands` (`fitLabel`: full, short, cut, bare; each band observed for its own width), `nameCuts` in `src/core/views/text.ts`, `LevelSpread.module.css`; tests: `tests/unit/text.test.ts`, design check "band names on narrow bands" with the `roster-bands-narrow` baseline, e2e roster.
+
+### WEB-55 Store the new data from uploads
+- Read the new character fields (`pvp`, `riding`) and the new feed fields from uploads into the derived data, kept per realm day like the activity feed. The feed fields:
+  - CF-52: `kills`, `deaths` with `t`, `duels` with `t`
+  - CF-53: `loot`, `notable`, `gold`, `sessions`, `groups`
+  - CF-55: `pvpKills`
+- Read `goals` (CF-56, own and friends' records in an upload):
+  - per Doomsday day and week: `set`, `swapped`, `done`, `at`
+  - `streak`, `best`, `pool`, `reset`
+  - kept per friend for as long as the activity feed (not only the 7 days an upload holds)
+  - the newer `at` wins, as the addon merges
+  - no sharing switch (Nico, 2026-10-28: who doesn't want to share uninstalls the addon): `goals = false` or `feed = false` from older addons means nothing was sent, and stored data stays; `feed_sharing` goes
+- A rebuild gives the same result. Validate and cap as the addon does: unknown death causes become `other`, goal ids at most 24 characters, 5 per day and 4 per week (the slots), numbers ≥ 0.
+- `docs/ARCHITECTURE.md` and `docs/UPLOADER-API.md` (if the upload format is described there) updated. Tests on a fixture with every new field, one without them, and one with `goals = false`.
+- Done (PR #101): `src/core/feed.ts` (CF-52, CF-53, CF-55 fields), `pvp` and `riding` in `src/core/normalize.ts`, `src/core/doomsday/record.ts` (goals), `doomsday_goals` and `doomsday_status` (`recordGoals`, the newer `at` wins, an equal one keeps the stored copy); no sharing switch (`feed_sharing` dropped, `false` = nothing sent); tests on `tests/fixtures/doomsday/`.
+
+### WEB-56 Feats
+After WEB-55. **Every milestone becomes a feat**: the existing kinds (`level`, `maxLevel`, `professionCap`, `newCharacter`) and the new ones below. The bot posts them as "Feat unlocked" (BOT-14). The event type stays `milestones` (bot API v1); only the words change. No points. The rank titles are also in `DOOMSDAY.md`.
+
+**PvP and danger**
+- `honorKills`: the first honorable kill, then 100, 1,000, 5,000 and 10,000 (lifetime kills from `pvp`). The first one has a playful text ("First blood: Ves Doombringer"). 10,000 gets a card image.
+- `pvpRank`: a character's **new highest rank ever**, every rank 1 to 14. No post on decay or on regaining a rank held before (the site keeps the highest rank per character). Several characters ranking up after the weekly honor reset arrive together; that is fine. The post gives the official rank (per faction) followed by "a.k.a." our title, the same for both factions:
+
+  | Rank | Horde / Alliance | Our title |
+  |---|---|---|
+  | 0 | none | Conscientious Objector (not posted; for the ladder and the rank race) |
+  | 1 | Scout / Private | Fresh Meat |
+  | 2 | Grunt / Corporal | Accidental Flagger |
+  | 3 | Sergeant / Sergeant | Lowbie Botherer |
+  | 4 | Senior Sergeant / Master Sergeant | Corpse Camper |
+  | 5 | First Sergeant / Sergeant Major | Spirit Healer's Pen Pal |
+  | 6 | Stone Guard / Knight | Mailbox Menace |
+  | 7 | Blood Guard / Knight-Lieutenant | Flag Hugger |
+  | 8 | Legionnaire / Knight-Captain | Honor Goblin |
+  | 9 | Centurion / Knight-Champion | Queue Dweller |
+  | 10 | Champion / Lieutenant Commander | Crossroads Landlord |
+  | 11 | Lieutenant General / Commander | Hillsbrad Housing Crisis |
+  | 12 | General / Marshal | Last Seen Questing at Launch |
+  | 13 | Warlord / Field Marshal | Sleep Is for the Dishonorable |
+  | 14 | High Warlord / Grand Marshal | Grass: Untouched |
+
+  Card images from rank 6; rank 14 gets a special image.
+- `duelWins`: 10, 50 and 100 duel wins (counted from the feed's `duels`, so from the day the character runs CF-52).
+- `bgFirstWin`: the first win in each battleground (Warsong Gulch, Arathi Basin, Alterac Valley), from `runs`.
+- `deaths100`: 100 deaths, "A spirit healer's best friend" (counted from the feed's `deaths`), once per character.
+
+**Loot and mounts**
+- `firstEpic`: only a character's first epic item; later epics go into the recap. The post shows the item name in epic purple, its slot and the level it was looted at (from CF-53's `loot.epic` entries). No Wowhead link. Card image.
+- `mount`: riding 75, with the level and the place in the group ("the 3rd mount in the group").
+- `epicMount`: riding 150, the same, with a card image.
+
+**Professions and fishing** (no new kind for the caps: the existing Profession cap feat already covers Fishing, Cooking and First Aid at 75/150/225/300)
+- At 300, the existing Profession cap post gets a flavour title: Cooking "Head Chef", First Aid "Field Medic", Fishing "Fish Whisperer".
+- `firstCatch`: the Fishing rank goes above 1 (from `professions`/the feed's `ranks`).
+- `jackOfAllTrades`: two primary professions plus Cooking, First Aid and Fishing all at 300. Card image.
+- `notableItem`: the first time a character gets an item from the addon's watch list (CF-53's `notable`), each with its own text and card image:
+  - Arcanite Reaper created
+  - the first Arcanite transmute (Arcanite Bar created)
+  - the first Mooncloth
+  - Devilsaur Gauntlets or Leggings created (one feat for the set)
+  - joined the Stranglethorn Fishing Extravaganza (Speckled Tastyfish looted)
+  - won the Extravaganza (Arcanite Fishing Pole or Hook of the Master Angler received)
+
+**First in the group**
+- A "First in the group" badge on the post when no character in the group reached it before: the first honorable kill, the first rank 6, the first epic, the first mount, the first epic mount, the first to 60 (the existing Max level feat), every `notableItem` and Jack of all trades.
+
+**Rules**
+- No Discord pings. Reputation comes later.
+- Same rules as now: the site's first upload makes none, and a rebuild never makes events again. A bot without BOT-14 skips kinds it doesn't know.
+- Card images (as WEB-41d), as the board `doomsday-feat-cards` shows: `honorKills` 10,000, `pvpRank` 6 to 13 and the special 14, `firstEpic`, `epicMount`, `jackOfAllTrades` and each `notableItem`.
+- `docs/RECAP.md` section 1 lists every new kind.
+
+- The site keeps every character's feats (with the date and the "First in the group" mark) for the feats page (WEB-60) and the addon-independent history.
+- Done (PR #104): `src/core/doomsday/feats.ts` (kinds, texts, card pick), `feats` table (`src/server/feats.ts`), the `milestones` event with `text`, `firstInGroup` and `card`, feat card images (`featCard`, board `doomsday-feat-cards`; the missing icons drawn in its style, approved by Nico); `docs/RECAP.md` section 1.
+
+### WEB-58 The Doomsday engine and its API
+After WEB-55 and the addon's CF-55 (its golden file).
+- `src/core/doomsday/` implements `DOOMSDAY.md`:
+  - the schedule (realm time zone, reset setting, day and week numbers)
+  - the draw, pools and swaps; a catalogue of every goal id and title (an unknown id shows as "a goal from a newer version" and still counts)
+  - points per track: goals from the stored `goals`, kill points and the Duel slot from the raw data
+  - crossing out, the crown and the streak
+  - the ladder per track (week, last week, all time, movement, the split per character)
+  - the PvP details: kills by zone, solo and skulls, rank with our title, the duel grid and **Elo** (start 1000, K = 32, in time order, disputed duels left out), the battleground block, PvP Virgin
+  - a 12-week heatmap per friend
+  
+  Where a victim field was unknown or guessed, the view model marks it so that screens can show "≈".
+- Tests: the addon's `tests/fixtures/doomsday-cases.json`, copied with the addon commit it came from, passes unchanged. Plus all-time totals and Elo over more than 7 days, a reset setting change (from the next reset only), and friends without data.
+- **The Discord page, reorganised** as the boards `discord-page`, `discord-page-map`, `discord-page-friend`, `discord-page-states` and `discord-page-phone` show (designed 2026-10-28): one box per kind of post, each with its own switch, channel picker and test button; Runs moves entirely into its box; "Milestones" becomes "Feats"; section shortcuts. `discord-page-map` lists where each of the 20 existing settings went; none may be lost.
+- **Settings** on the Discord page (admin), as the other bot settings:
+  - **Doomsday reset** (realm time, default 19:00)
+  - **realm time zone** (default `Europe/Paris`)
+  - a **Doomsday channel** (default: the posts channel)
+  - switches for the **daily board post** and the **weekly ladder post**
+  
+  The reset setting goes into `GET uploader/v1/runs` for the uploader's `Runs.lua` (`doomsday = { reset, changedAt }`), as an optional field within v1 (`docs/UPLOADER-API.md`). Check with the uploader whether it writes unknown fields through, or needs a small story.
+- **Bot API** (`docs/BOT-API.md`), optional within v1:
+  - Event **`doomsdayBoard`**: at each reset, the new day's board (goals per track, every friend's row, the crown, the reset time). The bot posts it and acknowledges it with its message id. After each accepted upload that changes the day, an event **`doomsdayBoardUpdate`** for the same day carries the whole board again; the bot edits its message. At the next reset, a final `doomsdayBoardUpdate` with `final: true` and the day's summary (goals done, who won the Hunt race, the longest streak).
+  - Event **`doomsdayLadder`**: at the weekly reset (Sunday at the reset time):
+    - the week number
+    - the top 5 per track with movement
+    - the duel champion with rating, the most kills in one zone
+    - the battleground block, the PvP Virgin of the week (if any)
+  - Look-up **`doomsday`** with an optional `friend` (a display name) and the asker's linked Discord id. It returns:
+    - that friend's goals today with progress
+    - points this week and all time per track
+    - the place on both ladders, the streak and best, the time to the reset
+    
+    It answers `404 no_data` before any Doomsday data.
+  - Events only when the matching switch is on. A bot that doesn't know an event type skips and acknowledges it.
+- **Recap (WEB-41):**
+  - The Doomsday section of the recap: **Most devoted** (goals on the most days), **Perfect week** (every PvE daily, every day played, at least 4 days), and the points per track (top 3 each).
+  - It replaces the dailies workshop's A15 and F23 and the ladder workshop's "Ladder of the week" line.
+  - It comes through the `recap` event as an optional `doomsday` field.
+  - `docs/RECAP.md` updated.
+- Done (PRs #108, #109, #111, #112): the rules (`src/core/doomsday/rules.ts`, the addon's golden cases unchanged), the engine and snapshot (`engine.ts`, `src/server/doomsdayEngine.ts`), the bot's posts (`posts.ts`, `src/server/doomsdayPosts.ts`), the settings on `bot_settings` (posts off by default), the realm offset for the uploader, the recap section, and the reorganised Discord page (boards `discord-page*`).
+
+### WEB-62 Launch cut-off: start fresh from launch
+Decided with Nico (2026-10-28). At launch (2026-11-04) every beta character is gone from the game. The beta and Forever are different clients, so every friend's SavedVariables start empty, and the addon needs no change. The site must forget the beta **without deleting anything**: uploads stay the single source of truth (Nico rejected a delete-style reset earlier for that reason). After the web engine's WEB-58; ready before launch, so Nico can press it on launch day.
+- **The setting:** a **Danger zone** box at the bottom of the admin page, "Start fresh from launch".
+  - It shows the cut-off moment, plus what's kept and what's hidden.
+  - No board (Nico, 2026-10-29): built from the design system. The button opens a confirmation dialog, "Are you sure? This is destructive", with what gets hidden and what's kept; the admin types `delete all` and the confirm button stays disabled until it matches. Undo removes the cut-off.
+  - It's stored in one settings row (the moment in UTC, who set it, when).
+- **Rebuild from the cut-off:** the rebuild ignores uploads received before the cut-off. Characters, people, members, locations, sightings, presence, the activity feed, Doomsday goals and points are derived only from uploads after it. Raw uploads are never deleted or changed.
+- **No beta characters sneaking back:** a character whose `lastPlayed` (and `updatedAt`) is before the cut-off is ignored, even when a newer upload carries it. Belt and braces: the launch client's files are empty anyway.
+- **Kept untouched:** accounts and sign-in access, guests and blocks, Discord links, time zones, bot settings and token, uploader devices and tokens, last-seen times.
+  - Members are derived from uploads, so anyone allowed to sign in before the cut-off stays allowed until their first launch upload.
+- **Hidden, not deleted** (shown nowhere, kept in the database):
+  - runs and asks that start before the cut-off, with their answers (a run planned before it for after it stays: Nico, 2026-10-29)
+  - game items
+  - recaps
+  - feats and Doomsday history from before the cut-off
+- **Restarted:**
+  - **Recap:** numbering restarts, so the first recap after the cut-off is week 1 (`recap_start` moves to the cut-off).
+  - **Feats:** "First in the group" counts from the cut-off.
+- **No posts about the reset.** The rebuild makes no feat events, as with the site's first upload today. Nothing is posted about the reset itself, and old beta posts stay in Discord.
+- **Undo:** removing the cut-off and rebuilding brings everything back as it was.
+- **Tests:**
+  - a fixture with beta uploads before and launch uploads after the cut-off
+  - a beta character carried in a launch-era upload is ignored
+  - runs, recaps and feats are hidden and come back on Undo
+  - kept tables are untouched
+  - no events are made
+- **Manual (in the PR):** on a copy of the live database, set the cut-off, check the roster is empty but sign-in, Discord links and settings work, then Undo.
+- The mistaken account from earlier needs no script: the cut-off clears its beta data too, and the block list handles it after launch.
+- Done (PR #113): `src/core/cutoff.ts` (what dates from before the cut-off), `launch_cutoff` (`src/server/cutoff.ts`), the rebuild reading beta uploads for members only, runs, asks and recaps hidden by their readers (recap numbering restarts: `recapBase`, `recapByNumber`), the Danger zone with its `delete all` dialog (no board, DESIGN.md §11), Undo; `tests/server/cutoff.test.ts`.
+
+### WEB-57 New recap cards, awards, headlines and challenges
+After WEB-55. The dailies' A15 and F23 are not built: the Doomsday section (WEB-58) covers them.
+Each card keeps the existing rules: a threshold, a score against earlier weeks, 3 phrasings, a 4-week cooldown, at most one card per friend. IDs continue the catalogue.
+- Awards:
+  - A11 Warmonger: most honorable kills, at least 10
+  - A12 Battlemaster: most battleground wins, at least 2
+  - A13 Loot goblin: most rare and epic items, at least 5
+  - A14 Duelist: most duel wins, at least 3
+  - A7 Social butterfly: in a group with the most different friends, at least 3
+- Stat cards:
+  - S13 Bloodbath zone: the zone with the most honorable kills, at least 10
+  - S14 Battleground of the week: the most played battleground, with wins and losses, at least 2 games
+  - S15 Deadliest zone: the zone with the most deaths, at least 3
+  - S11 Biggest group night: the evening with the most friends in groups together, at least 3
+- Progress cards: P14 Rank race, two friends' characters one PvP rank apart, or the same rank with honor within 10 %.
+- Social cards:
+  - F14 Revenge: died to players most, then got the most kills, at least 3 of each
+  - F15 Duel rivals: the pair that duelled each other most, with the score, at least 3 duels
+- Fun cards:
+  - F16 Most deaths: at least 5
+  - F17 Fell to their death: a `fall` death
+  - F18 Died by fire: a `fire` death ("the campfire won")
+  - F19 Untouchable: the most levels gained with 0 deaths, at least 3 levels
+  - F20 Big spender: the biggest gold spent; text without amounts ("someone bought something shiny")
+  - F21 Purple rain: epic items received, at least 1
+  - F22 Marathon: the longest session, at least 3 hours
+  - F7 Night owl: played after 01:00 the most
+  - F8 Early bird: played before 08:00 the most (both in each friend's own saved time zone; without one, the site's)
+- Headlines: `pvp` (a week with many kills), `danger` (a week with many deaths).
+- Challenges:
+  - "Win 3 battlegrounds as a group"
+  - "Each of you gets 25 honorable kills"
+  - "Take back Tarren Mill" (kills in Hillsbrad Foothills)
+  - "Duel every friend once"
+  - "A week without dying"
+- `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
+- Decided with Nico (2026-10-29): the thresholds are the boards' "Shows when" (`bot-recap-v2-cards`), not the ones above: awards Warmonger 25, Battlemaster 3, Loot goblin 4, Duelist 5, Social butterfly 3 (redefined: grouped with the most different friends); Bloodbath zone 20, Battleground of the week 3 games, Deadliest zone 5, Biggest group night 4 friends; Rank race same rank with this week's honor within 10%; Revenge 3 deaths to players then 10 kills; Duel rivals 4 duels; Most deaths 6; Untouchable 5 levels; Big spender 50 gold in one day ("Hooves were heard", no amount); Marathon 5 hours; Night owl after 01:00; Early bird before 07:00; headlines PvP (200 kills, one zone at least 40%) and danger (25 deaths, at least 1.5 times the 4-week average); "Take back Tarren Mill" when Hillsbrad Foothills is in the top 3 kill zones.
+- Done (PR #116): `src/core/recap/cardsV2.ts` (the 21 cards), headlines and challenges in `recap.ts`, texts in `texts.ts` (3 phrasings each), each friend's time zone and the PvP rank in the recap's input; `docs/RECAP.md`; tests `tests/unit/recap/v2.test.ts`.
+
+### WEB-64 Co-admins
+Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Boards: `admin-coadmins` (owner view), `admin-as-admin`, `admin-coadmin-states`, `admin-phone` and `discord-page-coadmins` (designed 2026-10-29). From the design: nobody, the owner included, can block an admin directly; remove the admin role first (the Members list shows "Can't be blocked" on those rows).
+
+- **Two levels:**
+  - **Owner:** the BattleTag in `ADMIN_BATTLETAG` (server setting), as now. Never demoted or removed through the site. No screen, action or API offers it, and the server refuses it.
+  - **Admin:** friends the owner appoints.
+- **Appointing:** only the owner appoints and removes admins; an admin can't make another admin.
+  - **Where:** on the admin page, an **Admins** box lists the friends who have signed in, each with **Make admin** or **Remove admin** and a confirm dialog.
+  - **The owner's row:** a crown and no button.
+  - **Storage:** admins live in their own table (not derived, so a rebuild or the launch cut-off never touches them).
+  - **Removing an admin** takes effect at their next request.
+- **What an admin may do:** everything for the everyday running of the group:
+  - the guest list (add, tick "may upload")
+  - blocking and unblocking a BattleTag, except the owner's and other admins'
+  - the Discord page's post settings (switches, channels, recap time, the Doomsday reset time and realm time zone)
+  - deleting any run, marking runs done
+  - test posts and previews
+- **Owner only:**
+  - **Start fresh from launch** (WEB-62), including Undo
+  - the **bot token** (create, replace, revoke)
+  - **appointing and removing admins**
+  - **revoking other friends' uploader devices or tokens**
+  - any server setting
+  
+  For admins these controls are hidden, and the server refuses the action too (403, not only a hidden button). Today's `mayAdmin` splits into "may admin" and "is owner", and every owner-only action and API route checks the latter.
+- **Admin changes log:** a short list on the admin page: who changed what and when (admins appointed or removed, blocks, guest changes, Discord settings, run deletions, the cut-off, the token). Owner and admins see it; it's the one place BattleTags show, as on the admin page now.
+- **The bot:** `isAdmin` in the bot API look-ups (cancel and move any run) is true for owner and admins.
+- **Tests:**
+  - every owner-only action refused for an admin (UI and server)
+  - the owner can't be removed or blocked, by anyone
+  - an admin can't appoint
+  - removing an admin takes effect at once
+  - the log entries
+  - the cut-off and the token are refused for admins
+- As every UI story: design checks, 375 and 1440 px, Playwright, screenshots in the PR.
+- Done: the `admins` table and `admin_log` (migration 0023), `isOwner` beside `mayAdmin`, owner-only checks in every owner-only server action, the Admins box, rank badges, the log, the owner's Uploader devices box and the admin's view of the admin and Discord pages (boards `admin-coadmins`, `admin-as-admin`, `admin-coadmin-states`, `admin-phone`, `discord-page-coadmins`).
+
+## E8 Doomsday (decided with Nico, 2026-10-28)
+Daily and weekly goals, points per track (PvE and PvP, never added together), a streak, a crown, feats and a ladder, in the game (addon E15), on the site and in Discord (bot "Doomsday"). **The rules are in the addon repo's `docs/DOOMSDAY.md`**, the one description for all three; read it first. It replaces the three workshop designs (milestones, PvP ladder, dailies and weeklies; their PRs were closed unmerged), and the recap v2 data and cards are part of it.
+
+Boards (`design/README.md`, "Doomsday"):
+- `doomsday-names`, `doomsday-rules`
+- `doomsday-today`, `doomsday-ladder`, `doomsday-feats`, `doomsday-phone`
+- `roster-cards-doomsday`, `doomsday-feat-cards`
+
+The bot's boards are in its repo, the addon's in `docs/design/doomsday-2026-10/` there. Where a board and `DOOMSDAY.md` disagree, `DOOMSDAY.md` wins:
+- the reset is **19:00** (a setting), not 09:00
+- goals are computed, not delivered
+- the crown gives no points (version B)
+
+The design prompt is `docs/DESIGN-PROMPT-DOOMSDAY.md`.
+
+Key decisions:
+- **Single source of truth:** uploads stay it. The addon decides when a goal is done and sends the time (`goals`, CF-56), because the Doomsday day (19:00 to 19:00) doesn't line up with the feed's realm days. The site stores and counts. Kill points the site computes itself from the raw kills (`pvpKills`, CF-55), against the addon's golden file.
+- **All-time totals** live only on the site and in the bot; the addon shows this week.
+- Gold is never shown as an amount. No pronouns in texts. Names: friends by display name, characters by full name, never BattleTags or Discord IDs.
+
+Compatibility: uploads from addons without CF-52 to CF-56 have none of the new fields. Each is optional everywhere. A card, feat or goal whose data is missing never shows, and friends without Doomsday data show "no Doomsday data yet", never 0 as if known.
+
+Two workers (Nico, 2026-10-28):
+- **Engine:** WEB-55, WEB-58, WEB-56, WEB-57, in that order.
+- **Screens:** WEB-59, WEB-60, WEB-61. They start from view models with fixture data, so they don't wait for the engine, and agree the view-model shapes with the engine worker first.
+
+The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
+
+### WEB-59 The Doomsday page: Today, Week, Board and heatmap
+Boards `doomsday-today` (desktop) and `doomsday-rules` (labels, tone). Starts from view models with fixture data, agreed with the engine worker; switches to WEB-58's data when it lands.
+- A page **Doomsday** (`/doomsday`, in the navigation after Runs) with a header:
+  - today's and this week's points (PvE and PvP side by side), the streak and best
+  - tabs: Today, Week, Board, Ladder, Feats, PvP
+- **Today:**
+  - your 5 goals with progress or a check and its time, the swap mark with the original in its tooltip
+  - the Duel slot (who's done, who's open), the time to the reset
+  - "Today so far" (the crown, who finished, who hasn't started, who has no addon)
+- **Week:** the 3 weeklies and the Weekly bounty with progress, the time to Sunday's reset.
+- **Board:** every friend × today's goals, struck through with the time when done. A friend's name is crossed out when the 3 PvE dailies are done. The crown, today's and this week's points, the streak.
+- **The 12-week heatmap** per friend (goals done per day).
+- "Goals are suggestions with points. Skip any of them; nothing is locked."
+- As every UI story: design checks, 1440 px, Playwright (the phone in WEB-61).
+- Decided with Nico (2026-10-28): built as if the engine existed (one Doomsday release); Today shows the board too, the Board tab adds the heatmap; times in the viewer's own zone; the group plays Horde, so the board's Hunt column is the Alliance Hunt.
+- Done (PR #103): `/doomsday` (alias `/doom`) after Runs; the engine → screens contract `src/core/doomsday/snapshot.ts` (agreed with the engine worker); views `src/core/views/doomsday.ts`; `src/components/doomsday/` (`parts.tsx`, `Doomsday.module.css`); Doomsday tokens in `tokens.css` part 2; deviations in `docs/DESIGN.md`; design checks and e2e (`doomsday.spec.ts`).
+
+### WEB-60 The Doomsday page: Ladder, PvP and Feats
+Boards `doomsday-ladder` and `doomsday-feats`. Same fixture-first start as WEB-59.
+- **Ladder:**
+  - This week and All time, PvE and PvP side by side, each with its own ranking
+  - rows expand to characters; movement (▲, ▼, new)
+  - PvP Virgin shown and not ranked ("not ranked: no kills on any character, ever")
+  - the time to the weekly reset
+- **PvP:** the details for a selected friend:
+  - kills this week (solo, skulls), rank with insignia and "a.k.a." title per character, kills by zone
+  - the duel grid with wins–losses and the Elo rating (with movement)
+  - the battleground block, apart from the week's kills, and first wins unlocked
+  - "≈" where data was guessed
+- **Feats:** per friend and the whole group's feats, newest first, with "First in the group", the rank titles table and the feat states from the board.
+- As every UI story (1440 px; the phone in WEB-61).
+- Decided with Nico (2026-10-28): the PvP tab picks a friend with chips, the viewer first; Your feats without a total; feats from before tracking only in a friend's own feats; the heatmap only on the Board tab.
+- Done (PR #107): `/doomsday/ladder` (`?scope=all`), `/doomsday/pvp` (`?friend=`), `/doomsday/feats`; views `doomsdayLadder.ts`, `doomsdayFeats.ts`; `ladder.tsx`, `Ladder.module.css`, the rank insignia and feat icons in `icons.tsx`; `FeatRecord.rank` in the contract.
+
+### WEB-61 Doomsday on the phone, its states, and the roster
+Boards `doomsday-phone` and `roster-cards-doomsday`.
+- The Doomsday page at 375 px as the board shows.
+- The states:
+  - empty, on the first day ("Nobody has done anything yet")
+  - loading
+  - only one friend with data
+  - friends without the addon or without Doomsday data
+  - error
+- The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
+- As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
+- Decided with Nico (2026-10-29): all six tabs on the phone, scrolling; the phone ladder one track at a time (PvE | PvP); the error state an amber banner with Try again; on the roster a muted "No Doomsday data yet".
+- Done (PR #115): the phone layout, `loading.tsx` and `error.tsx` (`states.tsx`), "Day one of Doomsday" (`today.tsx`), the scrolling tabs (`DoomsdayTabs.tsx`), `/dev/doomsday?state=` for the design checks, the roster chip (`RosterChip.tsx`, `doomsdayChips`).
+
+### WEB-63 Clean-up before the Doomsday release
+Agreed with Nico, 2026-10-29: everything on the list below. Built after WEB-57 is merged. WEB-64 (co-admins) touches the admin page, the Discord page, `viewer`, `mayAdmin` and the access code, so nothing here changes those before WEB-64 is merged; the items below don't need to. No behaviour changes for users; one PR, one commit per item.
+
+**Dependencies**
+- gitleaks-action v2 → v3 (Dependabot #69, closed by this PR).
+- ESLint 10 with `eslint-config-next`: the `src/core` layering rule still fails on a forbidden import (a test proves it), and lint passes unchanged otherwise.
+- TypeScript 7: kept only if `tsc`, the build and every test pass. If not, it stays on 6 with the reason in `docs/ARCHITECTURE.md`.
+- npm audit: the 4 moderate findings come from an old esbuild inside drizzle-kit (a dev tool; the latest drizzle-kit has it too). They are recorded as accepted in `docs/ARCHITECTURE.md`, with when to check again, instead of a forced breaking downgrade.
+- `allowScripts` covers esbuild's postinstall, so CI's install-scripts warning is gone.
+
+**Tests and CI**
+- The three flaky checks get fixed at the cause, not with retries:
+  - roster-table "design values": styles were read while the page re-rendered
+  - upload "nothing new": the accessibility scan ran before the `<title>` was there
+  - phone-map "the tapped character in the half sheet"
+  
+  Each passes 20 runs in a row locally.
+- **Real Doomsday test data:**
+  - the design sample (`tests/design/sample.ts`) uploads `goals`, `pvpKills`, PvP ranks and feats, so the engine computes Doomsday from uploads
+  - `DOOMSDAY_SAMPLE`, `src/server/doomsdaySample.ts` and the Playwright config lines go
+  - `/dev/doomsday` keeps its four states (day one, only you, loading, error) from the engine's own output
+  - The Doomsday screenshots change only where the real numbers differ from the made-up ones, after Nico's OK.
+- The Doomsday e2e checks run in the project before the upload tests add uploaders (as roster, professions and character do), so they no longer depend on test order.
+
+**Code**
+- One helper in `src/core` for weekday and month names and for `ordinal()`. Today they are copied in five and three files. Same output everywhere; the existing tests prove it.
+
+**Repo**
+- `AGENTS.md` (written by `next dev`, Next's pointer to its bundled docs) is committed, so the tree stays clean.
+
+**Docs**
+- Done stories (WEB-57, WEB-59, WEB-60, WEB-61 and any other done) move to `docs/STORIES-COMPLETED.md`. `docs/STORIES.md` keeps open stories only, with a current build order.
+- `docs/ARCHITECTURE.md`, `docs/BOT-API.md`, `docs/UPLOADER-API.md`, `docs/RECAP.md` and `docs/DESIGN.md` match the code.
+- `design/README.md` marks superseded boards as superseded and names the board that replaces each:
+  - `discord-settings` and `discord-settings-runs` by `discord-page*`
+  - the `doomsday-*` boards' 09:00 reset by 19:00
+- `CHANGELOG.md` `## Unreleased` reads as release notes for the Doomsday release: grouped, no story numbers, no duplicates.
+
+Done when: `npm run lint`, `npm test`, `npm run build`, `npm run test:design` and `npm run test:e2e` pass, CI is green twice in a row, and the docs PR items above are checked off in the PR.
+- Done (PR #120 and this docs PR): gitleaks-action v3; esbuild's install script denied; ESLint 10; TypeScript stays on 6 (its 7.0 package has no compiler API; `docs/ARCHITECTURE.md`); `AGENTS.md` committed; `src/core/names.ts`; `openScreen` waits until the page is fully streamed (the three flaky checks); the design sample uploads Doomsday data (`tests/design/sampleDoomsday.ts`) and `DOOMSDAY_SAMPLE` is gone (`/dev/doomsday` states from the engine: `src/server/doomsdayStates.ts`); the Doomsday e2e runs before the upload tests; the docs and the CHANGELOG.

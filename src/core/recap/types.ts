@@ -25,6 +25,10 @@ export interface RecapChar {
   role?: string;
   /** Quest IDs in the quest log. */
   quests: string[];
+  /** WEB-57: the PvP rank (1 to 14), the game's name for it, and this week's honor (addon CF-52). */
+  pvpRank?: number;
+  pvpRankName?: string;
+  weekHonor?: number;
 }
 
 export interface RecapFriend {
@@ -32,8 +36,8 @@ export interface RecapFriend {
   key: string;
   /** Display name (never a BattleTag). */
   name: string;
-  /** "Share my activity" on (CF-22): only then does the feed tell what they did. */
-  shares: boolean;
+  /** WEB-57: the friend's own time zone (else the admin's), for Night owl, Early bird and Marathon. */
+  timeZone?: string;
 }
 
 export interface WeekSighting {
@@ -128,6 +132,13 @@ export interface RecapCard {
   friends: string[];
 }
 
+export interface RecapDoomsday {
+  mostDevoted: { name: string; days: number } | null;
+  perfectWeek: string[];
+  points: { pve: { name: string; points: number }[]; pvp: { name: string; points: number }[] };
+  crowns: { name: string; count: number }[];
+}
+
 export interface Recap {
   week: number;
   start: number;
@@ -139,6 +150,8 @@ export interface Recap {
   cards: RecapCard[];
   challenge: { id: string; text: string };
   closing: string;
+  /** The Doomsday section (WEB-58, docs/BOT-API.md "Recap: doomsday"); left out when nobody has Doomsday data. */
+  doomsday?: RecapDoomsday;
   /** What the next recaps need from this one; stored with it (WEB-41c). */
   past: PastWeek;
   cycles: Cycles;

@@ -47,13 +47,29 @@ export const isPhone = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;
 
 /**
  * Opens a screen the way the checks see it: the browser clock at the sample's "now" (the server has FIXED_NOW), the
- * web fonts loaded. `motion: false` (the default) also emulates prefers-reduced-motion.
+ * page fully streamed, the web fonts loaded. `motion: false` (the default) also emulates prefers-reduced-motion.
  */
 export async function openScreen(page: Page, url: string, { motion = false } = {}): Promise<void> {
   await page.clock.setFixedTime(NOW * 1000);
   await page.emulateMedia({ reducedMotion: motion ? "no-preference" : "reduce" });
   await page.goto(url);
+  await pageStreamed(page);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
+}
+
+/**
+ * Waits until React has revealed every streamed Suspense boundary and the title is set (WEB-63). `goto` returns at
+ * the load event, but on a slow machine (CI) a page's loading.tsx can still be showing then, with the real page in a
+ * hidden `S:` segment: a check read the skeleton's heading just before it was swapped out (roster-table "design
+ * values"), or ran before the title arrived (upload "nothing new").
+ */
+export async function pageStreamed(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[hidden][id^="S:"], template[id^="B:"]') === null &&
+      document.title !== "" &&
+      document.readyState === "complete",
+  );
 }
 
 /**

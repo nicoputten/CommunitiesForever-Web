@@ -136,10 +136,10 @@ export const RICH: Week = {
   end: END,
   siteName: "Doombringers",
   friends: [
-    { key: "ada", name: "Ada", shares: true },
-    { key: "bob", name: "Bob", shares: true },
-    { key: "cid", name: "Cid", shares: true },
-    { key: "dee", name: "Dee", shares: true },
+    { key: "ada", name: "Ada" },
+    { key: "bob", name: "Bob" },
+    { key: "cid", name: "Cid" },
+    { key: "dee", name: "Dee" },
   ],
   before,
   after,
@@ -213,3 +213,41 @@ export const HISTORY: History = {
 };
 
 export const NO_HISTORY: History = { weeks: [], cycles: {} };
+
+// WEB-57: RICH with the addon's new feed fields (CF-52 kills, deaths, duels; CF-53 loot, gold, sessions, groups) and
+// PvP ranks, so every recap v2 card finds its example. Times are UTC (the friends have no time zone); START is 12:00.
+const H = 3600;
+const deaths = (zone: string, causes: string[]) =>
+  causes.map((cause, i) => ({ t: START + 4 * DAY + i * H, zone, cause }) as const) as FeedDay["deaths"];
+
+export const RICH_V2: Week = {
+  ...RICH,
+  after: {
+    ...RICH.after,
+    ada1: { ...RICH.after.ada1!, pvpRank: 6, pvpRankName: "Stone Guard", weekHonor: 1000 },
+    bob1: { ...RICH.after.bob1!, pvpRank: 6, pvpRankName: "Stone Guard", weekHonor: 950 },
+    dee1: { ...RICH.after.dee1!, level: 38 },
+  },
+  days: [
+    ...RICH.days,
+    day(4, "ada1", "ada", {
+      kills: { "Hillsbrad Foothills": 30 },
+      deaths: [
+        ...deaths("Hillsbrad Foothills", ["player", "player", "player", "creature", "fire"])!,
+        ...deaths("Thousand Needles", ["fall"])!,
+      ],
+      duels: Array.from({ length: 5 }, (_, i) => ({ t: START + 4 * DAY + 10 * H + i, won: true, vs: "Bob Example" })),
+      loot: { rare: 4, epic: [{ id: 1, name: "Example Blade", slot: "INVTYPE_2HWEAPON", level: 50 }] },
+      gold: { gained: 0, spent: 600000 },
+      sessions: [{ from: START + 4 * DAY + 8 * H, to: START + 4 * DAY + 14 * H }],
+      groups: ["bob1", "cid1", "dee1"],
+    }),
+    day(4, "bob1", "bob", {
+      kills: { "Hillsbrad Foothills": 5 },
+      duels: Array.from({ length: 5 }, (_, i) => ({ t: START + 4 * DAY + 10 * H + i, won: false, vs: "Ada Example" })),
+      runs: Array.from({ length: 3 }, () => ({ name: "Warsong Gulch", kind: "pvp", won: true, with: [] })),
+      sessions: [{ from: START + 4 * DAY + 18 * H, to: START + 4 * DAY + 19 * H }],
+    }),
+    day(4, "dee1", "dee", { deaths: [] }),
+  ],
+};

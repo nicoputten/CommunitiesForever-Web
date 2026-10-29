@@ -166,7 +166,8 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
         { "battleTag": "Nico#2201", "guid": "Player-1-0000A003", "name": "Grom Ashfeller", "answer": "in", "role": "tank", "source": "discord", "at": 1793119800, "fit": "fits" }
       ]
     }
-  ]
+  ],
+  "doomsday": { "reset": 68400, "changedAt": 0, "offset": 3600, "offsetUntil": 1806195600, "offsetAfter": 7200 }
 }
 ```
 - Which runs: those starting within 14 days and not yet past (2 hours after start), at most 50, by start. A cancelled run stays, as `"cancelled"`, until its start, so the game can say it was cancelled (decided with Nico, 2026-10-27).
@@ -176,6 +177,7 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
 - `received` (WEB-43, addon CF-47): ids of the token owner's own items from the game (runs planned, answers, asks, pings in their saved file's `pending`) that the site has, newest first, at most 200. The addon forgets them; until then it sends them again, which changes nothing. WEB-53: also the ids of friends' asks the owner's file carried (addon CF-51), so every carrier forgets them.
 - WEB-47 (optional, within v1): an answer's `fit` is how the character's level fits the run ("fits", "+3 over", "carry · +12", "4 below"; one rule, `levelFit`), and `reserve: true` marks an I'm in that waits for a full role. A reserve is sent as `"answer": "maybe"`, so older addons, which read only `in`, `maybe` and `cant`, show it as Maybe. `role` is the role chosen for that run (`tank`, `heal`, `dps`), no longer always the character's.
 - WEB-51 (optional, within v1): `asks` are the open asks ("who's up right now", from the game or Discord's `/ask`), oldest first, at most 50, so a friend whose game reloads within the 10 minutes sees one; an ask leaves the list when it expires (`expiresAt`, 10 minutes after `at`). `from` is the asker, on their character and its role when they have one that may join; `answers` as a run's, without slots (no `reserve`). `url` is the Runs page. Showing them in game is a later addon story; older addons ignore the list.
+- WEB-58 (optional, within v1): `doomsday` is Doomsday's reset in force (seconds after realm midnight, 68400 = 19:00; the admin's setting on the Discord page) and `changedAt`, when it took effect (0 while it was never changed). A change reaches the game only from the reset it takes effect at, never in the middle of a Doomsday day. `offset` is the realm zone's UTC offset now (seconds east; the Discord page's realm time zone, default Europe/Paris), `offsetUntil` the server time of its next change (daylight saving) and `offsetAfter` the offset then; both are left out for a zone without a change within 400 days. The day boundary is realm time for everyone, also a friend playing from another zone (Nico, 2026-10-28); the addon uses these when it can't read the game clock. The uploader writes the whole answer (UP-12), so it lands as `CF_RUNS.doomsday` without an uploader update; the addon (CF-56) passes it to friends without the uploader, the newest `changedAt` winning.
 - Bearer errors as above. Additive within v1: the app writes the fields the addon knows and may drop the rest.
 
 ## Disconnecting (RFC 7009)

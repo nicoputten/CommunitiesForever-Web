@@ -1,4 +1,5 @@
 import type { RecapChar, Week } from "./types";
+export { ordinal } from "../names";
 
 // Measures of a week that several cards share (WEB-41). Snapshot measures compare the characters at the start and
 // end of the week and cover every friend; feed measures only friends who share their activity.
@@ -149,13 +150,6 @@ export function weekdayOfDay(day: number): number {
 }
 
 export const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-/** "3rd", "11th". */
-export function ordinal(n: number): string {
-  const tens = n % 100;
-  const suffix = tens >= 11 && tens <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
-  return `${n}${suffix}`;
-}
 
 /** Score relative to earlier weeks: the value against the card's average so far (a rare high beats a usual one). */
 export function relative(value: number, past: readonly number[], base = 1): number {

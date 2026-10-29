@@ -42,5 +42,8 @@ export function recapChar(c: Character): RecapChar | undefined {
   if (c.ilvl !== undefined) out.ilvl = c.ilvl;
   if (c.mainTreeName !== undefined) out.spec = c.mainTreeName;
   if (c.role !== undefined) out.role = c.role;
+  if (c.pvp?.rank !== undefined) out.pvpRank = c.pvp.rank;
+  if (c.pvp?.rankName !== undefined) out.pvpRankName = c.pvp.rankName;
+  if (c.pvp?.weekHonor !== undefined) out.weekHonor = c.pvp.weekHonor;
   return out;
 }

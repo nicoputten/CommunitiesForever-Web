@@ -26,8 +26,10 @@ import { RosterToolbar } from "@/components/roster/RosterToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { SegmentedNav } from "@/components/ui/SegmentedNav";
+import { doomsdayChips } from "@/core/views/doomsday";
 import { rosterRuns } from "@/core/views/runs";
 import { getDb } from "@/server/db";
+import { doomsdayFor } from "@/server/doomsdayEngine";
 import { runsInput } from "@/server/runsInput";
 import { RosterEmpty } from "./empty";
 import styles from "./roster.module.css";
@@ -53,6 +55,8 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
   // Runs on the roster (WEB-45): the Next run card and each band's planned runs.
   const runs = viewer === undefined ? undefined : rosterRuns(runsInput(getDb(), viewer.battleTag, now));
   const own = peopleViews(data, now).find((p) => sameBattleTag(p.battleTag, viewer?.battleTag))?.key;
+  // Doomsday chips (WEB-61): this week's points and the streak per friend.
+  const chips = doomsdayChips(doomsdayFor(getDb(), now));
   const filtered = isFiltered(query);
   const noAddon = r.noAddon.map((p) => p.displayName);
   const sub = [
@@ -95,7 +99,14 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
       ) : (
         <div className={styles.friends}>
           {r.friends.map((f) => (
-            <FriendPanel key={f.person.key} person={f.person} characters={f.characters} total={f.total} now={now} />
+            <FriendPanel
+              key={f.person.key}
+              person={f.person}
+              characters={f.characters}
+              total={f.total}
+              now={now}
+              {...(chips.has(f.person.key) ? { doomsday: chips.get(f.person.key)! } : {})}
+            />
           ))}
           {!filtered &&
             r.noAddon.map((p) => <FriendPanel key={p.key} person={p} characters={[]} total={0} now={now} />)}

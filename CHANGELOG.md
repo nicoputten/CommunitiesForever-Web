@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.5.0 (2026-10-29)
+
+### Doomsday
+Daily and weekly goals with points, a streak, feats and a ladder, in the game, on the site and in Discord. Goals are suggestions with points: skip any of them, nothing is locked. PvE and PvP are always side by side and never added together.
+- **A new page, Doomsday** (`/doomsday`, or `/doom`), after Runs:
+  - **Today:** your three PvE dailies and the Skirmish, each with a check and its time or the progress, the Duel slot, the time to the reset (19:00 realm time by default), "Today so far" (who wore the crown, who finished, who hasn't started) and the board of every friend against today's goals.
+  - **Week:** the three weeklies and the Weekly bounty. **Board:** a 12-week heatmap of goals per friend.
+  - **Ladder:** this week or all time, PvE and PvP each with its own ranking, movement since last week, and each friend opening to their characters. A friend who never killed anyone is a PvP Virgin: shown, never ranked.
+  - **PvP:** per friend the kills this week, each character's PvP rank with our title, kills by zone, a duel grid with a duel rating, and battlegrounds apart.
+  - **Feats:** the group's newest first with "First in the group", each friend's own with the next steps, and the PvP rank titles.
+  - **On a phone:** your points and the reset under the tabs, goals as compact rows, the board as one card per friend and the ladder one track at a time. "Day one of Doomsday" before anyone has points.
+- **Roster:** each friend's PvE and PvP points this week and their streak, or "No Doomsday data yet".
+- **Feats:** every milestone is now a feat, and new ones join them: honorable kills, a new highest PvP rank with our title, duel wins, a first battleground win, 100 deaths, the first epic, mounts, the first catch, Jack of all trades and the profession watch list (Arcanite Reaper, Mooncloth, the Fishing Extravaganza and more). Special ones get a card image.
+- **Discord:** the bot gets the daily board at each reset (kept up to date after uploads), the weekly ladder on Sunday, a `/doomsday` look-up and a Doomsday section in the weekly recap. The board and ladder posts start switched off; the admin turns them on at launch.
+- **From the game:** the site keeps the new addon's (v0.8.0-beta1) PvP rank and kills, riding, deaths, duels, loot, play sessions, groups and each friend's goals. The reset time reaches the game through the uploader. There is no "Share my activity" any more: activity an older addon stopped sharing shows again.
+
+### Weekly recap
+- 21 new cards from the PvP, loot and play data (Warmonger, Battlemaster, Loot goblin, Duelist, Social butterfly, Bloodbath zone, Battleground of the week, Deadliest zone, Biggest group night, Rank race, Revenge, Duel rivals, Most deaths, Fell to their death, Died by fire, Untouchable, Big spender, Purple rain, Marathon, Night owl, Early bird), PvP and danger headlines, and five new challenges. Gold is never shown as an amount.
+
+### Admin and Discord
+- **Co-admins:** the owner can make friends admins, so they help run the group: guests, blocks, the Discord post settings, test posts and deleting any run. Starting fresh from launch, the bot token, appointing admins and revoking other friends' uploaders stay with the owner. "Admin changes" shows who changed what and when; the admin page shows who is online, and the owner sees every friend's uploader devices.
+- **Start fresh from launch** (Danger zone, owner only): after you type `delete all`, the site forgets the beta (characters, sightings, activity, runs and asks from before it, recaps, feats and Doomsday). Nothing is deleted: who may sign in, Discord links, settings and uploaders stay, and Undo brings everything back.
+- **The Discord page is reorganised:** "For you" (your Discord and time zone) and, for admins, one box per kind of post (Feats, Weekly recap, Runs, Doomsday), each with its own switch, channel and test post. Milestones are now called Feats and can have their own channel. The Doomsday box sets the daily board, the weekly ladder, their channel, the reset time (a change counts from the next reset, with Undo) and the realm's time zone.
+
 ## v0.4.1 (2026-10-28)
 - Roster: a narrow dungeon band keeps its name ("Ragef… 13–18 · 2") instead of showing only the levels and count.
 - Asks from the game reach the site and Discord sooner: any friend's upload carries a friend's ask (once, as the asker's ask), and answers given to an ask in game show up too.

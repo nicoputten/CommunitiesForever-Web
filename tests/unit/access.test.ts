@@ -7,7 +7,9 @@ import {
   battleTagsOf,
   checkFile,
   fileOwner,
+  isAppointedAdmin,
   isBattleTag,
+  isOwner,
   mayAdmin,
   mayBlock,
   maySignIn,
@@ -206,5 +208,27 @@ describe("BattleTag text (WEB-17)", () => {
     expect(battleTagName("Vestras#2201")).toBe("Vestras");
     expect(battleTagName(" Vestras#2201 ")).toBe("Vestras");
     expect(battleTagName("Vestras")).toBe("Vestras");
+  });
+});
+
+describe("co-admins (WEB-64)", () => {
+  const withAdmin = () => list({ admins: new Set(["ada#1001"]), blocked: new Set(["ada#1001"]) });
+  it("an appointed admin is an admin, not the owner, even when the blocks table names them", () => {
+    expect(roleOf("Ada#1001", withAdmin())).toBe("admin");
+    expect(mayAdmin("ada#1001", withAdmin())).toBe(true);
+    expect(isOwner("Ada#1001", withAdmin())).toBe(false);
+    expect(isAppointedAdmin("Ada#1001", withAdmin())).toBe(true);
+    expect(isAppointedAdmin("Nico#1000", withAdmin())).toBe(false);
+    expect(isOwner("nico#1000", withAdmin())).toBe(true);
+  });
+
+  it("nobody can block the owner or an admin", () => {
+    expect(mayBlock("Nico#1000", withAdmin())).toBe(false);
+    expect(mayBlock("Ada#1001", withAdmin())).toBe(false);
+    expect(mayBlock("Bob#2002", withAdmin())).toBe(true);
+  });
+
+  it("lists without admins (before WEB-64) still work", () => {
+    expect(roleOf("Ada#1001", list())).toBe("member");
   });
 });

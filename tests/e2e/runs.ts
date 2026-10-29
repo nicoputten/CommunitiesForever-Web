@@ -43,8 +43,9 @@ export async function planRun(page: Page, input: PlanInput): Promise<number> {
 export async function setTimeZone(page: Page, timeZone: string): Promise<void> {
   await page.goto("/discord");
   const [, ...place] = timeZone.split("/");
-  await pick(page, page.getByLabel("Time zone", { exact: true }), place.join(" / ").replace(/_/g, " "));
-  await page.getByRole("button", { name: "Save" }).first().click();
+  const zone = page.getByRole("region", { name: "Your time zone" });
+  await pick(page, zone.getByLabel("Your time zone", { exact: true }), place.join(" / ").replace(/_/g, " "));
+  await zone.getByRole("button", { name: "Save" }).click();
   await expect(page).toHaveURL(/notice=time-zone/);
 }
 

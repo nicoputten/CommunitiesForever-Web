@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
-import { battleTagName, mayAdmin, roleOf } from "@/core/access";
+import { battleTagName, isOwner, mayAdmin, roleOf } from "@/core/access";
 import {
   authorizeUrl,
   DISCORD_CALLBACK_PATH,
@@ -15,25 +15,41 @@ import {
   pkceChallenge,
   randomCode,
   settingChange,
+  settingChangeText,
 } from "@/core/discord";
 import { adminBattleTag, loadAccessList } from "@/server/access";
+import { logChange } from "@/server/admins";
 import { auth } from "@/server/auth";
 import { getDb, type Db } from "@/server/db";
 import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
-import { discordApp, setTimeZone, unlinkDiscord, updateBotSettings } from "@/server/discord";
+import {
+  discordApp,
+  setTimeZone,
+  TIME_ZONES,
+  undoDoomsdayReset,
+  unlinkDiscord,
+  updateBotSettings,
+} from "@/server/discord";
 import { LINK_COOKIE } from "@/server/discordLink";
+import { loadGuild } from "@/server/guild";
 import { sendTestRunPost } from "@/server/runs";
 
 // The Discord page's actions (WEB-39). Each checks the caller again (CLAUDE.md rule 6): anyone on the list for their
-// own link and time zone, the admin for the bot's settings. Server actions carry Next.js's Origin check, so none of
+// own link and time zone, the owner and admins for the bot's settings and test posts, the owner alone for the bot
+// token (WEB-64). Admin changes go in the admin changes log. Server actions carry Next.js's Origin check, so none of
 // these can be triggered from another site.
 
-async function as<T>(need: "friend" | "admin", action: (db: Db, battleTag: string) => T): Promise<T> {
+/**
+ * Runs `action` for the caller: any friend, the owner and admins (WEB-64), or the owner only (the bot token). An admin
+ * whose role was removed lands back here with a note; an owner-only action by an admin is refused with one.
+ */
+async function as<T>(need: "friend" | "admin" | "owner", action: (db: Db, battleTag: string) => T): Promise<T> {
   const battleTag = (await auth())?.user?.name ?? undefined;
   const db = getDb();
   const list = loadAccessList(db, adminBattleTag());
-  const ok = need === "admin" ? mayAdmin(battleTag, list) : roleOf(battleTag, list) !== undefined;
-  if (battleTag === undefined || !ok) throw new Error(need === "admin" ? "Only the admin may do this." : "Sign in.");
+  if (battleTag === undefined || roleOf(battleTag, list) === undefined) throw new Error("Sign in.");
+  if (need !== "friend" && !mayAdmin(battleTag, list)) redirect(to("admin-removed"));
+  if (need === "owner" && !isOwner(battleTag, list)) redirect(to("owner-only"));
   const result = action(db, battleTag);
   revalidatePath("/discord");
   return result;
@@ -82,11 +98,20 @@ export async function browserTimeZoneAction(timeZone: string): Promise<void> {
   setTimeZone(db, battleTag, String(timeZone), "browser", nowSeconds());
 }
 
-/** One setting of the bot (a switch, a pick, the recap time or the reminder time); invalid values change nothing. */
+/**
+ * One setting of the bot (a switch, a pick, the recap time, the reminder time, the Doomsday reset or the realm time
+ * zone); invalid values change nothing.
+ */
 export async function botSettingAction(form: FormData): Promise<void> {
-  const change = settingChange(String(form.get("field") ?? ""), String(form.get("value") ?? ""));
+  const field = String(form.get("field") ?? "");
+  const change = settingChange(field, String(form.get("value") ?? ""), new Set(TIME_ZONES));
   await as("admin", (db, by) => {
-    if (change !== undefined) updateBotSettings(db, change, by, nowSeconds());
+    if (change === undefined) return;
+    const now = nowSeconds();
+    updateBotSettings(db, change, by, now);
+    const guild = loadGuild(db);
+    const name = (id: string) => [...guild.channels, ...guild.roles].find((i) => i.id === id)?.name ?? id;
+    logChange(db, by, "discordSetting", now, undefined, settingChangeText(field, change, name));
   });
 }
 
@@ -99,23 +124,60 @@ export interface BotTokenState {
 
 /** Makes the bot token (the one before stops working) and hands it to the card once. */
 export async function createBotTokenAction(): Promise<BotTokenState> {
-  const token = await as("admin", (db, by) => createBotToken(db, by, nowSeconds()));
+  const token = await as("owner", (db, by) => {
+    const now = nowSeconds();
+    const made = createBotToken(db, by, now);
+    logChange(db, by, "botToken", now, undefined, "made a new bot token");
+    return made;
+  });
   return { token };
 }
 
 export async function revokeBotTokenAction(): Promise<void> {
-  await as("admin", (db) => revokeBotToken(db, nowSeconds()));
+  await as("owner", (db, by) => {
+    const now = nowSeconds();
+    revokeBotToken(db, now);
+    logChange(db, by, "botToken", now, undefined, "revoked the bot token");
+  });
   redirect(to("bot-revoked"));
 }
 
 /** "Send a test run post" (WEB-40): a made-up `runCreated` marked as a test, never stored as a run. */
 export async function testRunPostAction(): Promise<void> {
-  await as("admin", (db, battleTag) => sendTestRunPost(db, battleTagName(battleTag), nowSeconds()));
+  await as("admin", (db, battleTag) => {
+    const now = nowSeconds();
+    sendTestRunPost(db, battleTagName(battleTag), now);
+    logChange(db, battleTag, "testPost", now, undefined, "a test run post");
+  });
   redirect(to("test-run-sent"));
 }
 
-/** "Send a test post": a `test` event the bot posts in the posts channel (docs/BOT-API.md). */
-export async function testPostAction(): Promise<void> {
-  await as("admin", (db) => enqueueBotEvent(db, "test", { kind: "posts" }, nowSeconds()));
+/** The test posts of the Discord page's boxes (docs/BOT-API.md `test`, WEB-58): the bot posts a sample of the kind. */
+const TEST_KINDS = ["posts", "feats", "recap", "doomsday"] as const;
+const TEST_NAMES: Record<(typeof TEST_KINDS)[number], string> = {
+  posts: "a test post",
+  feats: "a test feat",
+  recap: "a test recap",
+  doomsday: "a test board",
+};
+
+/** "Send a test …": a `test` event of the form's `kind` (default `posts`), posted in that kind's channel. */
+export async function testPostAction(form?: FormData): Promise<void> {
+  const asked = String(form?.get("kind") ?? "posts");
+  const kind = TEST_KINDS.find((k) => k === asked) ?? "posts";
+  await as("admin", (db, by) => {
+    const now = nowSeconds();
+    enqueueBotEvent(db, "test", { kind }, now);
+    logChange(db, by, "testPost", now, undefined, TEST_NAMES[kind]);
+  });
   redirect(to("test-sent"));
+}
+
+/** Undo for a Doomsday reset change that waits for the next reset (WEB-58). */
+export async function undoResetAction(): Promise<void> {
+  await as("admin", (db, by) => {
+    const now = nowSeconds();
+    undoDoomsdayReset(db, by, now);
+    logChange(db, by, "discordSetting", now, undefined, "took back the Doomsday reset change");
+  });
 }

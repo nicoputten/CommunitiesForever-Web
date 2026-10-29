@@ -1,0 +1,765 @@
+/* The Doomsday page (WEB-59): boards doomsday-today (desktop), doomsday-phone (Week tab), doomsday-feats (heatmap).
+   Cards as the runs pages; PvE green and PvP red side by side, never added together. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+  min-width: 0;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4-5);
+}
+
+.emblem {
+  width: var(--size-emblem-dd);
+  height: var(--size-emblem-dd);
+  flex: none;
+}
+
+.headText {
+  flex: 1 1 var(--size-search-min);
+  min-width: 0;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2-5);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  padding: var(--s-2-5) var(--s-3-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-strong);
+  border: var(--border) solid var(--line);
+}
+
+.statLabel {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.statValue {
+  font-family: var(--font-ui);
+  font-size: var(--fs-cta);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.points {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pve {
+  color: var(--pve-text);
+}
+
+.pvp {
+  color: var(--pvp-text);
+}
+
+.sep {
+  color: var(--text-faint);
+}
+
+.streak {
+  color: var(--streak-text);
+  white-space: nowrap;
+}
+
+.flame {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  vertical-align: -2px;
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-regular);
+  color: var(--text-dim);
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: var(--s-1);
+  border-bottom: var(--border) solid var(--line-bar-phone);
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4);
+  font-family: var(--font-display);
+  font-size: var(--fs-cta);
+  letter-spacing: var(--ls-display);
+  color: var(--text-dim);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text-strong);
+}
+
+.tab[aria-current="page"] {
+  color: var(--gold-pale);
+  box-shadow: var(--shadow-current);
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-goals-aside);
+  gap: var(--s-4-5);
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4) var(--s-4-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-strong);
+  border: var(--border) solid var(--line);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-3);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-title);
+  color: var(--gold-bright);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.resets {
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--streak-text);
+}
+
+.goals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2-5);
+}
+
+.goals4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+  .goals4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .goals,
+  .goals4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── A goal ──────────────────────────────────────────────────────────── */
+
+.goal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-1) var(--s-3);
+  align-content: start;
+  padding: var(--s-3-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-goal);
+}
+
+.goal[data-done="true"] {
+  border-color: var(--line-goal-done);
+}
+
+.goal[data-slot="duel"] {
+  border-style: dashed;
+}
+
+.kind {
+  grid-column: 1 / -1;
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+}
+
+.goalTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-section);
+  color: var(--text-strong);
+}
+
+.goal[data-done="true"] .goalTitle {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--strike-done);
+}
+
+.check {
+  font-weight: var(--fw-semibold);
+  color: var(--pve-text);
+}
+
+.count {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.bar {
+  grid-column: 1 / -1;
+  height: var(--size-goal-bar);
+  margin-top: var(--s-1);
+  border-radius: var(--r-badge);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--pve-text);
+}
+
+.bar[data-track="pvp"] > span {
+  background: var(--pvp-text);
+}
+
+.goalMeta {
+  grid-column: 1 / -1;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.swap {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  margin-left: var(--s-1);
+  color: var(--swap-text);
+  vertical-align: -2px;
+}
+
+.note {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+/* ── Today so far ────────────────────────────────────────────────────── */
+
+.soFar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.soFarLine {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.soFarLine b {
+  font-weight: var(--fw-medium);
+  color: var(--text-strong);
+}
+
+.crown {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  flex: none;
+}
+
+.mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--size-avatar-mini);
+  height: var(--size-avatar-mini);
+  border-radius: var(--r-pill);
+  background: var(--avatar);
+  color: var(--gold-bright);
+  font-size: var(--fs-avatar-mini);
+  font-weight: var(--fw-semibold);
+}
+
+/* ── The board ───────────────────────────────────────────────────────── */
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.board {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-body-sm);
+}
+
+.board th {
+  padding: var(--s-2);
+  border-bottom: var(--border) solid var(--line-control);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-section);
+  text-transform: uppercase;
+  text-align: left;
+  vertical-align: bottom;
+  color: var(--text-faint);
+}
+
+.board th.goalCol {
+  width: var(--size-board-goal);
+}
+
+.board th.friendCol {
+  width: var(--size-board-friend);
+}
+
+.colTitle {
+  display: block;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-chip);
+}
+
+.board td {
+  padding: var(--s-2-5) var(--s-2);
+  border-bottom: var(--border) solid var(--line-row);
+  vertical-align: middle;
+  color: var(--text-chip);
+}
+
+.board tr[data-you="true"] {
+  background: var(--row-you);
+}
+
+.board tr[data-dim="true"] td {
+  color: var(--text-dim);
+}
+
+.friend {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  white-space: nowrap;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--size-avatar-board);
+  height: var(--size-avatar-board);
+  border-radius: var(--r-pill);
+  background: var(--avatar);
+  color: var(--gold-bright);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+}
+
+tr[data-dim="true"] .avatar {
+  background: var(--avatar-muted);
+  color: var(--text-dim);
+}
+
+.friendName {
+  font-weight: var(--fw-medium);
+  color: var(--text-strong);
+}
+
+.friendName[data-crossed="true"] {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--strike-done);
+  text-decoration-thickness: var(--s-0-5);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+}
+
+.cellDone {
+  font-size: var(--fs-cta);
+  font-weight: var(--fw-semibold);
+  color: var(--pve-text);
+}
+
+.cellTime {
+  font-size: var(--fs-meta-sm);
+  color: var(--text-faint);
+}
+
+.cellOpen {
+  color: var(--text-faint);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+
+.pillFirst {
+  background: var(--first-tint);
+  border: var(--border) solid var(--first-line);
+  color: var(--gold-pale);
+}
+
+.pillVirgin {
+  background: var(--virgin-tint);
+  border: var(--border) solid var(--virgin-line);
+  color: var(--swap-text);
+}
+
+.pillIcon {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4-5);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.legend .crown,
+.legend .swap {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  margin: 0;
+  vertical-align: -2px;
+}
+
+/* ── Heatmap ─────────────────────────────────────────────────────────── */
+
+.heatRow {
+  display: grid;
+  grid-template-columns: var(--size-heat-name) minmax(0, 1fr) var(--size-heat-best);
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.heatName {
+  font-size: var(--fs-body);
+  color: var(--text-strong);
+}
+
+.heat {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, var(--size-heat));
+  grid-auto-columns: var(--size-heat);
+  gap: var(--s-0-75);
+  justify-content: start;
+  overflow-x: auto;
+}
+
+.heat > span {
+  width: var(--size-heat);
+  height: var(--size-heat);
+  border-radius: var(--r-heat);
+  background: var(--heat-0);
+}
+
+.heat > span[data-level="1"] {
+  background: var(--heat-1);
+}
+
+.heat > span[data-level="2"] {
+  background: var(--heat-2);
+}
+
+.heat > span[data-level="3"] {
+  background: var(--heat-3);
+}
+
+.heat > span[data-level="4"] {
+  background: var(--heat-4);
+}
+
+.heat > span[data-level="5"] {
+  background: var(--heat-5);
+}
+
+@media (max-width: 767px) {
+  .heatRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .heat {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+.board tbody th {
+  padding: var(--s-2-5) var(--s-2);
+  border-bottom: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+/* ── Phone and states (WEB-61, board doomsday-phone) ─────────────────── */
+
+/* Only on the phone: the day's points with the reset under the tabs, the streak under the goals. */
+.phoneOnly {
+  display: none;
+}
+
+/* Shown (flex) by the phone media query below, through .phoneOnly. */
+.phoneLine {
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+/* The board as one card per friend. */
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.friendCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+}
+
+.friendCard[data-dim="true"] {
+  color: var(--text-dim);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* The tags sit on the right, together. */
+.cardTop .friendName {
+  margin-right: auto;
+}
+
+.youTag {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-0-5);
+  min-width: var(--size-mark);
+  height: var(--size-mark);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-nav);
+  background: var(--surface-raised);
+  color: var(--text-faint);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.mark[data-state="done"][data-track="pve"] {
+  background: var(--mark-pve);
+  color: var(--pve-text);
+}
+
+.mark[data-state="done"][data-track="pvp"] {
+  background: var(--mark-pvp);
+  color: var(--pvp-text);
+}
+
+.mark[data-state="progress"] {
+  color: var(--text-chip);
+}
+
+.markSwap {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--swap-text);
+}
+
+/* Day one of Doomsday. */
+.dayOne {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-3-5);
+}
+
+.dayOneEmblem {
+  width: var(--size-emblem-day-one);
+  height: var(--size-emblem-day-one);
+  flex: none;
+}
+
+.dayOneTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+.dayOneText {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* Loading and error. */
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--stale-banner-line);
+  background: transparent;
+  color: var(--stale-text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--stale-tint);
+}
+
+@media (max-width: 767px) {
+  .phoneOnly {
+    display: block;
+  }
+
+  .phoneLine.phoneOnly {
+    display: flex;
+  }
+
+  .stats {
+    display: none;
+  }
+
+  .emblem {
+    width: var(--size-emblem-day-one);
+    height: var(--size-emblem-day-one);
+  }
+
+  .card {
+    padding: var(--s-3-5);
+  }
+
+  /* Goals as 52 px rows: kind and title, the check or count on the right. */
+  .goal {
+    min-height: var(--size-goal-row);
+    padding: var(--s-2) var(--s-3);
+    align-items: center;
+  }
+
+  .goal .bar,
+  .goal .goalMeta {
+    display: none;
+  }
+
+  .goal[data-slot="duel"] .goalMeta {
+    display: block;
+  }
+
+  .goalTitle {
+    font-size: var(--fs-name-sm);
+  }
+
+  .tableWrap,
+  .legendDesktop,
+  .desktopOnly {
+    display: none;
+  }
+
+  .cards {
+    display: flex;
+  }
+}

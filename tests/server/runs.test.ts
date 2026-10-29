@@ -12,6 +12,7 @@ import { GET as charactersRoute } from "@/app/api/bot/v1/runs/[id]/characters/ro
 import { GET as runRoute, PATCH as editRoute } from "@/app/api/bot/v1/runs/[id]/route";
 import { GET as runsRoute, POST as planRoute } from "@/app/api/bot/v1/runs/route";
 import { block } from "@/server/access";
+import { listLog } from "@/server/admins";
 import { createBotToken, pendingEvents } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { runAnswers } from "@/server/db/schema";
@@ -498,6 +499,21 @@ describe("moving up and reminders", () => {
     expect(all.map((e) => e.type)).toEqual(["runReminder", "runStarting"]);
     // A new time brings both back.
     expect(editRun(db, id, "Femke#3307", { startsAt: NOW + 25 * 60 }, NOW + 22 * 60)).toBe("closed");
+  });
+
+  it("an admin deleting someone else's run goes in the admin changes log (WEB-64); one's own doesn't", () => {
+    const db = getDb();
+    const before = listLog(db).length;
+    const own = planRunFor(db, { dungeonId: "wc", startsAt: NOW + 50 * 60, organiser: ADMIN, source: "website" }, NOW);
+    cancelRun(db, (own as { id: number }).id, ADMIN, true, NOW);
+    expect(listLog(db)).toHaveLength(before);
+    const bobs = planRunFor(
+      db,
+      { dungeonId: "wc", startsAt: NOW + 50 * 60, organiser: "Bob#2002", source: "website" },
+      NOW,
+    );
+    cancelRun(db, (bobs as { id: number }).id, ADMIN, true, NOW);
+    expect(listLog(db)[0]).toMatchObject({ by: ADMIN, action: "runDeleted", target: "Bob#2002" });
   });
 
   it("no run events with the admin's Runs switch off; no reminder with Reminders off", () => {
