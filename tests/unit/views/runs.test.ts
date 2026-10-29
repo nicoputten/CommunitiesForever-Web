@@ -106,6 +106,7 @@ describe("the runs list", () => {
     const later = runsPage(input(NICO, { now: NOW + 6 * HOUR }), "all");
     expect(later.thisWeek.map((r) => r.dungeon)).not.toContain("Wailing Caverns");
     expect(later.past.map((p) => [p.dungeon, p.result.label])).toContainEqual(["Wailing Caverns", "Cancelled"]);
+    expect(runsPage(input(NICO), "all").thisWeek.find((r) => r.id === 6)?.hint).toBeUndefined();
   });
 
   it("describes a card: yours, the line, what's open, the organiser's own clock", () => {

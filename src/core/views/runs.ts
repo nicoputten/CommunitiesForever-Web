@@ -293,6 +293,8 @@ function openWithNobody(ctx: Ctx, run: RunRecord): SlotRole[] {
 }
 
 function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): RunCardView["hint"] {
+  // A cancelled run still in its week (WEB-65, bug 3) has nothing left to join.
+  if (run.cancelledAt !== undefined) return undefined;
   const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
   if (mine !== undefined && !yours) {
     const withChar = mine.guid === undefined ? "" : ` with ${charName(ctx, mine)}`;
