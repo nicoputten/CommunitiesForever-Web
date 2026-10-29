@@ -192,6 +192,33 @@ describe("doomsdayPage week", () => {
   });
 });
 
+describe("doomsdayPage week: who is closest (WEB-65)", () => {
+  it("names the friends done first, then the furthest along, at most two; nobody who hasn't started", () => {
+    const s = sample();
+    const nico = s.friends.find((f) => f.friendKey === "nico")!;
+    const column = nico.week!.goals[0]!.columnId;
+    const set = (key: string, goal: { doneAt?: number; progress?: { value: number; target: number } }) => {
+      const f = s.friends.find((x) => x.friendKey === key)!;
+      f.week = { goals: [{ ...nico.week!.goals[0]!, ...goal, columnId: column }] };
+    };
+    set("mira", { doneAt: NOW - 3600, progress: { value: 3, target: 3 } });
+    set("bob", { progress: { value: 2, target: 3 } });
+    set("femke", { progress: { value: 1, target: 3 } });
+    set("jorrit", { progress: { value: 0, target: 3 } });
+    const goals = page(s).week!.goals;
+    expect(goals[0]!.closest).toBe("Mira 3/3 done · Bob 2/3");
+    // Nobody else on the other weeklies: no line.
+    expect(goals[1]!.closest).toBeUndefined();
+  });
+
+  it("adds what the progress is about to the count", () => {
+    const s = sample();
+    const goal = s.friends.find((f) => f.friendKey === "nico")!.week!.goals[0]!;
+    goal.progress = { value: 4, target: 6, detail: "Deadmines" };
+    expect(page(s).week!.goals[0]!.progress?.text).toBe("4 / 6 · Deadmines");
+  });
+});
+
 describe("doomsdayPage heatmap", () => {
   it("has 84 days per friend with data, oldest first, today last", () => {
     const { heatmap } = page();

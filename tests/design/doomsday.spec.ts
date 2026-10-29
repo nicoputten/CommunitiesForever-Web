@@ -192,6 +192,11 @@ test("doomsday: week and heatmap design values", async ({ page }) => {
   await expectStyles(page.getByTestId("goal").getByText("PvP bounty"), {
     color: "var(--pvp-text)",
   });
+  // WEB-65: who else is closest on each weekly, on a phone too.
+  await expectStyles(page.getByTestId("goal").getByText("Bob 4/5 · Mira 3/5"), {
+    "font-size": "var(--fs-meta-sm)",
+    color: "var(--text-dim)",
+  });
   await openScreen(page, "/doomsday/board");
   const heat = page.getByRole("img", { name: /goals per day over 12 weeks/ }).first();
   await expect(heat.locator("span")).toHaveCount(84);

@@ -70,8 +70,10 @@ export interface GoalCardView {
   done: boolean;
   /** "done at 10:42", "done at Mon 22:10". */
   doneText?: string;
-  /** "3 / 5" with its share (0..100); only when the site can tell. */
+  /** "3 / 5", "4 / 6 · Deadmines", with its share (0..100); only when the site can tell. */
   progress?: { text: string; percent: number; approx: boolean };
+  /** A weekly's closest friends (WEB-65): "Mira 5/5 done · Bob 4/5"; none when nobody else has started. */
+  closest?: string;
   /** "+5 PvE". */
   worth: string;
   /** Tooltip of the swap mark: "Instead of: Raise Cooking, First Aid or Fishing". */
@@ -273,6 +275,42 @@ function swapText(g: FriendGoal): string | undefined {
   return g.swappedFrom === undefined ? undefined : `Instead of: ${g.swappedFrom.title}`;
 }
 
+/** How many friends the closest line names. */
+const CLOSEST = 2;
+
+/**
+ * Who else is closest on a weekly (WEB-65, board live-test-site-fixes): "Mira 5/5 done · Bob 4/5". Done first (the
+ * earliest first), then the furthest along; a friend who hasn't started isn't named.
+ */
+function closest(friends: readonly FriendDoomsday[], viewerKey: string, columnId: string): string | undefined {
+  const near = friends
+    .filter((f) => f.friendKey !== viewerKey)
+    .flatMap((f) => {
+      const g = f.week?.goals.find((x) => x.columnId === columnId);
+      if (g === undefined) return [];
+      const p = g.progress !== undefined && g.progress.target > 0 ? g.progress : undefined;
+      if (g.doneAt === undefined && (p === undefined || p.value <= 0)) return [];
+      const share = g.doneAt !== undefined ? 1 : Math.min(p!.value, p!.target) / p!.target;
+      const count =
+        p === undefined
+          ? ""
+          : g.doneAt !== undefined
+            ? ` ${p.target}/${p.target}`
+            : ` ${Math.min(p.value, p.target)}/${p.target}`;
+      return [
+        { name: f.name, share, doneAt: g.doneAt, text: `${f.name}${count}${g.doneAt !== undefined ? " done" : ""}` },
+      ];
+    })
+    .sort(
+      (a, b) =>
+        b.share - a.share ||
+        (a.doneAt ?? Number.MAX_SAFE_INTEGER) - (b.doneAt ?? Number.MAX_SAFE_INTEGER) ||
+        compareText(a.name, b.name),
+    )
+    .slice(0, CLOSEST);
+  return near.length === 0 ? undefined : near.map((n) => n.text).join(" · ");
+}
+
 function goalCard(g: FriendGoal, timeZone: string, dayStart?: number): GoalCardView {
   const card: GoalCardView = {
     key: g.columnId,
@@ -285,8 +323,9 @@ function goalCard(g: FriendGoal, timeZone: string, dayStart?: number): GoalCardV
   if (g.doneAt !== undefined) card.doneText = doneText(g.doneAt, timeZone, dayStart);
   else if (g.progress !== undefined && g.progress.target > 0) {
     const value = Math.min(g.progress.value, g.progress.target);
+    const detail = g.progress.detail === undefined ? "" : ` · ${g.progress.detail}`;
     card.progress = {
-      text: `${g.progress.approx === true ? "≈" : ""}${value} / ${g.progress.target}`,
+      text: `${g.progress.approx === true ? "≈" : ""}${value} / ${g.progress.target}${detail}`,
       percent: Math.round((value / g.progress.target) * 100),
       approx: g.progress.approx === true,
     };
@@ -444,7 +483,12 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
   if (me?.status === "active" && me.week !== undefined) {
     const week: WeekView = {
       resets: `resets ${weekdayLong(s.schedule.weekReset, timeZone)} ${localTime(s.schedule.weekReset, timeZone)} · in ${countdown(s.schedule.weekReset, s.now)}`,
-      goals: me.week.goals.map((g) => goalCard(g, timeZone)),
+      goals: me.week.goals.map((g) => {
+        const card = goalCard(g, timeZone);
+        const near = closest(active, me.friendKey, g.columnId);
+        if (near !== undefined) card.closest = near;
+        return card;
+      }),
     };
     const points = pointsView(me.points?.week, approx(me));
     if (points !== undefined) week.points = points;

@@ -278,6 +278,13 @@
   color: var(--text-dim);
 }
 
+/* A weekly's closest friends (WEB-65, board live-test-site-fixes). */
+.closest {
+  grid-column: 1 / -1;
+  font-size: var(--fs-meta-sm);
+  color: var(--text-dim);
+}
+
 .swap {
   width: var(--size-icon-sm);
   height: var(--size-icon-sm);
@@ -743,6 +750,11 @@ tr[data-dim="true"] .avatar {
   .goal .bar,
   .goal .goalMeta {
     display: none;
+  }
+
+  /* The Week tab keeps its progress on a phone (WEB-65). */
+  .goal[data-week] .bar {
+    display: block;
   }
 
   .goal[data-slot="duel"] .goalMeta {
