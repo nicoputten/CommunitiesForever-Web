@@ -39,11 +39,8 @@ describe("doomsdayPage header", () => {
     expect(header.streak).toEqual({ current: 6, best: 11 });
   });
 
-  it("names the reset in the viewer's zone", () => {
-    expect(page().header.sub).toMatch(/^Daily goals at 19:00,/);
-    expect(doomsdayPage({ snapshot: sample(), timeZone: "Europe/London" }).header.sub).toMatch(
-      /^Daily goals at 18:00,/,
-    );
+  it("says what the page is in a few words (player copy only, WEB-65)", () => {
+    expect(page().header.sub).toBe("Daily goals, feats and a ladder.");
   });
 
   it("has no numbers for a viewer without Doomsday data", () => {

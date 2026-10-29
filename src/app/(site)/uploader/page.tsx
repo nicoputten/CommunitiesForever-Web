@@ -156,10 +156,7 @@ export default async function UploaderPage({
 
       <OwnHistory rows={own.uploads.map(ownRow)} devices={own.devices} olderHref={olderHref} />
 
-      <p className={styles.note}>
-        Revoking stops that uploader at its next attempt; the app then shows “Reconnect”. Uploads from an uploader count
-        exactly like a manual upload: same session report, same history.
-      </p>
+      <p className={styles.note}>Revoking stops that uploader at its next attempt; the app then shows “Reconnect”.</p>
     </div>
   );
 }

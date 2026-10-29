@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { nowSeconds } from "@/app/clock";
 import { getDataset } from "@/app/dataset";
 import { professions, recordCharacters } from "@/core/views";
 import { ProfessionCard } from "@/components/professions/ProfessionCard";
 import { ProfessionMatrix } from "@/components/professions/ProfessionMatrix";
 import { ProfessionSummaryBoxes } from "@/components/professions/ProfessionSummary";
-import { RecipeSearch } from "@/components/professions/RecipeSearch";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { ProfessionsEmpty } from "./empty";
 import styles from "./professions.module.css";
 
 export const metadata: Metadata = { title: "Professions" };
 
-const SUB = "Who can craft what across the group · skill caps grow in steps of 75, 150, 225 and 300";
+const SUB = "Who can craft what across the group";
 
 /** Who can craft what across the group (WEB-24, board `professions`). */
 export default async function ProfessionsPage() {
@@ -24,7 +24,7 @@ export default async function ProfessionsPage() {
   return (
     <div className={styles.page}>
       <PageTitle sub={SUB}>Professions</PageTitle>
-      <RecipeSearch />
+      {/* The recipe search (RecipeSearch) is hidden until the addon shares recipes (WEB-65). */}
       <ProfessionSummaryBoxes view={view} />
 
       <section className={styles.section} aria-labelledby="by-profession">
@@ -32,10 +32,9 @@ export default async function ProfessionsPage() {
           <h2 id="by-profession" className={styles.title}>
             By profession
           </h2>
-          <p className={styles.hint}>
-            Light part of a bar = room left until the current cap · <span className={styles.star}>★</span> best in the
-            group
-          </p>
+          <InfoTip>
+            The light part of a bar is the room left until the current cap. ★ marks the best in the group.
+          </InfoTip>
         </div>
         <div className={styles.cards}>
           {view.professions.map((p) => (

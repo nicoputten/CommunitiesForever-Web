@@ -204,8 +204,13 @@ test.describe("the admin", () => {
     };
     await expect.poll(kinds).toEqual(expect.arrayContaining(["feats", "recap", "doomsday"]));
 
-    await bot.getByRole("button", { name: "Revoke" }).click();
-    await bot.getByRole("button", { name: "Revoke token" }).click();
+    // Revoke asks first. On a slow runner the last test post's page update can land after the first click and close
+    // the question again: ask and confirm as one step, again until it holds.
+    await expect(async () => {
+      const confirm = bot.getByRole("button", { name: "Revoke token" });
+      if (!(await confirm.isVisible())) await bot.getByRole("button", { name: "Revoke" }).click();
+      await confirm.click({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
     await expect(page.getByRole("status")).toContainText("bot token is revoked");
     await expect(page.getByTestId("bot-status")).toHaveText("Bot not connected");
     const after = await page.request.get("/api/bot/v1/settings", { headers: { authorization: `Bearer ${token}` } });

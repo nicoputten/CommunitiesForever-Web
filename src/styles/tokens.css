@@ -891,4 +891,10 @@
   --mark-pvp: rgba(240, 138, 128, 0.14); /* doomsday-phone: a PvP goal done */
   --surface-dd-chip: rgba(12, 18, 30, 0.9); /* roster-cards-doomsday: the Doomsday chip */
   --size-emblem-day-one: 40px; /* doomsday-phone: the emblem on "Day one of Doomsday" and the phone title */
+  /* The ⓘ tooltip (WEB-65, board live-test-site-fixes; brief docs/DESIGN-BRIEF-LIVE-TEST.md part 1) */
+  --size-info: 18px; /* the gold-outlined ⓘ circle (tap area --size-touch) */
+  --fs-info: 11px; /* the i inside it */
+  --size-tip: 280px; /* the panel's max width */
+  --fs-tip: 12.5px; /* the panel's text */
+  --line-tip: rgba(212, 175, 106, 0.45); /* the panel's 1 px gold border */
 }

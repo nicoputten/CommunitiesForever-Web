@@ -44,7 +44,7 @@ test("doomsday phone: design values", async ({ page }) => {
   await openScreen(page, "/doomsday");
   // The day's points and the reset under the tabs; the header's stat cards are desktop only.
   await expect(page.getByText("This week", { exact: true }).first()).toBeHidden();
-  await expectStyles(page.getByText(/^resets in /).first(), { color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /).first(), { color: "var(--streak-text)" });
   await expectStyles(page.getByTestId("goal").first(), { "min-height": "var(--size-goal-row)" });
   // The board as one card per friend, with a mark per goal.
   await expect(page.getByRole("region", { name: "The board", exact: true })).toBeHidden();
@@ -160,7 +160,7 @@ test("doomsday: design values", async ({ page }) => {
   const open = page.getByTestId("goal").filter({ hasText: "Front line" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
   await expectStyles(open.getByText("1 / 5"), { ...DATA, color: "var(--text)" });
-  await expectStyles(page.getByText(/^resets in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
   if (isPhone(page)) return;
@@ -227,4 +227,29 @@ test("doomsday roster chips: design values", async ({ page }) => {
   await expectStyles(chip.getByText("PvE 80"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
+});
+
+// WEB-65: the ⓘ tooltip, the site's one way to explain something (board live-test-site-fixes).
+test("info tip: design values", async ({ page }) => {
+  await openScreen(page, "/doomsday");
+  const goals = page.getByRole("region", { name: /^Your goals/ });
+  const button = goals.getByRole("button", { name: "More info" });
+  await expectStyles(button, { width: "var(--size-touch)", height: "var(--size-touch)" });
+  await expectStyles(button.locator("span"), {
+    width: "var(--size-info)",
+    height: "var(--size-info)",
+    "border-top-color": "var(--gold)",
+  });
+  await button.click();
+  const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
+  await expectStyles(tip, {
+    "background-color": "var(--surface-tooltip)",
+    "border-top-color": "var(--line-tip)",
+    "font-size": "var(--fs-tip)",
+  });
+  // Inside the screen, also on a 375 px phone.
+  const box = (await tip.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await expect(button).toHaveAttribute("aria-describedby", (await tip.getAttribute("id"))!);
 });

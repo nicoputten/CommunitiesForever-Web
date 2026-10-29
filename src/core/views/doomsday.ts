@@ -51,7 +51,7 @@ export interface StreakView {
 }
 
 export interface DoomsdayHeader {
-  /** "Daily goals at 19:00, feats for bragging, and a ladder per track. Suggestions, never rules." */
+  /** "Daily goals, feats and a ladder." (player copy only, WEB-65) */
   sub: string;
   /** "resets in 11 h 30 m" (the phone shows it under the tabs). */
   resets: string;
@@ -405,7 +405,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
   const approx = (f: FriendDoomsday) => f.points?.approx?.pvp === true;
 
   const header: DoomsdayHeader = {
-    sub: `Daily goals at ${localTime(s.schedule.nextReset, timeZone)}, feats for bragging, and a ladder per track. Suggestions, never rules.`,
+    sub: "Daily goals, feats and a ladder.",
     resets: resetsText(s.schedule.nextReset, s.now, timeZone),
   };
   if (me?.status === "active" && me.points !== undefined) {

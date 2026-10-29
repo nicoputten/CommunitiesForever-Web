@@ -26,7 +26,6 @@ export default async function DoomsdayLadderPage({
   const params = await searchParams;
   const view = ladderView(ctx.snapshot, parseLadderScope(params.scope), ctx.viewerKey, ctx.timeZone);
   const track = params.track === "pvp" ? "pvp" : "pve";
-  const note = view.scope === "week" ? "movement since last week" : undefined;
   const href = (scope: string | undefined, t: string) => {
     const q = [scope === undefined ? "" : `scope=${scope}`, t === "pvp" ? "track=pvp" : ""].filter((x) => x !== "");
     return `/doomsday/ladder${q.length === 0 ? "" : `?${q.join("&")}`}`;
@@ -65,15 +64,9 @@ export default async function DoomsdayLadderPage({
       </div>
       <div className={ladder.two}>
         {view.tracks.map((t) => (
-          <LadderCard
-            key={t.track}
-            view={t}
-            phoneHidden={t.track !== track}
-            {...(note === undefined ? {} : { note })}
-          />
+          <LadderCard key={t.track} view={t} phoneHidden={t.track !== track} />
         ))}
       </div>
-      <p className={`${styles.note} ${styles.phoneOnly}`}>Tap a friend for the split per character.</p>
     </DoomsdayFrame>
   );
 }
