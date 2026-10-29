@@ -109,7 +109,17 @@ describe("runs for the uploader", () => {
     ]);
     expect(body.runs[1]!.url).toBe(`https://wow.example/runs/${armory}`);
     expect(body.runs[0]!.id).toBe(`r-${started}`);
-    sameShape(body, example("runs"), ["note", "guid", "name", "fit", "reserve", "classFile", "level"]);
+    sameShape(body, example("runs"), [
+      "note",
+      "guid",
+      "name",
+      "fit",
+      "reserve",
+      "classFile",
+      "level",
+      "realm",
+      "seenAt",
+    ]);
     // WEB-66 (addon CF-62): the site's URL and the group's friends, the token's owner left out, never a BattleTag.
     const extra = body as unknown as {
       site: string;

@@ -170,7 +170,12 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
   "doomsday": { "reset": 68400, "changedAt": 0, "offset": 3600, "offsetUntil": 1806195600, "offsetAfter": 7200 },
   "site": "https://wow.vestras.nl",
   "friends": [
-    { "name": "Mira", "chars": [{ "name": "Mira Sunstrider", "classFile": "PRIEST", "level": 28 }] }
+    {
+      "name": "Mira",
+      "chars": [
+        { "name": "Mira Sunstrider", "realm": "Example Realm", "classFile": "PRIEST", "level": 28, "seenAt": 1793110000 }
+      ]
+    }
   ]
 }
 ```
@@ -182,7 +187,7 @@ Errors: the Bearer errors above, `400 empty_file`, `413 too_large`, `429 rate_li
 - WEB-47 (optional, within v1): an answer's `fit` is how the character's level fits the run ("fits", "+3 over", "carry · +12", "4 below"; one rule, `levelFit`), and `reserve: true` marks an I'm in that waits for a full role. A reserve is sent as `"answer": "maybe"`, so older addons, which read only `in`, `maybe` and `cant`, show it as Maybe. `role` is the role chosen for that run (`tank`, `heal`, `dps`), no longer always the character's.
 - WEB-51 (optional, within v1): `asks` are the open asks ("who's up right now", from the game or Discord's `/ask`), oldest first, at most 50, so a friend whose game reloads within the 10 minutes sees one; an ask leaves the list when it expires (`expiresAt`, 10 minutes after `at`). `from` is the asker, on their character and its role when they have one that may join; `answers` as a run's, without slots (no `reserve`). `url` is the Runs page. Showing them in game is a later addon story; older addons ignore the list.
 - WEB-58 (optional, within v1): `doomsday` is Doomsday's reset in force (seconds after realm midnight, 68400 = 19:00; the admin's setting on the Discord page) and `changedAt`, when it took effect (0 while it was never changed). A change reaches the game only from the reset it takes effect at, never in the middle of a Doomsday day. `offset` is the realm zone's UTC offset now (seconds east; the Discord page's realm time zone, default Europe/Paris), `offsetUntil` the server time of its next change (daylight saving) and `offsetAfter` the offset then; both are left out for a zone without a change within 400 days. The day boundary is realm time for everyone, also a friend playing from another zone (Nico, 2026-10-28); the addon uses these when it can't read the game clock. The uploader writes the whole answer (UP-12), so it lands as `CF_RUNS.doomsday` without an uploader update; the addon (CF-56) passes it to friends without the uploader, the newest `changedAt` winning.
-- WEB-66 (optional, within v1; addon CF-62, Nico 2026-10-29): `site` is the site's base URL (the addon's "Copy website link"). `friends` is the group's friends the site knows, so the addon's Friends tab can show them before they're online: every person in the merged data except the token's owner, by name, at most 50. `name` is the display name (at most 24 characters), never a BattleTag; `chars` the friend's characters, highest level first, at most 20, each with `name` (the full name, at most 40 characters) and optionally `classFile` (an uppercase token) and `level` (1 to 60). No GUIDs. A change to the list (a new record) moves `updatedAt`. The uploader writes them through as `CF_RUNS.site` and `CF_RUNS.friends`, like `doomsday`.
+- WEB-66 (optional, within v1; addon CF-62, Nico 2026-10-29): `site` is the site's base URL (the addon's "Copy website link"). `friends` is the group's friends the site knows, so the addon's Friends tab can show them before they're online: every person in the merged data except the token's owner, by name, at most 50. `name` is the display name (at most 24 characters), never a BattleTag; `chars` the friend's characters, highest level first, at most 20, each with `name` (the full name, at most 40 characters) and optionally `realm` (the realm's name as the game wrote it, at most 40), `classFile` (an uppercase token), `level` (1 to 60) and `seenAt` (Unix seconds: the newest of the character's last login and the group's last sighting of it). No GUIDs, no Discord IDs (Nico, 2026-10-29). A change to the list (a new record) moves `updatedAt`. The uploader writes them through as `CF_RUNS.site` and `CF_RUNS.friends`, like `doomsday`.
 - Bearer errors as above. Additive within v1: the app writes the fields the addon knows and may drop the rest.
 
 ## Disconnecting (RFC 7009)

@@ -95,7 +95,8 @@ export interface UploaderRuns {
 /** A friend for the addon's Friends tab: display name and characters only, never a BattleTag or GUID. */
 export interface GameFriend {
   name: string;
-  chars: { name: string; classFile?: string; level?: number }[];
+  /** `realm`: the realm's name as the game wrote it; `seenAt`: when the site last saw the character (Unix seconds). */
+  chars: { name: string; realm?: string; classFile?: string; level?: number; seenAt?: number }[];
 }
 
 /** At most this many friends, characters per friend, and characters in a name (addon CF-62). */
@@ -121,11 +122,17 @@ export function gameFriends(data: Dataset | undefined, owner: string): { friends
       .filter((c) => c.owner === p.key && c.name !== undefined)
       .sort((a, b) => (b.level ?? 0) - (a.level ?? 0) || a.name!.localeCompare(b.name!, "en"))
       .slice(0, UPLOADER_MAX_FRIEND_CHARS)
-      .map((c) => ({
-        name: c.name!.slice(0, CHAR_NAME_MAX),
-        ...(c.classFile !== undefined && /^[A-Z]+$/.test(c.classFile) ? { classFile: c.classFile } : {}),
-        ...(c.level !== undefined && c.level >= 1 && c.level <= 60 ? { level: c.level } : {}),
-      })),
+      .map((c) => {
+        // Last seen: the newest of its own record's last login and the group's sighting of it.
+        const seenAt = Math.max(c.lastPlayed ?? 0, data.locations[c.guid]?.seenAt ?? 0);
+        return {
+          name: c.name!.slice(0, CHAR_NAME_MAX),
+          ...(c.realm !== undefined && c.realm !== "" ? { realm: c.realm.slice(0, CHAR_NAME_MAX) } : {}),
+          ...(c.classFile !== undefined && /^[A-Z]+$/.test(c.classFile) ? { classFile: c.classFile } : {}),
+          ...(c.level !== undefined && c.level >= 1 && c.level <= 60 ? { level: c.level } : {}),
+          ...(seenAt > 0 ? { seenAt } : {}),
+        };
+      }),
   }));
   return { friends, changedAt: Math.max(0, ...people.map((p) => p.version ?? 0)) };
 }

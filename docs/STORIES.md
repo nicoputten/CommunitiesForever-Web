@@ -142,7 +142,7 @@ Agreed with Nico (2026-10-29). Boards: `bot-visual-recap`, `bot-visual-daily`, `
   - "The full week ↗" goes to the Doomsday page's Week tab (Nico): the recap's `url`
 - If an image can't be drawn, its id answers 404 and the bot posts without it.
 
-**Friends for the addon (addon CF-62, Nico 2026-10-29):** `GET uploader/v1/runs` gains `site` (the site's base URL) and `friends` (every person but the token's owner: display name and characters with class and level, never a BattleTag or GUID; at most 50 friends and 20 characters each), documented in `docs/UPLOADER-API.md`. The uploader writes the whole answer into `Data\Runs.lua`, so it reaches the addon without an uploader update.
+**Friends for the addon (addon CF-62, Nico 2026-10-29):** `GET uploader/v1/runs` gains `site` (the site's base URL) and `friends` (every person but the token's owner: display name and characters with realm, class, level and last seen, never a BattleTag, Discord ID or GUID; at most 50 friends and 20 characters each), documented in `docs/UPLOADER-API.md`. The uploader writes the whole answer into `Data\Runs.lua`, so it reaches the addon without an uploader update.
 
 **Tests:**
 - unit: the PvP Virgin rule (only duel points ends it; a kill without points ends it), the rank title, the goal count (5, 6 with Hunt and Skirmish, the duel slot), the day label (each part of the day, a time after midnight, the countdown), `shortLabel` length, the news line, big or strip per feat kind and the "most special" pick
