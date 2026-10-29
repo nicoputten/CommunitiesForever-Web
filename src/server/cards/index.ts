@@ -13,8 +13,8 @@ import { classLabel } from "@/core/recap/cards";
 import { recapChar } from "@/core/recap/input";
 import { recapDates } from "@/core/recap/when";
 import type { Db } from "../db";
-import { botEvents, recaps, sightings } from "../db/schema";
-import { recapSchedule } from "../recap";
+import { botEvents, sightings } from "../db/schema";
+import { recapByNumber, recapSchedule } from "../recap";
 import { loadState } from "../uploads";
 
 // Which card image an id names (WEB-41d, docs/BOT-API.md "Card images"), from what the site has stored:
@@ -51,7 +51,8 @@ function facts(db: Db, guid: string): CharacterFacts | undefined {
 }
 
 function recapCard(db: Db, week: number, which: string, host: string): CardSpec | undefined {
-  const row = db.select().from(recaps).where(eq(recaps.week, week)).get();
+  // The number the recap was posted with (WEB-62: it restarts after the launch cut-off).
+  const row = recapByNumber(db, week);
   if (row === undefined) return undefined;
   const r = row.data;
   const zoneCardFacts = r.cards.find((c) => c.id === "S1")?.facts;

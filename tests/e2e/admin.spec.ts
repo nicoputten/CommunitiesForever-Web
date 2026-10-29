@@ -81,3 +81,24 @@ test("only the admin sees the admin page", async ({ page, context, baseURL }) =>
   await page.getByRole("button", { name: "Account Bob#2002" }).click();
   await expect(page.getByRole("link", { name: "Admin", exact: true })).toHaveCount(0);
 });
+
+// WEB-62: the Danger zone asks before starting fresh. Confirming would change the shared database under the other
+// tests, so this stops at the dialog; the cut-off itself is tested in tests/server/cutoff.test.ts.
+test("Start fresh from launch asks first, and needs `delete all` typed", async ({ page, context, baseURL }) => {
+  await signInAs(context, baseURL!, E2E.admin);
+  await page.goto("/admin");
+  const zone = panel(page, "Danger zone");
+  await expect(zone).toContainText("Hidden, not deleted");
+  await zone.getByRole("button", { name: "Start fresh from launch…" }).click();
+  const dialog = page.getByRole("dialog", { name: "Are you sure? This is destructive" });
+  await expect(dialog).toBeVisible();
+  const confirm = dialog.getByRole("button", { name: "Start fresh from launch" });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/to confirm/).fill("delete");
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/to confirm/).fill("delete all");
+  await expect(confirm).toBeEnabled();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(zone.getByRole("button", { name: "Start fresh from launch…" })).toBeVisible();
+});

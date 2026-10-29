@@ -14,7 +14,10 @@ import {
   unblock,
 } from "@/server/access";
 import { auth } from "@/server/auth";
+import { CUTOFF_CONFIRM } from "@/core/cutoff";
+import { clearCutoff, storeCutoff } from "@/server/cutoff";
 import { getDb, type Db } from "@/server/db";
+import { rebuild } from "@/server/uploads";
 
 // The admin page's actions (WEB-18). Each checks again that the caller is the admin (CLAUDE.md rule 6); the
 // /api/admin routes stay for scripts.
@@ -65,4 +68,30 @@ export async function blockAction(form: FormData): Promise<void> {
 
 export async function unblockAction(form: FormData): Promise<void> {
   await asAdmin((db) => unblock(db, tagOf(form)));
+}
+
+// --- the launch cut-off (WEB-62) ---------------------------------------------------------------------------------
+
+/**
+ * "Start fresh from launch": the cut-off is now, then a rebuild from the uploads after it. Nothing is deleted. Only
+ * with the confirmation typed exactly; anything else changes nothing.
+ */
+export async function startFreshAction(form: FormData): Promise<void> {
+  if (String(form.get("confirm") ?? "").trim() !== CUTOFF_CONFIRM) return;
+  await asAdmin((db, by) => {
+    const now = nowSeconds();
+    storeCutoff(db, now, by, now);
+    rebuild(db);
+  });
+  // Every page shows the data again from the cut-off.
+  revalidatePath("/", "layout");
+}
+
+/** Undo: the cut-off goes, and a rebuild brings everything back as it was. */
+export async function undoStartFreshAction(): Promise<void> {
+  await asAdmin((db) => {
+    clearCutoff(db);
+    rebuild(db);
+  });
+  revalidatePath("/", "layout");
 }

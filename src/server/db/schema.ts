@@ -527,6 +527,19 @@ export const recaps = sqliteTable("recaps", {
   snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
 });
 
+/**
+ * The launch cut-off (WEB-62): one row (id 1) while it is set. The rebuild reads only uploads from after `at`; runs,
+ * asks and recaps from before it are hidden, never deleted. Not derived: Undo removes the row and rebuilds.
+ */
+export const launchCutoff = sqliteTable("launch_cutoff", {
+  id: integer("id").primaryKey(),
+  /** The moment (Unix seconds, UTC). */
+  at: integer("at").notNull(),
+  /** The admin's BattleTag, and when they set it. */
+  setBy: text("set_by").notNull(),
+  setAt: integer("set_at").notNull(),
+});
+
 /** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */
 export const recapStart = sqliteTable("recap_start", {
   id: integer("id").primaryKey(),

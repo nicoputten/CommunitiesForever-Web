@@ -5,6 +5,7 @@ import { ASK_EXPIRE_SECONDS, siteRunId, type GameItem, type GameRole } from "@/c
 import { OUTCOME_SECONDS, ranIt } from "@/core/runOutcome";
 import { runDungeon, runDungeonByAddonId, type SlotRole } from "@/core/runs";
 import { enqueueBotEvent } from "./bot";
+import { cutoffAt } from "./cutoff";
 import type { Db } from "./db";
 import type { Dataset } from "@/core/model";
 import { feedDays, gameItemCarriers, gameItems, runs } from "./db/schema";
@@ -273,7 +274,7 @@ export function markRanIt(db: Db, now: number): number {
         isNull(runs.cancelledAt),
         isNull(runs.outcome),
         lte(runs.startsAt, now),
-        gte(runs.startsAt, now - OUTCOME_SECONDS),
+        gte(runs.startsAt, Math.max(now - OUTCOME_SECONDS, cutoffAt(db))),
       ),
     )
     .all();

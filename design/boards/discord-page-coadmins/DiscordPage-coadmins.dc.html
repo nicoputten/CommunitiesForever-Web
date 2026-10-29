@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Discord page · co-admins</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+
+.opt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.opt:last-child{border-bottom:0}
+.opt b{display:block;font-weight:500;font-size:14px;color:#E6E1D6}
+.opt span.d{display:block;font-size:12px;color:#8E98A8;margin-top:2px;line-height:1.45}
+.swh{display:inline-flex;align-items:center;justify-content:center;width:52px;height:44px;flex:none}
+.sw{position:relative;width:40px;height:22px;border-radius:11px;background:#D4AF6A;flex:none;display:block}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#0B0F14}
+.sw.off{background:#2A3446}
+.sw.off:after{right:auto;left:3px;background:#8E98A8}
+.ok{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(127,217,154,.12);color:#9BE3B0;white-space:nowrap}
+.no{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(174,182,195,.1);color:#8E98A8;white-space:nowrap}
+.warn{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(240,167,116,.16);color:#F6C29C;white-space:nowrap}
+.adm{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid rgba(212,175,106,.35);color:#D4AF6A;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.new{font-size:10px;padding:2px 7px;border-radius:999px;background:#D4AF6A;color:#0B0F14;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-left:8px;vertical-align:3px}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bh .bt{display:flex;align-items:center;gap:10px}
+.bd{font-size:13px;color:#8E98A8;line-height:1.5;margin-top:-4px}
+.fld{display:flex;flex-direction:column;gap:6px}
+.hint{font-size:12px;color:#8E98A8;line-height:1.45}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 28px}
+.lr{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.av{width:30px;height:30px;border-radius:50%;background:#2A3446;color:#F0D08E;font:600 12px/30px Inter,sans-serif;text-align:center}
+.tm{display:inline-flex;align-items:center;gap:6px}
+.tm span.seg{display:inline-flex;align-items:center;justify-content:center;width:56px;min-height:44px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font:500 18px Inter,sans-serif;color:#F3EBDA;font-variant-numeric:tabular-nums}
+.tm span.c{font:600 18px Inter,sans-serif;color:#8E98A8}
+.pend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:rgba(240,167,116,.08);border:1px solid rgba(240,167,116,.35);font-size:13px;color:#F6C29C}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.jump{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:2;padding:10px 0;background:rgba(7,12,21,.92);border-bottom:1px solid rgba(212,175,106,.12)}
+.jump a{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:999px;font-size:13px;color:#AEB6C3;text-decoration:none;border:1px solid rgba(174,182,195,.18)}
+.jump a.act{color:#F3EBDA;border-color:#D4AF6A;background:rgba(212,175,106,.14)}
+.jump .sep{width:1px;background:rgba(212,175,106,.25);margin:4px 6px}
+.sect{display:flex;align-items:center;gap:14px;margin-top:8px}
+.sect h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.06em;color:#F0D08E;white-space:nowrap}
+.sect i{flex:1;height:1px;background:linear-gradient(90deg,rgba(212,175,106,.45),rgba(212,175,106,0))}
+.sect span{font-size:12px;color:#8E98A8}
+code{color:#F3DFAE;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.tok{font-family:ui-monospace,Menlo,monospace;font-size:14px;color:#F3DFAE;background:#0B1220;border:1px dashed rgba(212,175,106,.5);border-radius:10px;padding:12px 14px;word-break:break-all}
+.lbl{font:600 11px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#D4AF6A;margin-bottom:10px}
+.cap{font-size:13px;color:#AEB6C3;line-height:1.5}
+.dim{opacity:.55}
+.mt td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.05);color:#E6E1D6;font-size:13px;vertical-align:top}
+/* phone */
+.ph{width:375px;box-sizing:border-box;border-radius:28px;border:1px solid rgba(212,175,106,.3);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.ph .g2{grid-template-columns:minmax(0,1fr)}
+.ph .lr{grid-template-columns:34px minmax(0,1fr) auto}
+.ph .lr .dn{display:none}
+.ph .sel{min-width:0}
+.ph .box{padding:16px}
+.ph .btn{width:100%}
+.ph .opt.tk{grid-template-columns:minmax(0,1fr)}
+.ph .opt.tk>div:last-child{display:grid!important;grid-template-columns:1fr 1fr}
+
+.ar{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ar:last-child{border-bottom:0}
+.ar .n{font-size:14px;color:#F3EBDA;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ar .s{font-size:12px;color:#8E98A8;margin-top:2px}
+.ar .bt2{font:12px ui-monospace,Menlo,monospace;color:#AEB6C3}
+.av2{width:34px;height:34px;border-radius:50%;background:#2A3446;color:#F0D08E;font:600 13px/34px Inter,sans-serif;text-align:center}
+.av2.own{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.4),rgba(255,255,255,0) 55%),#D4AF6A;color:#0B0F14;box-shadow:0 0 0 2px #070C15,0 0 0 3px #F0D08E}
+.b-own{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:linear-gradient(90deg,#F0D08E,#D4AF6A);color:#0B0F14}
+.b-adm{font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid rgba(212,175,106,.6);color:#F3DFAE;background:rgba(212,175,106,.1)}
+.b-gst{font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:rgba(111,176,224,.14);color:#A8D2F0}
+.b-on{font:600 10px/1 Inter,sans-serif;padding:4px 7px;border-radius:999px;background:rgba(127,217,154,.14);color:#9BE3B0}
+.lg{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;line-height:1.4;color:#C9CFD9}
+.lg:last-child{border-bottom:0}
+.lg b{color:#F3EBDA;font-weight:600}
+.lg .t{font-size:12px;color:#7E8898;white-space:nowrap}
+.lg .av2{width:26px;height:26px;font-size:11px;line-height:26px}
+.lgd{font:600 11px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7E8898;padding:10px 0 2px}
+.oo{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#D4AF6A}
+.ownbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:12px;background:rgba(212,175,106,.08);border:1px solid rgba(212,175,106,.35);font-size:14px;color:#F3DFAE}
+.dz{border-color:rgba(218,55,60,.45)!important;background:linear-gradient(180deg,rgba(218,55,60,.07),rgba(12,18,30,.85))!important}
+.dz .bt{color:#F59A9C}
+.inp{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#6E7888;flex:1;min-width:0}
+.scrim{position:relative;border-radius:18px;padding:40px;background:rgba(3,6,12,.7);display:flex;justify-content:center}
+.dlg{width:460px;max-width:100%;box-sizing:border-box;border-radius:16px;background:#0E1626;border:1px solid rgba(212,175,106,.45);box-shadow:0 30px 80px rgba(0,0,0,.6);padding:24px;display:flex;flex-direction:column;gap:14px}
+.dlg h3{margin:0;font:22px Marcellus,serif;color:#F3EBDA}
+.dlg p{margin:0;font-size:14px;line-height:1.55;color:#AEB6C3}
+.dlg .acts{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.ph .ar{grid-template-columns:34px minmax(0,1fr)}
+.ph .ar .btn{grid-column:1 / -1}
+.ph .dlg{width:100%;border-radius:18px 18px 0 0}
+.ph .dlg .acts{flex-direction:column-reverse}
+
+</style>
+</helmet>
+<div style="min-height: 100%; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6">
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15); flex-wrap: wrap">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg>
+      <span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span>
+    </div>
+    <nav aria-label="Main" style="display: flex; gap: 4px"><a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Map</a><a href="Roster-doomsday.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Roster</a><a href="Professions.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Professions</a><a href="DD03SiteToday.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Doomsday</a><a href="SiteRuns-asknow.dc.html" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none">Runs</a></nav>
+    <div style="flex: 1"></div>
+    <a href="SiteUploader.dc.html" style="padding: 8px 12px; border-radius: 8px; color: #AEB6C3; font-size: 13px; text-decoration: none">Uploader</a><a href="#" aria-current="page" style="padding: 8px 12px; border-radius: 8px; background: rgba(212,175,106,0.14); color: #F3EBDA; font-size: 13px; font-weight: 600; text-decoration: none">Discord</a><a href="Admin-coadmins.dc.html" style="padding: 8px 12px; border-radius: 8px; color: #AEB6C3; font-size: 13px; text-decoration: none">Admin</a>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">M</span>Mira<span class="b-adm">Admin</span></div>
+  </header>
+  <main style="max-width: 1180px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 280px">
+        <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F0D08E">Discord</h1>
+        <div style="font-size: 13px; color: #8E98A8; margin-top: 4px">The DoomBot posts feats, runs, the weekly recap and Doomsday, and answers look-ups for linked friends.</div>
+      </div></div>
+    <div class="ownbar"><span class="b-adm">Admin</span><span>You’re an admin. Some settings are for the owner only.</span><span class="hint" style="margin-left: auto">Owner: Ada</span></div>
+    <nav class="jump" aria-label="On this page"><a href="#you-link" class="act">Your Discord</a><a href="#you-tz" class="">Time zone</a><span class="sep"></span><a href="#bot">The bot</a><a href="#feats">Feats</a><a href="#runs">Runs</a><a href="#recap">Weekly recap</a><a href="#doomsday">Doomsday</a><a href="#friends">Linked friends</a></nav>
+    <div class="sect"><h2>For you</h2><i></i><span>every friend sees this part</span></div>
+    <div class="g2" style="gap: 20px"><section class="box" id="you-link" style="border-color: rgba(212,175,106,.45); background: radial-gradient(circle at 10% 0%, rgba(212,175,106,0.12), rgba(12,18,30,0.85) 60%)">
+      <div class="bh"><h3 class="bt">Your Discord</h3><div style="display: flex; gap: 8px; align-items: center"></div></div>
+      <div style="display: flex; gap: 14px; align-items: center">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: #5865F2; display: flex; align-items: center; justify-content: center; color: #fff; font: 600 16px Inter, sans-serif; flex: none">M</div>
+          <div style="flex: 1; min-width: 0"><div style="font: 18px 'Marcellus', serif; color: #F3EBDA">Linked as mira</div><div class="hint">The bot knows which characters are yours, so <code>/me</code> works.</div></div></div>
+        <div><button class="btn ghost">Unlink</button></div>
+    </section><section class="box" id="you-tz">
+      <div class="bh"><h3 class="bt">Your time zone</h3><div style="display: flex; gap: 8px; align-items: center"></div></div>
+      <div class="fld"><div class="lab">Your time zone</div><div class="sel">Europe/Amsterdam · 21:40 now <span style="color: #D4AF6A">▾</span></div>
+        <div class="hint">When you type <code>/plan 20:00</code>, the bot reads 20:00 in this time zone. Everyone sees runs in their own time.</div></div>
+    </section></div>
+    <div class="sect"><h2>For the group</h2><i></i><span>owner &amp; admins · every post setting works for admins</span></div>
+    <section class="box" id="bot">
+      <div class="bh"><h3 class="bt">The bot</h3><div style="display: flex; gap: 8px; align-items: center"><span class="ok">● Online in “Doombringers” · 4 channels</span><span class="adm">Owner &amp; admins</span></div></div>
+      <div class="hint" style="display: flex; align-items: center; gap: 6px"><svg width="12" height="12" viewBox="0 0 16 16" aria-label="owner only" style="flex: none"><path d="M2 12h12l1-8-4 3-3-5-3 5-4-3z" fill="#D4AF6A"></path></svg>The bot token is managed by the owner.</div>
+      <div class="g2"><div class="fld"><div class="lab">Default channel</div><div class="sel"><span># doombringers</span> <span style="color: #D4AF6A">▾</span></div><div class="hint">Feats go here, and every kind of post that has no channel of its own.</div></div><div class="fld"><div class="lab">Server</div><div class="cap" style="min-height: 44px; display: flex; align-items: center">Doombringers · the bot sees 4 text channels</div></div></div>
+    </section>
+    <div class="g2" style="gap: 20px; align-items: start"><section class="box" id="feats">
+      <div class="bh"><h3 class="bt">Feats</h3><div style="display: flex; gap: 8px; align-items: center"><span class="adm">Owner &amp; admins</span></div></div>
+      <div class="bd">Renamed from Milestones: every milestone is a feat now.</div>
+      <div class="opt"><div><b>Post feats</b><span class="d">After each upload, one post per friend with everything new: rank titles, levels, epics, mounts, professions, firsts in the group</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Post feats"></span></span></div>
+      <div class="fld"><div class="lab">Feats channel</div><div class="sel"><span>Default · # doombringers</span> <span style="color: #D4AF6A">▾</span></div></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center"><button class="btn sec">Send a test feat</button></div>
+    </section><section class="box" id="recap">
+      <div class="bh"><h3 class="bt">Weekly recap</h3><div style="display: flex; gap: 8px; align-items: center"><span class="adm">Owner &amp; admins</span></div></div>
+      <div class="opt"><div><b>Post the weekly recap</b><span class="d">Fun stats that change every week, plus a Doomsday section when Doomsday is on</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Weekly recap"></span></span></div>
+      <div class="g2"><div class="fld"><div class="lab">Recap channel</div><div class="sel"><span>Default · # doombringers</span> <span style="color: #D4AF6A">▾</span></div></div><div class="fld"><div class="lab">Day and time</div><div class="sel"><span>Sunday · 20:00</span> <span style="color: #D4AF6A">▾</span></div><div class="hint">In your time zone (Europe/Amsterdam)</div></div></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center"><button class="btn sec">Send a test recap</button><a href="BotRecap-doomsday.dc.html" class="btn ghost">Preview next recap</a></div>
+    </section></div>
+    <section class="box" id="runs">
+      <div class="bh"><h3 class="bt">Runs</h3><div style="display: flex; gap: 8px; align-items: center"><span class="adm">Owner &amp; admins</span></div></div>
+      <div class="g2" style="gap: 0 32px">
+        <div>
+          <div class="opt"><div><b>Post runs</b><span class="d">Planned runs from the site, <code>/plan</code> and the game</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Post runs"></span></span></div>
+          <div class="opt"><div><b>Ask now from the game</b><span class="d">When a friend ticks “Also post on Discord” · expires after 10 min</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Ask now from the game"></span></span></div>
+          <div class="opt"><div><b>Reminders</b><span class="d">Before each run, mentioning only people who said I’m in or Maybe</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Reminders"></span></span></div>
+          <div class="opt"><div><b>“Starting now” message</b><span class="d">Posted at start time, mentioning everyone who answered</span></div><span class="ok">Always on</span></div>
+          <div class="opt"><div><b>Mark runs done from uploads</b><span class="d">“Ran it · 3 of 5 came”, used in the weekly recap</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Mark runs done"></span></span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 10px">
+          <div class="fld"><div class="lab">Runs channel</div><div class="sel"><span># doombringers-runs</span> <span style="color: #D4AF6A">▾</span></div></div>
+          <div class="fld"><div class="lab">Mention on new runs</div><div class="sel"><span>@Doombringers</span> <span style="color: #D4AF6A">▾</span></div><div class="hint">Moved here from “What the bot posts”</div></div>
+          <div class="fld"><div class="lab">Reminder time</div><div class="sel"><span>30 minutes before</span> <span style="color: #D4AF6A">▾</span></div><div class="hint">15 min, 30 min, 1 hour or 2 hours. The in-game toast uses the same time.</div></div>
+          <div class="fld"><div class="lab">Can delete any run</div><div class="cap">The owner and admins: Ada, Mira, Bob · everyone else only their own</div></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center"><button class="btn sec">Send a test run post</button><a href="BotPosts-runs.dc.html" class="btn ghost">See how runs look in Discord</a></div>
+    </section>
+    <section class="box" id="doomsday" style="border-color: rgba(212,175,106,.5); background: radial-gradient(circle at 95% 0%, rgba(240,208,142,.10), rgba(12,18,30,.85) 55%)">
+      <div class="bh"><h3 class="bt">Doomsday<span class="new">new</span></h3><div style="display: flex; gap: 8px; align-items: center"><span class="adm">Owner &amp; admins</span></div></div>
+      <div class="bd">Daily and weekly goals. The board is posted at every reset and edited as uploads come in; the ladder goes out on Sunday at the reset.</div>
+      <div class="g2" style="gap: 0 32px">
+        <div>
+          <div class="opt"><div><b>Daily board</b><span class="d">Today’s goals and every friend’s row, kept up to date, closed with a summary at the next reset</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Daily board"></span></span></div>
+          <div class="opt"><div><b>Weekly ladder</b><span class="d">Top 5 PvE and top 5 PvP, side by side, on Sunday at the reset</span></div><span class="swh"><span class="sw" role="switch" aria-checked="true" aria-label="Weekly ladder"></span></span></div>
+          <div style="padding-top: 12px"><div class="fld"><div class="lab">Doomsday channel</div><div class="sel"><span>Default · # doombringers</span> <span style="color: #D4AF6A">▾</span></div></div></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 10px">
+          <div class="fld"><div class="lab">Reset time · realm time</div><div class="tm"><span class="seg">19</span><span class="c">:</span><span class="seg">00</span></div><div class="hint">A change counts from the next reset, never mid-day. The addon gets it with the next upload.</div></div>
+          <div class="fld"><div class="lab">Realm time zone</div><div class="sel"><span>Europe/Paris · <span style="color: #F3DFAE">21:40 realm time</span></span> <span style="color: #D4AF6A">▾</span></div><div class="hint">The realm’s clock. The reset is in this time, for everyone.</div></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center"><button class="btn sec">Send a test board</button><a href="DD09DiscordDaily.dc.html" class="btn ghost">See the board in Discord</a></div>
+    </section>
+    <section class="box" id="friends">
+      <div class="bh"><h3 class="bt">Linked friends</h3><div style="display: flex; gap: 8px; align-items: center"><span class="hint">4 of 6</span><span class="adm">Owner &amp; admins</span></div></div>
+      <div><div class="lr"><span class="av">A</span><span>Ada#2101</span><span class="dn" style="color: #AEB6C3">ada.nightshade</span><span class="ok">Linked</span></div><div class="lr"><span class="av">B</span><span>Bob#2002</span><span class="dn" style="color: #AEB6C3">bobexample</span><span class="ok">Linked</span></div><div class="lr"><span class="av">M</span><span>Mira#1188</span><span class="dn" style="color: #AEB6C3">mira</span><span class="ok">Linked</span></div><div class="lr"><span class="av">T</span><span>Tok#3307</span><span class="dn" style="color: #AEB6C3">tok_heals</span><span class="ok">Linked</span></div><div class="lr"><span class="av">J</span><span>Jorrit#4410</span><span class="dn" style="color: #6E7888">—</span><span class="no">Not linked</span></div><div class="lr"><span class="av">S</span><span>Sanne#5150</span><span class="dn" style="color: #6E7888">—</span><span class="no">Not linked</span></div></div>
+      <div class="hint">Read only. Friends link themselves after signing in. Unlinked friends still see posts, but the bot won't answer their commands.</div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2520}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
