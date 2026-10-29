@@ -28,6 +28,8 @@ Decisions from the design workshop (WEB-02). The canvas "Doombringers — wow.ve
 
 B (Parchment) and C (Carved) remain on the canvas as rejected directions.
 
+The screens built after the canvas (Runs, the dungeon page, Discord, Admin, Doomsday and the uploader) have their boards in `design/README.md`.
+
 ## 3. Tokens
 
 ```css
@@ -196,6 +198,7 @@ Ambient details (WEB-16, Nico 2026-10-26):
 | `Atmosphere` | fog, light shafts, embers, sea; reads reduced-motion + a user toggle |
 | `Dropdown` | WEB-48, board `runs-v2-plan`: the only select on the site (no native `<select>`). ARIA combobox + listbox; groups, meta, hint, disabled options with a reason; search from 8 options; a bottom sheet (modal `<dialog>`) under 640 px; arrows, Home/End, PageUp/Down, Enter, Esc, Tab, type-to-jump. Its value is a hidden input, so forms read it as a select. `compact` is 36 px on desktop (Discord page) |
 | `DateField`, `TimeField` | WEB-48: no native date or time input. The day as text with a 44 × 44 calendar button and a month grid (APG date picker dialog, weeks from Monday, `min`); a 24-hour text field that reads 2030, 20.30 or 8:30, ↑↓ 15 minutes |
+| `DoomsdayFrame`, `DoomsdayTabs`, `GoalCard`, `Board`, `Heatmap`, `LadderCard`, `PvpDetails`, `GroupFeats`, `OwnFeats`, `RosterChip`, `RankInsignia` | Doomsday (WEB-59..61, `src/components/doomsday/`): PvE and PvP side by side (`--pve-text`, `--pvp-text`), never added together; the board as a table on desktop and a card per friend on a phone; ladder rows open with `<details>`; the rank insignia has chevrons for ranks 1–5 and the number from 6 |
 
 ## 8. Decisions and rules
 

@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-27): WEB-44, then Runs v2 (WEB-47, WEB-48, WEB-49 with WEB-50 merged in), WEB-43, WEB-42 (done), WEB-45. The order across the repos is under E7.
+Build order (2026-10-29): no open stories. Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release; the next ideas are in the backlog below.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -25,7 +25,7 @@ Build order (2026-10-27): WEB-44, then Runs v2 (WEB-47, WEB-48, WEB-49 with WEB-
 ## E7 Discord bot and planned runs
 The bot lives in its own public repo, [CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord) (BOT-01..07). The site is its only data source: it decides milestones, runs, the recap and who is linked; the bot formats and posts (decided with Nico, 2026-10-27). Design: the canvas's §12 "Discord bot" and the planned-runs boards (`design/README.md`; the flow: `runs-flow`).
 
-**Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, the admin can delete any run (one admin, `ADMIN_BATTLETAG`; the board's "Admins: Nico, Mira" is not built). Reminders mention only those who answered I'm in or Maybe.
+**Planned runs** (decided with Nico, 2026-10-27): two kinds of group. *Ask now* lives in the game (addon CF-27) and is answered within minutes; with "Also post on Discord" it reaches the site after a `/reload` and the bot posts it. A *planned run* is owned by the site, posted and answered in Discord, reaches the game through the uploader (`Runs.lua`) and friends' addons, and ends in an invite in the game at start time. The in-game calendar is out of the flow. Times are stored in UTC and shown in each viewer's own time zone. Any linked friend can plan; organisers edit and delete their own runs, an admin can delete any run (the owner, `ADMIN_BATTLETAG`, and the admins the owner appoints, WEB-64). Reminders mention only those who answered I'm in or Maybe.
 
 Order (2026-10-27; WEB-32, WEB-38, WEB-40 and WEB-46 are done): WEB-44, Runs v2 (WEB-47 first, then WEB-48, then WEB-49 with WEB-50 merged in), WEB-43, WEB-42, WEB-45. WEB-44 comes before WEB-43 because it is small and lets the uploader bring runs into the game (UP-12); WEB-41 before WEB-42 and WEB-45 so the site stores the week's history from launch. In the other repos: bot BOT-02 and BOT-03 now (WEB-38 is in), BOT-07 next so milestones post from launch, BOT-06 after WEB-39, BOT-04 after WEB-40 and WEB-43, BOT-05 after WEB-41; uploader UP-12 after WEB-44; the addon's CF-45..48 are done and wait for a release.
 
@@ -41,114 +41,3 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Final emblem and logo for the site.
 - Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).
-
-## E8 Doomsday (decided with Nico, 2026-10-28)
-Daily and weekly goals, points per track (PvE and PvP, never added together), a streak, a crown, feats and a ladder, in the game (addon E15), on the site and in Discord (bot "Doomsday"). **The rules are in the addon repo's `docs/DOOMSDAY.md`**, the one description for all three; read it first. It replaces the three workshop designs (milestones, PvP ladder, dailies and weeklies; their PRs were closed unmerged), and the recap v2 data and cards are part of it.
-
-Boards (`design/README.md`, "Doomsday"):
-- `doomsday-names`, `doomsday-rules`
-- `doomsday-today`, `doomsday-ladder`, `doomsday-feats`, `doomsday-phone`
-- `roster-cards-doomsday`, `doomsday-feat-cards`
-
-The bot's boards are in its repo, the addon's in `docs/design/doomsday-2026-10/` there. Where a board and `DOOMSDAY.md` disagree, `DOOMSDAY.md` wins:
-- the reset is **19:00** (a setting), not 09:00
-- goals are computed, not delivered
-- the crown gives no points (version B)
-
-The design prompt is `docs/DESIGN-PROMPT-DOOMSDAY.md`.
-
-Key decisions:
-- **Single source of truth:** uploads stay it. The addon decides when a goal is done and sends the time (`goals`, CF-56), because the Doomsday day (19:00 to 19:00) doesn't line up with the feed's realm days. The site stores and counts. Kill points the site computes itself from the raw kills (`pvpKills`, CF-55), against the addon's golden file.
-- **All-time totals** live only on the site and in the bot; the addon shows this week.
-- Gold is never shown as an amount. No pronouns in texts. Names: friends by display name, characters by full name, never BattleTags or Discord IDs.
-
-Compatibility: uploads from addons without CF-52 to CF-56 have none of the new fields. Each is optional everywhere. A card, feat or goal whose data is missing never shows, and friends without Doomsday data show "no Doomsday data yet", never 0 as if known.
-
-Two workers (Nico, 2026-10-28):
-- **Engine:** WEB-55, WEB-58, WEB-56, WEB-57, in that order.
-- **Screens:** WEB-59, WEB-60, WEB-61. They start from view models with fixture data, so they don't wait for the engine, and agree the view-model shapes with the engine worker first.
-
-The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
-
-### WEB-59 The Doomsday page: Today, Week, Board and heatmap
-Boards `doomsday-today` (desktop) and `doomsday-rules` (labels, tone). Starts from view models with fixture data, agreed with the engine worker; switches to WEB-58's data when it lands.
-- A page **Doomsday** (`/doomsday`, in the navigation after Runs) with a header:
-  - today's and this week's points (PvE and PvP side by side), the streak and best
-  - tabs: Today, Week, Board, Ladder, Feats, PvP
-- **Today:**
-  - your 5 goals with progress or a check and its time, the swap mark with the original in its tooltip
-  - the Duel slot (who's done, who's open), the time to the reset
-  - "Today so far" (the crown, who finished, who hasn't started, who has no addon)
-- **Week:** the 3 weeklies and the Weekly bounty with progress, the time to Sunday's reset.
-- **Board:** every friend × today's goals, struck through with the time when done. A friend's name is crossed out when the 3 PvE dailies are done. The crown, today's and this week's points, the streak.
-- **The 12-week heatmap** per friend (goals done per day).
-- "Goals are suggestions with points. Skip any of them; nothing is locked."
-- As every UI story: design checks, 1440 px, Playwright (the phone in WEB-61).
-
-### WEB-60 The Doomsday page: Ladder, PvP and Feats
-Boards `doomsday-ladder` and `doomsday-feats`. Same fixture-first start as WEB-59.
-- **Ladder:**
-  - This week and All time, PvE and PvP side by side, each with its own ranking
-  - rows expand to characters; movement (▲, ▼, new)
-  - PvP Virgin shown and not ranked ("not ranked: no kills on any character, ever")
-  - the time to the weekly reset
-- **PvP:** the details for a selected friend:
-  - kills this week (solo, skulls), rank with insignia and "a.k.a." title per character, kills by zone
-  - the duel grid with wins–losses and the Elo rating (with movement)
-  - the battleground block, apart from the week's kills, and first wins unlocked
-  - "≈" where data was guessed
-- **Feats:** per friend and the whole group's feats, newest first, with "First in the group", the rank titles table and the feat states from the board.
-- As every UI story (1440 px; the phone in WEB-61).
-
-### WEB-61 Doomsday on the phone, its states, and the roster
-Boards `doomsday-phone` and `roster-cards-doomsday`.
-- The Doomsday page at 375 px as the board shows.
-- The states:
-  - empty, on the first day ("Nobody has done anything yet")
-  - loading
-  - only one friend with data
-  - friends without the addon or without Doomsday data
-  - error
-- The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
-- As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
-
-### WEB-63 Clean-up before the Doomsday release
-Agreed with Nico, 2026-10-29: everything on the list below. Built after WEB-57 is merged. WEB-64 (co-admins) touches the admin page, the Discord page, `viewer`, `mayAdmin` and the access code, so nothing here changes those before WEB-64 is merged; the items below don't need to. No behaviour changes for users; one PR, one commit per item.
-
-**Dependencies**
-- gitleaks-action v2 → v3 (Dependabot #69, closed by this PR).
-- ESLint 10 with `eslint-config-next`: the `src/core` layering rule still fails on a forbidden import (a test proves it), and lint passes unchanged otherwise.
-- TypeScript 7: kept only if `tsc`, the build and every test pass. If not, it stays on 6 with the reason in `docs/ARCHITECTURE.md`.
-- npm audit: the 4 moderate findings come from an old esbuild inside drizzle-kit (a dev tool; the latest drizzle-kit has it too). They are recorded as accepted in `docs/ARCHITECTURE.md`, with when to check again, instead of a forced breaking downgrade.
-- `allowScripts` covers esbuild's postinstall, so CI's install-scripts warning is gone.
-
-**Tests and CI**
-- The three flaky checks get fixed at the cause, not with retries:
-  - roster-table "design values": styles were read while the page re-rendered
-  - upload "nothing new": the accessibility scan ran before the `<title>` was there
-  - phone-map "the tapped character in the half sheet"
-  
-  Each passes 20 runs in a row locally.
-- **Real Doomsday test data:**
-  - the design sample (`tests/design/sample.ts`) uploads `goals`, `pvpKills`, PvP ranks and feats, so the engine computes Doomsday from uploads
-  - `DOOMSDAY_SAMPLE`, `src/server/doomsdaySample.ts` and the Playwright config lines go
-  - `/dev/doomsday` keeps its four states (day one, only you, loading, error) from the engine's own output
-  - The Doomsday screenshots change only where the real numbers differ from the made-up ones, after Nico's OK.
-- The Doomsday e2e checks run in the project before the upload tests add uploaders (as roster, professions and character do), so they no longer depend on test order.
-
-**Code**
-- One helper in `src/core` for weekday and month names and for `ordinal()`. Today they are copied in five and three files. Same output everywhere; the existing tests prove it.
-
-**Repo**
-- `AGENTS.md` (written by `next dev`, Next's pointer to its bundled docs) is committed, so the tree stays clean.
-
-**Docs**
-- Done stories (WEB-57, WEB-59, WEB-60, WEB-61 and any other done) move to `docs/STORIES-COMPLETED.md`. `docs/STORIES.md` keeps open stories only, with a current build order.
-- `docs/ARCHITECTURE.md`, `docs/BOT-API.md`, `docs/UPLOADER-API.md`, `docs/RECAP.md` and `docs/DESIGN.md` match the code.
-- `design/README.md` marks superseded boards as superseded and names the board that replaces each:
-  - `discord-settings` and `discord-settings-runs` by `discord-page*`
-  - the `doomsday-*` boards' 09:00 reset by 19:00
-- `CHANGELOG.md` `## Unreleased` reads as release notes for the Doomsday release: grouped, no story numbers, no duplicates.
-
-Done when: `npm run lint`, `npm test`, `npm run build`, `npm run test:design` and `npm run test:e2e` pass, CI is green twice in a row, and the docs PR items above are checked off in the PR.
-
