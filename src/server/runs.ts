@@ -59,6 +59,7 @@ function answerFrom(row: AnswerRow): RunAnswer {
   // A WEB-40 "Maybe, first in line" is a reserve (WEB-47).
   if (row.waitlisted && row.answer === "maybe") a.answer = "reserve";
   if (row.movedUp) a.movedUp = true;
+  if (row.note !== null) a.note = row.note;
   return a;
 }
 
@@ -133,6 +134,7 @@ function writeAnswers(db: Db, runId: number, answers: readonly RunAnswer[]): voi
         answeredAt: a.answeredAt,
         waitlisted: false,
         movedUp: a.movedUp === true,
+        note: a.note ?? null,
       })
       .run();
   }
@@ -251,6 +253,7 @@ function answersPayload(data: Dataset | undefined, run: StoredRun, ids: Map<stri
       ...(a.guid === undefined ? {} : { guid: a.guid, fit: fitOf(data, run, a.guid), ...characterFacts(data, a.guid) }),
       ...(a.movedUp ? { movedUp: true } : {}),
       ...(a.answer === "reserve" ? { reserve: true, waitlisted: true } : {}),
+      ...(a.note === undefined ? {} : { note: a.note }),
     }));
 }
 
@@ -387,6 +390,8 @@ export interface AnswerRequest {
   guid?: string;
   /** The role for this run (WEB-47); default the character's role from the addon. */
   role?: SlotRole;
+  /** WEB-67: the note with an answer from the game. */
+  note?: string;
 }
 
 export function answerRunFor(
@@ -431,6 +436,7 @@ function answerFor(
             },
           }),
       ...(req.role === undefined ? {} : { role: req.role }),
+      ...(req.note === undefined ? {} : { note: req.note }),
     },
     now,
     (guid) => runCharacter(data, guid)?.level,

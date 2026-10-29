@@ -26,7 +26,7 @@ interface Who {
 
 export type GameItem =
   | (ItemBase & Who & { kind: "plan"; dungeon: string; startsAt: number; note?: string })
-  | (ItemBase & Who & { kind: "answer"; run: string; answer: "in" | "maybe" | "cant" })
+  | (ItemBase & Who & { kind: "answer"; run: string; answer: "in" | "maybe" | "cant"; note?: string })
   /** `battleTag`: the asker, when the game knows it (WEB-53: a carried ask names its asker by guid or BattleTag). */
   | (ItemBase & Who & { kind: "ask"; dungeon: string; note?: string; battleTag?: string })
   /** WEB-53: an answer given in game to an ask; `ask` is the ask's item id. */
@@ -36,6 +36,8 @@ export type GameItem =
 /** The addon's caps (Pending.MAX_ITEMS, MAX_NOTE). */
 export const MAX_GAME_ITEMS = 100;
 export const MAX_GAME_NOTE = 200;
+/** WEB-67 (addon CF-63): an answer's note from the game ("Late, start without me"); a longer one is cut. */
+export const MAX_ANSWER_NOTE = 80;
 /** An ask is posted only within 10 minutes of being made in game (Pending.ASK_EXPIRE; story WEB-43). */
 export const ASK_EXPIRE_SECONDS = 10 * 60;
 
@@ -88,7 +90,16 @@ function item(t: Table): GameItem | undefined {
       const run = token(t, "run");
       const answer = str(t, "answer");
       if (run === undefined || answer === undefined || !ANSWERS.has(answer)) return undefined;
-      return { id, at, kind: "answer", run, answer: answer as "in" | "maybe" | "cant", ...who(t) };
+      const answerNote = text(t, "note", MAX_ANSWER_NOTE);
+      return {
+        id,
+        at,
+        kind: "answer",
+        run,
+        answer: answer as "in" | "maybe" | "cant",
+        ...who(t),
+        ...(answerNote === undefined ? {} : { note: answerNote }),
+      };
     }
     case "ask": {
       const dungeon = token(t, "dungeon");

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.1 (2026-10-30)
+- Runs: a note with an answer from the game ("Late, start without me") shows under that answer on the run page, and goes to Discord with it.
+- Discord page: the test buttons send the bot sample pictures too (the board, a feat card, the recap header and map), so a test post looks like the real one once the bot reads them.
+
 ## v0.6.0 (2026-10-29)
 - Fixes from the live test:
   - Explanations that didn't belong on the page are gone or moved into a small ⓘ tooltip (hover, focus or tap).

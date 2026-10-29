@@ -761,6 +761,17 @@
   color: var(--text-dim);
 }
 
+/* WEB-67: a friend's note with their answer from the game, under the answer. */
+.answerNote {
+  display: block;
+  max-width: var(--size-search-min);
+  font-size: var(--fs-meta);
+  font-style: italic;
+  color: var(--text-dim);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .tableScroll {
   overflow-x: auto;
 }

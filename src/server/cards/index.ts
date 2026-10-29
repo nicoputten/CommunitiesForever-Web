@@ -11,6 +11,7 @@ import {
   whereisCard,
   zoneCard,
 } from "@/core/cards/models";
+import { sampleCard } from "@/core/cards/samples";
 import { featCardSize, type FeatFields } from "@/core/doomsday/feats";
 import { classLabel } from "@/core/recap/cards";
 import { recapChar } from "@/core/recap/input";
@@ -158,6 +159,9 @@ function board(db: Db, id: string, day: number, host: string): CardSpec | undefi
 
 /** The card an id names, or undefined. */
 export function cardFor(db: Db, id: string, now: number, host = cardHost()): CardSpec | undefined {
+  // WEB-68: the test posts' images, fixed made-up samples.
+  const sample = /^sample-([a-z-]{1,32})$/.exec(id);
+  if (sample !== null) return sampleCard(sample[1]!, host);
   const b = /^doomsday-(\d{1,6})-[0-9a-f]{6}$/.exec(id);
   if (b !== null) return board(db, id, Number(b[1]), host);
   let m = /^recap-(\d{1,5})-(header|zone)$/.exec(id);

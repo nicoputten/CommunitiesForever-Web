@@ -172,6 +172,17 @@ The admin's "Send a test post" on the Discord page. `data`: `{ "kind": "posts" }
 
 WEB-58 part 2 (the reorganised Discord page; Nico, 2026-10-28): a test button per box, so `kind` may also be `feats`, `recap` or `doomsday`. The bot posts a sample of that kind (a made-up feat, a short recap, a board) in that kind's channel, marked as a test. A bot that doesn't know a kind posts the plain test message in the posts channel.
 
+WEB-68 (Nico, 2026-10-29: test posts look like the real ones; optional within v1): the event's `data` gains `images`, the ids of test images drawn like the real ones with the bot's own sample names (Test Friend, Another Test, Testy McTestface). The bot fetches them like any card (`GET cards/<id>.png`, the bot token) and attaches them where the real post would have its image. An older bot ignores `images`; a site without them sends none.
+
+| `kind` | `images` | Where it goes |
+|---|---|---|
+| `doomsday` | `{ "board": "sample-board" }` | the board embed's image (800 × 560), instead of the text table |
+| `feats` | `{ "feat": "sample-feat-big", "strip": "sample-feat-strip" }` | `feat`: the post's one card (800 × 400, the rank 6 sample); `strip` (800 × 240) to show a small feat's strip if the sample has one |
+| `recap` | `{ "award": "sample-recap-header", "zone": "sample-recap-zone" }` | `award`: the award embed's image (1200 × 400); `zone`: the stat card's map (800 × 450, Bloodbath zone) |
+| `posts` | none | the plain test message |
+
+- The ids are fixed and always draw the same picture; `GET cards/sample-<name>.png` answers `404 not_found` for an unknown name.
+
 ### `recap` (built, WEB-41c)
 The weekly recap, once per week at the recap moment (the Discord page's day and time in the admin's time zone; default Sunday 13:00), when the page's Weekly recap is on. `data` is the recap as it is to be posted:
 
@@ -218,7 +229,7 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 
 - `startsAt` is UTC: the bot shows it with Discord's timestamp markup (`<t:1793131200:f>`), which every reader sees in their own time.
 - `state`: `open`, `full`, `started` (from start time), `past` (2 hours after start), `cancelled`.
-- `open`: free slots per role (one tank, one healer, three damage). `answers`, oldest first: `answer` is `in`, `maybe` or `cant`; `role` the slot the character fills (from talents or set by the player; unknown is `damage`); `waitlisted`: answered I'm in while the role was full, first in line; `movedUp`: moved up from Maybe. `note`, `character`, `discordId` (only for linked friends) and the flags are optional.
+- `open`: free slots per role (one tank, one healer, three damage). `answers`, oldest first: `answer` is `in`, `maybe` or `cant`; `role` the slot the character fills (from talents or set by the player; unknown is `damage`); `waitlisted`: answered I'm in while the role was full, first in line; `movedUp`: moved up from Maybe. `note`, `character`, `discordId` (only for linked friends) and the flags are optional. WEB-67 (addon CF-63, optional within v1): an answer given in game may carry `note`, the friend's note with it ("Late, start without me", at most 80 characters, plain text); the bot shows it next to that answer. A later answer from the site or Discord replaces it, without a note.
 - Names only, never BattleTags.
 
 | `type` | Extra in `data` | When |

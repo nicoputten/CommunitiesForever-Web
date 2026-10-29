@@ -61,6 +61,8 @@ export interface RunAnswer {
   answeredAt: number;
   /** Moved up from reserve or Maybe when a slot freed. */
   movedUp?: boolean;
+  /** WEB-67 (addon CF-63): the friend's note with the answer from the game, at most 80 characters. */
+  note?: string;
 }
 
 /** What a run stores about itself (the rest is its answers). */
@@ -144,6 +146,8 @@ export interface AnswerInput {
   character?: { guid: string; level?: number; role?: Role; classFile?: string };
   /** The role chosen for this run (WEB-47); default the role the addon reports. */
   role?: SlotRole;
+  /** WEB-67: the note with an answer from the game. */
+  note?: string;
 }
 
 export type AnswerRefusal =
@@ -228,6 +232,8 @@ export function giveAnswer(
     answeredAt: now,
   };
   if (input.character !== undefined) stored.guid = input.character.guid;
+  // A new answer brings its own note, or none (WEB-67).
+  if (input.note !== undefined) stored.note = input.note;
   // An ask has no slots: everyone who says I'm in is in (WEB-51).
   if (!ask && stored.answer === "in" && openSlots(others)[role] <= 0) stored.answer = "reserve";
   const next = [...others, stored];

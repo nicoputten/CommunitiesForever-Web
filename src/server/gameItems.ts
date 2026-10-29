@@ -147,6 +147,7 @@ function apply(db: Db, battleTag: string, item: GameItem, now: number): { outcom
         answer: item.answer,
         source: "game" as const,
         ...(item.guid === undefined ? {} : { guid: item.guid }),
+        ...(item.note === undefined ? {} : { note: item.note }),
       };
       const role = slotFromGame(item.role);
       let answered = answerRunFor(db, runId, { ...request, ...(role === undefined ? {} : { role }) }, now);
