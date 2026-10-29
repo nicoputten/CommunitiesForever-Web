@@ -7,7 +7,7 @@ import { peopleViews } from "@/core/views/characters";
 import { doomsdayPage, type DoomsdayPage } from "@/core/views/doomsday";
 import { getDb } from "@/server/db";
 import { effectiveTimeZone } from "@/server/discord";
-import { loadDoomsday } from "@/server/doomsday";
+import { doomsdayFor } from "@/server/doomsdayEngine";
 import { loadState } from "@/server/uploads";
 
 export interface DoomsdayContext {
@@ -24,7 +24,7 @@ export async function doomsdayContext(): Promise<DoomsdayContext | undefined> {
   if (viewer === undefined) notFound();
   const db = getDb();
   const now = nowSeconds();
-  const snapshot = loadDoomsday(db, now);
+  const snapshot = doomsdayFor(db, now);
   if (snapshot === undefined) return undefined;
   const data = loadState(db)?.data;
   const me =

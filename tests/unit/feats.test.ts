@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { cardRank, featText, hasCard, ordinal, rankName, slotName } from "@/core/doomsday/feats";
+import { cardRank, featText, hasCard, rankName, slotName } from "@/core/doomsday/feats";
+import { ordinal } from "@/core/names";
 
 // WEB-56: the feats' catalogue and texts (the detection is tested with uploads in tests/server/feats.test.ts).
 

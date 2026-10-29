@@ -1,3 +1,4 @@
+import { MONTH_SHORT, WEEKDAY_SHORT } from "./names";
 // Run times (WEB-40): stored in UTC (Unix seconds), shown and typed in each viewer's own IANA time zone. Daylight
 // saving moves nothing that is stored. Pure: the zone and "now" come in as arguments; Intl does the zone rules.
 
@@ -82,16 +83,13 @@ export function zonedToUtc(date: string, time: string, timeZone: string): number
   return undefined;
 }
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 /** "Today", "Tomorrow" or "Thu 29 Oct", by the zone's calendar. */
 export function dayLabel(at: number, timeZone: string, now: number): string {
   const day = localDate(at, timeZone);
   if (day === localDate(now, timeZone)) return "Today";
   if (day === localDate(now + DAY, timeZone) && Math.abs(at - now) < 2 * DAY) return "Tomorrow";
   const p = parts(at, timeZone);
-  return `${WEEKDAYS[p.weekday]} ${p.day} ${MONTHS[p.month - 1]}`;
+  return `${WEEKDAY_SHORT[p.weekday]} ${p.day} ${MONTH_SHORT[p.month - 1]}`;
 }
 
 /** "Today 20:30", "Thu 29 Oct 21:00". */
@@ -134,7 +132,7 @@ export function nextDays(now: number, timeZone: string, count = 7): DayOption[] 
   const p = parts(now, timeZone);
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(Date.UTC(p.year, p.month - 1, p.day + i));
-    const label = `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}`;
+    const label = `${WEEKDAY_SHORT[d.getUTCDay()]} ${d.getUTCDate()}`;
     return {
       date: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`,
       label: i === 0 ? "Today" : label,

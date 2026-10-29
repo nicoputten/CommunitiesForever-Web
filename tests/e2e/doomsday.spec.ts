@@ -3,9 +3,10 @@ import { E2E } from "../../playwright.config";
 import { isPhone } from "../design/checks";
 import { signInAs } from "./session";
 
-// WEB-59: the Doomsday page on the made-up Doomsday sample (DOOMSDAY_SAMPLE=1, src/server/doomsdaySample.ts) until
-// the engine (WEB-58) computes it from the uploads: the admin is the sample's uploader, Femke a PvP Virgin, Mira
-// swapped a goal and wears the crown, Sanne has no addon.
+// WEB-59..61: the Doomsday page on what the engine (WEB-58) computes from the seeded sample (WEB-63), on the real
+// clock: the day's draw and what's done today depend on the time, so these checks hold at any hour. The admin is the
+// sample's uploader (Nico), Femke never killed anyone (a PvP Virgin), Sanne has no addon. They run before the upload
+// tests add uploaders (playwright.config.ts).
 
 test.beforeEach(async ({ context, baseURL }) => {
   await signInAs(context, baseURL!, E2E.admin);
@@ -18,36 +19,34 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page).toHaveURL(/\/doomsday$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Doomsday");
 
-  // Today: the viewer's points per track, the goals, the Duel slot and Today so far.
-  await expect(page.getByText("PvE 10").filter({ visible: true }).first()).toBeVisible();
-  await expect(page.getByText("PvP 9").filter({ visible: true }).first()).toBeVisible();
+  // Today: the viewer's points per track, the goals (3 PvE dailies and the Skirmish), the Duel slot, Today so far.
+  await expect(
+    page
+      .getByText(/^PvE \d+$/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText(/^PvP \d+$/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: /^Your goals · \w{3} \d+ \w{3}$/ })).toBeVisible();
-  await expect(page.getByText("3 of 5 done")).toBeVisible();
+  await expect(page.getByText(/^\d of 4 done$/)).toBeVisible();
   await expect(page.getByText(/^resets in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
-  await expect(page.getByTestId("goal")).toHaveCount(5);
+  await expect(page.getByTestId("goal")).toHaveCount(4);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
-  await expect(page.getByText(/Won vs Bob/)).toBeVisible();
-  await expect(page.getByText(/^Mira finished all dailies first/)).toBeVisible();
   await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
   await expect(page.getByText("Goals are suggestions with points. Skip any of them; nothing is locked.")).toBeVisible();
 
-  // The board: Mira crossed out with the crown, the swap in a tooltip, Femke a PvP Virgin, Sanne without the addon.
-  // On the phone it is one card per friend (WEB-61).
+  // The board: Femke a PvP Virgin, Sanne without the addon (on the phone one card per friend, WEB-61).
   if (isPhone(page)) {
     const card = (name: string) => page.getByTestId("board-card").filter({ hasText: name });
-    await expect(card("Mira").getByText(/\d\d:\d\d/)).toBeVisible();
-    await expect(card("Mira").getByText("(all PvE dailies done)")).toBeAttached();
-    await expect(
-      card("Mira").getByRole("img", { name: /Instead of: Raise Cooking, First Aid or Fishing/ }),
-    ).toHaveCount(1);
     await expect(card("Femke").getByText("PvP Virgin")).toBeVisible();
     await expect(card("Sanne")).toContainText("No addon yet");
   } else {
     const board = page.getByRole("table");
-    const mira = board.getByRole("row", { name: /Mira/ });
-    await expect(mira.getByText(/first · \d\d:\d\d/)).toBeVisible();
-    await expect(mira.getByText("(all PvE dailies done)")).toBeAttached();
-    await expect(mira.locator("[title='Instead of: Raise Cooking, First Aid or Fishing']")).toHaveCount(1);
     await expect(board.getByRole("row", { name: /Femke/ }).getByText("PvP Virgin")).toBeVisible();
     await expect(board.getByRole("row", { name: /Sanne/ })).toContainText("No addon yet");
   }
@@ -58,11 +57,10 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page.getByTestId("goal")).toHaveCount(4);
   await expect(page.getByText(/^resets Sunday \d\d:\d\d · in /)).toBeVisible();
 
-  // Board: the table and the 12-week heatmap, one row per friend with data.
+  // Board: the table and the 12-week heatmap, one row per friend with Doomsday data.
   await page.getByRole("navigation", { name: "Doomsday" }).getByRole("link", { name: "Board" }).click();
   await expect(page).toHaveURL(/\/doomsday\/board$/);
-  // (The upload tests may add uploaders, who get Doomsday data too, so only named friends are checked.)
-  for (const name of ["Mira", "Bob", "Femke", "Jorrit"]) {
+  for (const name of ["Nico", "Mira", "Bob", "Femke", "Jorrit"]) {
     await expect(page.getByRole("img", { name: `${name}: goals per day over 12 weeks` })).toBeVisible();
   }
   await expect(page.getByText("Sanne: no Doomsday data yet.")).toBeVisible();
@@ -78,27 +76,27 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
   // Two rankings, never added together; Femke is a PvP Virgin, shown and not ranked.
   const pve = page.getByRole("region", { name: /^PvE · this week/ });
   const pvp = page.getByRole("region", { name: /^PvP · this week/ });
-  await expect(pve.locator("summary").first()).toContainText("Mira");
+  await expect(pve.locator("summary").filter({ hasText: "Femke" })).toHaveCount(1);
   // The phone shows one track at a time (WEB-61).
   if (isPhone(page)) await page.goto("/doomsday/ladder?track=pvp");
-  await expect(pvp.locator("summary").first()).toContainText("Bob");
+  await expect(pvp.locator("summary").filter({ hasText: "Bob" })).toHaveCount(1);
   await expect(pvp.locator("summary").filter({ hasText: "Femke" })).toHaveCount(0);
   await expect(pvp.getByText("not ranked: no kills on any character, ever")).toBeVisible();
 
-  // A row opens to the split per character.
+  // A row opens to the split per character; the viewer's is open.
+  await expect(pvp.locator("details[open]").filter({ hasText: "Nico" })).toContainText("Ves Doombringer");
   const bob = pvp.locator("details").filter({ hasText: "Bob" }).first();
   await bob.locator("summary").click();
   await expect(bob.getByText("Bob Example")).toBeVisible();
-  await expect(bob.getByText("Tok Ironhide")).toBeVisible();
 
   // All time: no movement.
   await page.getByRole("navigation", { name: "Ladder period" }).getByRole("link", { name: "All time" }).click();
   await expect(page).toHaveURL(/scope=all/);
-  await expect(page.getByRole("region", { name: /^PvP · all time/ })).toContainText("1,540");
-  await expect(page.getByText("▲ 1")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: /^PvP · all time/ }).locator("summary")).not.toHaveCount(0);
+  await expect(page.getByText(/^[▲▼] \d/)).toHaveCount(0);
 
-  // Bob's PvP details from the ladder, then Mira's with the chips.
-  // A fresh load: a row opened before stays open across client navigation.
+  // Bob's PvP details from the ladder (a fresh load: a row opened before stays open across client navigation), then
+  // Mira's with the chips.
   await page.goto("/doomsday/ladder?track=pvp");
   const bobRow = page
     .getByRole("region", { name: /^PvP · this week/ })
@@ -109,19 +107,18 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
   await expect(page).toHaveURL(/\/doomsday\/pvp\?friend=/);
   await expect(page.getByRole("heading", { name: "PvP details · Bob" })).toBeVisible();
   await expect(page.getByText("Blood Guard · rank 7")).toBeVisible();
-  await expect(page.getByText("1st", { exact: true })).toBeVisible();
   await page.getByRole("navigation", { name: "Friend" }).getByRole("link", { name: "Mira" }).click();
   await expect(page.getByRole("heading", { name: "PvP details · Mira" })).toBeVisible();
-  // Its place depends on how many uploaders the upload tests added (each gets the sample's rating).
-  await expect(page.getByText(/^\d+(st|nd|rd|th) · Bob 1,112$/)).toBeVisible();
+  await expect(page.getByText("Senior Sergeant · rank 4")).toBeVisible();
 
-  // Feats: the group's newest first with First in the group; your own with the next steps.
+  // Feats: the e2e seed is the site's first upload, so every feat is from before tracking (WEB-56): none in the
+  // group's list, all in your own, with the next steps.
   await tabs.getByRole("link", { name: "Feats" }).click();
   await expect(page).toHaveURL(/\/doomsday\/feats$/);
-  await expect(page.getByTestId("feat").first()).toContainText("Stone Guard, a.k.a. Mailbox Menace");
-  await expect(page.getByTestId("feat").filter({ hasText: "First epic" })).toContainText("First in the group");
+  await expect(page.getByText("No feats yet. They appear as characters reach them.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Your feats" })).toBeVisible();
-  await expect(page.getByText("412 / 1,000")).toBeVisible();
+  await expect(page.getByText("Ves Doombringer · before tracking").first()).toBeVisible();
+  await expect(page.getByText("132 / 1,000")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Grass: Untouched" })).toBeVisible();
 });
 
@@ -149,7 +146,7 @@ test("phone ladder switch and the roster chips", async ({ page }) => {
 
   await page.goto("/roster");
   const bob = page.getByRole("region", { name: "Bob" });
-  await expect(bob.getByRole("link", { name: "Doomsday this week: PvE 60 PvP 310 streak 3" })).toBeVisible();
+  await expect(bob.getByRole("link", { name: /^Doomsday this week: PvE \d+ PvP \d+ streak \d+$/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Femke" }).getByText("PvP Virgin")).toBeVisible();
   await bob.getByRole("link", { name: /^Doomsday this week/ }).click();
   await expect(page).toHaveURL(/\/doomsday\/ladder$/);

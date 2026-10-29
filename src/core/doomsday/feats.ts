@@ -2,6 +2,7 @@ import { MAX_LEVEL } from "../gamedata/levels";
 import { PROFESSIONS } from "../gamedata/professions";
 import type { FeedDay } from "../feed";
 import type { Character, Dataset } from "../model";
+import { ordinal } from "../names";
 
 // Feats (WEB-56; the addon repo's docs/DOOMSDAY.md "Feats"): one-time achievements per character, posted once as
 // "Feat unlocked", no points. Every milestone (src/core/bot.ts) is one, and these kinds join them. Pure: the server
@@ -397,11 +398,6 @@ export interface FeatText {
   text: string;
 }
 
-/** 1st, 2nd, 3rd, 4th, 11th, 21st. */
-export function ordinal(n: number): string {
-  if (n % 100 >= 11 && n % 100 <= 13) return `${n}th`;
-  return `${n}${["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
-}
 const thousands = (n: number) => n.toLocaleString("en-US");
 
 const NOTABLE_TEXT: Readonly<Record<Notable, { title: string; line: string; flavour: string }>> = {

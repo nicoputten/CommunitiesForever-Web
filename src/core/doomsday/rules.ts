@@ -1,3 +1,4 @@
+import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 // Doomsday: the rules of the addon repo's docs/DOOMSDAY.md (WEB-58), the TypeScript copy of the addon's
 // src/core/Doomsday.lua (CF-55). Both pass tests/fixtures/doomsday/doomsday-cases.json, the golden cases, unchanged;
 // a rule change updates DOOMSDAY.md, the golden file and both copies in the same release. Pure.
@@ -68,13 +69,10 @@ export function resetsIn(serverTime: number, s: Schedule = {}): number {
   return dayStart(dayOf(serverTime, s) + 1, s) - serverTime;
 }
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 /** "Tue 28 Oct": the day's name (the realm date it starts on). */
 export function dayLabel(n: number): string {
   const d = new Date(n * DAY * 1000);
-  return `${WEEKDAYS[(n + 4) % 7]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+  return `${WEEKDAY_SHORT[(n + 4) % 7]} ${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
 }
 
 /** "3 h 12 m", "12 m", "0 m". */

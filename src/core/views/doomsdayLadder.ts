@@ -4,6 +4,7 @@ import { localTime } from "../runTime";
 import { compareText } from "./characters";
 import { countdown } from "./doomsday";
 import { initials } from "./text";
+import { ordinal } from "../names";
 
 // The Doomsday page's Ladder and PvP tabs (WEB-60, board `doomsday-ladder`): one ranking per track, never added
 // together, rows that open to the split per character, PvP Virgins shown and never ranked; the PvP details of one
@@ -177,12 +178,6 @@ export interface PvpView {
   };
   battlegrounds: { name: string; won: number; lost: number; kills: number }[];
   firstWins?: string;
-}
-
-function ordinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
 }
 
 function rankView(c: NonNullable<FriendDoomsday["pvp"]>["characters"][number]): PvpRankView | undefined {

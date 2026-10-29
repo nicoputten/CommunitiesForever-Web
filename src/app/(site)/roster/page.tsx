@@ -29,7 +29,7 @@ import { SegmentedNav } from "@/components/ui/SegmentedNav";
 import { doomsdayChips } from "@/core/views/doomsday";
 import { rosterRuns } from "@/core/views/runs";
 import { getDb } from "@/server/db";
-import { loadDoomsday } from "@/server/doomsday";
+import { doomsdayFor } from "@/server/doomsdayEngine";
 import { runsInput } from "@/server/runsInput";
 import { RosterEmpty } from "./empty";
 import styles from "./roster.module.css";
@@ -56,7 +56,7 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
   const runs = viewer === undefined ? undefined : rosterRuns(runsInput(getDb(), viewer.battleTag, now));
   const own = peopleViews(data, now).find((p) => sameBattleTag(p.battleTag, viewer?.battleTag))?.key;
   // Doomsday chips (WEB-61): this week's points and the streak per friend.
-  const chips = doomsdayChips(loadDoomsday(getDb(), now));
+  const chips = doomsdayChips(doomsdayFor(getDb(), now));
   const filtered = isFiltered(query);
   const noAddon = r.noAddon.map((p) => p.displayName);
   const sub = [

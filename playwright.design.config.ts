@@ -52,8 +52,6 @@ export default defineConfig({
       // Discord linking (WEB-39): made-up values; Discord itself is never called.
       DISCORD_CLIENT_ID: "e2e-discord-client-id",
       DISCORD_CLIENT_SECRET: "e2e-discord-secret",
-      // Doomsday before the engine (WEB-58): the made-up sample (src/server/doomsdaySample.ts).
-      DOOMSDAY_SAMPLE: "1",
     },
     port,
     // Always a fresh server: a reused one would have another database and clock.

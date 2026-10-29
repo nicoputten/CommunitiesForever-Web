@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DoomsdaySnapshot } from "@/core/doomsday/snapshot";
 import type { PersonView } from "@/core/views/characters";
 import { countdown, doomsdayChips, doomsdayPage } from "@/core/views/doomsday";
-import { doomsdaySample } from "@/server/doomsdaySample";
+import { doomsdaySample } from "../../fixtures/doomsday/sampleSnapshot";
 
 // 2026-11-19 20:00 UTC, a Thursday: 21:00 in Paris, two hours after the 19:00 reset.
 const NOW = 1795118400;

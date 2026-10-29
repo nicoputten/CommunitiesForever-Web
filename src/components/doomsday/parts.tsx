@@ -267,16 +267,15 @@ function BoardCards({ view }: { view: BoardView }) {
               {r.name}
             </span>
             {r.crossedOut && <span className="visually-hidden">(all PvE dailies done)</span>}
-            {r.crown !== undefined ? (
+            {/* The first tag sits on the right (margin-left: auto); a PvP Virgin can wear the crown too. */}
+            {r.crown !== undefined && (
               <span className={`${styles.pill} ${styles.pillFirst}`}>
                 <CrownIcon className={styles.pillIcon} /> {r.crown}
                 <span className="visually-hidden"> first to finish</span>
               </span>
-            ) : r.you ? (
-              <span className={styles.youTag}>you</span>
-            ) : r.pvpVirgin ? (
-              <span className={`${styles.pill} ${styles.pillVirgin}`}>PvP Virgin</span>
-            ) : null}
+            )}
+            {r.you && <span className={styles.youTag}>you</span>}
+            {r.pvpVirgin && <span className={`${styles.pill} ${styles.pillVirgin}`}>PvP Virgin</span>}
           </div>
           {r.cells !== undefined && (
             <div className={styles.marks}>
@@ -311,7 +310,9 @@ function BoardCards({ view }: { view: BoardView }) {
 /** A row's goal cells; a PvP Virgin with nothing done in PvP gets one "PvP Virgin" pill over the PvP columns. */
 function Cells({ row, pvpColumns }: { row: BoardView["rows"][number]; pvpColumns: boolean[] }) {
   const cells = row.cells ?? [];
-  const pvpIdle = cells.every((c, i) => !pvpColumns[i] || c.kind === "open");
+  const pvpIdle = cells.every(
+    (c, i) => !pvpColumns[i] || c.kind === "open" || (c.kind === "progress" && c.value === 0),
+  );
   const virgin = row.pvpVirgin && pvpIdle;
   const out: ReactNode[] = [];
   let virginShown = false;

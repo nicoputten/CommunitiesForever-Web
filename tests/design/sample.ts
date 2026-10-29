@@ -1,7 +1,10 @@
 // The design checks' sample data (WEB-30): the invented friends of docs/DESIGN-PROMPT.md ("Sample data"), never real
 // people, written as the SavedVariables `global` table the addon writes (docs/SOURCE-DATA.md) with times relative to
 // a fixed "now". tests/design/seed.setup.ts uploads it through the real upload route as the admin, Nico.
-// The community is called Doombringers, the name on the boards (docs/DESIGN.md §1).
+// The community is called Doombringers, the name on the boards (docs/DESIGN.md §1). Its Doomsday data (goals, kills,
+// PvP ranks) comes from sampleDoomsday.ts (WEB-63).
+
+import { doomsdayChar, doomsdayPerson } from "./sampleDoomsday";
 
 /** The design server's "now" (FIXED_NOW): 2026-11-19 20:00 UTC, a Thursday evening. */
 export const NOW = 1795118400;
@@ -288,7 +291,8 @@ function lua(value: Lua, indent = ""): string {
   return items.length === 0 ? "{}" : `{\n${items.join("\n")}\n${indent}}`;
 }
 
-function char(c: Sample, now: number): Lua {
+/** A character record; `owner` (display name) and `before` (an earlier file) pick its Doomsday fields. */
+function char(c: Sample, now: number, owner: string, before: boolean): Lua {
   const trees = TREES[c.classFile]!;
   const most = c.talents.indexOf(Math.max(...c.talents));
   return {
@@ -309,6 +313,7 @@ function char(c: Sample, now: number): Lua {
       quests: Object.fromEntries(Object.entries(c.quests).map(([id, title]) => [id, { title }])),
     }),
     updatedAt: now - c.lastPlayed,
+    ...doomsdayChar(owner, c, before),
   };
 }
 
@@ -346,10 +351,12 @@ export interface SampleOptions {
   now?: number;
   /** Which of the consecutive days' files; 3 (the design sample) by default. */
   day?: SampleDay;
+  /** With the Doomsday fields (goals, feed, PvP; WEB-63); a test that brings its own feed turns them off. */
+  doomsday?: boolean;
 }
 
 /** The sample as the SavedVariables file the game writes. */
-export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3 }: SampleOptions = {}): string {
+export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3, doomsday = true }: SampleOptions = {}): string {
   const ago = (3 - day) * D;
   const later = (t: number) => (ago === 0 ? t : Math.max(t, ago + H));
   const mine = NICO.map((c) => asOf(c, ago)).filter((c) => c !== undefined);
@@ -368,21 +375,23 @@ export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3 }: Sampl
       friends.map((f) => [
         f.battleTag,
         {
-          chars: Object.fromEntries(f.chars.map((c) => [c.guid, char(c, now)])),
+          chars: Object.fromEntries(f.chars.map((c) => [c.guid, char(c, now, f.displayName, ago > 0)])),
           displayName: f.displayName,
           receivedAt: now - later(f.receivedAgo),
           ...(f.via !== undefined && { via: f.via }),
           version: now - later(f.receivedAgo),
+          ...(doomsday && doomsdayPerson(f.displayName, f.chars, now, now - later(f.receivedAgo))),
         },
       ]),
     ),
     presence,
-    schemaVersion: 1,
+    schemaVersion: 2,
     self: {
       battleTag: self,
-      chars: Object.fromEntries(mine.map((c) => [c.guid, char(c, now)])),
+      chars: Object.fromEntries(mine.map((c) => [c.guid, char(c, now, "Nico", ago > 0)])),
       displayName: "Nico",
       version: now - ago - H,
+      ...(doomsday && doomsdayPerson("Nico", mine, now, now - ago - H)),
     },
     settings: { clubId: "40000001", clubName: "Doombringers" },
   };

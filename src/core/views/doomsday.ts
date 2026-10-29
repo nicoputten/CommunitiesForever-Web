@@ -10,6 +10,7 @@ import type {
 import { localTime } from "../runTime";
 import { compareText } from "./characters";
 import { initials, joinNames } from "./text";
+import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 
 // The Doomsday page (E8; the addon repo's docs/DOOMSDAY.md): the header, Today, Week, the Board and the 12-week
 // heatmap (WEB-59, boards `doomsday-today`, `doomsday-phone` and `doomsday-rules`). Times in the viewer's own zone
@@ -115,7 +116,8 @@ export interface BoardColumn {
 
 export type BoardCell =
   | { kind: "done"; time: string; swap?: string }
-  | { kind: "progress"; text: string; swap?: string }
+  /** `value` 0: nothing yet (a PvP Virgin's kill goal shows the pill instead). */
+  | { kind: "progress"; text: string; value: number; swap?: string }
   | { kind: "open"; swap?: string };
 
 export interface BoardRow {
@@ -222,16 +224,13 @@ const KIND: Record<GoalSlot, string> = {
 
 const TRACK: Record<Track, string> = { pve: "PvE", pvp: "PvP" };
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 /** "Tue 28 Oct" in the zone. */
 function dayName(at: number, timeZone: string): string {
   const p = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", day: "numeric", month: "numeric" })
     .formatToParts(new Date(at * 1000))
     .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
-  const weekday = WEEKDAYS.indexOf(p.weekday ?? "");
-  return `${WEEKDAYS[weekday] ?? p.weekday} ${p.day} ${MONTHS[Number(p.month) - 1]}`;
+  const weekday = WEEKDAY_SHORT.indexOf(p.weekday ?? "");
+  return `${WEEKDAY_SHORT[weekday] ?? p.weekday} ${p.day} ${MONTH_SHORT[Number(p.month) - 1]}`;
 }
 
 /** "Sunday" in the zone. */
@@ -257,11 +256,13 @@ function pointsView(p: Points | undefined, approx: boolean): PointsView | undefi
 /** "done at 10:42", or with the day for a weekly done on another day ("done at Mon 22:10"). */
 function doneText(at: number, timeZone: string, withDay: boolean): string {
   const time = localTime(at, timeZone);
-  return withDay ? `done at ${WEEKDAYS[weekdayIndex(at, timeZone)]} ${time}` : `done at ${time}`;
+  return withDay ? `done at ${WEEKDAY_SHORT[weekdayIndex(at, timeZone)]} ${time}` : `done at ${time}`;
 }
 
 function weekdayIndex(at: number, timeZone: string): number {
-  return WEEKDAYS.indexOf(new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short" }).format(new Date(at * 1000)));
+  return WEEKDAY_SHORT.indexOf(
+    new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short" }).format(new Date(at * 1000)),
+  );
 }
 
 function swapText(g: FriendGoal): string | undefined {
@@ -331,6 +332,7 @@ function boardCell(g: FriendGoal | undefined, timeZone: string): BoardCell {
         ? {
             kind: "progress",
             text: `${g.progress.approx === true ? "≈" : ""}${Math.min(g.progress.value, g.progress.target)}/${g.progress.target}`,
+            value: g.progress.value,
           }
         : { kind: "open" };
   if (swap !== undefined) cell.swap = swap;
