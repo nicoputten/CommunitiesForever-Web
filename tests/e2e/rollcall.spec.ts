@@ -24,8 +24,13 @@ test("lists who was seen where, newest first, with the unknown tray", async ({ p
   await expect(row(page, "Bob Example")).toContainText("The Deadmines, Westfall · Bob");
   await expect(row(page, "Mira Sunstrider")).toContainText("Mira, via Bob");
   await expect(row(page, "Ruk Bloodhoof")).toContainText("Jorrit's data is 9 days old");
+  // One row until opened (WEB-65).
   const tray = panel(page).getByRole("region", { name: "Unknown whereabouts" });
-  await expect(tray.getByRole("link", { name: /Sela Moonbrook/ })).toHaveAttribute("href", /^\/character\//);
+  const sela = tray.getByRole("link", { name: /Sela Moonbrook/ });
+  await expect(sela).toBeHidden();
+  await tray.getByText("1 not sighted yet").click();
+  await expect(sela).toHaveAttribute("href", /^\/character\//);
+  await expect(sela).toBeVisible();
   await expect(tray).toContainText("Sanne has no addon data yet.");
 });
 

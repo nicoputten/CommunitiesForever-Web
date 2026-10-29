@@ -51,11 +51,8 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
     await expect(band).toHaveAttribute("aria-label", new RegExp(label));
     await expect(band).toHaveAttribute("aria-label", new RegExp(name));
   }
-  // A narrow band keeps its name, cut on desktop (WEB-54); the phone list has it whole.
-  await expect(bands.locator('button[data-band="rfc"]')).toHaveText(
-    isPhone(page) ? "Ragefire Chasm 13–18 · 2" : /^Rag\w*… 13–18 · 2$/,
-    { useInnerText: true },
-  );
+  // Full names everywhere, never cut (WEB-65).
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
@@ -130,8 +127,10 @@ test("filters by class and role from the menus, and Back undoes it", async ({ pa
   await expect(page.getByRole("menu", { name: "Class" })).toBeHidden();
   await expect(page.getByRole("button", { name: "Class · 2" })).toBeFocused();
   await expect(rowNames(page, "Femke")).toHaveText(["Lia Thornwhisper", "Zul Kazrek"]);
-  await expect(panel(page, "Femke")).toContainText("Femke#3307 · 2 characters");
-  await expect(panel(page, "Nico")).toContainText(`${E2E.admin} · 1 of 3 characters`);
+  // WEB-65: display names only; the BattleTag is on Admin.
+  await expect(panel(page, "Femke")).toContainText("2 characters");
+  await expect(panel(page, "Femke")).not.toContainText("#");
+  await expect(panel(page, "Nico")).toContainText("1 of 3 characters");
 
   await page.getByRole("button", { name: "Role" }).click();
   await page.getByRole("menuitemcheckbox", { name: "Healer" }).click();

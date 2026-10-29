@@ -44,23 +44,3 @@ export function talentsText(
   const points = talents.map((t) => t.points ?? 0).join("/");
   return mainTreeName === undefined ? points : `${mainTreeName} ${points}`;
 }
-
-/** A cut name keeps at least this many letters before the "…" (WEB-54). */
-const MIN_LETTERS = 3;
-
-/**
- * A dungeon's short name cut with "…" at every length that keeps 3 letters, longest first ("Ragefire Chasm" →
- * "Ragefire Chas…", …, "Rag…"), for a narrow roster band (WEB-54). No space or ":" before the "…".
- */
-export function nameCuts(name: string): string[] {
-  const letters = Array.from(name);
-  const out: string[] = [];
-  for (let n = letters.length - 1; n >= MIN_LETTERS; n--) {
-    const cut = `${letters
-      .slice(0, n)
-      .join("")
-      .replace(/[\s:,–-]+$/, "")}…`;
-    if (Array.from(cut).length > MIN_LETTERS && cut !== out.at(-1)) out.push(cut);
-  }
-  return out.length > 0 ? out : [name];
-}
