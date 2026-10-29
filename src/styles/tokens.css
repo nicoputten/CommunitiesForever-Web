@@ -884,4 +884,11 @@
   --size-crown-badge: 10px; /* admin-coadmins: the crown in the Owner badge */
   --size-crown-log: 11px; /* admin-coadmins: the crown on an owner-only log line */
   --size-dialog: 460px; /* admin-coadmin-states: Make admin, Remove admin */
+  /* Doomsday on the phone (WEB-61, board doomsday-phone) */
+  --size-goal-row: 52px; /* doomsday-phone: a goal row */
+  --size-mark: 30px; /* doomsday-phone: a goal's mark on a friend's board card */
+  --mark-pve: rgba(127, 217, 154, 0.16); /* doomsday-phone: a PvE goal done */
+  --mark-pvp: rgba(240, 138, 128, 0.14); /* doomsday-phone: a PvP goal done */
+  --surface-dd-chip: rgba(12, 18, 30, 0.9); /* roster-cards-doomsday: the Doomsday chip */
+  --size-emblem-day-one: 40px; /* doomsday-phone: the emblem on "Day one of Doomsday" and the phone title */
 }

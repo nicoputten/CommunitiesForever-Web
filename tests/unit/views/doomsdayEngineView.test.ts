@@ -52,6 +52,7 @@ describe("doomsdayPage on the engine's snapshot", () => {
     expect(ada?.cells?.length).toBe(page.board.columns.length);
     expect(page.board.rows.find((r) => r.name === "Bob")?.dim).toBe(true);
     expect(page.firstDay).toBe(true);
+    expect(page.soFar.empty).toBe(true);
   });
 
   it("renders the ladder, PvP details and feats (WEB-60)", () => {

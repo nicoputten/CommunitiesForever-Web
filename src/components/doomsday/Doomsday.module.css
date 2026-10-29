@@ -564,3 +564,202 @@ tr[data-dim="true"] .avatar {
   text-transform: none;
   vertical-align: middle;
 }
+
+/* ── Phone and states (WEB-61, board doomsday-phone) ─────────────────── */
+
+/* Only on the phone: the day's points with the reset under the tabs, the streak under the goals. */
+.phoneOnly {
+  display: none;
+}
+
+/* Shown (flex) by the phone media query below, through .phoneOnly. */
+.phoneLine {
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+/* The board as one card per friend. */
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.friendCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+}
+
+.friendCard[data-dim="true"] {
+  color: var(--text-dim);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cardTop .pill,
+.cardTop .youTag {
+  margin-left: auto;
+}
+
+.youTag {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-0-5);
+  min-width: var(--size-mark);
+  height: var(--size-mark);
+  padding: 0 var(--s-1);
+  border-radius: var(--r-nav);
+  background: var(--surface-raised);
+  color: var(--text-faint);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.mark[data-state="done"][data-track="pve"] {
+  background: var(--mark-pve);
+  color: var(--pve-text);
+}
+
+.mark[data-state="done"][data-track="pvp"] {
+  background: var(--mark-pvp);
+  color: var(--pvp-text);
+}
+
+.mark[data-state="progress"] {
+  color: var(--text-chip);
+}
+
+.markSwap {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  color: var(--swap-text);
+}
+
+/* Day one of Doomsday. */
+.dayOne {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-3-5);
+}
+
+.dayOneEmblem {
+  width: var(--size-emblem-day-one);
+  height: var(--size-emblem-day-one);
+  flex: none;
+}
+
+.dayOneTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+.dayOneText {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* Loading and error. */
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--stale-banner-line);
+  background: transparent;
+  color: var(--stale-text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--stale-tint);
+}
+
+@media (max-width: 767px) {
+  .phoneOnly {
+    display: block;
+  }
+
+  .phoneLine.phoneOnly {
+    display: flex;
+  }
+
+  .stats {
+    display: none;
+  }
+
+  .emblem {
+    width: var(--size-emblem-day-one);
+    height: var(--size-emblem-day-one);
+  }
+
+  .card {
+    padding: var(--s-3-5);
+  }
+
+  /* Goals as 52 px rows: kind and title, the check or count on the right. */
+  .goal {
+    min-height: var(--size-goal-row);
+    padding: var(--s-2) var(--s-3);
+    align-items: center;
+  }
+
+  .goal .bar,
+  .goal .goalMeta {
+    display: none;
+  }
+
+  .goal[data-slot="duel"] .goalMeta {
+    display: block;
+  }
+
+  .goalTitle {
+    font-size: var(--fs-name-sm);
+  }
+
+  .tableWrap,
+  .legendDesktop,
+  .desktopOnly {
+    display: none;
+  }
+
+  .cards {
+    display: flex;
+  }
+}
