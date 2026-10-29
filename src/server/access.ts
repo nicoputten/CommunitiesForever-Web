@@ -1,7 +1,7 @@
 import { and, asc, eq, isNull, lte } from "drizzle-orm";
 import { battleTagKey, mayBlock, sameBattleTag, type AccessList, type Role, roleOf } from "@/core/access";
 import type { Db } from "./db";
-import { blocks, guests, lastSeen, members, uploaderTokens } from "./db/schema";
+import { admins, blocks, guests, lastSeen, members, uploaderTokens } from "./db/schema";
 
 // The access list from the database (WEB-06): members (derived from uploads, src/server/uploads.ts), the guest list
 // and blocks (both kept by the admin page, WEB-18). The rules themselves are in src/core/access.ts.
@@ -35,6 +35,13 @@ export function loadAccessList(db: Db | Tx, admin: string | undefined = adminBat
       db
         .select({ key: blocks.key })
         .from(blocks)
+        .all()
+        .map((r) => r.key),
+    ),
+    admins: new Set(
+      db
+        .select({ key: admins.key })
+        .from(admins)
         .all()
         .map((r) => r.key),
     ),
@@ -186,7 +193,13 @@ export function block(
   admin = adminBattleTag(),
 ): Block {
   const tag = cleanTag(battleTag);
-  if (!mayBlock(tag, loadAccessList(db, admin))) throw new AccessError("The admin can't be blocked.");
+  if (!mayBlock(tag, loadAccessList(db, admin))) {
+    throw new AccessError(
+      sameBattleTag(tag, admin)
+        ? "The owner can't be blocked."
+        : `Admins and the owner can't be blocked. Remove ${tag.split("#")[0]} as admin first.`,
+    );
+  }
   db.insert(blocks)
     .values({ key: battleTagKey(tag), battleTag: tag, blockedAt: now, blockedBy: by })
     .onConflictDoNothing()
@@ -215,10 +228,10 @@ export function unblock(db: Db, battleTag: string): boolean {
 
 // --- last seen -----------------------------------------------------------------------------------------------
 
-/** How often a BattleTag's "last seen" is written: once an hour is precise enough for the admin page. */
-export const LAST_SEEN_EVERY = 60 * 60;
+/** How often a BattleTag's "last seen" is written: every 5 minutes, so the admin page can say "online" (WEB-64). */
+export const LAST_SEEN_EVERY = 5 * 60;
 
-/** Notes that a signed-in BattleTag opened the site (src/proxy.ts); writes only when the stored time is an hour old. */
+/** Notes that a signed-in BattleTag opened the site (src/proxy.ts); writes only when the stored time is 5 minutes old. */
 export function touchLastSeen(db: Db, battleTag: string, now = Math.floor(Date.now() / 1000)): void {
   db.insert(lastSeen)
     .values({ key: battleTagKey(battleTag), battleTag, seenAt: now })

@@ -48,7 +48,7 @@ test.describe("a friend", () => {
     }
     // The jump bar: only the friend's two sections.
     await expect(page.getByRole("navigation", { name: "On this page" }).getByRole("link")).toHaveCount(2);
-    await expect(page.getByText(/is set by the admin/)).toBeVisible();
+    await expect(page.getByText(/is set by the owner/)).toBeVisible();
     expect((await page.goto("/discord/recap"))?.status()).toBe(404);
   });
 

@@ -21,7 +21,8 @@ test("the admin blocks and unblocks a member", async ({ page, context, baseURL, 
   await expect(page.getByRole("heading", { level: 1, name: "Admin" })).toBeVisible();
 
   const members = panel(page, "Members");
-  await expect(members.getByTestId("member").first()).toContainText("Admin");
+  await expect(members.getByTestId("member").first()).toContainText("Owner");
+  await expect(members.getByTestId("member").first()).toContainText("Can't be blocked");
   await expect(members).toContainText("Bob#2002");
   await expect(members).toContainText("Added by");
 
@@ -101,4 +102,56 @@ test("Start fresh from launch asks first, and needs `delete all` typed", async (
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
   await expect(zone.getByRole("button", { name: "Start fresh from launch…" })).toBeVisible();
+});
+
+// WEB-64: the owner makes a friend an admin and removes them again; the admin sees the page without the owner's
+// boxes. Each project uses its own friend, and leaves them a member.
+const HELPER: Record<string, { tag: string; name: string }> = {
+  desktop: { tag: "Sanne#5150", name: "Sanne" },
+  phone: { tag: "Femke#3307", name: "Femke" },
+};
+
+test("the owner makes a friend an admin, who helps without the owner's controls, then removes them", async ({
+  page,
+  context,
+  baseURL,
+  browser,
+}, info) => {
+  const helper = HELPER[info.project.name] ?? HELPER.desktop!;
+  // The friend signs in first: only friends who have signed in can be made admin.
+  const other = await browser.newContext();
+  await signInAs(other, baseURL!, helper.tag);
+  const theirs = await other.newPage();
+  await theirs.goto("/");
+  expect((await theirs.goto("/admin"))?.status()).toBe(404);
+
+  await signInAs(context, baseURL!, E2E.admin);
+  await page.goto("/admin");
+  const admins = panel(page, "Admins");
+  await admins.getByRole("button", { name: `Make admin ${helper.tag}`, exact: true }).click();
+  const ask = page.getByRole("dialog", { name: `Make ${helper.name} an admin?` });
+  await expect(ask).toContainText("not the bot token, the launch reset or other admins");
+  await ask.getByRole("button", { name: "Make admin", exact: true }).click();
+  await expect(admins.getByRole("button", { name: `Remove admin ${helper.tag}`, exact: true })).toBeVisible();
+  await expect(panel(page, "Admin changes")).toContainText(`made ${helper.name} an admin`);
+
+  // The new admin: the admin page with a note on who the owner is, without the owner's boxes and buttons.
+  expect((await theirs.goto("/admin"))?.status()).toBe(200);
+  await expect(theirs.getByTestId("owner-bar")).toContainText("You're an admin. Some settings are for the owner only.");
+  await expect(theirs.getByRole("region", { name: "Danger zone" })).toHaveCount(0);
+  await expect(theirs.getByRole("region", { name: "Uploader devices" })).toHaveCount(0);
+  await expect(theirs.getByRole("button", { name: /^(Make|Remove) admin/ })).toHaveCount(0);
+  await expect(theirs.getByRole("region", { name: "Admin changes" })).toContainText(`made ${helper.name} an admin`);
+  await theirs.goto("/discord");
+  await expect(theirs.getByTestId("token-owner")).toHaveText("The bot token is managed by the owner.");
+
+  // Removed: it takes effect at their next request.
+  await admins.getByRole("button", { name: `Remove admin ${helper.tag}`, exact: true }).click();
+  await page
+    .getByRole("dialog", { name: `Remove ${helper.name} as admin?` })
+    .getByRole("button", { name: "Remove admin", exact: true })
+    .click();
+  await expect(admins.getByRole("button", { name: `Make admin ${helper.tag}`, exact: true })).toBeVisible();
+  expect((await theirs.goto("/admin"))?.status()).toBe(404);
+  await other.close();
 });

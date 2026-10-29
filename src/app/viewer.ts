@@ -1,5 +1,5 @@
 import type { Viewer } from "@/components/shell/viewer";
-import { mayAdmin, mayUpload, roleOf } from "@/core/access";
+import { isOwner, mayAdmin, mayUpload, roleOf } from "@/core/access";
 import { adminBattleTag, loadAccessList } from "@/server/access";
 import { auth } from "@/server/auth";
 import { getDb } from "@/server/db";
@@ -14,7 +14,7 @@ export async function getViewer(): Promise<Viewer | undefined> {
   const list = loadAccessList(getDb(), adminBattleTag());
   const role = roleOf(battleTag, list);
   if (role === undefined) return undefined;
-  return { battleTag, role, mayUpload: mayUpload(battleTag, list) };
+  return { battleTag, role, mayUpload: mayUpload(battleTag, list), owner: isOwner(battleTag, list) };
 }
 
 /** The admin guard for admin-only pages (/dev/components). */

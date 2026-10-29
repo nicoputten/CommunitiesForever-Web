@@ -1,23 +1,33 @@
 import type { ReactNode } from "react";
 import styles from "./Admin.module.css";
 
-/** One admin page panel (WEB-18, no board): the upload board's history panel with a section heading. */
+/**
+ * One admin page panel (WEB-18, no board): the upload board's history panel with a section heading. WEB-64: a count
+ * or hint and a tag ("Owner & admins") at the end of the heading line; `strong` for the Admins box's gold line.
+ */
 export function AdminPanel({
   id,
   title,
   sub,
+  aside,
+  strong = false,
   children,
 }: {
   id: string;
   title: string;
   sub?: string;
+  aside?: ReactNode;
+  strong?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className={styles.panel}>
-      <h2 id={id} className={styles.title}>
-        {title}
-      </h2>
+    <section aria-labelledby={id} className={styles.panel} data-strong={strong || undefined}>
+      <div className={styles.head}>
+        <h2 id={id} className={styles.title}>
+          {title}
+        </h2>
+        {aside !== undefined && <span className={styles.aside}>{aside}</span>}
+      </div>
       {sub !== undefined && <p className={styles.sub}>{sub}</p>}
       {children}
     </section>

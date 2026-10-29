@@ -774,3 +774,40 @@ Each card keeps the existing rules: a threshold, a score against earlier weeks, 
 - `docs/RECAP.md` lists every new card with its threshold. Tests per card: shows above the threshold, not below it, and not without the data.
 - Decided with Nico (2026-10-29): the thresholds are the boards' "Shows when" (`bot-recap-v2-cards`), not the ones above: awards Warmonger 25, Battlemaster 3, Loot goblin 4, Duelist 5, Social butterfly 3 (redefined: grouped with the most different friends); Bloodbath zone 20, Battleground of the week 3 games, Deadliest zone 5, Biggest group night 4 friends; Rank race same rank with this week's honor within 10%; Revenge 3 deaths to players then 10 kills; Duel rivals 4 duels; Most deaths 6; Untouchable 5 levels; Big spender 50 gold in one day ("Hooves were heard", no amount); Marathon 5 hours; Night owl after 01:00; Early bird before 07:00; headlines PvP (200 kills, one zone at least 40%) and danger (25 deaths, at least 1.5 times the 4-week average); "Take back Tarren Mill" when Hillsbrad Foothills is in the top 3 kill zones.
 - Done (PR #116): `src/core/recap/cardsV2.ts` (the 21 cards), headlines and challenges in `recap.ts`, texts in `texts.ts` (3 phrasings each), each friend's time zone and the PvP rank in the recap's input; `docs/RECAP.md`; tests `tests/unit/recap/v2.test.ts`.
+
+### WEB-64 Co-admins
+Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Boards: `admin-coadmins` (owner view), `admin-as-admin`, `admin-coadmin-states`, `admin-phone` and `discord-page-coadmins` (designed 2026-10-29). From the design: nobody, the owner included, can block an admin directly; remove the admin role first (the Members list shows "Can't be blocked" on those rows).
+
+- **Two levels:**
+  - **Owner:** the BattleTag in `ADMIN_BATTLETAG` (server setting), as now. Never demoted or removed through the site. No screen, action or API offers it, and the server refuses it.
+  - **Admin:** friends the owner appoints.
+- **Appointing:** only the owner appoints and removes admins; an admin can't make another admin.
+  - **Where:** on the admin page, an **Admins** box lists the friends who have signed in, each with **Make admin** or **Remove admin** and a confirm dialog.
+  - **The owner's row:** a crown and no button.
+  - **Storage:** admins live in their own table (not derived, so a rebuild or the launch cut-off never touches them).
+  - **Removing an admin** takes effect at their next request.
+- **What an admin may do:** everything for the everyday running of the group:
+  - the guest list (add, tick "may upload")
+  - blocking and unblocking a BattleTag, except the owner's and other admins'
+  - the Discord page's post settings (switches, channels, recap time, the Doomsday reset time and realm time zone)
+  - deleting any run, marking runs done
+  - test posts and previews
+- **Owner only:**
+  - **Start fresh from launch** (WEB-62), including Undo
+  - the **bot token** (create, replace, revoke)
+  - **appointing and removing admins**
+  - **revoking other friends' uploader devices or tokens**
+  - any server setting
+  
+  For admins these controls are hidden, and the server refuses the action too (403, not only a hidden button). Today's `mayAdmin` splits into "may admin" and "is owner", and every owner-only action and API route checks the latter.
+- **Admin changes log:** a short list on the admin page: who changed what and when (admins appointed or removed, blocks, guest changes, Discord settings, run deletions, the cut-off, the token). Owner and admins see it; it's the one place BattleTags show, as on the admin page now.
+- **The bot:** `isAdmin` in the bot API look-ups (cancel and move any run) is true for owner and admins.
+- **Tests:**
+  - every owner-only action refused for an admin (UI and server)
+  - the owner can't be removed or blocked, by anyone
+  - an admin can't appoint
+  - removing an admin takes effect at once
+  - the log entries
+  - the cut-off and the token are refused for admins
+- As every UI story: design checks, 375 and 1440 px, Playwright, screenshots in the PR.
+- Done: the `admins` table and `admin_log` (migration 0023), `isOwner` beside `mayAdmin`, owner-only checks in every owner-only server action, the Admins box, rank badges, the log, the owner's Uploader devices box and the admin's view of the admin and Discord pages (boards `admin-coadmins`, `admin-as-admin`, `admin-coadmin-states`, `admin-phone`, `discord-page-coadmins`).
