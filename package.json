@@ -44,7 +44,7 @@
     "vitest": "^5.0.5"
   },
   "allowScripts": {
-    "esbuild": true,
+    "esbuild": false,
     "unrs-resolver": false,
     "better-sqlite3@13.0.3": true
   }
