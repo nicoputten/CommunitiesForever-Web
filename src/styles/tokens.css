@@ -444,6 +444,12 @@
   --size-marker: 30px; /* map: character marker (hit area --size-touch) */
   --size-cluster: 36px; /* map: cluster, 2–5 */
   --size-cluster-many: 38px; /* map-states: cluster of 6 or more */
+  --label-drop: calc(
+    var(--size-cluster-many) / 2 + var(--s-1-5)
+  ); /* map: a zone's name below its marker (live-test-site-fixes, WEB-65) */
+  --label-drop-zone: calc(
+    var(--size-marker) / 2 + var(--s-1) + var(--fs-meta-sm) * var(--lh-tight) + var(--s-1-5) * 2
+  ); /* map: the same, below a name tag at zone zoom */
   --size-cluster-ring: 4px; /* map: class ring around the count */
   --size-badge: 18px; /* map: dungeon badge */
   --size-badge-icon: 11px;

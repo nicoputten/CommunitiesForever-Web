@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { MAX_LEVEL } from "@/core/gamedata";
 import { capitalize } from "@/core/views/text";
-import type { MapMarker } from "@/core/views/mapMarkers";
+import { seenFact, type MapMarker } from "@/core/views/mapMarkers";
 import { ClassDisc } from "@/components/ui/ClassDisc";
 import { classStyle } from "./Markers";
 import styles from "./CharacterSheet.module.css";
@@ -72,7 +72,7 @@ export function CharacterSheet({ marker: m, next, onNext, onClose }: CharacterSh
         <div>
           <dt>Seen</dt>
           <dd>
-            {capitalize(m.seenAgo)}
+            {capitalize(seenFact(m))}
             {m.age === "live" && <span className={styles.fresh} aria-label="new" role="img" />}
             {m.viaName !== undefined && <span className={styles.via}> · via {m.viaName}</span>}
           </dd>

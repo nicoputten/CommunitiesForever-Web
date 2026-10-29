@@ -99,9 +99,9 @@ test("plan, answer, edit and delete a run", async ({ page, context, baseURL }) =
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByText("Cancelled by Nico")).toBeVisible();
   await page.goto("/runs?show=all");
-  const card = page.locator(`article:has(a#run-${runId})`);
-  await expect(card).toHaveAttribute("data-cancelled", "true");
-  await expect(card.getByText("Cancelled", { exact: true })).toBeVisible();
+  const cancelled = page.locator(`article:has(a#run-${runId})`);
+  await expect(cancelled).toHaveAttribute("data-cancelled", "true");
+  await expect(cancelled.getByText("Cancelled", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: `Tomorrow ${name} · Nico Cancelled` })).toHaveCount(0);
 });
 

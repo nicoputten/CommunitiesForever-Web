@@ -135,6 +135,36 @@ test("map: screenshot of Kalimdor", async ({ page }) => {
   await expectScreenshot(page, "map-kalimdor");
 });
 
+/** WEB-65, bug 6: no zone name sits under its own marker or cluster (the visible ones; a fan's hub is its centre). */
+async function expectLabelsClear(page: import("@playwright/test").Page) {
+  const overlaps = await page.evaluate(() => {
+    const hit = (a: DOMRect, b: DOMRect) =>
+      a.width > 0 && b.width > 0 && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    const out: string[] = [];
+    for (const label of document.querySelectorAll<SVGTextElement>("text[data-label][data-occupied]")) {
+      if (getComputedStyle(label).display === "none") continue;
+      const zone = label.getAttribute("data-label");
+      const place = document.querySelector(`[data-place="${zone}"]`);
+      if (place === null) continue;
+      const box = label.getBoundingClientRect();
+      for (const disc of place.querySelectorAll("button > span, a > span, [role=img] > span"))
+        if (hit(box, disc.getBoundingClientRect())) out.push(zone!);
+    }
+    return [...new Set(out)];
+  });
+  expect(overlaps).toEqual([]);
+}
+
+test("map: zone names clear of their markers (WEB-65)", async ({ page }) => {
+  await openScreen(page, "/");
+  await mapSettled(page);
+  await expectLabelsClear(page);
+  await openScreen(page, "/?character=Player-1-0000A001");
+  await expect(page.locator("[data-label][data-focus]")).toBeAttached();
+  await mapSettled(page);
+  await expectLabelsClear(page);
+});
+
 // WEB-26: zoom levels (map-states board), the zoom buttons and the zone name in the top bar.
 
 test("map: zoom buttons", async ({ page }) => {
