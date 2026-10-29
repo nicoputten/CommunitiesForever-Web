@@ -453,8 +453,13 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
   const { now } = input;
   const tz = input.viewer.timeZone;
   const upcoming = input.runs.filter((r) => isUpcoming(r, now)).sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
+  // "Past" is a start time before now (WEB-65, bug 3): a cancelled run still ahead stays in its week, struck through.
+  const cancelledAhead = (r: RunRecord) => r.cancelledAt !== undefined && now < r.startsAt;
+  const listed = input.runs
+    .filter((r) => isUpcoming(r, now) || cancelledAhead(r))
+    .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
   const keep = (r: RunRecord) => filter === "all" || involved(ctx, r) || (filter === "join" && viewerFits(ctx, r));
-  const shown = upcoming.filter(keep);
+  const shown = listed.filter(keep);
   const hiddenRuns = upcoming.filter((r) => !keep(r));
   const end = weekEnd(now, tz);
   const page: RunsPage = {
@@ -462,7 +467,9 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
     thisWeek: shown.filter((r) => r.startsAt < end).map((r) => card(ctx, r)),
     later: shown.filter((r) => r.startsAt >= end).map((r) => card(ctx, r)),
     past: input.runs
-      .filter((r) => !isUpcoming(r, now) && (filter === "all" || involved(ctx, r) || filter === "join"))
+      .filter(
+        (r) => !isUpcoming(r, now) && !cancelledAhead(r) && (filter === "all" || involved(ctx, r) || filter === "join"),
+      )
       .sort((a, b) => b.startsAt - a.startsAt || b.id - a.id)
       .slice(0, PAST_SHOWN)
       .map((r) => ({
