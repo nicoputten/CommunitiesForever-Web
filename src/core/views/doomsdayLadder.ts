@@ -151,6 +151,8 @@ export interface DuelGridView {
   names: { key: string; name: string }[];
   /** cells[row][column]: "4–2" with the row friend's result; undefined on the diagonal or without duels. */
   cells: ({ text: string; result: "won" | "lost" | "even" } | undefined)[][];
+  /** "Read across: Mira beat Tok 2–1.": the clearest win in the grid, how to read it (WEB-65, bug 7). */
+  readAcross?: string;
 }
 
 export interface PvpView {
@@ -213,16 +215,25 @@ function rankView(
 function duelGrid(s: DoomsdaySnapshot): DuelGridView {
   const duelists = s.friends.filter((f) => f.pvp !== undefined && f.pvp.duels.vs.some((v) => v.won + v.lost > 0));
   const names = duelists.map((f) => ({ key: f.friendKey, name: f.name }));
+  // The example under the grid: the biggest lead, then the most duels, then the first in grid order.
+  let best: { lead: number; duels: number; text: string } | undefined;
   const cells = duelists.map((row) =>
     duelists.map((col) => {
       if (row.friendKey === col.friendKey) return undefined;
       const vs = row.pvp!.duels.vs.find((v) => v.friendKey === col.friendKey);
       if (vs === undefined || vs.won + vs.lost === 0) return undefined;
       const result: "won" | "lost" | "even" = vs.won > vs.lost ? "won" : vs.won < vs.lost ? "lost" : "even";
-      return { text: `${vs.won}–${vs.lost}`, result };
+      const text = `${vs.won}–${vs.lost}`;
+      const lead = vs.won - vs.lost;
+      const duels = vs.won + vs.lost;
+      if (lead > 0 && (best === undefined || lead > best.lead || (lead === best.lead && duels > best.duels)))
+        best = { lead, duels, text: `Read across: ${row.name} beat ${col.name} ${text}.` };
+      return { text, result };
     }),
   );
-  return { names, cells };
+  const grid: DuelGridView = { names, cells };
+  if (best !== undefined) grid.readAcross = best.text;
+  return grid;
 }
 
 export function pvpView(s: DoomsdaySnapshot, friendKey: string | undefined, viewerKey: string | undefined): PvpView {

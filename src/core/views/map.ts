@@ -1,7 +1,7 @@
 import map from "../map/zones.json";
 import { MAX_LEVEL } from "../gamedata";
 import type { Dataset } from "../model";
-import { daysOld, rowAge, timeAgo, type DataAge } from "./age";
+import { ageSeconds, DAY, daysOld, rowAge, timeAgo, type DataAge } from "./age";
 import { compareText, peopleViews, shownCharacters } from "./characters";
 import { ROLE_NAMES } from "./rosterQuery";
 import { initials } from "./text";
@@ -188,15 +188,18 @@ export function worldMap(d: Dataset, now: number, only?: ReadonlySet<string>): W
       byZone.set(zone.id, place);
     }
     const owner = c.owner === undefined ? undefined : people.get(c.owner);
+    // Where and when are two facts (WEB-65, bug 6): a character played 42 min ago may have been placed 6 days ago.
+    const lastSeen = Math.max(s.seenAt, c.lastPlayed ?? s.seenAt);
     const marker: MapMarker = {
       guid: c.guid,
       initials: initials(c.name),
       zoneName: zone.name,
       seenAt: s.seenAt,
-      seenAgo: timeAgo(s.seenAt, now),
-      seenShort: rowAge(s.seenAt, now),
+      seenAgo: timeAgo(lastSeen, now),
+      seenShort: rowAge(lastSeen, now),
       age: s.age,
     };
+    if (lastSeen - s.seenAt >= DAY) marker.hereAgo = rowAge(s.seenAt, now);
     if (c.faction !== undefined) marker.faction = c.faction;
     if (c.level !== undefined) marker.levelsToMax = Math.max(0, MAX_LEVEL - c.level);
     if (c.role !== undefined) marker.role = ROLE_NAMES[c.role];
@@ -225,7 +228,7 @@ export function worldMap(d: Dataset, now: number, only?: ReadonlySet<string>): W
       marker.dungeonName = s.dungeon.name;
       if (!place.dungeons.includes(s.dungeon.name)) place.dungeons.push(s.dungeon.name);
     }
-    if (s.age !== "live") marker.ageTag = `${daysOld(s.seenAt, now)}d`;
+    if (ageSeconds(lastSeen, now) >= DAY) marker.ageTag = `${daysOld(lastSeen, now)}d`;
     place.markers.push(marker);
   }
 

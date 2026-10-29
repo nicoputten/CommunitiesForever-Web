@@ -113,6 +113,8 @@ describe("pvpView", () => {
       { text: "2–0", result: "won" },
     ]);
     expect(duels.grid.cells[1]?.[2]).toEqual({ text: "2–2", result: "even" });
+    // WEB-65, bug 7: the biggest lead in the grid (3–0 over 4–2 and 2–0).
+    expect(duels.grid.readAcross).toBe("Read across: Bob beat Jorrit 3–0.");
     expect(duels.elo).toEqual({ rating: "1,084", place: "2nd · Bob 1,112", change: { kind: "up", text: "▲ 22" } });
     expect(pvpView(sample(), "bob", "nico").duels?.elo?.place).toBe("1st");
   });
