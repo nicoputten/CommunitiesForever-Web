@@ -118,7 +118,8 @@ export function assembleWeek(
   }
   const friends = Object.values(state?.data.people ?? {})
     .filter((p) => p.hasRecord)
-    .map((p) => ({ key: p.key, name: p.displayName }))
+    // WEB-57: each friend's own time zone, else the admin's (Night owl, Early bird, Marathon).
+    .map((p) => ({ key: p.key, name: p.displayName, timeZone: effectiveTimeZone(db, p.key) }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
   const inWeek = (day: number, at: number | null) => {

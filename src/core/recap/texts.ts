@@ -234,10 +234,124 @@ export const CARD_TEXTS: Readonly<Record<string, readonly Phrasing[]>> = {
     p("Riddle of the week", "{riddle} Who is it? ||{character}||"),
     p("Guess the character", "{riddle} The answer: ||{character}||"),
   ],
+  // WEB-57 (recap v2; boards `bot-recap-v2*`, first phrasing from the board). Gold never as an amount.
+  A11: [
+    p("{friend} took {amount}", "Stranglethorn needs a minute."),
+    p("{amount} for {friend}", "The graveyards were busy this week."),
+    p("{friend}: {amount}", "Honor, earned the loud way."),
+  ],
+  A12: [
+    p("{amount} for {friend}", "The flag room remembers."),
+    p("{friend} took {amount}", "Queue, win, repeat."),
+    p("{friend}: {amount}", "The battlemasters know the name by now."),
+  ],
+  A13: [
+    p("{friend} looted {amount}", "Anything shiny, {friend} had it in the bags first."),
+    p("{amount} for {friend}", "The need button got a workout."),
+    p("{friend}: {amount}", "The bags are fuller than the bank."),
+  ],
+  A14: [
+    p("{friend} won {amount}", "Outside Orgrimmar, mostly."),
+    p("{amount} for {friend}", "Nobody walked away from a duel request."),
+    p("{friend}: {amount}", "The duel flag never cooled down."),
+  ],
+  A7: [
+    p("{friend} {amount}", "Nobody was safe from a group invite."),
+    p("{friend} grouped up all week", "{amount}, and counting."),
+    p("The party starts with {friend}", "{amount} this week."),
+  ],
+  S13: [
+    p("{zone}: {kills} honorable kills", "{friends} friends joined in."),
+    p("Bloodbath in {zone}", "{kills} honorable kills, {friends} friends."),
+    p("{zone} ran red", "{kills} kills this week."),
+  ],
+  S14: [
+    p("{battleground}, {games} games: {won} won, {lost} lost", "{friend} played {played}. The flag room remembers."),
+    p("{battleground} it was", "{games} games, {won} won. {friend} played {played}."),
+    p("The week in {battleground}", "{won} wins and {lost} losses."),
+  ],
+  S15: [
+    p("{zone} claimed {deaths} lives", "{friends} friends paid the toll."),
+    p("Watch out in {zone}", "{deaths} deaths this week."),
+    p("{zone}: {deaths} deaths", "The spirit healer there knows everyone by now."),
+  ],
+  S11: [
+    p("{weekday}: {friends} friends grouped up", "{names}."),
+    p("The biggest group night: {weekday}", "{friends} friends together."),
+    p("{friends} friends on {weekday}", "The biggest group night yet."),
+  ],
+  P14: [
+    p("{rank} vs {rank}: {leader} leads", "{second} is close behind. First one to the next rank gets a card."),
+    p("Neck and neck at {rank}", "{leader} and {second}, a few points of honor apart."),
+    p("The rank race: {leader} vs {second}", "Both {rank}, both on the move."),
+  ],
+  F14: [
+    p(
+      "{character} died to players {deaths} times, then took {kills} kills",
+      "Revenge is a dish best served in Hillsbrad.",
+    ),
+    p("Revenge for {character}", "{deaths} deaths, {kills} kills back."),
+    p("{character} got even", "Killed {deaths} times, answered with {kills}."),
+  ],
+  F15: [
+    p("{first} vs {second}: {score} in duels", "{second} wants a rematch. {second} always wants a rematch."),
+    p("Duel rivals: {first} and {second}", "{score} this week."),
+    p("{first} leads {second} {score}", "{duels} duels, and nobody walked away."),
+  ],
+  F16: [
+    p("A spirit healer knows {character} by name: {deaths} deaths", "The graveyard sends a fruit basket."),
+    p("{deaths} deaths for {character}", "Running back is a hobby now."),
+    p("{character} died {deaths} times", "Corpse runs build character."),
+  ],
+  F17: [
+    p("{character} trusted the cliff. The cliff said no.", "{falls} falling deaths this week."),
+    p("Gravity won against {character}", "{falls} times this week."),
+    p("{character} found the bottom", "Slow fall sold separately."),
+  ],
+  F18: [
+    p("The campfire won.", "{character} got too cosy."),
+    p("{character} died by fire", "Stop, drop and roll next time."),
+    p("Too close to the flames: {character}", "Fire and lava: {deaths} deaths."),
+  ],
+  F19: [
+    p(
+      "{levels} levels and not a single death for {character}",
+      "Level {from} to {to}, zero spirit healers. Teach the rest of us.",
+    ),
+    p("Untouchable: {character}", "{levels} levels, no deaths."),
+    p("{character} gained {levels} levels without dying", "The spirit healer is still waiting."),
+  ],
+  F20: [
+    p("{friend}'s purse got a lot lighter. Something shiny was bought.", "We don't ask what. Hooves were heard."),
+    p("{friend} went shopping", "Something big. We don't ask."),
+    p("Big spender: {friend}", "The vendor sent a thank-you note."),
+  ],
+  F21: [
+    p("{epics} epic items this week", "{items}"),
+    p("Purple rain", "{items}"),
+    p("Epics for the group: {epics}", "{items}"),
+  ],
+  F22: [
+    p("{character} played {hours} hours straight on {weekday}", "{from} to {to}. Stretch, {character}."),
+    p("Marathon: {character}", "{hours} hours in one go."),
+    p("{hours} hours for {character}", "From {from} to {to}, no breaks logged."),
+  ],
+  F7: [
+    p("{character} was still out at {time}", "Of course."),
+    p("Night owl: {character}", "Online at {time}."),
+    p("{time}, and {character} was still playing", "Sleep is for the dishonorable."),
+  ],
+  F8: [
+    p("{friend} logged in at {time}. Coffee first?", "First one online on {days} days."),
+    p("Early bird: {friend}", "Online at {time}."),
+    p("{friend} was up at {time}", "The early bird gets the herbs."),
+  ],
 };
 
 /** Headlines: chosen by the week (headline.ts), then phrased. */
 export const HEADLINE_TEXTS: Readonly<Record<string, readonly string[]>> = {
+  pvp: ["Blood in {zone}", "The week of the gankers", "{kills} honorable kills"],
+  danger: ["A week of spirit healers", "{deaths} deaths and counting", "Mind the cliffs"],
   first: ["The first week of the {site}", "Week one of the {site}", "The {site} set out"],
   sixty: ["The week {character} hit 60", "{character} reached 60", "60 for {character}"],
   club: ["{character} joins the max-level club", "Another 60: {character}", "Welcome to 60, {character}"],
@@ -252,6 +366,11 @@ export const HEADLINE_TEXTS: Readonly<Record<string, readonly string[]>> = {
 
 /** Challenges for the coming week. */
 export const CHALLENGE_TEXTS: Readonly<Record<string, readonly string[]>> = {
+  bgGroup: ["Win 3 battlegrounds as a group", "Three battleground wins, together", "Queue up as a group: win 3"],
+  kills25: ["Each of you gets 25 honorable kills", "25 honorable kills each", "Everyone to 25 kills"],
+  tarrenMill: ["Take back Tarren Mill", "Tarren Mill on Friday", "Hold Hillsbrad"],
+  duelEveryone: ["Duel every friend once", "One duel with every friend", "Challenge everyone to a duel"],
+  noDeaths: ["A week without dying", "No spirit healers this week", "Stay alive all week"],
   everyoneTo10: ["Everyone to level 10", "Get every new character to 10", "Level 10 for all"],
   professionPair: ["Pick a profession pair", "Two professions for every character", "Train a second profession"],
   groupDungeon: [
