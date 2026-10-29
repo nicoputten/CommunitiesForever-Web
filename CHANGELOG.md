@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Runs: a note with an answer from the game ("Late, start without me") shows under that answer on the run page, and goes to Discord with it.
 
 ## v0.6.0 (2026-10-29)
 - Fixes from the live test:

@@ -71,6 +71,24 @@ describe("the game's items", () => {
     ]);
   });
 
+  it("keeps an answer's note: trimmed, without control characters or WoW escapes, cut at 80 (WEB-67, CF-63)", () => {
+    const long = "x".repeat(100);
+    const items = readGameItems(
+      file(`{
+        { id = "n-1", kind = "answer", at = 10, run = "r-1", answer = "maybe", note = "  Late,\\tstart |cffff0000without|r me \\n " },
+        { id = "n-2", kind = "answer", at = 11, run = "r-1", answer = "in", note = "${long}" },
+        { id = "n-3", kind = "answer", at = 12, run = "r-1", answer = "cant", note = "   " },
+        { id = "n-4", kind = "answer", at = 13, run = "r-1", answer = "cant" },
+      }`),
+    );
+    expect(items.map((i) => (i.kind === "answer" ? i.note : "?"))).toEqual([
+      "Late, start without me",
+      "x".repeat(80),
+      undefined,
+      undefined,
+    ]);
+  });
+
   it("reads a carried ask's asker and an in-game answer to an ask (WEB-53, addon CF-51)", () => {
     const items = readGameItems(
       file(`{
