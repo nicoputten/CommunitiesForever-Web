@@ -93,3 +93,25 @@ test("admin: add-guest error", async ({ page }) => {
   await expectStyles(error, { ...TYPE.meta, color: "var(--stale-text)" });
   await expectAccessible(page);
 });
+
+// WEB-62: the Danger zone and its dialog (no board; the design system's danger line and the menu's dialog look).
+test("admin: danger zone", async ({ page }, info) => {
+  await openScreen(page, "/admin");
+  const zone = page.getByRole("region", { name: "Danger zone" });
+  const out = process.env.SCREENSHOT_OUT;
+  if (out) await zone.screenshot({ path: `${out}/danger-zone-${info.project.name}.png` });
+  await expectStyles(zone, { "border-top-color": "var(--danger-line)", "border-radius": "var(--r-panel)" });
+  await expectStyles(zone.getByRole("heading"), { ...TYPE.section, color: "var(--danger-text)" });
+  const open = zone.getByRole("button", { name: "Start fresh from launch…" });
+  await expectStyles(open, { color: "var(--danger-text)", "min-height": "var(--size-touch)" });
+  await open.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expectStyles(dialog, { "background-color": "var(--surface-menu)", "border-radius": "var(--r-menu)" });
+  if (out) await page.screenshot({ path: `${out}/danger-dialog-${info.project.name}.png` });
+  await expectStyles(dialog.getByRole("textbox"), {
+    "background-color": "var(--input-bg)",
+    "min-height": "var(--size-touch)",
+  });
+  await expectAccessible(page);
+});

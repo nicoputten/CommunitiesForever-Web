@@ -2,24 +2,37 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { nowSeconds } from "@/app/clock";
 import { AddGuestForm } from "@/components/admin/AddGuestForm";
+import { DangerZone } from "@/components/admin/DangerZone";
 import { AdminPanel, PanelEmpty, RowBadge, RowButton } from "@/components/admin/AdminPanel";
 import rows from "@/components/admin/Admin.module.css";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { LocalTime } from "@/components/ui/LocalTime";
 import { PageTitle } from "@/components/ui/PageTitle";
 import { loadAdminView } from "@/server/admin";
+import { battleTagName } from "@/core/access";
+import { getCutoff } from "@/server/cutoff";
 import { getDb } from "@/server/db";
-import { addGuestAction, blockAction, removeGuestAction, setMayUploadAction, unblockAction } from "../actions";
+import {
+  addGuestAction,
+  blockAction,
+  removeGuestAction,
+  setMayUploadAction,
+  startFreshAction,
+  unblockAction,
+  undoStartFreshAction,
+} from "../actions";
 import styles from "../admin.module.css";
 
 export const metadata: Metadata = { title: "Admin" };
 
 /**
  * The admin page (WEB-18, no board; layout decided with Nico, DESIGN.md §11): members from the data, the guest list
- * and blocks, each with when they were last seen. Admin only: layout.tsx checks.
+ * and blocks, each with when they were last seen; the Danger zone (WEB-62) at the bottom. Admin only: layout.tsx
+ * checks.
  */
 export default function AdminPage() {
   const view = loadAdminView(getDb(), nowSeconds());
+  const cutoff = getCutoff(getDb());
   return (
     <div className={styles.page}>
       <PageTitle sub="Who may sign in: members come from the uploads, guests from your list.">Admin</PageTitle>
@@ -125,6 +138,20 @@ export default function AdminPage() {
           </AdminPanel>
         </div>
       </div>
+      <DangerZone
+        start={startFreshAction}
+        undo={undoStartFreshAction}
+        {...(cutoff !== undefined
+          ? {
+              set: (
+                <>
+                  Started fresh at <LocalTime at={cutoff.at} /> by {battleTagName(cutoff.setBy)}. Only uploads after it
+                  count; Undo brings everything back.
+                </>
+              ),
+            }
+          : {})}
+      />
     </div>
   );
 }
