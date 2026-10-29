@@ -2,7 +2,9 @@ import type { Dataset } from "./model";
 import { stripEscapes } from "./sanitize";
 
 // Access rules (docs/ARCHITECTURE.md "Access", WEB-06). Battle.net only tells us the BattleTag, so who belongs to the
-// group comes from the uploaded data: the admin, members (BattleTags in accepted uploads) and the guest list.
+// group comes from the uploaded data: the owner and the admins they appoint (WEB-64), members (BattleTags in accepted
+// uploads) and the guest list. The role "admin" covers the owner and the admins; `isOwner` tells the owner apart for
+// what only the owner may do (the launch cut-off, the bot token, appointing admins, others' uploader devices).
 
 export type Role = "admin" | "member" | "guest";
 
@@ -12,8 +14,10 @@ export interface Guest {
 
 /** Everything the rules need, each set keyed by battleTagKey(). */
 export interface AccessList {
-  /** ADMIN_BATTLETAG; undefined when not configured (then nobody is admin). */
+  /** ADMIN_BATTLETAG, the owner; undefined when not configured (then nobody is admin). */
   admin: string | undefined;
+  /** The admins the owner appointed (WEB-64); absent from lists made before it. */
+  admins?: ReadonlySet<string>;
   members: ReadonlySet<string>;
   guests: ReadonlyMap<string, Guest>;
   blocked: ReadonlySet<string>;
@@ -45,11 +49,12 @@ export function sameBattleTag(a: string | undefined, b: string | undefined): boo
   return a !== undefined && b !== undefined && battleTagKey(a) === battleTagKey(b);
 }
 
-/** The BattleTag's role; undefined when not on the list or blocked. The admin can never be blocked. */
+/** The BattleTag's role; undefined when not on the list or blocked. The owner and admins can never be blocked. */
 export function roleOf(battleTag: string | undefined, list: AccessList): Role | undefined {
   if (battleTag === undefined || battleTag.trim() === "") return undefined;
   if (sameBattleTag(battleTag, list.admin)) return "admin";
   const key = battleTagKey(battleTag);
+  if (list.admins?.has(key) === true) return "admin";
   if (list.blocked.has(key)) return undefined;
   if (list.members.has(key)) return "member";
   if (list.guests.has(key)) return "guest";
@@ -67,12 +72,24 @@ export function mayUpload(battleTag: string | undefined, list: AccessList): bool
   return role === "guest" && list.guests.get(battleTagKey(battleTag!))?.mayUpload === true;
 }
 
+/** The owner and the admins (WEB-64): the everyday running of the group. */
 export function mayAdmin(battleTag: string | undefined, list: AccessList): boolean {
   return roleOf(battleTag, list) === "admin";
 }
 
+/** The owner (ADMIN_BATTLETAG) only: never demoted, blocked or removed through the site (WEB-64). */
+export function isOwner(battleTag: string | undefined, list: AccessList): boolean {
+  return sameBattleTag(battleTag, list.admin);
+}
+
+/** An appointed admin (not the owner). */
+export function isAppointedAdmin(battleTag: string | undefined, list: AccessList): boolean {
+  return battleTag !== undefined && !isOwner(battleTag, list) && list.admins?.has(battleTagKey(battleTag)) === true;
+}
+
+/** Nobody can block the owner or an admin: an admin has to be removed as admin first (WEB-64). */
 export function mayBlock(battleTag: string, list: AccessList): boolean {
-  return !sameBattleTag(battleTag, list.admin);
+  return !isOwner(battleTag, list) && !isAppointedAdmin(battleTag, list);
 }
 
 /** Why a readable file is not taken. The upload screen (WEB-19) shows each. */

@@ -28,7 +28,7 @@ export default async function UploadPage() {
         <PageTitle sub="After a play session, drop the addon's saved file here. Everyone sees what changed.">
           Upload the ledger
         </PageTitle>
-        <Dropzone community={getSiteInfo().name} isAdmin={viewer.role === "admin"} />
+        <Dropzone community={getSiteInfo().name} isAdmin={viewer.owner === true} />
         <p className={styles.hint}>
           <InfoIcon className={styles.hintIcon} />
           <span>

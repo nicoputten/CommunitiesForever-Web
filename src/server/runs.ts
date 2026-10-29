@@ -31,6 +31,7 @@ import { levelFit, type FitKind } from "@/core/levelFit";
 import { characterRole } from "@/core/views/characters";
 import { OUTCOME_SECONDS } from "@/core/runOutcome";
 import { ASK_EXPIRE_SECONDS } from "@/core/gameItems";
+import { logChange } from "./admins";
 import { enqueueBotEvent } from "./bot";
 import type { Db } from "./db";
 import { cutoffAt } from "./cutoff";
@@ -506,6 +507,10 @@ export function cancelRun(
   if (!mayDelete(run, battleTag, isAdmin)) return "not_allowed";
   if (run.cancelledAt !== undefined) return "already_cancelled";
   db.update(runs).set({ cancelledAt: now, cancelledBy: battleTag, updatedAt: now }).where(eq(runs.id, runId)).run();
+  // An admin deleting someone else's run goes in the admin changes log (WEB-64).
+  if (!mayEdit(run, battleTag)) {
+    logChange(db, battleTag, "runDeleted", now, run.organiser, runDungeon(run.dungeonId)?.name ?? run.dungeonId);
+  }
   const after = getRun(db, runId)!;
   runEvent(db, "runCancelled", after, now, {
     by: displayName(loadState(db)?.data, battleTag),

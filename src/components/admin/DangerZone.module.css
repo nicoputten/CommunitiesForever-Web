@@ -12,6 +12,15 @@
   border: var(--border) solid var(--danger-line);
 }
 
+/* The heading and "Owner only" (WEB-64). */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
 .title {
   font-family: var(--font-display);
   font-size: var(--fs-section);

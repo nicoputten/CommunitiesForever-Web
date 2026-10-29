@@ -15,10 +15,16 @@ import {
 } from "./checks";
 import { ADMIN } from "./sample";
 
-// WEB-18: design checks of the admin page (no board; layout decided with Nico, DESIGN.md §11) on the sample data,
+// WEB-18: design checks of the admin page (WEB-64: the owner's view, boards `admin-coadmins`, `admin-coadmin-states`,
+// `admin-phone`) (no board; layout decided with Nico, DESIGN.md §11) on the sample data,
 // with one guest and one block. Both are idempotent, so the desktop and phone projects can each set them.
 
-test.beforeEach(async ({ context, baseURL, page }) => {
+test.beforeEach(async ({ context, baseURL, page, browser }) => {
+  // WEB-64: Bob has signed in, so the Admins box offers "Make admin" for him.
+  const bob = await browser.newContext();
+  await signInAs(bob, baseURL!, "Bob#2002");
+  await (await bob.newPage()).goto("/");
+  await bob.close();
   await signInAs(context, baseURL!, ADMIN);
   expect((await page.request.put("/api/admin/guests", { data: { battleTag: "Wim#7070", mayUpload: true } })).ok()).toBe(true);
   expect((await page.request.put("/api/admin/blocks", { data: { battleTag: "Jorrit#4410" } })).ok()).toBe(true);
@@ -114,4 +120,42 @@ test("admin: danger zone", async ({ page }, info) => {
     "min-height": "var(--size-touch)",
   });
   await expectAccessible(page);
+});
+
+// WEB-64: the Admins box, the rank badges, the log and the Make admin dialog (a bottom sheet on a phone).
+test("admin: co-admins", async ({ page }, info) => {
+  await openScreen(page, "/admin");
+  const admins = page.getByRole("region", { name: "Admins", exact: true });
+  await expectStyles(admins, { "border-top-color": "var(--line-admins-box)", "border-radius": "var(--r-panel)" });
+  await expectStyles(admins.getByText("Owner", { exact: true }).first(), {
+    color: "var(--on-gold)",
+    "border-radius": "var(--r-pill)",
+    "font-size": "var(--fs-tiny)",
+  });
+  await expectStyles(page.getByRole("region", { name: "Members", exact: true }).getByText("Owner & admins"), {
+    color: "var(--gold)",
+    "font-size": "var(--fs-meta-sm)",
+  });
+  await expect(page.getByRole("region", { name: "Uploader devices" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Admin changes" })).toBeVisible();
+  const out = process.env.SCREENSHOT_OUT;
+  if (out) await page.screenshot({ path: `${out}/coadmins-${info.project.name}.png`, fullPage: true });
+  const make = admins.getByRole("button", { name: "Make admin Bob#2002", exact: true });
+  await expectStyles(make, { color: "var(--gold-bright)", "min-height": "var(--size-touch)" });
+  await make.click();
+  const dialog = page.getByRole("dialog", { name: "Make Bob an admin?" });
+  await expect(dialog).toBeVisible();
+  await expectStyles(dialog, {
+    "background-color": "var(--surface-menu)",
+    "border-top-left-radius": isPhone(page) ? "var(--r-sheet)" : "var(--r-panel)",
+  });
+  await expectStyles(dialog.getByRole("button", { name: "Make admin", exact: true }), {
+    "background-color": "var(--gold)",
+    color: "var(--on-gold)",
+    "min-height": "var(--size-touch)",
+  });
+  if (out) await page.screenshot({ path: `${out}/make-admin-${info.project.name}.png` });
+  await expectAccessible(page);
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
 });

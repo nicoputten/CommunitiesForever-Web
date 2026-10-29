@@ -5,7 +5,7 @@ import { getViewer } from "./viewer";
 // Before the first upload (WEB-29): what the empty screens say to whom.
 
 export interface FirstUpload {
-  /** Only the admin can upload before the admin's first upload (WEB-19: "no community yet"). */
+  /** Only the owner can upload before the owner's first upload (WEB-19: "no community yet"; WEB-64). */
   canUpload: boolean;
   /** Who everyone else waits for: the name part of the admin's BattleTag. */
   adminName: string;
@@ -14,5 +14,5 @@ export interface FirstUpload {
 export async function getFirstUpload(): Promise<FirstUpload> {
   const viewer = await getViewer();
   const admin = adminBattleTag();
-  return { canUpload: viewer?.role === "admin", adminName: admin === undefined ? "The admin" : battleTagName(admin) };
+  return { canUpload: viewer?.owner === true, adminName: admin === undefined ? "The admin" : battleTagName(admin) };
 }

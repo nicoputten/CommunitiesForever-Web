@@ -97,6 +97,9 @@ export const NOTICES = {
   "test-sent": "Test post sent. The bot posts it in the channel for posts within a few seconds.",
   "test-run-sent":
     "Test run post sent. The bot posts it in the runs channel within a few seconds; nothing was planned.",
+  // WEB-64: an admin whose role the owner removed, after their next admin click; an owner-only action by an admin.
+  "admin-removed": "Your admin role was removed. This page now shows what members see.",
+  "owner-only": "Only the owner can do this. Nothing was changed.",
 } as const;
 
 export type Notice = keyof typeof NOTICES;
@@ -106,7 +109,7 @@ export function parseNotice(value: unknown): Notice | undefined {
 }
 
 export function noticeOk(notice: Notice): boolean {
-  return notice !== "cancelled" && notice !== "taken" && notice !== "failed" && notice !== "expired";
+  return !["cancelled", "taken", "failed", "expired", "admin-removed", "owner-only"].includes(notice);
 }
 
 // --- linked friends (admin) ---------------------------------------------------------------------------------------
@@ -234,6 +237,48 @@ export function recapLabel(day: number, time: string): string {
 
 export function reminderLabel(minutes: number): string {
   return minutes < 60 ? `${minutes} minutes before` : `${minutes / 60} hour${minutes === 60 ? "" : "s"} before`;
+}
+
+const SETTING_NAMES: Record<string, string> = {
+  milestones: "feat posts",
+  runs: "run posts",
+  recap: "the weekly recap",
+  reminders: "run reminders",
+  askNow: "Ask now from the game",
+  markDone: "marking runs done from uploads",
+  doomsdayBoard: "the daily board",
+  doomsdayLadder: "the weekly ladder",
+  postsChannel: "the default channel",
+  recapChannel: "the recap channel",
+  runsChannel: "the runs channel",
+  doomsdayChannel: "the Doomsday channel",
+  featsChannel: "the feats channel",
+  mentionRole: "the role for new runs",
+  reminderMinutes: "the reminder time",
+  recapAt: "the recap time",
+  doomsdayReset: "the Doomsday reset",
+  realmTimeZone: "the realm time zone",
+};
+
+/**
+ * A settings change as the admin changes log says it (WEB-64): "turned on the daily board", "changed the Doomsday
+ * reset to 20:00". `name` names a channel or role by its id.
+ */
+export function settingChangeText(field: string, change: Partial<BotSettings>, name: (id: string) => string): string {
+  const what = SETTING_NAMES[field] ?? field;
+  const value = Object.values(change)[0];
+  if (typeof value === "boolean") return `turned ${value ? "on" : "off"} ${what}`;
+  if (field === "doomsdayReset" && change.doomsdayReset !== undefined) {
+    return `changed ${what} to ${resetLabel(change.doomsdayReset)}`;
+  }
+  if (field === "recapAt") return `changed ${what} to ${recapLabel(change.recapDay ?? 0, change.recapTime ?? "")}`;
+  if (field === "reminderMinutes" && change.reminderMinutes !== undefined) {
+    return `changed ${what} to ${reminderLabel(change.reminderMinutes)}`;
+  }
+  if (value === null) return `cleared ${what}`;
+  if (field === "mentionRole") return `changed ${what} to @${name(String(value))}`;
+  if (field.endsWith("Channel")) return `changed ${what} to # ${name(String(value))}`;
+  return `changed ${what} to ${String(value)}`;
 }
 
 /** "19:00" for a reset in seconds after midnight. */

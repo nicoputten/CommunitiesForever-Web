@@ -6,12 +6,13 @@ import { nowSeconds } from "@/app/clock";
 import { getSiteInfo } from "@/app/site";
 import { getViewer } from "@/app/viewer";
 import { Atmosphere } from "@/components/atmosphere/Atmosphere";
+import { OwnerBar } from "@/components/admin/CoAdmins";
 import { BotTokenCard } from "@/components/discord/BotTokenCard";
 import { SettingFixed, SettingPick, SettingSwitch } from "@/components/discord/Controls";
 import { ResetTime, UseBrowserZone } from "@/components/discord/Doomsday";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { battleTagName } from "@/core/access";
+import { battleTagKey, battleTagName } from "@/core/access";
 import { guildOptions } from "@/core/guild";
 import { effectiveFrom, zoneOffset } from "@/core/doomsday/engine";
 import { dayLabel } from "@/core/doomsday/rules";
@@ -32,9 +33,11 @@ import {
   timeZoneOptions,
 } from "@/core/discord";
 import { adminBattleTag } from "@/server/access";
+import { listAdmins } from "@/server/admins";
 import { botTokenStatus } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { loadGuild } from "@/server/guild";
+import { displayNames } from "@/server/uploads";
 import {
   discordApp,
   discordNames,
@@ -82,7 +85,8 @@ const SECTIONS: { id: string; label: string; short: string; admin: boolean }[] =
 
 /**
  * The Discord page, reorganised (boards `discord-page`, `-map`, `-friend`, `-states`, `-phone`; WEB-58): "For you"
- * (every friend: their Discord link and time zone), then "For the group" (the admin): the bot, then one box per kind
+ * (every friend: their Discord link and time zone), then "For the group" (the owner and admins, WEB-64; board
+ * `discord-page-coadmins`; the bot token is the owner's): the bot, then one box per kind
  * of post (Feats, Weekly recap, Runs, Doomsday), each with its own switch, channel, timing and test post, and the
  * linked friends last. `discord-page-map` lists where each of the 20 earlier settings went.
  */
@@ -103,8 +107,11 @@ export default async function DiscordPage({
   const ownZone = timeZoneFor(db, viewer.battleTag);
   const zone = effectiveTimeZone(db, viewer.battleTag);
   const admin = viewer.role === "admin";
+  const owner = viewer.owner === true;
   const adminTag = adminBattleTag();
-  const adminName = adminTag === undefined ? "the admin" : battleTagName(adminTag);
+  const names = displayNames(db);
+  const nameOf = (tag: string) => names.get(battleTagKey(tag)) ?? battleTagName(tag);
+  const adminName = adminTag === undefined ? "the owner" : nameOf(adminTag);
 
   return (
     <div className={styles.page}>
@@ -115,13 +122,14 @@ export default async function DiscordPage({
             sub={
               admin
                 ? `The ${site} bot posts feats, runs, the weekly recap and Doomsday, and answers look-ups for linked friends.`
-                : `Link your Discord so the ${site} bot knows your characters. Bot settings are for the admin.`
+                : `Link your Discord so the ${site} bot knows your characters. Bot settings are for the owner and admins.`
             }
           >
             Discord
           </PageTitle>
         </div>
       </div>
+      {admin && !owner && <OwnerBar owner={adminTag === undefined ? undefined : adminName} />}
 
       <nav className={styles.jump} aria-label="On this page">
         {SECTIONS.filter((s) => admin || !s.admin).map((s, i, shown) => (
@@ -223,17 +231,17 @@ export default async function DiscordPage({
       </div>
 
       {admin ? (
-        <AdminSections adminTag={adminTag} now={now} />
+        <AdminSections adminTag={adminTag} owner={owner} nameOf={nameOf} now={now} />
       ) : (
         <p className={styles.adminNote}>
-          What the bot posts, where and when is set by the admin ({adminName}). Ask them if you want a post somewhere
-          else.
+          What the bot posts, where and when is set by the owner ({adminName}) and the admins. Ask them if you want a
+          post somewhere else.
         </p>
       )}
 
       <p className={styles.note}>
         Posts use display names and full character names, never BattleTags or Discord IDs.
-        {admin && " Only the admin's Linked friends list shows them."}
+        {admin && " Only the Linked friends list, for the owner and admins, shows them."}
       </p>
     </div>
   );
@@ -261,7 +269,7 @@ function BoxHead({ id, title, children }: { id: string; title: ReactNode; childr
 }
 
 function AdminOnly() {
-  return <span className={styles.adminTag}>Admin only</span>;
+  return <span className={styles.adminTag}>Owner &amp; admins</span>;
 }
 
 /** A box's test post: disabled with the reason next to it, never hidden (board `discord-page-states`). */
@@ -277,8 +285,21 @@ function TestButton({ kind, label, reason }: { kind: string; label: string; reas
   );
 }
 
-/** "For the group": the bot and one box per kind of post. The admin only (the actions check again). */
-function AdminSections({ adminTag, now }: { adminTag: string | undefined; now: number }) {
+/**
+ * "For the group": the bot and one box per kind of post. The owner and admins; the bot token the owner only (the
+ * actions check again).
+ */
+function AdminSections({
+  adminTag,
+  owner,
+  nameOf,
+  now,
+}: {
+  adminTag: string | undefined;
+  owner: boolean;
+  nameOf: (battleTag: string) => string;
+  now: number;
+}) {
   const db = getDb();
   const s = getBotSettings(db);
   const bot: BotStatusView = botStatus(botTokenStatus(db), now);
@@ -295,6 +316,11 @@ function AdminSections({ adminTag, now }: { adminTag: string | undefined; now: n
   const waiting = reported ? undefined : WAITING;
   const friends = linkedFriends(friendBattleTags(db, adminTag), discordNames(db));
   const recapZone = effectiveTimeZone(db, adminTag, adminTag);
+  // "Can delete any run": the owner first, then the admins (WEB-64).
+  const deleters = [
+    ...(adminTag !== undefined ? [nameOf(adminTag)] : []),
+    ...listAdmins(db).map((a) => nameOf(a.battleTag)),
+  ];
 
   // A reset change waiting for the next reset (board `discord-page-states` 4).
   const setting = doomsdayResetSetting(s);
@@ -308,7 +334,7 @@ function AdminSections({ adminTag, now }: { adminTag: string | undefined; now: n
     <>
       <Section
         title="For the group"
-        note="admin only · one box per kind of post, each with its own switch, channel and timing"
+        note="owner & admins · one box per kind of post, each with its own switch, channel and timing"
       />
 
       <section id="bot" aria-labelledby="discord-bot" className={styles.box}>
@@ -323,12 +349,18 @@ function AdminSections({ adminTag, now }: { adminTag: string | undefined; now: n
           </span>
           <AdminOnly />
         </BoxHead>
-        <BotTokenCard
-          line={bot.line}
-          active={bot.state !== "none"}
-          create={createBotTokenAction}
-          revoke={revokeBotTokenAction}
-        />
+        {owner ? (
+          <BotTokenCard
+            line={bot.line}
+            active={bot.state !== "none"}
+            create={createBotTokenAction}
+            revoke={revokeBotTokenAction}
+          />
+        ) : (
+          <p className={styles.caption} data-testid="token-owner">
+            The bot token is managed by the owner.
+          </p>
+        )}
         <div className={styles.grid2}>
           <SettingPick
             field="postsChannel"
@@ -495,7 +527,7 @@ function AdminSections({ adminTag, now }: { adminTag: string | undefined; now: n
             <div>
               <p className={styles.label}>Can delete any run</p>
               <p className={styles.caption}>
-                Admin: {adminTag === undefined ? "—" : battleTagName(adminTag)} · everyone else only their own
+                The owner and admins: {deleters.length === 0 ? "—" : deleters.join(", ")} · everyone else only their own
               </p>
             </div>
           </div>

@@ -875,6 +875,15 @@
   --feat-icon-bg: radial-gradient(circle at 40% 35%, #1e2e48, #0a1322); /* doomsday-feats: the icon box */
   --line-feat-own: rgba(212, 175, 106, 0.45); /* doomsday-feats: a feat you have */
   --line-feat-locked: rgba(174, 182, 195, 0.1); /* doomsday-feats: a feat not reached yet */
+  /* Co-admins (WEB-64, boards admin-coadmins, admin-as-admin, admin-coadmin-states, admin-phone) */
+  --owner-badge: linear-gradient(90deg, var(--gold-bright), var(--gold)); /* admin-coadmins: the Owner badge */
+  --line-admin-badge: rgba(212, 175, 106, 0.6); /* admin-coadmins: the Admin badge */
+  --guest-badge: rgba(111, 176, 224, 0.14); /* admin-coadmins: the Guest badge */
+  --guest-text: #a8d2f0;
+  --line-admins-box: rgba(212, 175, 106, 0.5); /* admin-coadmins: the Admins box */
+  --size-crown-badge: 10px; /* admin-coadmins: the crown in the Owner badge */
+  --size-crown-log: 11px; /* admin-coadmins: the crown on an owner-only log line */
+  --size-dialog: 460px; /* admin-coadmin-states: Make admin, Remove admin */
   /* Doomsday on the phone (WEB-61, board doomsday-phone) */
   --size-goal-row: 52px; /* doomsday-phone: a goal row */
   --size-mark: 30px; /* doomsday-phone: a goal's mark on a friend's board card */
