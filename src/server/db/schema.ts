@@ -527,6 +527,31 @@ export const recaps = sqliteTable("recaps", {
   snapshot: text("snapshot", { mode: "json" }).$type<Record<string, RecapChar>>().notNull(),
 });
 
+/** The admins the owner appointed (WEB-64). Not derived: a rebuild or the launch cut-off never touches them. */
+export const admins = sqliteTable("admins", {
+  /** battleTagKey(). */
+  key: text("key").primaryKey(),
+  battleTag: text("battle_tag").notNull(),
+  /** The owner's BattleTag, and when (Unix seconds). */
+  addedBy: text("added_by").notNull(),
+  addedAt: integer("added_at").notNull(),
+});
+
+/**
+ * Admin changes (WEB-64): who changed what and when, shown to the owner and admins. Nobody can edit or clear it; only
+ * the newest 500 are kept. `target` and `detail` are text for the line ("Bob", "the Doomsday reset to 20:00").
+ */
+export const adminLog = sqliteTable("admin_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  at: integer("at").notNull(),
+  /** The BattleTag who did it. */
+  by: text("by").notNull(),
+  /** What kind of change (adminAppointed, blocked, guestAdded, discordSetting, runDeleted, cutoff, botToken, …). */
+  action: text("action").notNull(),
+  target: text("target"),
+  detail: text("detail"),
+});
+
 /**
  * The launch cut-off (WEB-62): one row (id 1) while it is set. The rebuild reads only uploads from after `at`; runs,
  * asks and recaps from before it are hidden, never deleted. Not derived: Undo removes the row and rebuilds.

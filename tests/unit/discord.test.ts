@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  settingChangeText,
   authorizeUrl,
   botStatus,
   botSettingsFrom,
@@ -188,5 +189,22 @@ describe("the bot's status", () => {
       pill: "Bot not connected",
       line: "Token made 1 min ago · the bot hasn't used it yet",
     });
+  });
+});
+
+describe("settings in the admin changes log (WEB-64)", () => {
+  const name = (id: string) => ({ "1": "doombringers", "9": "Raiders" })[id] ?? id;
+  it("says what changed", () => {
+    expect(settingChangeText("doomsdayBoard", { doomsdayBoard: true }, name)).toBe("turned on the daily board");
+    expect(settingChangeText("doomsdayReset", { doomsdayReset: 20 * 3600 }, name)).toBe(
+      "changed the Doomsday reset to 20:00",
+    );
+    expect(settingChangeText("postsChannel", { postsChannel: "1" }, name)).toBe(
+      "changed the default channel to # doombringers",
+    );
+    expect(settingChangeText("mentionRole", { mentionRole: "9" }, name)).toBe(
+      "changed the role for new runs to @Raiders",
+    );
+    expect(settingChangeText("featsChannel", { featsChannel: null }, name)).toBe("cleared the feats channel");
   });
 });

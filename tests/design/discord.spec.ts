@@ -54,7 +54,7 @@ test("discord: design values", async ({ page }) => {
 
   const feats = page.getByRole("region", { name: "Feats" });
   await expectStyles(feats, { "background-color": "var(--surface-box)", "border-radius": "var(--r-panel)" });
-  await expectStyles(feats.getByText("Admin only"), { color: "var(--gold)", "font-size": "var(--fs-meta-sm)" });
+  await expectStyles(feats.getByText("Owner & admins"), { color: "var(--gold)", "font-size": "var(--fs-meta-sm)" });
   await expectStyles(feats.getByText("Post feats", { exact: true }), { "font-size": "var(--fs-body)", color: "var(--text)" });
   await expectStyles(feats.getByRole("switch", { name: "Post feats" }), { "min-height": "var(--size-touch)" });
   await expectStyles(feats.getByText("Feats channel"), {

@@ -735,3 +735,40 @@ Decided with Nico (2026-10-28). At launch (2026-11-04) every beta character is g
 - **Manual (in the PR):** on a copy of the live database, set the cut-off, check the roster is empty but sign-in, Discord links and settings work, then Undo.
 - The mistaken account from earlier needs no script: the cut-off clears its beta data too, and the block list handles it after launch.
 - Done (PR #113): `src/core/cutoff.ts` (what dates from before the cut-off), `launch_cutoff` (`src/server/cutoff.ts`), the rebuild reading beta uploads for members only, runs, asks and recaps hidden by their readers (recap numbering restarts: `recapBase`, `recapByNumber`), the Danger zone with its `delete all` dialog (no board, DESIGN.md §11), Undo; `tests/server/cutoff.test.ts`.
+
+### WEB-64 Co-admins
+Agreed with Nico (2026-10-29). The owner can make other friends admins, so others can help run the group, without anyone but the owner being able to break things. Boards: `admin-coadmins` (owner view), `admin-as-admin`, `admin-coadmin-states`, `admin-phone` and `discord-page-coadmins` (designed 2026-10-29). From the design: nobody, the owner included, can block an admin directly; remove the admin role first (the Members list shows "Can't be blocked" on those rows).
+
+- **Two levels:**
+  - **Owner:** the BattleTag in `ADMIN_BATTLETAG` (server setting), as now. Never demoted or removed through the site. No screen, action or API offers it, and the server refuses it.
+  - **Admin:** friends the owner appoints.
+- **Appointing:** only the owner appoints and removes admins; an admin can't make another admin.
+  - **Where:** on the admin page, an **Admins** box lists the friends who have signed in, each with **Make admin** or **Remove admin** and a confirm dialog.
+  - **The owner's row:** a crown and no button.
+  - **Storage:** admins live in their own table (not derived, so a rebuild or the launch cut-off never touches them).
+  - **Removing an admin** takes effect at their next request.
+- **What an admin may do:** everything for the everyday running of the group:
+  - the guest list (add, tick "may upload")
+  - blocking and unblocking a BattleTag, except the owner's and other admins'
+  - the Discord page's post settings (switches, channels, recap time, the Doomsday reset time and realm time zone)
+  - deleting any run, marking runs done
+  - test posts and previews
+- **Owner only:**
+  - **Start fresh from launch** (WEB-62), including Undo
+  - the **bot token** (create, replace, revoke)
+  - **appointing and removing admins**
+  - **revoking other friends' uploader devices or tokens**
+  - any server setting
+  
+  For admins these controls are hidden, and the server refuses the action too (403, not only a hidden button). Today's `mayAdmin` splits into "may admin" and "is owner", and every owner-only action and API route checks the latter.
+- **Admin changes log:** a short list on the admin page: who changed what and when (admins appointed or removed, blocks, guest changes, Discord settings, run deletions, the cut-off, the token). Owner and admins see it; it's the one place BattleTags show, as on the admin page now.
+- **The bot:** `isAdmin` in the bot API look-ups (cancel and move any run) is true for owner and admins.
+- **Tests:**
+  - every owner-only action refused for an admin (UI and server)
+  - the owner can't be removed or blocked, by anyone
+  - an admin can't appoint
+  - removing an admin takes effect at once
+  - the log entries
+  - the cut-off and the token are refused for admins
+- As every UI story: design checks, 375 and 1440 px, Playwright, screenshots in the PR.
+- Done: the `admins` table and `admin_log` (migration 0023), `isOwner` beside `mayAdmin`, owner-only checks in every owner-only server action, the Admins box, rank badges, the log, the owner's Uploader devices box and the admin's view of the admin and Discord pages (boards `admin-coadmins`, `admin-as-admin`, `admin-coadmin-states`, `admin-phone`, `discord-page-coadmins`).

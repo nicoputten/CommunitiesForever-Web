@@ -46,7 +46,7 @@ export default async function UploadReportPage({ params }: { params: Promise<{ i
         <UploadStateCard
           outcome={outcome ?? { kind: "nothing-new" }}
           community={getSiteInfo().name}
-          isAdmin={viewer.role === "admin"}
+          isAdmin={viewer.owner === true}
           mayUpload={viewer.mayUpload}
         />
       </div>

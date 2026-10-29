@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type ReactNode } from "react";
 import { CUTOFF_CONFIRM } from "@/core/cutoff";
+import { WhoTag } from "./CoAdmins";
 import styles from "./DangerZone.module.css";
 
 type Action = (form: FormData) => Promise<void>;
@@ -51,9 +52,12 @@ export function DangerZone({
   const ok = typed.trim() === CUTOFF_CONFIRM;
   return (
     <section aria-labelledby={`${id}-title`} className={styles.zone}>
-      <h2 id={`${id}-title`} className={styles.title}>
-        Danger zone
-      </h2>
+      <div className={styles.head}>
+        <h2 id={`${id}-title`} className={styles.title}>
+          Danger zone
+        </h2>
+        <WhoTag owner />
+      </div>
       <div className={styles.row}>
         <div className={styles.text}>
           <p className={styles.name}>Start fresh from launch</p>
