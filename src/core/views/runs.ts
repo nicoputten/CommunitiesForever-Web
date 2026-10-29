@@ -612,6 +612,8 @@ export interface AnswerRowView {
   answerTone: "in" | "maybe" | "cant" | "reserve" | "organiser";
   /** "Wed 09:12 · Discord" in the viewer's zone (WEB-49: with the day). */
   where: string;
+  /** WEB-67: the friend's note with the answer, from the game. */
+  note?: string;
 }
 
 export interface CouldJoinView {
@@ -747,6 +749,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
       };
       if (ch?.level !== undefined) row.level = ch.level;
       if (info !== undefined) row.colorToken = info.textToken;
+      if (a.note !== undefined) row.note = a.note;
       if (ch !== undefined) {
         row.fit = levelFit(ch.level, r.min, r.max).label;
         const usual = slotRole(ch.role);

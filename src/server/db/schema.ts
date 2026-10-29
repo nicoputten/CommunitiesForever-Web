@@ -334,6 +334,8 @@ export const runAnswers = sqliteTable(
     /** WEB-40's "Maybe, first in line"; since WEB-47 a reserve answer instead (0011 turned them into reserve). */
     waitlisted: integer("waitlisted", { mode: "boolean" }).notNull(),
     movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
+    /** WEB-67 (addon CF-63): the note with an answer from the game, at most 80 characters. */
+    note: text("note"),
   },
   (t) => [uniqueIndex("run_answers_run_key_unique").on(t.runId, t.key)],
 );

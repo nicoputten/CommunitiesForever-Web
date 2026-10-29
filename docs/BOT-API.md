@@ -229,7 +229,7 @@ Written when the admin's Runs switch is on (WEB-39); the reminders have their ow
 
 - `startsAt` is UTC: the bot shows it with Discord's timestamp markup (`<t:1793131200:f>`), which every reader sees in their own time.
 - `state`: `open`, `full`, `started` (from start time), `past` (2 hours after start), `cancelled`.
-- `open`: free slots per role (one tank, one healer, three damage). `answers`, oldest first: `answer` is `in`, `maybe` or `cant`; `role` the slot the character fills (from talents or set by the player; unknown is `damage`); `waitlisted`: answered I'm in while the role was full, first in line; `movedUp`: moved up from Maybe. `note`, `character`, `discordId` (only for linked friends) and the flags are optional.
+- `open`: free slots per role (one tank, one healer, three damage). `answers`, oldest first: `answer` is `in`, `maybe` or `cant`; `role` the slot the character fills (from talents or set by the player; unknown is `damage`); `waitlisted`: answered I'm in while the role was full, first in line; `movedUp`: moved up from Maybe. `note`, `character`, `discordId` (only for linked friends) and the flags are optional. WEB-67 (addon CF-63, optional within v1): an answer given in game may carry `note`, the friend's note with it ("Late, start without me", at most 80 characters, plain text); the bot shows it next to that answer. A later answer from the site or Discord replaces it, without a note.
 - Names only, never BattleTags.
 
 | `type` | Extra in `data` | When |

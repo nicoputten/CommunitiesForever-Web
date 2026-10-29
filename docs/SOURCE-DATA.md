@@ -60,7 +60,7 @@ their ids under `received` (WEB-44). Each item: `id` (unique per player: account
 | `kind` | Fields | The site |
 |---|---|---|
 | `plan` (own file only) | `dungeon` (the addon's id), `startsAt`, `guid`, `name`, `role`, `note` | a run, source "game", the player leading as that character (else organiser without a slot); dropped when its start has passed |
-| `answer` | `run` (`r-<id>`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role` | the player's answer, source "game" ("N run answers") |
+| `answer` | `run` (`r-<id>`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role`, `note` (optional, WEB-67 / addon CF-63) | the player's answer, source "game" ("N run answers"). `note` ("Late, start without me") is trimmed, loses control characters and WoW escapes, and is cut at 80 characters; it is stored with the answer, shown under it on the run page and sent to the bot. Without one, nothing changes |
 | `ask` | `dungeon`, `guid`, `name`, `role`, `note`; `battleTag` (optional, addon CF-51: the asker) | an ask (WEB-51) and an `askNow` bot event, only within 10 minutes of `at`. WEB-53: a friend's ask carried in another member's file (CF-51) is the asker's, by the owner of `guid`, else the person `battleTag` names; created once by its `id` (the asker's), every carrier kept (`game_item_carriers`); an asker the community's data doesn't know: `not_member` |
 | `askAnswer` | `ask` (the ask's `id`), `answer` (`in` / `maybe` / `cant`), `guid`, `name`, `role` | WEB-53 (CF-51): the player's answer to that ask, source "game", as a Discord answer; `unknown_ask` when the site has no such ask, `expired` after its 10 minutes |
 | `ping` | `run`, `battleTag`, `guid`, `name` (who to ping) | a `ping` bot event |

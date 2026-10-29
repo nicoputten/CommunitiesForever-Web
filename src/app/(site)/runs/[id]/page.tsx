@@ -269,7 +269,10 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                         {a.usualRole !== undefined && <span className={styles.usual}> {a.usualRole}</span>}
                       </td>
                       <td data-dim="">{a.fit ?? "—"}</td>
-                      <td data-answer={a.answerTone}>{a.answer}</td>
+                      <td data-answer={a.answerTone}>
+                        {a.answer}
+                        {a.note !== undefined && <span className={styles.answerNote}>“{a.note}”</span>}
+                      </td>
                       <td data-dim="">{a.where}</td>
                     </tr>
                   ))}
