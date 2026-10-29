@@ -6,7 +6,6 @@ import {
   classInfo,
   dungeonPosition,
   rolesFor,
-  type DungeonInfo,
   type LevelRange,
   type RunnableDungeon,
 } from "../gamedata";
@@ -33,7 +32,6 @@ import type { RunsInput } from "./runs";
 // and the links of their popover.
 
 const ROLE_TITLE: Record<SlotRole, string> = { tank: "Tank", healer: "Healer", damage: "Damage" };
-const WING_COUNT = ["", "one", "two", "three", "four", "five"];
 /** Runs shown under "Ran here": the last few. */
 export const RAN_SHOWN = 5;
 
@@ -104,7 +102,7 @@ export interface DungeonPage {
   title: string;
   /** "Scarlet Monastery · Tirisfal Glades", "Durotar". */
   eyebrow: string;
-  /** "Levels 32–42 (typical) · one of four wings, each its own dungeon with its own entrance". */
+  /** "Levels 32–42 (typical)". */
   levels: string;
   crumbs: Crumb[];
   wings?: WingLink[];
@@ -242,11 +240,8 @@ function plannedView(input: RunsInput, n: Names, run: RunRecord): PlannedRunView
   return v;
 }
 
-function levelsLine(instance: DungeonInfo, dungeon: RunnableDungeon): string {
-  const levels = `Levels ${rangeText(dungeon.typicalLevels)} (typical)`;
-  if (instance.wingsAreDungeons !== true || instance.wings === undefined) return levels;
-  const n = instance.wings.length;
-  return `${levels} · one of ${WING_COUNT[n] ?? n} wings, each its own dungeon with its own entrance`;
+function levelsLine(dungeon: RunnableDungeon): string {
+  return `Levels ${rangeText(dungeon.typicalLevels)} (typical)`;
 }
 
 /** The dungeon page of a runnable dungeon id ("sm-armory", "rfc"); undefined for an unknown id. */
@@ -271,7 +266,7 @@ export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefin
     id,
     title: wing?.name ?? instance.name,
     eyebrow: [wing === undefined ? undefined : instance.name, zone?.name].filter((x) => x !== undefined).join(" · "),
-    levels: levelsLine(instance, dungeon),
+    levels: levelsLine(dungeon),
     crumbs,
     planHref: planHref(id),
     whoFits: whoFits(input.characters, dungeon.typicalLevels),

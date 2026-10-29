@@ -14,8 +14,8 @@ const card = (page: Page, name: string) => page.getByRole("region", { name, exac
 test("sums up the group and shows every profession", async ({ page }) => {
   await page.goto("/professions");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Professions");
-  await expect(page.getByRole("searchbox")).toBeDisabled();
-  await expect(page.getByText("Recipe search arrives when the addon shares known recipes.")).toBeVisible();
+  // The recipe search is hidden until the addon shares recipes (WEB-65).
+  await expect(page.getByRole("searchbox")).toHaveCount(0);
   const summary = page.getByRole("list", { name: "Summary" }).getByRole("listitem");
   await expect(summary).toHaveText([
     "4 coveredSomeone is at 225 or higher: Enchanting, Tailoring, First Aid, Fishing",

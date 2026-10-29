@@ -22,8 +22,6 @@ export default async function DoomsdayFeatsPage({ searchParams }: { searchParams
             <h2 id="dd-group-feats" className={styles.cardTitle}>
               The group&apos;s feats · newest first
             </h2>
-            <span className={styles.spacer} />
-            <span className={styles.meta}>posted once in Discord as “Feat unlocked”</span>
           </div>
           <GroupFeats feats={view.group} />
         </section>
@@ -43,10 +41,6 @@ export default async function DoomsdayFeatsPage({ searchParams }: { searchParams
           <h2 id="dd-ranks" className={styles.cardTitle}>
             PvP ranks &amp; our titles
           </h2>
-          <span className={styles.spacer} />
-          <span className={styles.meta}>
-            a new highest rank is a feat; before the first kill: Conscientious Objector (never posted)
-          </span>
         </div>
         <RankTitles ranks={view.ranks} />
       </section>

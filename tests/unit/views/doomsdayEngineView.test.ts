@@ -43,7 +43,7 @@ const input: DoomsdayInput = {
 describe("doomsdayPage on the engine's snapshot", () => {
   it("renders the viewer's day, the board and the friend without the addon", () => {
     const page = doomsdayPage({ snapshot: doomsdaySnapshot(input), viewerKey: "Ada#1001", timeZone: "Europe/Paris" });
-    expect(page.header.sub).toMatch(/^Daily goals at 19:00,/);
+    expect(page.header.sub).toBe("Daily goals, feats and a ladder.");
     expect(page.today?.resets).toMatch(/^resets in \d+ h \d+ m$/);
     expect(page.today?.pve.length).toBeGreaterThan(0);
     expect(page.board.columns.length).toBeGreaterThan(0);

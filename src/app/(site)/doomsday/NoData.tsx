@@ -6,9 +6,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 export function NoDoomsday() {
   return (
     <div className={styles.page}>
-      <PageTitle sub="Daily goals, feats for bragging, and a ladder per track. Suggestions, never rules.">
-        Doomsday
-      </PageTitle>
+      <PageTitle sub="Daily goals, feats and a ladder.">Doomsday</PageTitle>
       <EmptyState title="No Doomsday data yet">
         Goals start counting once friends upload with a CommunitiesForever version that shares them.
       </EmptyState>

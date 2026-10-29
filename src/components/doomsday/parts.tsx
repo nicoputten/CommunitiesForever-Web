@@ -247,16 +247,8 @@ export function Board({ view }: { view: BoardView }) {
 
 /** The board on the phone: one card per friend with a mark per goal (board doomsday-phone "Board"). */
 function BoardCards({ view }: { view: BoardView }) {
-  const pve = view.columns.filter((c) => c.track === "pve").length;
-  const pvpTitles = view.columns
-    .filter((c) => c.track === "pvp")
-    .map((c) => (c.title.startsWith("Hunt") ? "Hunt" : "Skirmish"));
   return (
     <div className={styles.cards}>
-      <p className={styles.note}>
-        Columns: {pve} PvE {pve === 1 ? "daily" : "dailies"}
-        {pvpTitles.map((t) => ` · ${t}`).join("")}
-      </p>
       {view.rows.map((r) => (
         <div key={r.key} className={styles.friendCard} data-dim={r.dim} data-testid="board-card">
           <div className={styles.cardTop}>

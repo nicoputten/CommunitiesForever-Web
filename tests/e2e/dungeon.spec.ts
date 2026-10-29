@@ -78,7 +78,7 @@ test("Scarlet Monastery goes to its first wing; a raid or an unknown dungeon has
   await page.goto("/dungeons/sm");
   await expect(page).toHaveURL(/\/dungeons\/sm-graveyard$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Graveyard");
-  await expect(page.getByText("Levels 26–36 (typical) · one of four wings")).toBeVisible();
+  await expect(page.getByText("Levels 26–36 (typical)", { exact: true })).toBeVisible();
   for (const id of ["ony", "nope"]) {
     const res = await page.goto(`/dungeons/${id}`);
     expect(res?.status()).toBe(404);

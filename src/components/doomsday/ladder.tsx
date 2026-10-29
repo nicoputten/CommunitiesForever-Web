@@ -214,11 +214,10 @@ export function PvpDetails({ view }: { view: PvpView }) {
             <span className={base.meta}>{view.duels.elo.place}</span>
           </div>
         )}
-        <p className={base.note}>Site and Discord only; the addon shows wins and losses.</p>
       </section>
 
       <section className={`${base.card} ${styles.dashed}`} aria-label="Battlegrounds">
-        <span className={base.meta}>Battlegrounds · separate, never in the week&apos;s kills</span>
+        <span className={base.meta}>Battlegrounds</span>
         {view.battlegrounds.length === 0 && <p className={base.note}>No battlegrounds yet.</p>}
         {view.battlegrounds.map((b) => (
           <div key={b.name} className={styles.bg}>
@@ -295,7 +294,6 @@ export function OwnFeats({ view }: { view: FeatsView }) {
           </div>
         ))}
       </div>
-      <p className={base.note}>Locked feats show progress, never pressure.</p>
     </>
   );
 }

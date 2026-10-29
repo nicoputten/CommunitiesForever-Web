@@ -287,7 +287,8 @@ details[open] > .head .caret {
   color: var(--gold-pale);
 }
 
-.dashed {
+/* section.: wins over .card (Doomsday.module.css) whatever order the CSS loads in. */
+section.dashed {
   border-style: dashed;
 }
 
@@ -442,7 +443,7 @@ details[open] > .head .caret {
     display: block;
   }
 
-  .phoneHidden {
+  section.phoneHidden {
     display: none;
   }
 

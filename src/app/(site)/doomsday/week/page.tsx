@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import styles from "@/components/doomsday/Doomsday.module.css";
 import { DoomsdayFrame, GoalCard, Points } from "@/components/doomsday/parts";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { SUGGESTIONS } from "@/core/views/doomsday";
 import { doomsdayData } from "../data";
 import { NoDoomsday } from "../NoData";
@@ -19,6 +20,7 @@ export default async function DoomsdayWeekPage() {
           <h2 id="dd-week" className={styles.cardTitle}>
             Your weeklies
           </h2>
+          <InfoTip>{SUGGESTIONS}</InfoTip>
           {week?.points !== undefined && <Points points={week.points} />}
           <span className={styles.spacer} />
           {week !== undefined && <span className={styles.resets}>{week.resets}</span>}
@@ -35,7 +37,6 @@ export default async function DoomsdayWeekPage() {
             ))}
           </div>
         )}
-        <p className={styles.note}>{SUGGESTIONS}</p>
       </section>
     </DoomsdayFrame>
   );
