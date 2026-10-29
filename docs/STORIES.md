@@ -33,7 +33,7 @@ Agreed with Nico (2026-10-29). Boards: `bot-visual-recap`, `bot-visual-daily`, `
   - one row per friend with Doomsday data: the name (30 px, struck through when all PvE dailies are done, the crown after the first to finish), 44 px boxes (PvE done green with a check, PvP done red, open as a dark outline), "PvP Virgin" across the PvP columns while the rule above holds, "Today" as PvE · PvP points, the streak with a flame
   - footer: "resets Thu 19:00" at the start, "resets in 5 h 50 m" during the day, "Mira first at 23:13 · 14 goals done" when final
   - Friends without Doomsday data are left out of the image.
-- **`shortLabel`** on every daily goal of the catalogue (max 10 characters, one or two words: "Level", "3 quests", "Skills", "Hunt", "Lone wolf"), in `src/core/doomsday/rules.ts` and in `DOOMSDAY.md`. A test checks the length and that every daily goal has one.
+- **`shortLabel`** on every goal of the catalogue, the addon's own (`Doomsday.SHORT_LABELS`, addon PR #123, `DOOMSDAY.md` "Short labels (CF-61)"; at most 10 characters, the Hunt "Hunt"), in `src/core/doomsday/rules.ts`. A test checks the length and that every goal has one.
 - **The board picture's id changes only when the picture does** (`doomsday-<day>-<hash>`), so the bot re-attaches it only then, at most every 5 minutes.
 - **The board's news line**, one sentence, made by the site:
   - at the reset: the goals in full and "5 points each"
