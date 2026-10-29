@@ -208,9 +208,15 @@ export function RollCallPanel({ call, query, clearHref, variant = "panel" }: Rol
         </div>
         {(call.unknown.length > 0 || call.noAddon.length > 0) && (
           <section aria-label="Unknown whereabouts" className={styles.tray}>
+            {/* One row until opened (WEB-65): "4 not sighted yet ▸". */}
             {call.unknown.length > 0 && (
-              <>
-                <h3 className={styles.overline}>Unknown whereabouts</h3>
+              <details className={styles.unsighted}>
+                <summary className={styles.unsightedRow}>
+                  {call.unknown.length} not sighted yet
+                  <span aria-hidden="true" className={styles.chevron}>
+                    ▸
+                  </span>
+                </summary>
                 <ul className={styles.rows}>
                   {call.unknown.map(({ character: c, person }) => {
                     const body = (
@@ -239,7 +245,7 @@ export function RollCallPanel({ call, query, clearHref, variant = "panel" }: Rol
                     );
                   })}
                 </ul>
-              </>
+              </details>
             )}
             {call.noAddon.length > 0 && (
               <p className={styles.noAddon}>

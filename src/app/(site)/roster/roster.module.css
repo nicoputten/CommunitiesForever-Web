@@ -16,16 +16,20 @@
   min-width: var(--size-search-min);
 }
 
+/* CSS columns (WEB-65, board live-test-site-fixes): cards stack without holes, top to bottom, then the next column. */
 .friends {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--s-4);
-  align-items: start;
+  columns: 2;
+  column-gap: var(--s-4);
+}
+
+.friends > * {
+  break-inside: avoid;
+  margin-bottom: var(--s-4);
 }
 
 /* One column of friends below 1024 px (no board, decided with Nico for WEB-21). */
 @media (max-width: 1023px) {
   .friends {
-    grid-template-columns: minmax(0, 1fr);
+    columns: 1;
   }
 }

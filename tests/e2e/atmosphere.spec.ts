@@ -4,7 +4,7 @@ import { signInAs } from "./session";
 
 // WEB-16: the atmosphere on the map, sign-in and data pages, the Motion switch and reduced motion.
 
-const ACCOUNT = `Account ${E2E.admin}`;
+const ACCOUNT = /^Account /;
 
 /** Ambient animations ([data-ambient] layers) by play state. */
 function ambient(page: Page) {

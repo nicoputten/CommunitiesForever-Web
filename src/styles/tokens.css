@@ -264,9 +264,6 @@
   --line-tooltip: rgba(212, 175, 106, 0.5); /* roster-cards-runs: dot tooltip */
   --shadow-tooltip: 0 12px 30px rgba(0, 0, 0, 0.6); /* roster-cards-runs: dot tooltip */
   --size-tick: 12px; /* roster-cards: level ticks */
-  --size-band: 20px; /* roster-cards: dungeon band */
-  --size-band-row: 26px; /* roster-cards: band rows 0 and 26 px */
-  --r-band: 5px;
   --track-line: linear-gradient(90deg, var(--avatar), var(--gold)); /* roster-cards: level spread track */
   --line-quick: rgba(212, 175, 106, 0.18); /* roster-cards: quick answer cards */
   --line-hover: rgba(212, 175, 106, 0.3); /* roster-cards: character row hover */

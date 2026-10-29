@@ -169,37 +169,35 @@
   right: 0;
 }
 
+/* The bands as chips by level (WEB-65, board live-test-site-fixes; Nico 2026-10-29): the full name, wrapping onto
+   more rows, never cut. */
 .bands {
-  position: relative;
-  height: calc(var(--band-rows) * var(--size-band-row) - var(--size-band-row) + var(--size-band));
-  margin: var(--s-2) var(--s-2-5) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5);
+  margin: var(--s-3) var(--s-2-5) 0;
   padding: 0;
   list-style: none;
 }
 
-/* A band's place on the track (WEB-45: rows from bandLayout, at most 4 until "Show all"). */
 .bandItem {
-  position: absolute;
-  left: var(--from);
-  width: calc(var(--to) - var(--from));
-  top: calc(var(--row) * var(--size-band-row));
+  position: relative;
+  order: var(--order);
+  max-width: 100%;
 }
 
 .band {
   display: block;
-  width: 100%;
-  height: var(--size-band);
-  padding: 0 var(--s-1-5);
-  border-radius: var(--r-band);
+  max-width: 100%;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-btn);
   background: var(--surface-row);
   border: var(--border) solid var(--line-neutral);
   color: var(--text-muted);
   font: inherit;
-  font-size: var(--fs-tiny);
-  line-height: calc(var(--size-band) - 2 * var(--border));
+  font-size: var(--fs-meta);
+  line-height: var(--lh-body);
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
   cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-out);
 }
@@ -221,30 +219,15 @@
   color: var(--gold-pale);
 }
 
-/* The label that fits (measured in the browser, DungeonBands): the full name, the short name, the short name cut
-   (WEB-54), or the cut name without the range. */
-.bandShort,
-.bandCut,
-.band[data-fit="short"] .bandFull,
-.band[data-fit="cut"] .bandFull,
-.band[data-fit="cut"] .bandShort,
-.band[data-fit="bare"] .bandFull,
-.band[data-fit="bare"] .bandShort,
-.band[data-fit="bare"] .bandRange {
-  display: none;
+.bandRange {
+  white-space: nowrap;
 }
 
-.band[data-fit="short"] .bandShort,
-.band[data-fit="cut"] .bandCut,
-.band[data-fit="bare"] .bandCut {
-  display: inline;
-}
-
-/* The band popover (board `roster-cards-runs`), under its band and kept inside the track. */
+/* The band popover (board `roster-cards-runs`), under its band. */
 .pop {
   position: absolute;
   z-index: 3;
-  top: calc(var(--size-band) + var(--s-1));
+  top: calc(100% + var(--s-1));
   left: 0;
   display: flex;
   flex-direction: column;
@@ -413,40 +396,19 @@
   }
 
   .bands {
-    height: auto;
     margin: var(--s-3) 0 0;
-    display: flex;
     flex-direction: column;
-    gap: var(--s-1-5);
   }
 
-  /* By level on phone, the best band first (the track's rows order them top to bottom). */
+  /* By level on phone, the best band first. */
   .bandItem {
-    order: var(--order);
     position: static;
-    width: auto;
   }
 
   .band {
-    height: auto;
+    width: 100%;
     min-height: var(--size-touch);
-    padding: var(--s-1) var(--s-2);
     font-size: var(--fs-meta-sm);
-    line-height: var(--lh-body);
-    white-space: normal;
-  }
-
-  /* A list item is wide enough: always the full name and range, whatever was measured. */
-  .band .bandFull,
-  .band[data-fit] .bandFull,
-  .band[data-fit] .bandRange {
-    display: inline;
-  }
-
-  .band .bandShort,
-  .band[data-fit] .bandShort,
-  .band[data-fit] .bandCut {
-    display: none;
   }
 
   .bandsFoot {

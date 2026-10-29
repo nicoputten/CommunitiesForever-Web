@@ -122,7 +122,7 @@ test("phone map: the full roll call with its filters", async ({ page }) => {
   await expect(sheet(page).getByRole("heading", { name: "Roll call" })).toHaveCSS("font-size", "22px");
   await expectStyles(sheet(page).getByRole("heading", { name: "Roll call" }), TYPE.titleLg);
   await expect(sheet(page).getByRole("button", { name: "All", pressed: true })).toBeVisible();
-  await expect(sheet(page).getByText("Unknown whereabouts")).toBeVisible();
+  await expect(sheet(page).getByText("1 not sighted yet")).toBeVisible();
   await shot(page, "full");
   await expectTouchTargets(page);
   await expectAccessible(page, OVERLAP);

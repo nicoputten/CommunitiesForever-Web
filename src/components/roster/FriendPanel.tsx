@@ -25,7 +25,8 @@ export function FriendPanel({ person, characters, total, now, doomsday }: Friend
     : characters.length < total
       ? `${characters.length} of ${plural(total, "character")}`
       : plural(total, "character");
-  const tag = [person.battleTag, count].filter((p) => p !== undefined).join(" · ");
+  // Display names only, BattleTags only on Admin (WEB-65).
+  const tag = count;
   return (
     <section className={styles.panel} aria-label={person.displayName} data-addon={person.hasAddon || undefined}>
       <div className={styles.head}>

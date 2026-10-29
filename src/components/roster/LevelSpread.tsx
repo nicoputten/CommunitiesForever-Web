@@ -18,8 +18,6 @@ import styles from "./LevelSpread.module.css";
 import { DungeonBands, type BandView } from "./DungeonBands";
 import { SpreadTrack, type TrackDot } from "./SpreadTrack";
 
-const rowsOf = (placed: readonly { row: number }[]) => Math.max(0, ...placed.map((p) => p.row + 1));
-
 const TICKS = [1, 10, 20, 30, 40, 50, 60];
 
 const pct = (n: number) => `${(n * 100).toFixed(2)}%`;
@@ -90,17 +88,12 @@ export function LevelSpread({
     return {
       id: b.dungeon.id,
       name: b.dungeon.name,
-      shortName: b.dungeon.shortName,
       range: `${min}–${max}`,
       fits: b.fits.length,
       ...(b.missing.length === 0 ? {} : { missing: `no ${joinNames([...b.missing])} in range` }),
       runs: planned.runs,
       moreRuns: planned.more,
       best: placed.best,
-      from: pct(placed.from),
-      to: pct(placed.to),
-      row: row ?? 0,
-      rowAll: placed.row,
       extra: row === undefined,
       order: b === spread.best ? -1 : spread.bands.indexOf(b),
       right: placed.from > 0.5,
@@ -130,7 +123,7 @@ export function LevelSpread({
         ))}
       </div>
 
-      {bands.length > 0 && <DungeonBands bands={bands} rows={rowsOf(limited.shown)} rowsAll={rowsOf(all.shown)} />}
+      {bands.length > 0 && <DungeonBands bands={bands} />}
     </section>
   );
 }

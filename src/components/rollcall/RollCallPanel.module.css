@@ -108,11 +108,17 @@
   background: var(--line);
 }
 
-/* Scrolls on its own; the unknown tray stays at the bottom. */
-.list {
+/* One scroll for the panel (WEB-65): everything under the title, the never-sighted row last. */
+.body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.list {
   display: flex;
   flex-direction: column;
   gap: var(--s-2-5);
@@ -228,6 +234,34 @@ a.row:hover {
   border-top: var(--border) solid var(--line);
 }
 
+.unsightedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--size-touch);
+  list-style: none;
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.unsightedRow::-webkit-details-marker {
+  display: none;
+}
+
+.unsightedRow:hover {
+  color: var(--text-strong);
+}
+
+.chevron {
+  color: var(--gold);
+}
+
+.unsighted[open] .chevron {
+  transform: rotate(90deg);
+}
+
 .unknown {
   display: flex;
   align-items: center;
@@ -260,7 +294,6 @@ a.row:hover {
 }
 
 /* As a panel the parts lay out in the panel's own column. */
-.body,
 .filters {
   display: contents;
 }
@@ -454,8 +487,8 @@ a.row:hover {
   border-top: 0;
 }
 
-.sheet .tray .overline {
-  padding-top: var(--s-3);
+.sheet .unsightedRow {
+  padding: 0 var(--s-1);
 }
 
 .sheet .noAddon {

@@ -76,11 +76,21 @@ test.describe("signed in", () => {
 
   test("user menu: blurred surface, touch targets, accessible", async ({ page }) => {
     await openScreen(page, "/roster");
-    const trigger = page.getByRole("button", { name: `Account ${ADMIN}` });
+    const trigger = page.getByRole("button", { name: /^Account / });
     await trigger.click();
     const panel = page.locator(`[id="${await trigger.getAttribute("aria-controls")}"]`);
     await expect(panel).toBeVisible();
     await expectStyles(panel, { ...SURFACE, "border-radius": "var(--r-panel)", "box-shadow": "var(--shadow-card)" });
+    // WEB-65 (board live-test-site-fixes): 44 px items, the Owner badge, Sign out under a divider.
+    await expectStyles(panel.getByRole("link", { name: "Discord" }), { "min-height": "var(--size-touch)" });
+    await expectStyles(panel.getByText("Owner", { exact: true }), {
+      "background-image": "var(--owner-badge)",
+      color: "var(--on-gold)",
+    });
+    await expectStyles(panel.locator("li").filter({ hasText: "Sign out" }), {
+      "border-top-style": "solid",
+      "border-top-color": "var(--line)",
+    });
     if (isPhone(page)) await expectTouchTargets(page);
     await expectAccessible(page);
   });

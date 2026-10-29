@@ -76,7 +76,7 @@ test.describe("desktop", () => {
     await expect(header(page, "Player")).toHaveCount(0);
     const groups = table(page).locator("tbody");
     await expect(groups).toHaveCount(5);
-    await expect(groups.first().getByRole("rowheader")).toContainText(`Nico${E2E.admin} · 3 characters`);
+    await expect(groups.first().getByRole("rowheader")).toContainText("Nico3 characters");
     await expect(groups.first().locator("tr td:first-child a")).toHaveText([
       "Ves Doombringer",
       "Grom Ashfeller",
