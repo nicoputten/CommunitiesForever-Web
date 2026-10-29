@@ -20,7 +20,14 @@ import { adminBattleTag, loadAccessList } from "@/server/access";
 import { auth } from "@/server/auth";
 import { getDb, type Db } from "@/server/db";
 import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
-import { discordApp, setTimeZone, TIME_ZONES, unlinkDiscord, updateBotSettings } from "@/server/discord";
+import {
+  discordApp,
+  setTimeZone,
+  TIME_ZONES,
+  undoDoomsdayReset,
+  unlinkDiscord,
+  updateBotSettings,
+} from "@/server/discord";
 import { LINK_COOKIE } from "@/server/discordLink";
 import { sendTestRunPost } from "@/server/runs";
 
@@ -117,8 +124,20 @@ export async function testRunPostAction(): Promise<void> {
   redirect(to("test-run-sent"));
 }
 
-/** "Send a test post": a `test` event the bot posts in the posts channel (docs/BOT-API.md). */
-export async function testPostAction(): Promise<void> {
-  await as("admin", (db) => enqueueBotEvent(db, "test", { kind: "posts" }, nowSeconds()));
+/** The test posts of the Discord page's boxes (docs/BOT-API.md `test`, WEB-58): the bot posts a sample of the kind. */
+const TEST_KINDS = ["posts", "feats", "recap", "doomsday"] as const;
+
+/** "Send a test …": a `test` event of the form's `kind` (default `posts`), posted in that kind's channel. */
+export async function testPostAction(form?: FormData): Promise<void> {
+  const asked = String(form?.get("kind") ?? "posts");
+  const kind = TEST_KINDS.find((k) => k === asked) ?? "posts";
+  await as("admin", (db) => enqueueBotEvent(db, "test", { kind }, nowSeconds()));
   redirect(to("test-sent"));
+}
+
+/** Undo for a Doomsday reset change that waits for the next reset (WEB-58). */
+export async function undoResetAction(): Promise<void> {
+  await as("admin", (db, by) => {
+    undoDoomsdayReset(db, by, nowSeconds());
+  });
 }

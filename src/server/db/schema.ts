@@ -266,6 +266,8 @@ export const botSettings = sqliteTable("bot_settings", {
   doomsdayBoard: integer("doomsday_board", { mode: "boolean" }).notNull().default(false),
   doomsdayLadder: integer("doomsday_ladder", { mode: "boolean" }).notNull().default(false),
   doomsdayChannel: text("doomsday_channel"),
+  /** Feats; null: the default (posts) channel. */
+  featsChannel: text("feats_channel"),
   /** Seconds after realm midnight. */
   doomsdayReset: integer("doomsday_reset").notNull().default(68400),
   doomsdayResetPrevious: integer("doomsday_reset_previous"),

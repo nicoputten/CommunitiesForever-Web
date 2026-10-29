@@ -656,7 +656,6 @@
   /* Discord page (WEB-39): the discord-settings-runs board */
   --discord-avatar: #5865f2; /* discord-settings-runs: the linked account's disc */
   --on-discord-avatar: #ffffff;
-  --size-link-avatar: 48px; /* discord-settings-runs: "Your Discord is linked" disc */
   --size-switch-w: 40px; /* discord-settings-runs: on/off switch (hit area --size-touch) */
   --size-switch-h: 22px;
   --size-switch-knob: 16px;
@@ -665,7 +664,22 @@
   --size-select-min: 200px;
   --size-friend-lead: 34px; /* discord-settings-runs: linked friends avatar column */
   --size-friend-disc: 30px;
-  --size-discord-main: 1.15fr; /* discord-settings-runs: "What the bot posts" : "Linked friends" */
+  /* the Discord page, reorganised (WEB-58): boards discord-page, -states, -phone */
+  --size-discord-avatar: 44px; /* discord-page: "Linked as …" disc */
+  --surface-jump: rgba(7, 12, 21, 0.92); /* discord-page: the sticky jump bar */
+  --line-jump: rgba(212, 175, 106, 0.12); /* discord-page: under the jump bar */
+  --line-jump-chip: rgba(174, 182, 195, 0.18); /* discord-page: a jump bar chip */
+  --line-jump-sep: rgba(212, 175, 106, 0.25); /* discord-page: between "For you" and the admin's chips */
+  --size-jump-chip: 36px; /* discord-page: chip height to the eye; the link's hit area is --size-touch (Nico) */
+  --sect-rule: linear-gradient(90deg, rgba(212, 175, 106, 0.45), rgba(212, 175, 106, 0)); /* discord-page */
+  --line-doomsday-box: rgba(212, 175, 106, 0.5); /* discord-page: the Doomsday box */
+  --surface-doomsday-box: radial-gradient(
+    circle at 95% 0%,
+    rgba(240, 208, 142, 0.1),
+    rgba(12, 18, 30, 0.85) 55%
+  ); /* discord-page: the Doomsday box */
+  --size-time-segment: 56px; /* discord-page: the reset's hours and minutes */
+  --fs-time-segment: 18px;
   --line-link: rgba(212, 175, 106, 0.45); /* discord-settings-runs: the link card and the Runs box */
 
   /* Runs (WEB-40): the runs, run-detail, run-create and runs-phone boards */
