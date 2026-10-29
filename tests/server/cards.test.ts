@@ -222,6 +222,8 @@ function stripSpecs(): Record<string, CardSpec> {
     strip("strip-first-blood", { kind: "honorKills", kills: 1 }, { name: "Bob Example", classFile: "ROGUE" }),
     strip("strip-level-30", { kind: "level", level: 30, from: 28 }, lia),
     strip("strip-profession", { kind: "professionCap", skillLine: "197", profession: "Tailoring", rank: 225 }, lia),
+    strip("strip-duel-wins", { kind: "duelWins", wins: 10 }, { name: "Bob Example", classFile: "ROGUE" }),
+    strip("strip-bg-win", { kind: "bgFirstWin", battleground: "Warsong Gulch" }, lia),
     strip("strip-deaths", { kind: "deaths100", deaths: 100 }, { name: "Ada Nightshade", classFile: "WARLOCK" }),
     strip(
       "strip-rank-3",
