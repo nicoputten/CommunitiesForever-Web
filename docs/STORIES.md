@@ -149,3 +149,43 @@ Boards `doomsday-phone` and `roster-cards-doomsday`.
 - The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
 - As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
 
+### WEB-63 Clean-up before the Doomsday release
+Agreed with Nico, 2026-10-29: everything on the list below. Built after WEB-57 is merged. WEB-64 (co-admins) touches the admin page, the Discord page, `viewer`, `mayAdmin` and the access code, so nothing here changes those before WEB-64 is merged; the items below don't need to. No behaviour changes for users; one PR, one commit per item.
+
+**Dependencies**
+- gitleaks-action v2 → v3 (Dependabot #69, closed by this PR).
+- ESLint 10 with `eslint-config-next`: the `src/core` layering rule still fails on a forbidden import (a test proves it), and lint passes unchanged otherwise.
+- TypeScript 7: kept only if `tsc`, the build and every test pass. If not, it stays on 6 with the reason in `docs/ARCHITECTURE.md`.
+- npm audit: the 4 moderate findings come from an old esbuild inside drizzle-kit (a dev tool; the latest drizzle-kit has it too). They are recorded as accepted in `docs/ARCHITECTURE.md`, with when to check again, instead of a forced breaking downgrade.
+- `allowScripts` covers esbuild's postinstall, so CI's install-scripts warning is gone.
+
+**Tests and CI**
+- The three flaky checks get fixed at the cause, not with retries:
+  - roster-table "design values": styles were read while the page re-rendered
+  - upload "nothing new": the accessibility scan ran before the `<title>` was there
+  - phone-map "the tapped character in the half sheet"
+  
+  Each passes 20 runs in a row locally.
+- **Real Doomsday test data:**
+  - the design sample (`tests/design/sample.ts`) uploads `goals`, `pvpKills`, PvP ranks and feats, so the engine computes Doomsday from uploads
+  - `DOOMSDAY_SAMPLE`, `src/server/doomsdaySample.ts` and the Playwright config lines go
+  - `/dev/doomsday` keeps its four states (day one, only you, loading, error) from the engine's own output
+  - The Doomsday screenshots change only where the real numbers differ from the made-up ones, after Nico's OK.
+- The Doomsday e2e checks run in the project before the upload tests add uploaders (as roster, professions and character do), so they no longer depend on test order.
+
+**Code**
+- One helper in `src/core` for weekday and month names and for `ordinal()`. Today they are copied in five and three files. Same output everywhere; the existing tests prove it.
+
+**Repo**
+- `AGENTS.md` (written by `next dev`, Next's pointer to its bundled docs) is committed, so the tree stays clean.
+
+**Docs**
+- Done stories (WEB-57, WEB-59, WEB-60, WEB-61 and any other done) move to `docs/STORIES-COMPLETED.md`. `docs/STORIES.md` keeps open stories only, with a current build order.
+- `docs/ARCHITECTURE.md`, `docs/BOT-API.md`, `docs/UPLOADER-API.md`, `docs/RECAP.md` and `docs/DESIGN.md` match the code.
+- `design/README.md` marks superseded boards as superseded and names the board that replaces each:
+  - `discord-settings` and `discord-settings-runs` by `discord-page*`
+  - the `doomsday-*` boards' 09:00 reset by 19:00
+- `CHANGELOG.md` `## Unreleased` reads as release notes for the Doomsday release: grouped, no story numbers, no duplicates.
+
+Done when: `npm run lint`, `npm test`, `npm run build`, `npm run test:design` and `npm run test:e2e` pass, CI is green twice in a row, and the docs PR items above are checked off in the PR.
+
