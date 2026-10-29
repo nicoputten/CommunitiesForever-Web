@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InfoTip } from "@/components/ui/InfoTip";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -121,8 +122,8 @@ export default async function DiscordPage({
           <PageTitle
             sub={
               admin
-                ? `The ${site} bot posts feats, runs, the weekly recap and Doomsday, and answers look-ups for linked friends.`
-                : `Link your Discord so the ${site} bot knows your characters. Bot settings are for the owner and admins.`
+                ? `The ${site} bot: feats, runs, the weekly recap and Doomsday.`
+                : `Link your Discord so the ${site} bot knows your characters.`
             }
           >
             Discord
@@ -154,7 +155,7 @@ export default async function DiscordPage({
         </p>
       )}
 
-      <Section title="For you" note="every friend sees this part" />
+      <Section title="For you" />
       <div className={styles.grid2}>
         <section id="you-link" aria-labelledby="discord-link" className={`${styles.box} ${styles.boxLink}`}>
           <BoxHead id="discord-link" title="Your Discord" />
@@ -215,14 +216,11 @@ export default async function DiscordPage({
           <p className={styles.small}>
             {ownZone === undefined ? (
               <>
-                Not set · using {adminName}&apos;s ({zone.replace(/_/g, " ")}). Until you pick one, times you type are
-                read in {adminName}&apos;s time zone.
+                Not set · using {adminName}&apos;s ({zone.replace(/_/g, " ")})
               </>
             ) : (
               <>
-                {zone.replace(/_/g, " ")} · {clockIn(zone, now)} now. When you type{" "}
-                <code className={styles.cmd}>/plan 20:00</code>, the bot reads 20:00 in this time zone. Everyone sees
-                runs in their own time.
+                {zone.replace(/_/g, " ")} · {clockIn(zone, now)} now
               </>
             )}
           </p>
@@ -238,21 +236,16 @@ export default async function DiscordPage({
           post somewhere else.
         </p>
       )}
-
-      <p className={styles.note}>
-        Posts use display names and full character names, never BattleTags or Discord IDs.
-        {admin && " Only the Linked friends list, for the owner and admins, shows them."}
-      </p>
     </div>
   );
 }
 
-function Section({ title, note }: { title: string; note: string }) {
+function Section({ title, note }: { title: string; note?: string }) {
   return (
     <div className={styles.sect}>
       <h2 className={styles.sectTitle}>{title}</h2>
       <span className={styles.sectLine} aria-hidden="true" />
-      <span className={styles.sectNote}>{note}</span>
+      {note !== undefined && <span className={styles.sectNote}>{note}</span>}
     </div>
   );
 }
@@ -332,10 +325,7 @@ function AdminSections({
 
   return (
     <>
-      <Section
-        title="For the group"
-        note="owner & admins · one box per kind of post, each with its own switch, channel and timing"
-      />
+      <Section title="For the group" note="owner & admins" />
 
       <section id="bot" aria-labelledby="discord-bot" className={styles.box}>
         <BoxHead id="discord-bot" title="The bot">
@@ -375,14 +365,6 @@ function AdminSections({
             }
             action={botSettingAction}
           />
-          <div>
-            <p className={styles.label}>Server</p>
-            <p className={styles.caption}>
-              {reported
-                ? `The bot sees ${present.length} text channel${present.length === 1 ? "" : "s"}`
-                : "Not reported yet"}
-            </p>
-          </div>
         </div>
       </section>
 
@@ -391,7 +373,6 @@ function AdminSections({
           <BoxHead id="discord-feats" title="Feats">
             <AdminOnly />
           </BoxHead>
-          <p className={styles.lead}>Renamed from Milestones: every milestone is a feat now.</p>
           <ul className={styles.options}>
             <SettingSwitch
               field="milestones"
@@ -513,7 +494,7 @@ function AdminSections({
               value={s.mentionRole ?? ""}
               options={roles(s.mentionRole)}
               none={NO_ROLES}
-              hint={reported ? "Moved here from “What the bot posts”" : "Roles arrive with the channels"}
+              {...(reported ? {} : { hint: "Roles arrive with the channels" })}
               action={botSettingAction}
             />
             <SettingPick
@@ -613,9 +594,7 @@ function AdminSections({
                   </form>
                 </div>
               ) : (
-                <p className={`${styles.small} ${styles.hint}`}>
-                  A change counts from the next reset, never mid-day. The addon gets it with the next upload.
-                </p>
+                <p className={`${styles.small} ${styles.hint}`}>Counts from the next reset.</p>
               )}
             </div>
             <SettingPick
@@ -623,7 +602,7 @@ function AdminSections({
               label="Realm time zone"
               value={s.realmTimeZone}
               options={timeZoneOptions(TIME_ZONES, now)}
-              hint={`${realmNow} realm time. The realm's clock: the reset is in this time, for everyone.`}
+              hint={`${realmNow} realm time`}
               action={botSettingAction}
             />
           </div>
@@ -638,6 +617,10 @@ function AdminSections({
 
       <section id="friends" aria-labelledby="discord-friends" className={styles.box}>
         <BoxHead id="discord-friends" title="Linked friends">
+          <InfoTip>
+            Friends link themselves after signing in. Unlinked friends still see posts, but the bot won&apos;t answer
+            their commands.
+          </InfoTip>
           <span className={styles.small}>
             {friends.linked} of {friends.rows.length}
           </span>
@@ -664,10 +647,6 @@ function AdminSections({
             </li>
           ))}
         </ul>
-        <p className={styles.small}>
-          Read only. Friends link themselves after signing in. Unlinked friends still see posts, but the bot won&apos;t
-          answer their commands.
-        </p>
       </section>
     </>
   );

@@ -94,7 +94,7 @@ test("dungeon: screenshot", async ({ page }) => {
 test("dungeon: without wings, nothing planned or ran", async ({ page }) => {
   await openScreen(page, "/dungeons/rfc");
   await expect(page.getByText("Nothing planned here yet.")).toBeVisible();
-  await expect(page.getByText("Not yet. Runs are marked done when an upload shows a run inside.")).toBeVisible();
+  await expect(page.getByText("Not yet.", { exact: true })).toBeVisible();
   await expectAccessible(page);
   await expectScreenshot(page, "dungeon-empty");
 });

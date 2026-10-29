@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { InfoTip } from "@/components/ui/InfoTip";
 import { classInfo } from "@/core/gamedata";
 import type { CharacterView } from "@/core/views/characters";
 import type { DungeonBand, LevelSpread as Spread } from "@/core/views/roster";
@@ -112,9 +113,9 @@ export function LevelSpread({
         <h2 id="level-spread" className={styles.title}>
           Who is around which level
         </h2>
-        <span className={styles.hint}>
-          Hover or tap a dot for names · gold ring: your characters · click a dungeon to plan a run
-        </span>
+        <InfoTip>
+          Hover or tap a dot for names. A gold ring marks your characters. Click a dungeon to plan a run.
+        </InfoTip>
       </div>
 
       {/* One track per layout: a phone merges more (MERGE_LEVELS_PHONE); CSS shows one. */}
