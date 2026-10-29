@@ -63,6 +63,11 @@ export interface RunAnswer {
   movedUp?: boolean;
   /** WEB-67 (addon CF-63): the friend's note with the answer from the game, at most 80 characters. */
   note?: string;
+  /**
+   * WEB-69: the character's name when it was last known, kept with the answer: shown when the site no longer has the
+   * character (dropped from its owner's newest record).
+   */
+  name?: string;
 }
 
 /** What a run stores about itself (the rest is its answers). */

@@ -395,3 +395,28 @@ describe("asking now", () => {
     expect(askCountdown(-3)).toBe("0 s");
   });
 });
+
+// WEB-69 (live v0.6.1): a character the site no longer has (a retail one, dropped by its owner's newer record) is never
+// shown as its raw GUID: the name kept with the answer, else "Unknown character"; the organiser's bar keeps its role.
+describe("a character the site no longer has", () => {
+  const GONE = "Player-6842-00018D02";
+  const withLead = (lead: RunAnswer) =>
+    input(NICO, { runs: [run(1, { dungeonId: "maraudon-orange", startsAt: NOW + 3 * HOUR, answers: [lead] })] });
+
+  it("shows the name kept with the answer", () => {
+    const d = runDetail(withLead({ ...answer(NICO, "in", GONE, "damage"), name: "Vestras Retail" }), 1)!;
+    expect(d.leadBar).toMatchObject({ state: "playing", character: "Vestras Retail", role: "Damage" });
+    expect(d.slots.find((s) => s.who !== undefined)!.who!.character).toBe("Vestras Retail");
+    expect(d.card.line).toBe("1–60 · You lead as Vestras Retail");
+  });
+
+  it("says Unknown character without a kept name, never the GUID", () => {
+    const d = runDetail(withLead(answer(NICO, "in", GONE, "damage")), 1)!;
+    expect(d.leadBar).toMatchObject({ character: "Unknown character", role: "Damage" });
+    expect(d.answers[0]!.character).toBe("Unknown character");
+    // Every text shown: the card's line and slot rows, the group, the answers, the bar.
+    const shown = [d.card.line, ...d.card.slotRows, ...d.slots.map((x) => x.who?.character), d.answers[0]!.character];
+    expect(shown.join(" ")).not.toContain("Player-");
+    expect(d.card.slotRows).toContain("Damage · Unknown character · 2 open");
+  });
+});

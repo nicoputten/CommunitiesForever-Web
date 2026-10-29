@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
 
 ## v0.6.1 (2026-10-30)
 - Runs: a note with an answer from the game ("Late, start without me") shows under that answer on the run page, and goes to Discord with it.

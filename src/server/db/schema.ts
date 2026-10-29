@@ -336,6 +336,8 @@ export const runAnswers = sqliteTable(
     movedUp: integer("moved_up", { mode: "boolean" }).notNull(),
     /** WEB-67 (addon CF-63): the note with an answer from the game, at most 80 characters. */
     note: text("note"),
+    /** WEB-69: the character's name when it was last known, for when the site no longer has the character. */
+    name: text("name"),
   },
   (t) => [uniqueIndex("run_answers_run_key_unique").on(t.runId, t.key)],
 );

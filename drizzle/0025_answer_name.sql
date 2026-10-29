@@ -1,0 +1,1 @@
+ALTER TABLE `run_answers` ADD `name` text;

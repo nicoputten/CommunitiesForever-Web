@@ -44,3 +44,9 @@ export function talentsText(
   const points = talents.map((t) => t.points ?? 0).join("/");
   return mainTreeName === undefined ? points : `${mainTreeName} ${points}`;
 }
+
+/**
+ * A character the site has no name for (WEB-69: a character dropped from its owner's newest record, such as a retail
+ * one). Never shown as its raw GUID.
+ */
+export const UNKNOWN_CHARACTER = "Unknown character";
