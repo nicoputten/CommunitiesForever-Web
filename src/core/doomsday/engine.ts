@@ -235,6 +235,7 @@ interface Friend {
   goals?: DoomsdayInput["goals"][string];
   kills: ScoredKill[];
   deaths: { t: number; char: string }[];
+  /** Any honorable kill or any PvP point (duels included), ever: no PvP Virgin (live test 2026-10-29). */
   killedEver: boolean;
 }
 
@@ -342,6 +343,17 @@ export function prepare(input: DoomsdayInput) {
       kills: f.kills.filter((k) => k.track === "pvp" && k.counted && days(k.day)).length,
     };
   };
+  // Any PvP point ends PvP Virgin too, a duel's included (Nico, live test 2026-10-29).
+  for (const f of friends) {
+    if (!f.killedEver && f.hasRecord) {
+      const all = totals(
+        f,
+        () => true,
+        () => true,
+      );
+      if (all.pvp > 0) f.killedEver = true;
+    }
+  }
   return { s, friends, byKey, active, allDuels, records, owner, duelPoints, killPoints, killApprox, totals };
 }
 
@@ -695,6 +707,7 @@ function pvpDetails(
       if (c.pvp?.rank !== undefined) out.rank = c.pvp.rank;
       const h = Math.max(highest(c.guid), c.pvp?.rank ?? 0);
       if (c.pvp?.rank !== undefined || h > 0) out.highestRank = h;
+      if (c.pvp?.hk !== undefined) out.hk = c.pvp.hk;
       return out;
     }),
     duels: {
@@ -735,7 +748,12 @@ function featRecords(input: DoomsdayInput): FeatRecord[] {
         id: `${f.guid}:${f.key}`,
         kind: f.kind,
         friendKey: f.owner,
-        character: { guid: f.guid, name, ...(c?.classFile !== undefined ? { classFile: c.classFile } : {}) },
+        character: {
+          guid: f.guid,
+          name,
+          ...(c?.classFile !== undefined ? { classFile: c.classFile } : {}),
+          ...(f.fields.level !== undefined ? { level: f.fields.level } : {}),
+        },
         at: f.at,
         // Display-ready (WEB-60): "Stone Guard, a.k.a. Mailbox Menace", "First epic: <item>".
         title:

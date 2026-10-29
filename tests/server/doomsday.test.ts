@@ -118,9 +118,9 @@ describe("the Doomsday engine", () => {
     expect(nico.heatmap!.slice(-2)).toEqual([1, 2]);
     // Elo: one duel, 1000 each before, so +16 / -16.
     expect(nico.pvp!.duels.elo).toMatchObject({ rating: 1016, place: 1 });
-    // Ada never killed anyone: a PvP Virgin, not on the PvP ladder.
-    expect(ada.pvpVirgin).toBe(true);
-    expect(snap.ladders.week.pvp.map((r) => r.name)).toEqual(["Nico"]);
+    // Ada never killed anyone, but lost a duel: that is a PvP point, so no PvP Virgin (live test 2026-10-29).
+    expect(ada.pvpVirgin).toBe(false);
+    expect(snap.ladders.week.pvp.map((r) => r.name)).toEqual(["Nico", "Ada"]);
     // The week began on Sunday: yesterday's daily counts too.
     expect(snap.ladders.week.pve.map((r) => [r.name, r.points])).toEqual([
       ["Nico", 15],
@@ -135,7 +135,13 @@ describe("the Doomsday engine", () => {
     const input = doomsdayInput(db, T + 1200)!;
     expect(recapSection(input, T - 2 * 86400, T + 86400)).toMatchObject({
       mostDevoted: { name: "Nico", days: 2 },
-      points: { pve: [{ name: "Nico", points: 15 }], pvp: [{ name: "Nico", points: 6 }] },
+      points: {
+        pve: [{ name: "Nico", points: 15 }],
+        pvp: [
+          { name: "Nico", points: 6 },
+          { name: "Ada", points: 1 },
+        ],
+      },
       crowns: [],
     });
   });
@@ -182,7 +188,14 @@ describe("Doomsday's bot events", () => {
     runDueDoomsday(db, T + 120);
     const [board] = events("doomsdayBoard");
     expect(events("doomsdayBoard")).toHaveLength(1);
-    expect(board!.data).toMatchObject({ day: DAY, label: "Tue 10 Nov", start: T, end: T + 86400, crown: null });
+    expect(board!.data).toMatchObject({
+      day: DAY,
+      label: "Tue evening",
+      span: "Tue 19:00 → Wed 19:00",
+      start: T,
+      end: T + 86400,
+      crown: null,
+    });
     expect((board!.data.friends as { name: string }[]).map((f) => f.name)).toEqual(["Ada", "Nico"]);
     expect(board!.data.withoutData).toEqual(["Bob"]);
 

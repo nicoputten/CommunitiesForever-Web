@@ -44,7 +44,7 @@ test("doomsday phone: design values", async ({ page }) => {
   await openScreen(page, "/doomsday");
   // The day's points and the reset under the tabs; the header's stat cards are desktop only.
   await expect(page.getByText("This week", { exact: true }).first()).toBeHidden();
-  await expectStyles(page.getByText(/^resets in /).first(), { color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /).first(), { color: "var(--streak-text)" });
   await expectStyles(page.getByTestId("goal").first(), { "min-height": "var(--size-goal-row)" });
   // The board as one card per friend, with a mark per goal.
   await expect(page.getByRole("region", { name: "The board", exact: true })).toBeHidden();
@@ -166,7 +166,7 @@ test("doomsday: design values", async ({ page }) => {
   const open = page.getByTestId("goal").filter({ hasText: "Front line" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
   await expectStyles(open.getByText("1 / 5"), { ...DATA, color: "var(--text)" });
-  await expectStyles(page.getByText(/^resets in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
+  await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
   if (isPhone(page)) return;
