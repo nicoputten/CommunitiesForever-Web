@@ -19,6 +19,7 @@ import {
 } from "@/core/discord";
 import { adminBattleTag, loadAccessList } from "@/server/access";
 import { logChange } from "@/server/admins";
+import { testImages } from "@/core/cards/samples";
 import { auth } from "@/server/auth";
 import { getDb, type Db } from "@/server/db";
 import { createBotToken, enqueueBotEvent, revokeBotToken } from "@/server/bot";
@@ -167,7 +168,9 @@ export async function testPostAction(form?: FormData): Promise<void> {
   const kind = TEST_KINDS.find((k) => k === asked) ?? "posts";
   await as("admin", (db, by) => {
     const now = nowSeconds();
-    enqueueBotEvent(db, "test", { kind }, now);
+    // WEB-68: the test images, so a test post looks like the real one (an older bot ignores them).
+    const images = testImages(kind);
+    enqueueBotEvent(db, "test", { kind, ...(images !== undefined ? { images } : {}) }, now);
     logChange(db, by, "testPost", now, undefined, TEST_NAMES[kind]);
   });
   redirect(to("test-sent"));

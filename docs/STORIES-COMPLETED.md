@@ -984,3 +984,7 @@ Decided with Nico (2026-10-29, for addon CF-63). An answer item from the game ma
 - Stored with the run answer (migration 0024: `run_answers.note`), shown under that answer on the run page, and sent to the bot with the answer (optional within v1). A later answer from the site or Discord replaces it, without a note.
 - Documented in `docs/SOURCE-DATA.md`, `docs/UPLOADER-API.md` and `docs/BOT-API.md`.
 - Done (this PR).
+
+### WEB-68 Test posts with pictures
+Nico (2026-10-29, "Yes, fix now"): the Discord page's test posts still showed the old text board. The site draws sample pictures with the same renderer as the real ones and the bot's own made-up names (Test Friend, Another Test, Testy McTestface): the daily board, a big and a strip feat card, the recap's award header and zone crop, at fixed ids `sample-<name>` behind the bot token. The `test` event carries their ids per kind (`images`, optional within v1; `docs/BOT-API.md`). The bot reads them in its own follow-up.
+- Done (this PR): `src/core/cards/samples.ts`, `cardFor`'s `sample-` ids, the test action's `images`.
