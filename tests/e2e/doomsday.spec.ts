@@ -19,11 +19,11 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Doomsday");
 
   // Today: the viewer's points per track, the goals, the Duel slot and Today so far.
-  await expect(page.getByText("PvE 10").first()).toBeVisible();
-  await expect(page.getByText("PvP 9").first()).toBeVisible();
+  await expect(page.getByText("PvE 10").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("PvP 9").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: /^Your goals · \w{3} \d+ \w{3}$/ })).toBeVisible();
   await expect(page.getByText("3 of 5 done")).toBeVisible();
-  await expect(page.getByText(/^resets in \d+ (h|m)/)).toBeVisible();
+  await expect(page.getByText(/^resets in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
   await expect(page.getByTestId("goal")).toHaveCount(5);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
   await expect(page.getByText(/Won vs Bob/)).toBeVisible();
@@ -32,13 +32,25 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page.getByText("Goals are suggestions with points. Skip any of them; nothing is locked.")).toBeVisible();
 
   // The board: Mira crossed out with the crown, the swap in a tooltip, Femke a PvP Virgin, Sanne without the addon.
-  const board = page.getByRole("table");
-  const mira = board.getByRole("row", { name: /Mira/ });
-  await expect(mira.getByText(/first · \d\d:\d\d/)).toBeVisible();
-  await expect(mira.getByText("(all PvE dailies done)")).toBeAttached();
-  await expect(mira.locator("[title='Instead of: Raise Cooking, First Aid or Fishing']")).toHaveCount(1);
-  await expect(board.getByRole("row", { name: /Femke/ }).getByText("PvP Virgin")).toBeVisible();
-  await expect(board.getByRole("row", { name: /Sanne/ })).toContainText("No addon yet");
+  // On the phone it is one card per friend (WEB-61).
+  if (isPhone(page)) {
+    const card = (name: string) => page.getByTestId("board-card").filter({ hasText: name });
+    await expect(card("Mira").getByText(/\d\d:\d\d/)).toBeVisible();
+    await expect(card("Mira").getByText("(all PvE dailies done)")).toBeAttached();
+    await expect(
+      card("Mira").getByRole("img", { name: /Instead of: Raise Cooking, First Aid or Fishing/ }),
+    ).toHaveCount(1);
+    await expect(card("Femke").getByText("PvP Virgin")).toBeVisible();
+    await expect(card("Sanne")).toContainText("No addon yet");
+  } else {
+    const board = page.getByRole("table");
+    const mira = board.getByRole("row", { name: /Mira/ });
+    await expect(mira.getByText(/first · \d\d:\d\d/)).toBeVisible();
+    await expect(mira.getByText("(all PvE dailies done)")).toBeAttached();
+    await expect(mira.locator("[title='Instead of: Raise Cooking, First Aid or Fishing']")).toHaveCount(1);
+    await expect(board.getByRole("row", { name: /Femke/ }).getByText("PvP Virgin")).toBeVisible();
+    await expect(board.getByRole("row", { name: /Sanne/ })).toContainText("No addon yet");
+  }
 
   // Week: the 3 weeklies and the bounty.
   await page.getByRole("navigation", { name: "Doomsday" }).getByRole("link", { name: "Week" }).click();
@@ -67,6 +79,8 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
   const pve = page.getByRole("region", { name: /^PvE · this week/ });
   const pvp = page.getByRole("region", { name: /^PvP · this week/ });
   await expect(pve.locator("summary").first()).toContainText("Mira");
+  // The phone shows one track at a time (WEB-61).
+  if (isPhone(page)) await page.goto("/doomsday/ladder?track=pvp");
   await expect(pvp.locator("summary").first()).toContainText("Bob");
   await expect(pvp.locator("summary").filter({ hasText: "Femke" })).toHaveCount(0);
   await expect(pvp.getByText("not ranked: no kills on any character, ever")).toBeVisible();
@@ -79,13 +93,13 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
 
   // All time: no movement.
   await page.getByRole("navigation", { name: "Ladder period" }).getByRole("link", { name: "All time" }).click();
-  await expect(page).toHaveURL(/scope=all$/);
+  await expect(page).toHaveURL(/scope=all/);
   await expect(page.getByRole("region", { name: /^PvP · all time/ })).toContainText("1,540");
   await expect(page.getByText("▲ 1")).toHaveCount(0);
 
   // Bob's PvP details from the ladder, then Mira's with the chips.
   // A fresh load: a row opened before stays open across client navigation.
-  await page.goto("/doomsday/ladder");
+  await page.goto("/doomsday/ladder?track=pvp");
   const bobRow = page
     .getByRole("region", { name: /^PvP · this week/ })
     .locator("details")
@@ -114,4 +128,29 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
 test("/doom is the short way to Doomsday", async ({ page }) => {
   await page.goto("/doom");
   await expect(page).toHaveURL(/\/doomsday$/);
+});
+
+// WEB-61: the phone ladder shows one track at a time; the roster cards carry each friend's Doomsday chip.
+test("phone ladder switch and the roster chips", async ({ page }) => {
+  await page.goto("/doomsday/ladder");
+  if (isPhone(page)) {
+    await expect(page.getByRole("region", { name: /^PvP · this week/ })).toBeHidden();
+    await page.getByRole("navigation", { name: "Track" }).getByRole("link", { name: "PvP" }).click();
+    await expect(page).toHaveURL(/track=pvp/);
+    await expect(page.getByRole("region", { name: /^PvP · this week/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: /^PvE · this week/ })).toBeHidden();
+    // All time keeps the track.
+    await page.getByRole("navigation", { name: "Ladder period" }).getByRole("link", { name: "All time" }).click();
+    await expect(page).toHaveURL(/scope=all&track=pvp/);
+  } else {
+    await expect(page.getByRole("region", { name: /^PvP · this week/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: /^PvE · this week/ })).toBeVisible();
+  }
+
+  await page.goto("/roster");
+  const bob = page.getByRole("region", { name: "Bob" });
+  await expect(bob.getByRole("link", { name: "Doomsday this week: PvE 60 PvP 310 streak 3" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Femke" }).getByText("PvP Virgin")).toBeVisible();
+  await bob.getByRole("link", { name: /^Doomsday this week/ }).click();
+  await expect(page).toHaveURL(/\/doomsday\/ladder$/);
 });

@@ -12,10 +12,19 @@ import styles from "./Ladder.module.css";
 // components: rows open with <details>, friends are picked with links.
 
 /** One track's ladder: rows that open to the split per character; PvP Virgins under it, never ranked. */
-export function LadderCard({ view, note }: { view: LadderTrackView; note?: string }) {
+export function LadderCard({
+  view,
+  note,
+  phoneHidden = false,
+}: {
+  view: LadderTrackView;
+  note?: string;
+  /** On the phone only one track shows (WEB-61). */
+  phoneHidden?: boolean;
+}) {
   const id = `ladder-${view.track}`;
   return (
-    <section className={base.card} aria-labelledby={id}>
+    <section className={phoneHidden ? `${base.card} ${styles.phoneHidden}` : base.card} aria-labelledby={id}>
       <div className={base.cardHead}>
         <h2 id={id} className={base.cardTitle}>
           <span className={view.track === "pve" ? base.pve : base.pvp}>{view.track === "pve" ? "PvE" : "PvP"}</span> ·{" "}
