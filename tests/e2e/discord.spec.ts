@@ -160,6 +160,8 @@ test.describe("the admin", () => {
 
   test("makes the bot token once, sends a test post per kind the bot gets, and revokes it", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "one bot token for the site");
+    // Three test posts and every page of the feed: more than the default 30 s on a busy CI runner.
+    test.setTimeout(60_000);
     await page.goto("/discord");
     const bot = page.getByRole("region", { name: "The bot" });
     // Without a token the test buttons wait, with the reason next to them.
