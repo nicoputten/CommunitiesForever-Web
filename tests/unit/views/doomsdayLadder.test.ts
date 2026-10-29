@@ -129,6 +129,16 @@ describe("pvpView", () => {
     expect(view.ranks[0]).toMatchObject({ rankText: "No rank yet", title: "Conscientious Objector" });
   });
 
+  it("gives a rankless character of a friend with PvP points its kills, not Conscientious Objector (live test)", () => {
+    const s = sample();
+    const femke = s.friends.find((f) => f.friendKey === "femke")!;
+    femke.pvpVirgin = false;
+    femke.pvp!.characters[0]!.hk = 1;
+    expect(pvpView(s, "femke", "nico").ranks[0]).toMatchObject({ rankText: "No rank yet · 1 kill", title: "" });
+    femke.pvp!.characters[0]!.hk = 12;
+    expect(pvpView(s, "femke", "nico").ranks[0]).toMatchObject({ rankText: "No rank yet · 12 kills" });
+  });
+
   it("says so when a friend has no PvP data", () => {
     const s = sample();
     delete s.friends.find((f) => f.friendKey === "mira")!.pvp;

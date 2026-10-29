@@ -63,9 +63,10 @@ describe("doomsdayPage header", () => {
 describe("doomsdayPage today", () => {
   it("lists the viewer's goals with checks, times and progress", () => {
     const today = page().today!;
-    expect(today.title).toBe("Your goals · Thu 19 Nov");
-    expect(today.doneText).toBe("3 of 5 done");
-    expect(today.resets).toBe("resets in 22 h 0 m");
+    expect(today.title).toBe("Your goals · Thu evening");
+    // The grid: 3 PvE dailies, the Hunt, the Skirmish and the Duel slot (done: a duel today).
+    expect(today.doneText).toBe("4 of 6 done");
+    expect(today.resets).toBe("resets Fri 19:00 · in 22 h 0 m");
     expect(today.pve.map((g) => [g.kind, g.title, g.done, g.doneText ?? g.progress?.text])).toEqual([
       ["PvE daily", "Finish 10 quests", true, "done at 19:12"],
       ["PvE daily", "Run a dungeon with a friend", true, "done at 19:55"],

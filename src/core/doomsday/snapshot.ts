@@ -74,7 +74,7 @@ export interface FriendDoomsday {
   week?: FriendWeek;
   points?: { today: Points; week: Points; allTime: Points; approx?: { pvp: boolean } };
   streak?: { current: number; best: number };
-  /** No kill on any character, ever: shown, never ranked on PvP. */
+  /** No PvP point (duels included) and no honorable kill on any character, ever: shown, never ranked on PvP. */
   pvpVirgin: boolean;
   /** 84 Doomsday days, oldest first, ending today: goals done that day (either track); null = no data that day. */
   heatmap?: (number | null)[];
@@ -105,7 +105,7 @@ export interface FriendGoal {
   swappedFrom?: GoalRef;
   doneAt?: number;
   /** When the site can tell; undefined = unknown (nothing shown). */
-  progress?: { value: number; target: number; approx?: boolean };
+  progress?: { value: number; target: number; approx?: boolean; /** "Deadmines" (WEB-66). */ detail?: string };
   /** What it is worth: 5 a daily, 15 a weekly. */
   points: number;
 }
@@ -149,6 +149,8 @@ export interface PvpDetails {
     /** Undefined from an addon before CF-52 (no `pvp`). */
     rank?: number;
     highestRank?: number;
+    /** Lifetime honorable kills ("No rank yet · 12 kills", WEB-66). */
+    hk?: number;
   }[];
   duels: {
     won: number;
@@ -167,7 +169,8 @@ export interface FeatRecord {
   /** WEB-56 kind (honorKills, pvpRank, firstEpic, ...); an unknown kind still shows. */
   kind: string;
   friendKey: string;
-  character: { guid: string; name: string; classFile?: string };
+  /** `level`: the character's level at that feat, when known ("+4 new characters: Frida Snowmantle 41"). */
+  character: { guid: string; name: string; classFile?: string; level?: number };
   at: number;
   /** "Stone Guard, a.k.a. Mailbox Menace", "First epic: Robes of the Exalted". */
   title: string;

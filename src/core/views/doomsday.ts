@@ -8,6 +8,7 @@ import type {
   Track,
 } from "../doomsday/snapshot";
 import { localTime } from "../runTime";
+import { clockAt, doomsdayDay, gridCount, resetsText } from "../doomsday/rules";
 import { compareText } from "./characters";
 import { initials, joinNames } from "./text";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
@@ -253,10 +254,13 @@ function pointsView(p: Points | undefined, approx: boolean): PointsView | undefi
   return p === undefined ? undefined : { pve: p.pve, pvp: p.pvp, approx };
 }
 
-/** "done at 10:42", or with the day for a weekly done on another day ("done at Mon 22:10"). */
-function doneText(at: number, timeZone: string, withDay: boolean): string {
-  const time = localTime(at, timeZone);
-  return withDay ? `done at ${WEEKDAY_SHORT[weekdayIndex(at, timeZone)]} ${time}` : `done at ${time}`;
+/**
+ * "done at 10:42"; a daily done after midnight with its weekday ("done at Thu 00:04", live test 2026-10-29), a weekly
+ * always with the day ("done at Mon 22:10"). `dayStart` is today's Doomsday day for a daily.
+ */
+function doneText(at: number, timeZone: string, dayStart: number | undefined): string {
+  if (dayStart !== undefined) return `done at ${clockAt(at, dayStart, timeZone)}`;
+  return `done at ${WEEKDAY_SHORT[weekdayIndex(at, timeZone)]} ${localTime(at, timeZone)}`;
 }
 
 function weekdayIndex(at: number, timeZone: string): number {
@@ -269,7 +273,7 @@ function swapText(g: FriendGoal): string | undefined {
   return g.swappedFrom === undefined ? undefined : `Instead of: ${g.swappedFrom.title}`;
 }
 
-function goalCard(g: FriendGoal, timeZone: string, withDay: boolean): GoalCardView {
+function goalCard(g: FriendGoal, timeZone: string, dayStart?: number): GoalCardView {
   const card: GoalCardView = {
     key: g.columnId,
     track: g.goal.track,
@@ -278,7 +282,7 @@ function goalCard(g: FriendGoal, timeZone: string, withDay: boolean): GoalCardVi
     done: g.doneAt !== undefined,
     worth: `+${g.points} ${TRACK[g.goal.track]}`,
   };
-  if (g.doneAt !== undefined) card.doneText = doneText(g.doneAt, timeZone, withDay);
+  if (g.doneAt !== undefined) card.doneText = doneText(g.doneAt, timeZone, dayStart);
   else if (g.progress !== undefined && g.progress.target > 0) {
     const value = Math.min(g.progress.value, g.progress.target);
     card.progress = {
@@ -322,12 +326,12 @@ function goalFor(f: FriendDoomsday, column: BoardColumn): FriendGoal | undefined
   return columnIsHunt ? (hunts.find((g) => g.doneAt !== undefined) ?? hunts[0]) : undefined;
 }
 
-function boardCell(g: FriendGoal | undefined, timeZone: string): BoardCell {
+function boardCell(g: FriendGoal | undefined, timeZone: string, dayStart: number): BoardCell {
   if (g === undefined) return { kind: "open" };
   const swap = swapText(g);
   const cell: BoardCell =
     g.doneAt !== undefined
-      ? { kind: "done", time: localTime(g.doneAt, timeZone) }
+      ? { kind: "done", time: clockAt(g.doneAt, dayStart, timeZone) }
       : g.progress !== undefined && g.progress.target > 0
         ? {
             kind: "progress",
@@ -402,7 +406,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
 
   const header: DoomsdayHeader = {
     sub: `Daily goals at ${localTime(s.schedule.nextReset, timeZone)}, feats for bragging, and a ladder per track. Suggestions, never rules.`,
-    resets: `resets in ${countdown(s.schedule.nextReset, s.now)}`,
+    resets: resetsText(s.schedule.nextReset, s.now, timeZone),
   };
   if (me?.status === "active" && me.points !== undefined) {
     header.today = pointsView(me.points.today, approx(me));
@@ -426,20 +430,21 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
 
   if (me?.status === "active" && me.today !== undefined) {
     const goals = me.today.goals;
-    const done = goals.filter((g) => g.doneAt !== undefined).length;
+    // The grid's own count, the Duel slot included (live test 2026-10-29).
+    const count = gridCount(goals, me.today.duels.first.length);
     page.today = {
-      title: `Your goals · ${dayName(s.schedule.dayStart, s.schedule.timeZone)}`,
-      doneText: `${done} of ${goals.length} done`,
-      resets: `resets in ${countdown(s.schedule.nextReset, s.now)}`,
-      pve: goals.filter(isPve).map((g) => goalCard(g, timeZone, false)),
-      pvp: goals.filter((g) => !isPve(g)).map((g) => goalCard(g, timeZone, false)),
+      title: `Your goals · ${doomsdayDay(s.schedule.dayStart, s.schedule.nextReset, timeZone).name}`,
+      doneText: `${count.done} of ${count.total} done`,
+      resets: resetsText(s.schedule.nextReset, s.now, timeZone),
+      pve: goals.filter(isPve).map((g) => goalCard(g, timeZone, s.schedule.dayStart)),
+      pvp: goals.filter((g) => !isPve(g)).map((g) => goalCard(g, timeZone, s.schedule.dayStart)),
       duels: duelSlot(me),
     };
   }
   if (me?.status === "active" && me.week !== undefined) {
     const week: WeekView = {
       resets: `resets ${weekdayLong(s.schedule.weekReset, timeZone)} ${localTime(s.schedule.weekReset, timeZone)} · in ${countdown(s.schedule.weekReset, s.now)}`,
-      goals: me.week.goals.map((g) => goalCard(g, timeZone, true)),
+      goals: me.week.goals.map((g) => goalCard(g, timeZone)),
     };
     const points = pointsView(me.points?.week, approx(me));
     if (points !== undefined) week.points = points;
@@ -475,8 +480,8 @@ function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: str
       row.note = withoutNote(f);
       return row;
     }
-    if (s.crown?.friendKey === f.friendKey) row.crown = localTime(s.crown.at, timeZone);
-    row.cells = columns.map((c) => boardCell(goalFor(f, c), timeZone));
+    if (s.crown?.friendKey === f.friendKey) row.crown = clockAt(s.crown.at, s.schedule.dayStart, timeZone);
+    row.cells = columns.map((c) => boardCell(goalFor(f, c), timeZone, s.schedule.dayStart));
     row.duels = duelsCell(f);
     const approx = f.points?.approx?.pvp === true;
     const today = pointsView(f.points?.today, approx);
@@ -502,7 +507,7 @@ function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
   const crownKey = s.crown?.friendKey;
   if (s.crown !== undefined) {
     const name = s.friends.find((f) => f.friendKey === crownKey)?.name;
-    if (name !== undefined) view.crown = { name, time: localTime(s.crown.at, timeZone) };
+    if (name !== undefined) view.crown = { name, time: clockAt(s.crown.at, s.schedule.dayStart, timeZone) };
   }
   const notStarted: string[] = [];
   const noAddon: string[] = [];
@@ -516,7 +521,11 @@ function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
     const finishedAt = f.today?.finishedAt;
     if (f.friendKey === crownKey) continue;
     if (finishedAt !== undefined) {
-      view.finished.push({ name: f.name, initials: initials(f.name), time: localTime(finishedAt, timeZone) });
+      view.finished.push({
+        name: f.name,
+        initials: initials(f.name),
+        time: clockAt(finishedAt, s.schedule.dayStart, timeZone),
+      });
       continue;
     }
     const done = (f.today?.goals ?? []).filter((g) => g.doneAt !== undefined);

@@ -1,5 +1,5 @@
 import { doomsdaySnapshot, type DoomsdayInput, prepare, periodTotals, scheduleAt } from "./engine";
-import { crown, dayLabel, dayOf, dayStart, elo, weekOf, weekStart } from "./rules";
+import { crown, dayOf, dayStart, doomsdayDay, elo, gridCount, weekOf, weekStart } from "./rules";
 import type { DoomsdaySnapshot, FriendGoal, GoalRef } from "./snapshot";
 
 // What the bot gets about Doomsday (WEB-58, docs/BOT-API.md "Doomsday"): the daily board, the weekly ladder, the
@@ -28,14 +28,20 @@ export interface BotFriendGoal {
 export interface BoardData {
   day: number;
   week: number;
+  /** "Wed evening": the day by its reset, realm time (WEB-66). */
   label: string;
+  /** "Wed 19:00 → Thu 19:00", realm time. */
+  span: string;
   start: number;
   end: number;
   goals: BotGoal[];
   friends: {
     name: string;
     goals: BotFriendGoal[];
+    /** The grid's goals done, the Duel slot included (WEB-66). */
     doneCount: number;
+    /** The goals on the grid: the PvE dailies, the Hunt, the Skirmish and the Duel slot. */
+    goalCount: number;
     crossedOut: boolean;
     today: { pve: number; pvp: number | null };
     week: { pve: number; pvp: number | null };
@@ -49,6 +55,12 @@ export interface BoardData {
 }
 
 const DAY_SLOTS = ["pve1", "pve2", "pve3", "skirmish"];
+
+/** The day's name and span in realm time: the bot posts one message for everyone (WEB-66). */
+function dayOfBoard(snap: DoomsdaySnapshot): { label: string; span: string } {
+  const d = doomsdayDay(snap.schedule.dayStart, snap.schedule.nextReset, snap.schedule.timeZone);
+  return { label: d.name, span: d.span };
+}
 const WEEK_SLOTS = ["week1", "week2", "week3", "bounty"];
 
 function botGoal(ref: GoalRef, slot: string, points: number): BotGoal {
@@ -81,7 +93,9 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
     return {
       name: f.name,
       goals,
-      doneCount: f.today!.goals.filter((g) => g.doneAt !== undefined).length,
+      ...(({ done, total }) => ({ doneCount: done, goalCount: total }))(
+        gridCount(f.today!.goals, f.today!.duels.first.length),
+      ),
       crossedOut: f.today!.finishedAt !== undefined,
       today: { pve: f.points?.today.pve ?? 0, pvp: f.pvpVirgin ? null : (f.points?.today.pvp ?? 0) },
       week: { pve: f.points?.week.pve ?? 0, pvp: f.pvpVirgin ? null : (f.points?.week.pvp ?? 0) },
@@ -102,7 +116,7 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
   return {
     day,
     week: snap.schedule.week,
-    label: dayLabel(day),
+    ...dayOfBoard(snap),
     start: snap.schedule.dayStart,
     end: snap.schedule.nextReset,
     goals: snap.todayGoals.map((ref, i) => botGoal(ref, DAY_SLOTS[i] ?? `extra${i}`, 5)),
@@ -251,7 +265,7 @@ export function lookupData(snap: DoomsdaySnapshot, friendKey: string) {
   return {
     friend: f.name,
     day: snap.schedule.day,
-    label: dayLabel(snap.schedule.day),
+    ...dayOfBoard(snap),
     resetAt: snap.schedule.nextReset,
     weekResetAt: snap.schedule.weekReset,
     goals,
