@@ -169,6 +169,13 @@
       "when": 1793233106846,
       "tag": "0023_coadmins",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1793289240581,
+      "tag": "0024_answer_note",
+      "breakpoints": true
     }
   ]
 }

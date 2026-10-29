@@ -63,7 +63,7 @@ describe("the game's items", () => {
       { id = "g-1", kind = "plan", at = ${NOW - 120}, dungeon = "smlib", startsAt = ${NOW + 5 * HOUR},
         guid = "${VES}", name = "Ves Doombringer", role = "dps", note = "From the game" },
       { id = "g-2", kind = "plan", at = ${NOW - 120}, dungeon = "rfk", startsAt = ${NOW - 60} },
-      { id = "g-3", kind = "answer", at = ${NOW - 90}, run = "r-${bobs}", answer = "in", guid = "${VES}" },
+      { id = "g-3", kind = "answer", at = ${NOW - 90}, run = "r-${bobs}", answer = "in", guid = "${VES}", note = "Late, start without me" },
       { id = "g-4", kind = "ask", at = ${NOW - 60}, dungeon = "dm", guid = "${VES}", role = "dps", note = "Quick" },
       { id = "g-5", kind = "ask", at = ${NOW - 3600}, dungeon = "dm" },
       { id = "g-6", kind = "ping", at = ${NOW - 30}, run = "r-${bobs}", battleTag = "Bob#2002" },
@@ -80,7 +80,16 @@ describe("the game's items", () => {
       note: "From the game",
     });
     expect(fromGame.answers).toMatchObject([{ guid: VES, answer: "in", source: "game" }]);
-    expect(getRun(db, bobs)!.answers.find((a) => a.guid === VES)).toMatchObject({ answer: "in", source: "game" });
+    // WEB-67: the answer's note is stored with it and goes to the bot.
+    expect(getRun(db, bobs)!.answers.find((a) => a.guid === VES)).toMatchObject({
+      answer: "in",
+      source: "game",
+      note: "Late, start without me",
+    });
+    const answered = pendingEvents(db, before, NOW).find((e) => e.type === "runChanged")!.data as {
+      run: { answers: { note?: string }[] };
+    };
+    expect(answered.run.answers.map((a) => a.note).filter(Boolean)).toEqual(["Late, start without me"]);
 
     const results = Object.fromEntries(
       db
