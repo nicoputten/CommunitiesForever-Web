@@ -52,7 +52,8 @@ src/styles/        tokens.css, global styles
 design/            Claude Design board exports: visual reference only, never imported (design/README.md)
 tools/map/         build_zones.py and its source SVGs: rebuilds src/core/map/zones.json
 tests/             unit (core), compat (addon fixtures), server (temporary SQLite), e2e (Playwright)
-                   e2e runs on a fresh database: `empty` checks first, then `seed` uploads the sample (WEB-21)
+                   e2e runs on a fresh database: `empty` checks first, then `seed` uploads the sample (WEB-21), then
+                   the roster, professions, character and Doomsday checks, before the upload tests add uploaders
                    fixtures/sample: SavedVariables files to upload by hand (README there)
 ```
 - `core` imports nothing from the other layers (enforced by ESLint `no-restricted-imports`).

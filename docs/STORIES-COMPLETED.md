@@ -811,3 +811,120 @@ Agreed with Nico (2026-10-29). The owner can make other friends admins, so other
   - the cut-off and the token are refused for admins
 - As every UI story: design checks, 375 and 1440 px, Playwright, screenshots in the PR.
 - Done: the `admins` table and `admin_log` (migration 0023), `isOwner` beside `mayAdmin`, owner-only checks in every owner-only server action, the Admins box, rank badges, the log, the owner's Uploader devices box and the admin's view of the admin and Discord pages (boards `admin-coadmins`, `admin-as-admin`, `admin-coadmin-states`, `admin-phone`, `discord-page-coadmins`).
+
+## E8 Doomsday (decided with Nico, 2026-10-28)
+Daily and weekly goals, points per track (PvE and PvP, never added together), a streak, a crown, feats and a ladder, in the game (addon E15), on the site and in Discord (bot "Doomsday"). **The rules are in the addon repo's `docs/DOOMSDAY.md`**, the one description for all three; read it first. It replaces the three workshop designs (milestones, PvP ladder, dailies and weeklies; their PRs were closed unmerged), and the recap v2 data and cards are part of it.
+
+Boards (`design/README.md`, "Doomsday"):
+- `doomsday-names`, `doomsday-rules`
+- `doomsday-today`, `doomsday-ladder`, `doomsday-feats`, `doomsday-phone`
+- `roster-cards-doomsday`, `doomsday-feat-cards`
+
+The bot's boards are in its repo, the addon's in `docs/design/doomsday-2026-10/` there. Where a board and `DOOMSDAY.md` disagree, `DOOMSDAY.md` wins:
+- the reset is **19:00** (a setting), not 09:00
+- goals are computed, not delivered
+- the crown gives no points (version B)
+
+The design prompt is `docs/DESIGN-PROMPT-DOOMSDAY.md`.
+
+Key decisions:
+- **Single source of truth:** uploads stay it. The addon decides when a goal is done and sends the time (`goals`, CF-56), because the Doomsday day (19:00 to 19:00) doesn't line up with the feed's realm days. The site stores and counts. Kill points the site computes itself from the raw kills (`pvpKills`, CF-55), against the addon's golden file.
+- **All-time totals** live only on the site and in the bot; the addon shows this week.
+- Gold is never shown as an amount. No pronouns in texts. Names: friends by display name, characters by full name, never BattleTags or Discord IDs.
+
+Compatibility: uploads from addons without CF-52 to CF-56 have none of the new fields. Each is optional everywhere. A card, feat or goal whose data is missing never shows, and friends without Doomsday data show "no Doomsday data yet", never 0 as if known.
+
+Two workers (Nico, 2026-10-28):
+- **Engine:** WEB-55, WEB-58, WEB-56, WEB-57, in that order.
+- **Screens:** WEB-59, WEB-60, WEB-61. They start from view models with fixture data, so they don't wait for the engine, and agree the view-model shapes with the engine worker first.
+
+The bot's stories need WEB-56 (feats) and WEB-58 (the Doomsday API).
+
+### WEB-59 The Doomsday page: Today, Week, Board and heatmap
+Boards `doomsday-today` (desktop) and `doomsday-rules` (labels, tone). Starts from view models with fixture data, agreed with the engine worker; switches to WEB-58's data when it lands.
+- A page **Doomsday** (`/doomsday`, in the navigation after Runs) with a header:
+  - today's and this week's points (PvE and PvP side by side), the streak and best
+  - tabs: Today, Week, Board, Ladder, Feats, PvP
+- **Today:**
+  - your 5 goals with progress or a check and its time, the swap mark with the original in its tooltip
+  - the Duel slot (who's done, who's open), the time to the reset
+  - "Today so far" (the crown, who finished, who hasn't started, who has no addon)
+- **Week:** the 3 weeklies and the Weekly bounty with progress, the time to Sunday's reset.
+- **Board:** every friend × today's goals, struck through with the time when done. A friend's name is crossed out when the 3 PvE dailies are done. The crown, today's and this week's points, the streak.
+- **The 12-week heatmap** per friend (goals done per day).
+- "Goals are suggestions with points. Skip any of them; nothing is locked."
+- As every UI story: design checks, 1440 px, Playwright (the phone in WEB-61).
+- Decided with Nico (2026-10-28): built as if the engine existed (one Doomsday release); Today shows the board too, the Board tab adds the heatmap; times in the viewer's own zone; the group plays Horde, so the board's Hunt column is the Alliance Hunt.
+- Done (PR #103): `/doomsday` (alias `/doom`) after Runs; the engine → screens contract `src/core/doomsday/snapshot.ts` (agreed with the engine worker); views `src/core/views/doomsday.ts`; `src/components/doomsday/` (`parts.tsx`, `Doomsday.module.css`); Doomsday tokens in `tokens.css` part 2; deviations in `docs/DESIGN.md`; design checks and e2e (`doomsday.spec.ts`).
+
+### WEB-60 The Doomsday page: Ladder, PvP and Feats
+Boards `doomsday-ladder` and `doomsday-feats`. Same fixture-first start as WEB-59.
+- **Ladder:**
+  - This week and All time, PvE and PvP side by side, each with its own ranking
+  - rows expand to characters; movement (▲, ▼, new)
+  - PvP Virgin shown and not ranked ("not ranked: no kills on any character, ever")
+  - the time to the weekly reset
+- **PvP:** the details for a selected friend:
+  - kills this week (solo, skulls), rank with insignia and "a.k.a." title per character, kills by zone
+  - the duel grid with wins–losses and the Elo rating (with movement)
+  - the battleground block, apart from the week's kills, and first wins unlocked
+  - "≈" where data was guessed
+- **Feats:** per friend and the whole group's feats, newest first, with "First in the group", the rank titles table and the feat states from the board.
+- As every UI story (1440 px; the phone in WEB-61).
+- Decided with Nico (2026-10-28): the PvP tab picks a friend with chips, the viewer first; Your feats without a total; feats from before tracking only in a friend's own feats; the heatmap only on the Board tab.
+- Done (PR #107): `/doomsday/ladder` (`?scope=all`), `/doomsday/pvp` (`?friend=`), `/doomsday/feats`; views `doomsdayLadder.ts`, `doomsdayFeats.ts`; `ladder.tsx`, `Ladder.module.css`, the rank insignia and feat icons in `icons.tsx`; `FeatRecord.rank` in the contract.
+
+### WEB-61 Doomsday on the phone, its states, and the roster
+Boards `doomsday-phone` and `roster-cards-doomsday`.
+- The Doomsday page at 375 px as the board shows.
+- The states:
+  - empty, on the first day ("Nobody has done anything yet")
+  - loading
+  - only one friend with data
+  - friends without the addon or without Doomsday data
+  - error
+- The **roster** cards get each friend's PvE and PvP points this week and the streak as chips, as `roster-cards-doomsday` shows (a copy of `roster-cards-runs` with only those chips added).
+- As every UI story (375 and 1440 px, Playwright, screenshots in the PR).
+- Decided with Nico (2026-10-29): all six tabs on the phone, scrolling; the phone ladder one track at a time (PvE | PvP); the error state an amber banner with Try again; on the roster a muted "No Doomsday data yet".
+- Done (PR #115): the phone layout, `loading.tsx` and `error.tsx` (`states.tsx`), "Day one of Doomsday" (`today.tsx`), the scrolling tabs (`DoomsdayTabs.tsx`), `/dev/doomsday?state=` for the design checks, the roster chip (`RosterChip.tsx`, `doomsdayChips`).
+
+### WEB-63 Clean-up before the Doomsday release
+Agreed with Nico, 2026-10-29: everything on the list below. Built after WEB-57 is merged. WEB-64 (co-admins) touches the admin page, the Discord page, `viewer`, `mayAdmin` and the access code, so nothing here changes those before WEB-64 is merged; the items below don't need to. No behaviour changes for users; one PR, one commit per item.
+
+**Dependencies**
+- gitleaks-action v2 → v3 (Dependabot #69, closed by this PR).
+- ESLint 10 with `eslint-config-next`: the `src/core` layering rule still fails on a forbidden import (a test proves it), and lint passes unchanged otherwise.
+- TypeScript 7: kept only if `tsc`, the build and every test pass. If not, it stays on 6 with the reason in `docs/ARCHITECTURE.md`.
+- npm audit: the 4 moderate findings come from an old esbuild inside drizzle-kit (a dev tool; the latest drizzle-kit has it too). They are recorded as accepted in `docs/ARCHITECTURE.md`, with when to check again, instead of a forced breaking downgrade.
+- `allowScripts` covers esbuild's postinstall, so CI's install-scripts warning is gone.
+
+**Tests and CI**
+- The three flaky checks get fixed at the cause, not with retries:
+  - roster-table "design values": styles were read while the page re-rendered
+  - upload "nothing new": the accessibility scan ran before the `<title>` was there
+  - phone-map "the tapped character in the half sheet"
+  
+  Each passes 20 runs in a row locally.
+- **Real Doomsday test data:**
+  - the design sample (`tests/design/sample.ts`) uploads `goals`, `pvpKills`, PvP ranks and feats, so the engine computes Doomsday from uploads
+  - `DOOMSDAY_SAMPLE`, `src/server/doomsdaySample.ts` and the Playwright config lines go
+  - `/dev/doomsday` keeps its four states (day one, only you, loading, error) from the engine's own output
+  - The Doomsday screenshots change only where the real numbers differ from the made-up ones, after Nico's OK.
+- The Doomsday e2e checks run in the project before the upload tests add uploaders (as roster, professions and character do), so they no longer depend on test order.
+
+**Code**
+- One helper in `src/core` for weekday and month names and for `ordinal()`. Today they are copied in five and three files. Same output everywhere; the existing tests prove it.
+
+**Repo**
+- `AGENTS.md` (written by `next dev`, Next's pointer to its bundled docs) is committed, so the tree stays clean.
+
+**Docs**
+- Done stories (WEB-57, WEB-59, WEB-60, WEB-61 and any other done) move to `docs/STORIES-COMPLETED.md`. `docs/STORIES.md` keeps open stories only, with a current build order.
+- `docs/ARCHITECTURE.md`, `docs/BOT-API.md`, `docs/UPLOADER-API.md`, `docs/RECAP.md` and `docs/DESIGN.md` match the code.
+- `design/README.md` marks superseded boards as superseded and names the board that replaces each:
+  - `discord-settings` and `discord-settings-runs` by `discord-page*`
+  - the `doomsday-*` boards' 09:00 reset by 19:00
+- `CHANGELOG.md` `## Unreleased` reads as release notes for the Doomsday release: grouped, no story numbers, no duplicates.
+
+Done when: `npm run lint`, `npm test`, `npm run build`, `npm run test:design` and `npm run test:e2e` pass, CI is green twice in a row, and the docs PR items above are checked off in the PR.
+- Done (PR #120 and this docs PR): gitleaks-action v3; esbuild's install script denied; ESLint 10; TypeScript stays on 6 (its 7.0 package has no compiler API; `docs/ARCHITECTURE.md`); `AGENTS.md` committed; `src/core/names.ts`; `openScreen` waits until the page is fully streamed (the three flaky checks); the design sample uploads Doomsday data (`tests/design/sampleDoomsday.ts`) and `DOOMSDAY_SAMPLE` is gone (`/dev/doomsday` states from the engine: `src/server/doomsdayStates.ts`); the Doomsday e2e runs before the upload tests; the docs and the CHANGELOG.
