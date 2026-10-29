@@ -14,14 +14,15 @@ import { doomsdayPage } from "@/core/views/doomsday";
 import { ladderView } from "@/core/views/doomsdayLadder";
 import { getDb } from "@/server/db";
 import { effectiveTimeZone } from "@/server/discord";
-import { doomsdaySample, doomsdaySampleState } from "@/server/doomsdaySample";
+import { doomsdayFor } from "@/server/doomsdayEngine";
+import { doomsdayState } from "@/server/doomsdayStates";
 import { loadState } from "@/server/uploads";
 
 export const metadata: Metadata = { title: "Doomsday states" };
 
 /**
  * Doomsday's states for the design checks (WEB-61, board doomsday-phone), as /dev/asks is for Asking now: day one,
- * only one friend with data, loading and error, on the made-up sample. Admin only.
+ * only one friend with data, loading and error, from the engine's own snapshot (WEB-63). Admin only.
  */
 export default async function DoomsdayStatesPage({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
   if (!(await isAdmin())) notFound();
@@ -36,7 +37,9 @@ export default async function DoomsdayStatesPage({ searchParams }: { searchParam
   const people = peopleViews(data, now);
   const viewerKey = people.find((p) => sameBattleTag(p.battleTag, viewer.battleTag))?.key;
   const timeZone = effectiveTimeZone(db, viewer.battleTag);
-  const snapshot = doomsdaySampleState(doomsdaySample(people, now), state === "only-you" ? "only-you" : "first-day");
+  const real = doomsdayFor(db, now);
+  if (real === undefined) notFound();
+  const snapshot = doomsdayState(real, state === "only-you" ? "only-you" : "first-day", viewerKey);
   const page = doomsdayPage({ snapshot, timeZone, ...(viewerKey === undefined ? {} : { viewerKey }) });
   if (state === "only-you") {
     return (

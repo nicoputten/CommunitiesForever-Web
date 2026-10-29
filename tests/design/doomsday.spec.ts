@@ -14,9 +14,9 @@ import {
 } from "./checks";
 import { ADMIN } from "./sample";
 
-// WEB-59: design checks of the Doomsday page (boards doomsday-today, doomsday-phone "Week tab", doomsdays-feats
-// heatmap) on the made-up Doomsday sample (src/server/doomsdaySample.ts, DOOMSDAY_SAMPLE=1) until the engine (WEB-58)
-// computes it from the uploads. The phone layout is WEB-61; these run at both sizes so nothing breaks meanwhile.
+// WEB-59..61: design checks of the Doomsday page (boards doomsday-today, -ladder, -feats, -phone) on what the engine
+// (WEB-58) computes from the design sample's uploads (sampleDoomsday.ts, WEB-63). "Now" is fixed, so the day's draw
+// and the numbers below are too: Nico's goals today, Femke with the crown and no kill ever, Ves's first epic.
 
 test.beforeEach(async ({ context, baseURL }) => {
   await signInAs(context, baseURL!, ADMIN);
@@ -97,10 +97,13 @@ test("doomsday ladder: design values", async ({ page }) => {
     "font-size": "var(--fs-ladder-place)",
     color: "var(--gold-pale)",
   });
-  await expectStyles(pvp.getByText("▲ 1"), { color: "var(--pve-text)" });
-  await expectStyles(pvp.getByText("▼ 1"), { color: "var(--pvp-text)" });
-  await expectStyles(pvp.getByText("new"), { color: "var(--swap-text)" });
+  await expectStyles(pvp.getByText("– 0", { exact: true }), { color: "var(--text-faint)" });
   await expectStyles(pvp.getByText("PvP Virgin"), { color: "var(--swap-text)", "background-color": "var(--virgin-tint)" });
+  // Movement up and down: the PvE ladder this week.
+  await openScreen(page, "/doomsday/ladder");
+  const pve = page.getByRole("region", { name: /^PvE · this week/ });
+  await expectStyles(pve.getByText(/^▲ \d/), { color: "var(--pve-text)" });
+  await expectStyles(pve.getByText(/^▼ \d/), { color: "var(--pvp-text)" });
 });
 
 test("doomsday pvp: design values", async ({ page }) => {
@@ -112,9 +115,9 @@ test("doomsday pvp: design values", async ({ page }) => {
   });
   await expectStyles(page.getByText("Mailbox Menace"), { color: "var(--gold-pale)" });
   const grid = page.getByRole("table");
-  await expectStyles(grid.getByRole("cell", { name: "4–2" }), { color: "var(--pve-text)" });
-  await expectStyles(grid.getByRole("cell", { name: "1–3" }), { color: "var(--pvp-text)" });
-  await expectStyles(page.getByText("1,084"), { "font-family": "var(--font-name)", color: "var(--gold-pale)" });
+  await expectStyles(grid.getByRole("cell", { name: "1–0" }), { color: "var(--pve-text)" });
+  await expectStyles(grid.getByRole("cell", { name: "0–1" }), { color: "var(--pvp-text)" });
+  await expectStyles(page.getByText("1,016"), { "font-family": "var(--font-name)", color: "var(--gold-pale)" });
   await expectStyles(page.getByRole("region", { name: "Battlegrounds" }), { "border-style": "dashed" });
 });
 
@@ -127,7 +130,7 @@ test("doomsday feats: design values", async ({ page }) => {
     color: "var(--gold-pale)",
     "background-color": "var(--first-tint)",
   });
-  await expectStyles(page.getByText("412 / 1,000"), { ...TYPE.meta, color: "var(--text-dim)" });
+  await expectStyles(page.getByText("132 / 1,000"), { ...TYPE.meta, color: "var(--text-dim)" });
 });
 
 test("doomsday: design values", async ({ page }) => {
@@ -146,17 +149,17 @@ test("doomsday: design values", async ({ page }) => {
   });
   await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
 
-  const goal = page.getByTestId("goal").filter({ hasText: "Finish 10 quests" });
+  const goal = page.getByTestId("goal").filter({ hasText: "Finish 5 quests in one zone" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
-  await expectStyles(goal.getByText("Finish 10 quests"), {
+  await expectStyles(goal.getByText("Finish 5 quests in one zone"), {
     "font-family": "var(--font-name)",
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
-  const open = page.getByTestId("goal").filter({ hasText: "Lone wolf" });
+  const open = page.getByTestId("goal").filter({ hasText: "Front line" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  await expectStyles(open.getByText("2 / 3"), { ...DATA, color: "var(--text)" });
+  await expectStyles(open.getByText("1 / 5"), { ...DATA, color: "var(--text)" });
   await expectStyles(page.getByText(/^resets in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
@@ -180,7 +183,7 @@ test("doomsday: design values", async ({ page }) => {
 
 test("doomsday: week and heatmap design values", async ({ page }) => {
   await openScreen(page, "/doomsday/week");
-  await expectStyles(page.getByTestId("goal").filter({ hasText: "Bounty" }).getByText("PvP bounty"), {
+  await expectStyles(page.getByTestId("goal").getByText("PvP bounty"), {
     color: "var(--pvp-text)",
   });
   await openScreen(page, "/doomsday/board");
@@ -215,13 +218,13 @@ for (const tab of TABS) {
 
 test("doomsday roster chips: design values", async ({ page }) => {
   await openScreen(page, "/roster");
-  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 85 PvP 240/ });
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 80 PvP 67/ });
   await expectStyles(chip, {
     "background-color": "var(--surface-dd-chip)",
     "border-color": "var(--line-control)",
     "font-size": "var(--fs-meta)",
   });
-  await expectStyles(chip.getByText("PvE 85"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText("PvE 80"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
 });

@@ -116,7 +116,8 @@ export interface BoardColumn {
 
 export type BoardCell =
   | { kind: "done"; time: string; swap?: string }
-  | { kind: "progress"; text: string; swap?: string }
+  /** `value` 0: nothing yet (a PvP Virgin's kill goal shows the pill instead). */
+  | { kind: "progress"; text: string; value: number; swap?: string }
   | { kind: "open"; swap?: string };
 
 export interface BoardRow {
@@ -331,6 +332,7 @@ function boardCell(g: FriendGoal | undefined, timeZone: string): BoardCell {
         ? {
             kind: "progress",
             text: `${g.progress.approx === true ? "≈" : ""}${Math.min(g.progress.value, g.progress.target)}/${g.progress.target}`,
+            value: g.progress.value,
           }
         : { kind: "open" };
   if (swap !== undefined) cell.swap = swap;

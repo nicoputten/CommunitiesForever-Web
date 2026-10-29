@@ -28,7 +28,8 @@ beforeEach(() => {
   process.env.ADMIN_BATTLETAG = ADMIN;
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
   db = openDatabase(path.join(dir, "test.sqlite"));
-  expect(upload(db, new TextEncoder().encode(sampleSavedVariables()), ADMIN, NOW).status).toBe("ok");
+  // Without the Doomsday feed: these tests bring their own run log for the same day (WEB-63).
+  expect(upload(db, new TextEncoder().encode(sampleSavedVariables({ doomsday: false })), ADMIN, NOW).status).toBe("ok");
 });
 
 afterEach(() => {
@@ -38,7 +39,7 @@ afterEach(() => {
 
 /** The sample as a schema 2 file with the game's items (and, optionally, the uploader's run log). */
 function gameFile(pending: string, feed = ""): Uint8Array {
-  let text = sampleSavedVariables()
+  let text = sampleSavedVariables({ doomsday: false })
     .replace('["schemaVersion"] = 1', '["schemaVersion"] = 2')
     .replace('["global"] = {', `["global"] = {\n    pending = ${pending},`);
   if (feed !== "") text = text.replace('["self"] = {', `["self"] = {\n      feed = ${feed},`);

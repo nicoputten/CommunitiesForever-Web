@@ -185,12 +185,20 @@ test.describe("the admin", () => {
       await expect(page).toHaveURL(/notice=test-sent/);
       await expect(page.getByRole("status")).toContainText("Test post sent");
     }
+    // Every page of the feed (50 events each, oldest first): the upload tests' feats may come before the test posts.
+    // A page that isn't full is the last (asking past it would long-poll).
     const kinds = async () => {
-      const feed = await page.request.get("/api/bot/v1/events?after=0", {
-        headers: { authorization: `Bearer ${token}` },
-      });
-      const { events } = (await feed.json()) as { events: { type: string; data: { kind?: string } }[] };
-      return events.filter((e) => e.type === "test").map((e) => e.data.kind);
+      const all: { type: string; data: { kind?: string } }[] = [];
+      for (let after = "0"; ;) {
+        const feed = await page.request.get(`/api/bot/v1/events?after=${after}`, {
+          headers: { authorization: `Bearer ${token}` },
+        });
+        const answer = (await feed.json()) as { events: { type: string; data: { kind?: string } }[]; cursor: string };
+        all.push(...answer.events);
+        if (answer.events.length < 50) break;
+        after = answer.cursor;
+      }
+      return all.filter((e) => e.type === "test").map((e) => e.data.kind);
     };
     await expect.poll(kinds).toEqual(expect.arrayContaining(["feats", "recap", "doomsday"]));
 

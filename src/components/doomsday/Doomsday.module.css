@@ -606,9 +606,9 @@ tr[data-dim="true"] .avatar {
   gap: var(--s-2);
 }
 
-.cardTop .pill,
-.cardTop .youTag {
-  margin-left: auto;
+/* The tags sit on the right, together. */
+.cardTop .friendName {
+  margin-right: auto;
 }
 
 .youTag {
