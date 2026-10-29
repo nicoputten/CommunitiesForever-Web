@@ -87,7 +87,12 @@
 
 /* Phone (no board, decided with Nico for WEB-21): search full width, chips wrap under it, sort at the end. */
 @media (max-width: 767px) {
-  .searchForm,
+  /* The search and the Filters button share a row (WEB-65, board live-test-phone). */
+  .searchForm {
+    flex: 1;
+    min-width: 0;
+  }
+
   .search {
     width: 100%;
     min-width: 0;
@@ -105,8 +110,8 @@
     width: 100%;
   }
 
-  /* The table's filters live in its sheet on a phone (WEB-22). */
-  .filters[data-table] {
+  /* The filters live in the sheet on a phone (WEB-22 table, WEB-65 cards). */
+  .filters {
     display: none;
   }
 

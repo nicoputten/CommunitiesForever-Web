@@ -191,6 +191,19 @@
     white-space: nowrap;
   }
 
+  /* The map: the shield only, so nothing is cut off (WEB-65, board live-test-phone); the name stays for screen readers. */
+  .bar[data-variant="map"] .brand > span:first-of-type {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .bar[data-variant="map"] .brand {
+    min-width: var(--size-touch);
+  }
+
   .emblem {
     width: var(--size-emblem-phone);
     height: var(--size-emblem-phone);

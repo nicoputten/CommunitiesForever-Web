@@ -14,7 +14,8 @@ test("a slow page change shows the gold line after 300 ms", async ({ page, conte
     await held;
     await route.continue();
   });
-  const line = page.getByRole("status").filter({ hasText: "Loading" });
+  // The gold line says just "Loading"; the page's own skeleton may also announce "Loading professions".
+  const line = page.getByRole("status").filter({ hasText: /^Loading$/ });
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Professions" }).first().click();
   await expect(line).toBeAttached();
   await expect(line).toHaveCSS("opacity", "1");

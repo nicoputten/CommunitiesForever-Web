@@ -118,7 +118,27 @@ test("roster: design values", async ({ page }) => {
   });
 });
 
+test("roster: phone Filters sheet (WEB-65)", async ({ page }) => {
+  test.skip(!isPhone(page), "phone only");
+  await openScreen(page, "/roster");
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Filters" });
+  await expect(sheet).toBeVisible();
+  await expectStyles(sheet.getByRole("button", { name: /^Show \d+ characters$/ }), {
+    "background-color": "var(--gold)",
+    "min-height": "var(--size-touch)",
+  });
+  await expectStyles(sheet.getByRole("button", { name: "Clear" }), {
+    "border-top-color": "var(--line-neutral)",
+    "min-height": "var(--size-touch)",
+  });
+  await expectTouchTargets(page);
+  await expectAccessible(page);
+  await expectScreenshot(page, "roster-sheet");
+});
+
 test("roster: filter menu surface", async ({ page }) => {
+  test.skip(isPhone(page), "desktop: the phone has its Filters sheet (WEB-65)");
   await openScreen(page, "/roster");
   await page.getByRole("button", { name: "Class" }).click();
   const menu = page.getByRole("menu", { name: "Class" });

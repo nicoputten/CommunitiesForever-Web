@@ -64,6 +64,7 @@ export default async function RosterTablePage({ searchParams }: { searchParams: 
       <RosterToolbar
         query={query}
         professions={professionOptions(recordCharacters(data, now))}
+        count={r.characters.length}
         shown={isFiltered(query) ? { count: r.characters.length, of: r.counts.characters } : undefined}
         table
       />
