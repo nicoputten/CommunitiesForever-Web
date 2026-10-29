@@ -19,6 +19,14 @@ import { px, tok } from "@/core/cards/palette";
 // the site's own, bundled under ./fonts (SIL OFL) and traced into the standalone build (next.config.ts).
 
 const FONT_DIR = path.join(process.cwd(), "src", "server", "cards", "fonts");
+/** The designer's recap icons (Nico's `doombot-recap-icons`, 128 px PNGs), traced into the build like the fonts. */
+const ICON_DIR = path.join(process.cwd(), "src", "server", "cards", "icons");
+
+/** A recap icon as a data URI for Satori's <img>. */
+async function iconUri(name: string): Promise<string> {
+  const buf = await readFile(path.join(ICON_DIR, `${name}.png`));
+  return `data:image/png;base64,${buf.toString("base64")}`;
+}
 
 type Font = { name: string; data: ArrayBuffer; weight: 400 | 600; style: "normal" };
 let fonts: Promise<Font[]> | undefined;
@@ -498,7 +506,18 @@ function FirstPill() {
 }
 
 /** A strip feat card (WEB-66, board `bot-visual-feats`, 800 × 240): the icon at 140 px left, the texts right. */
-function StripCard({ spec, width, height }: { spec: StripCardSpec; width: number; height: number }) {
+function StripCard({
+  spec,
+  width,
+  height,
+  image,
+}: {
+  spec: StripCardSpec;
+  width: number;
+  height: number;
+  /** The designer's icon as a data URI, when the feat has one. */
+  image?: string;
+}) {
   const box = px("--size-card-strip-box");
   const frame = `inset 0 0 0 2px ${tok("--card-frame")}`;
   return (
@@ -527,11 +546,17 @@ function StripCard({ spec, width, height }: { spec: StripCardSpec; width: number
           backgroundImage: `radial-gradient(circle at 50% 50%, ${tok("--card-feat-glow")}, transparent 62%)`,
         }}
       >
-        <FeatIconSvg
-          icon={spec.icon}
-          {...(spec.rank !== undefined ? { rank: spec.rank } : {})}
-          size={px("--size-card-strip-icon")}
-        />
+        {image !== undefined ? (
+          // Satori draws a plain <img> from a data URI; next/image doesn't apply in an image response.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} width={px("--size-card-strip-icon")} height={px("--size-card-strip-icon")} alt="" />
+        ) : (
+          <FeatIconSvg
+            icon={spec.icon}
+            {...(spec.rank !== undefined ? { rank: spec.rank } : {})}
+            size={px("--size-card-strip-icon")}
+          />
+        )}
       </div>
       {spec.firstInGroup ? <FirstPill /> : null}
       <div
@@ -781,7 +806,7 @@ function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number
   );
 }
 
-function card(spec: CardSpec): ReactNode {
+function card(spec: CardSpec, image?: string): ReactNode {
   const { width, height } = cardSize(spec);
   switch (spec.kind) {
     case "board":
@@ -789,7 +814,7 @@ function card(spec: CardSpec): ReactNode {
     case "feat":
       return <FeatCard spec={spec} width={width} height={height} />;
     case "strip":
-      return <StripCard spec={spec} width={width} height={height} />;
+      return <StripCard spec={spec} width={width} height={height} {...(image !== undefined ? { image } : {})} />;
     case "milestone":
     case "award": {
       const award = spec.kind === "award";
@@ -1021,7 +1046,8 @@ function Marker({
 /** The card as a PNG response; private and cached for a day (the bot fetches each once). */
 export async function renderCard(spec: CardSpec): Promise<Response> {
   const { width, height } = cardSize(spec);
-  const image = new ImageResponse(card(spec) as ReactElement, { width, height, fonts: await loadFonts() });
+  const icon = spec.kind === "strip" && spec.image !== undefined ? await iconUri(spec.image) : undefined;
+  const image = new ImageResponse(card(spec, icon) as ReactElement, { width, height, fonts: await loadFonts() });
   const bytes = await image.arrayBuffer();
   return new Response(bytes, {
     headers: { "Content-Type": "image/png", "Cache-Control": "private, max-age=86400" },

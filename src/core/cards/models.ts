@@ -88,10 +88,50 @@ export type FeatIcon =
   | "level"
   | "skull";
 
+/**
+ * The designer's recap icons (Nico's `doombot-recap-icons` set, 128 px; in src/server/cards/icons/), also drawn on the
+ * strip feat cards where one fits.
+ */
+export type RecapIcon =
+  | "recap_pvp"
+  | "recap_deaths"
+  | "recap_fall"
+  | "recap_fire"
+  | "recap_epic"
+  | "recap_mount"
+  | "recap_night_owl"
+  | "recap_early_bird"
+  | "recap_battleground"
+  | "recap_marathon"
+  | "recap_untouchable"
+  | "recap_group";
+
+/** The recap icon a strip feat card draws, when one fits the feat; else the site's drawn icon (featIcon). */
+export function stripImage(kind: FeatKind): RecapIcon | undefined {
+  switch (kind) {
+    case "deaths100":
+      return "recap_deaths";
+    case "honorKills":
+    case "duelWins":
+      return "recap_pvp";
+    case "bgFirstWin":
+      return "recap_battleground";
+    case "firstEpic":
+      return "recap_epic";
+    case "mount":
+    case "epicMount":
+      return "recap_mount";
+    default:
+      return undefined;
+  }
+}
+
 /** A strip feat card (WEB-66, board `bot-visual-feats`, 800 × 240): the icon left, the texts right. */
 export interface StripCardSpec {
   kind: "strip";
   icon: FeatIcon;
+  /** The designer's icon, when one fits; drawn instead of `icon`. */
+  image?: RecapIcon;
   rank?: number;
   title: string;
   name: string;
@@ -402,6 +442,8 @@ export function stripCard(m: Milestone, c: CharacterFacts): StripCardSpec | unde
     firstInGroup: m.firstInGroup === true,
   };
   if (m.kind === "pvpRank" && fields.rank !== undefined) spec.rank = fields.rank;
+  const image = stripImage(m.kind);
+  if (image !== undefined) spec.image = image;
   return spec;
 }
 
