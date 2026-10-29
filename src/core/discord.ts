@@ -162,6 +162,8 @@ export interface BotSettings {
   doomsdayBoard: boolean;
   doomsdayLadder: boolean;
   doomsdayChannel: string | null;
+  /** Feats (the `milestones` event, WEB-56); null: the default channel (`postsChannel`). WEB-58 part 2. */
+  featsChannel: string | null;
   /** The Doomsday reset in seconds after realm midnight (19:00 = 68400). */
   doomsdayReset: number;
   /** The reset before the last change and when it was changed: a change applies from the next reset. */
@@ -193,6 +195,7 @@ export const DEFAULT_BOT_SETTINGS: BotSettings = {
   doomsdayBoard: false,
   doomsdayLadder: false,
   doomsdayChannel: null,
+  featsChannel: null,
   doomsdayReset: 68400,
   doomsdayResetPrevious: null,
   doomsdayResetChangedAt: null,
@@ -211,7 +214,14 @@ export const SWITCHES = [
 ] as const;
 export type SwitchName = (typeof SWITCHES)[number];
 
-export const PICKS = ["postsChannel", "recapChannel", "runsChannel", "mentionRole", "doomsdayChannel"] as const;
+export const PICKS = [
+  "postsChannel",
+  "recapChannel",
+  "runsChannel",
+  "mentionRole",
+  "doomsdayChannel",
+  "featsChannel",
+] as const;
 export type PickName = (typeof PICKS)[number];
 
 /** Recap times: every full hour. */
