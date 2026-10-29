@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Discord page: the test buttons send the bot sample pictures too (the board, a feat card, the recap header and map), so a test post looks like the real one once the bot reads them.
 
 ## v0.6.0 (2026-10-29)
 - Fixes from the live test:

@@ -977,3 +977,7 @@ Agreed with Nico (2026-10-29). Boards: `bot-visual-recap`, `bot-visual-daily`, `
 
 **Manual:** with BOT-20 deployed, a test recap, test board and test feat from the Discord page's buttons, into the test channel, look like the boards on Discord desktop and on a phone.
 - Done (PRs #128, #130 and this one): the rules (`gridCount`, `doomsdayDay`, `clockAt`, `resetsText`, the PvP Virgin and rank title), the friends list for the addon, the short labels, the board picture (`doomsday-<day>-<hash>`, 800 × 560) with its news line, the strip feat card (800 × 240) and a card for every feat, the Bloodbath zone crop (800 × 450) and the recap's numbers, class, image ids and link.
+
+### WEB-68 Test posts with pictures
+Nico (2026-10-29, "Yes, fix now"): the Discord page's test posts still showed the old text board. The site draws sample pictures with the same renderer as the real ones and the bot's own made-up names (Test Friend, Another Test, Testy McTestface): the daily board, a big and a strip feat card, the recap's award header and zone crop, at fixed ids `sample-<name>` behind the bot token. The `test` event carries their ids per kind (`images`, optional within v1; `docs/BOT-API.md`). The bot reads them in its own follow-up.
+- Done (this PR): `src/core/cards/samples.ts`, `cardFor`'s `sample-` ids, the test action's `images`.
