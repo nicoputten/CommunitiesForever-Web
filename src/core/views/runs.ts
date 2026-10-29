@@ -157,7 +157,7 @@ export interface RunsPage {
   yourAnswers: YourAnswerView[];
   /** Asking now (WEB-51): the open asks, newest first. */
   asks: AskCardView[];
-  /** Upcoming runs at all (the empty state when none). */
+  /** Upcoming runs at all, cancelled ones still ahead included (the empty state when none). */
   anyUpcoming: boolean;
   timeZone: string;
 }
@@ -293,6 +293,8 @@ function openWithNobody(ctx: Ctx, run: RunRecord): SlotRole[] {
 }
 
 function hint(ctx: Ctx, run: RunRecord, yours: boolean, choice: AnswerChoice): RunCardView["hint"] {
+  // A cancelled run still in its week (WEB-65, bug 3) has nothing left to join.
+  if (run.cancelledAt !== undefined) return undefined;
   const mine = run.answers.find((a) => isViewer(ctx, a.battleTag));
   if (mine !== undefined && !yours) {
     const withChar = mine.guid === undefined ? "" : ` with ${charName(ctx, mine)}`;
@@ -453,8 +455,13 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
   const { now } = input;
   const tz = input.viewer.timeZone;
   const upcoming = input.runs.filter((r) => isUpcoming(r, now)).sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
+  // "Past" is a start time before now (WEB-65, bug 3): a cancelled run still ahead stays in its week, struck through.
+  const cancelledAhead = (r: RunRecord) => r.cancelledAt !== undefined && now < r.startsAt;
+  const listed = input.runs
+    .filter((r) => isUpcoming(r, now) || cancelledAhead(r))
+    .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id);
   const keep = (r: RunRecord) => filter === "all" || involved(ctx, r) || (filter === "join" && viewerFits(ctx, r));
-  const shown = upcoming.filter(keep);
+  const shown = listed.filter(keep);
   const hiddenRuns = upcoming.filter((r) => !keep(r));
   const end = weekEnd(now, tz);
   const page: RunsPage = {
@@ -462,7 +469,9 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
     thisWeek: shown.filter((r) => r.startsAt < end).map((r) => card(ctx, r)),
     later: shown.filter((r) => r.startsAt >= end).map((r) => card(ctx, r)),
     past: input.runs
-      .filter((r) => !isUpcoming(r, now) && (filter === "all" || involved(ctx, r) || filter === "join"))
+      .filter(
+        (r) => !isUpcoming(r, now) && !cancelledAhead(r) && (filter === "all" || involved(ctx, r) || filter === "join"),
+      )
       .sort((a, b) => b.startsAt - a.startsAt || b.id - a.id)
       .slice(0, PAST_SHOWN)
       .map((r) => ({
@@ -481,7 +490,7 @@ export function runsPage(input: RunsInput, filter: RunsFilter): RunsPage {
         status: yourStatus(ctx, r),
       })),
     asks: asksNow(ctx),
-    anyUpcoming: upcoming.length > 0,
+    anyUpcoming: listed.length > 0,
     timeZone: tz,
   };
   if (hiddenRuns.length > 0 && filter !== "all") {

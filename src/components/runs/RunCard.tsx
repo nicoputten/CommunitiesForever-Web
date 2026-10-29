@@ -10,7 +10,12 @@ import styles from "./Runs.module.css";
 export function RunCard({ run }: { run: RunCardView }) {
   const [day, time] = splitWhen(run.when);
   return (
-    <article className={styles.run} data-yours={run.yours || undefined} aria-labelledby={`run-${run.id}`}>
+    <article
+      className={styles.run}
+      data-yours={run.yours || undefined}
+      data-cancelled={run.pill.tone === "cancelled" || undefined}
+      aria-labelledby={`run-${run.id}`}
+    >
       <div className={styles.when}>
         <span>{day}</span>
         <b>{time}</b>

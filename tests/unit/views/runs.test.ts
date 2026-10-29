@@ -89,19 +89,31 @@ const input = (viewer: string, over: Partial<RunsInput> = {}): RunsInput => ({
 describe("the runs list", () => {
   it("shows the runs you can join by this week and later, the others hidden, the past last", () => {
     const page = runsPage(input(NICO), "join");
-    expect(page.thisWeek.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Armory", "Scarlet Monastery: Library"]);
+    // WEB-65, bug 3: the cancelled Wailing Caverns run still ahead stays in its week, until its start time.
+    expect(page.thisWeek.map((r) => [r.dungeon, r.pill.label])).toEqual([
+      ["Scarlet Monastery: Armory", "Open"],
+      ["Wailing Caverns", "Cancelled"],
+      ["Scarlet Monastery: Library", "Open"],
+    ]);
     expect(page.later.map((r) => r.dungeon)).toEqual(["Scarlet Monastery: Cathedral"]);
     expect(page.hidden).toMatch(/^1 run hidden by “Runs I can join”: Zul'Farrak on .+ \(44–54\)\.$/);
-    expect(page.past.map((p) => [p.dungeon, p.result.label])).toEqual([
-      ["Wailing Caverns", "Cancelled"],
-      ["Shadowfang Keep", "0 in"],
-    ]);
+    expect(page.past.map((p) => [p.dungeon, p.result.label])).toEqual([["Shadowfang Keep", "0 in"]]);
     expect(runsPage(input(NICO), "all").hidden).toBeUndefined();
     expect(runsPage(input(NICO), "mine").thisWeek.map((r) => r.id)).toEqual([1]);
   });
 
+  it("moves a cancelled run to Past once its start time has passed (WEB-65, bug 3)", () => {
+    const later = runsPage(input(NICO, { now: NOW + 6 * HOUR }), "all");
+    expect(later.thisWeek.map((r) => r.dungeon)).not.toContain("Wailing Caverns");
+    expect(later.past.map((p) => [p.dungeon, p.result.label])).toContainEqual(["Wailing Caverns", "Cancelled"]);
+    expect(runsPage(input(NICO), "all").thisWeek.find((r) => r.id === 6)?.hint).toBeUndefined();
+    // Only a cancelled run ahead: listed, so not the empty state.
+    const onlyCancelled = runsPage(input(NICO, { runs: RUNS.filter((r) => r.id === 6) }), "all");
+    expect([onlyCancelled.anyUpcoming, onlyCancelled.thisWeek.length]).toEqual([true, 1]);
+  });
+
   it("describes a card: yours, the line, what's open, the organiser's own clock", () => {
-    const [armory, library] = runsPage(input(NICO), "join").thisWeek;
+    const [armory, , library] = runsPage(input(NICO), "join").thisWeek;
     expect(armory).toMatchObject({
       yours: true,
       pill: { label: "Open", tone: "open" },

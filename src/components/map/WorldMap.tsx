@@ -42,6 +42,8 @@ const FRAMES = {
 
 /** Labels keep their screen size at any zoom: scaled back around their anchor (world units). */
 const anchor = (x: number, y: number) => ({ "--ox": x, "--oy": y }) as CSSProperties;
+/** A zone name's top above its anchor, in world units: its lines sit around the anchor (WEB-65, bug 6). */
+const labelTop = (size: number, lines: number) => `${(lines > 1 ? 1 : 0.35) * size}px`;
 
 /**
  * The world map (DESIGN.md §5, boards `map` and `map-states`): an SVG rendered on the server from zones.json with
@@ -173,7 +175,7 @@ export function WorldMap({ view, continent, selected, drop, panel, sheet, dungeo
                   key={z.id}
                   fontSize={z.size}
                   className={`${z.kind === "terrain" ? styles.terrainLabel : styles.label} ${styles.keepScale}`}
-                  style={anchor(z.lx, z.ly)}
+                  style={{ ...anchor(z.lx, z.ly), "--label-top": labelTop(z.size, z.lines.length) } as CSSProperties}
                   data-label={z.kind === "zone" ? z.id : undefined}
                   data-occupied={view.occupied[z.id]}
                 >

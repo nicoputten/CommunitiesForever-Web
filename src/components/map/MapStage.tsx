@@ -430,6 +430,19 @@ export function MapStage({
     return () => observer.disconnect();
   }, [zoomable, goTo]);
 
+  // World units per screen pixel at 1×, so the SVG can place a zone's name below its marker (WEB-65, bug 6).
+  useEffect(() => {
+    const stage = root.current;
+    if (stage === null) return;
+    const measure = () => {
+      if (stage.offsetWidth > 0) stage.style.setProperty("--unit", String(box.width / stage.offsetWidth));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [box.width]);
+
   /** Frames a continent (the switch), or both for Azeroth: the land centred (map.ts continentViewBox). */
   const frameContinent = useCallback(
     (to: Continent, animate: boolean) => {
