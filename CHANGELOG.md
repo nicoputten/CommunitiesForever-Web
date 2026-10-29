@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.6.0 (2026-10-29)
 - Fixes from the live test:
   - Explanations that didn't belong on the page are gone or moved into a small ⓘ tooltip (hover, focus or tap).
