@@ -273,6 +273,20 @@ export function GroupFeats({ feats }: { feats: FeatsView["group"] }) {
   return (
     <>
       {feats.map((f) => {
+        if ("newCharacters" in f) {
+          const n = f.newCharacters;
+          return (
+            <div key={f.key} className={styles.newCharacters} data-testid="new-characters">
+              <span className={styles.newBadge} aria-hidden="true">
+                {n.badge}
+              </span>
+              <div>
+                <div className={styles.newTitle}>{n.title}</div>
+                <div className={styles.newLine}>{n.line}</div>
+              </div>
+            </div>
+          );
+        }
         const Glyph = f.icon === "rank" ? undefined : GLYPHS[f.icon];
         return (
           <div key={f.key} className={styles.feat} data-testid="feat">

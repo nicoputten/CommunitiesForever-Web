@@ -348,6 +348,35 @@ section.dashed {
   }
 }
 
+/* New characters from one upload: a line, not a feat card (WEB-65, board live-test-site-fixes). */
+.newCharacters {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-3-5);
+  font-size: var(--fs-body-sm);
+}
+
+.newBadge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--size-new-badge);
+  height: var(--size-new-badge);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-chip-on);
+  color: var(--gold);
+}
+
+.newTitle {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.newLine {
+  color: var(--text-dim);
+}
+
 .feat {
   display: grid;
   grid-template-columns: var(--size-feat-icon) minmax(0, 1fr) auto;

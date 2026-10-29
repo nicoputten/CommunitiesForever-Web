@@ -846,6 +846,7 @@
      Horde red, never added together. */
   --pve-text: #9be3b0; /* the PvE track */
   --pvp-text: #f08a80; /* the PvP track */
+  --size-new-badge: 36px; /* live-test-site-fixes: the "+4" of new characters in the feats list (WEB-65) */
   --duel-self: #3a4456; /* live-test-site-fixes: the duel grid's "—", a friend against themself (WEB-65) */
   --duel-none: #56627a; /* live-test-site-fixes: the duel grid's "·", no duels yet */
   --size-duel-name: 26%; /* the duel grid's name column, so 8 friends fit a 375 px phone */
