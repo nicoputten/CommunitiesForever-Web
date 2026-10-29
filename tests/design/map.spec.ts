@@ -238,6 +238,16 @@ test("map: roll call design values", async ({ page }) => {
   await expectStyles(panel.getByText(/Jorrit's data is 9 days old/), { ...TYPE.metaSm, color: "var(--stale-note)" });
   await expectStyles(panel.getByText("1 d", { exact: true }), { ...DATA, color: "var(--text-muted)" });
   await expectStyles(panel.getByText("Sanne has no addon data yet."), { ...TYPE.meta, color: "var(--text-dim)" });
+  // WEB-65: one scroll area for the panel, and the never-sighted characters folded into one 44 px row.
+  // Closed menus scroll too, so only what is shown counts.
+  const scrollers = await panel.evaluate(
+    (el) =>
+      [el, ...el.querySelectorAll("*")].filter(
+        (e) => e.checkVisibility() && /auto|scroll/.test(getComputedStyle(e).overflowY),
+      ).length,
+  );
+  expect(scrollers).toBe(1);
+  await expectStyles(panel.getByText("1 not sighted yet"), { "min-height": "var(--size-touch)", color: "var(--text-dim)" });
   // Zoom buttons left of the panel (board: right 352px).
   const zoomBox = await page.getByRole("button", { name: "Zoom in" }).boundingBox();
   const panelBox = await panel.boundingBox();
