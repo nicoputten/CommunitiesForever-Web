@@ -160,8 +160,7 @@ test("doomsday: design values", async ({ page }) => {
     });
     await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-chip)" });
     await expectStyles(tabs, { "scrollbar-width": "none" });
-    const fade = await tabs.evaluate((el) => getComputedStyle(el.parentElement!, "::after").width);
-    expect(fade).toBe("48px");
+    expect(await tabs.evaluate((el) => getComputedStyle(el).maskImage)).toContain("48px");
   } else {
     await expectStyles(tabs.getByRole("link", { name: "Today" }), {
       "font-family": "var(--font-display)",

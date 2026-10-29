@@ -199,22 +199,9 @@
 
   /* The tabs as pill chips that scroll sideways without a scrollbar; a fade shows there is more (WEB-65, board
      live-test-phone). */
-  .tabsWrap {
-    position: relative;
-  }
-
-  .tabsWrap::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: var(--size-tab-fade);
-    background: linear-gradient(90deg, transparent, var(--bg-night));
-    pointer-events: none;
-  }
-
   .tabs {
+    /* The fade is a mask, so it works on whatever the page behind it is. */
+    mask-image: var(--mask-tab-fade);
     gap: var(--s-1-5);
     padding-right: var(--size-tab-fade);
     border-bottom: 0;

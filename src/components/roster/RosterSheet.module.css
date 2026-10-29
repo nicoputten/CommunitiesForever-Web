@@ -17,7 +17,13 @@
   backdrop-filter: blur(var(--blur-modal));
   box-shadow: var(--shadow-sheet);
   color: var(--text);
-  overflow-y: auto;
+  /* Only the choices scroll; Clear and Show stay under them. */
+  overflow: hidden;
+}
+
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .sheet::backdrop {
@@ -25,10 +31,13 @@
 }
 
 .body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
-  padding: var(--s-5) var(--gutter-phone) var(--s-6);
+  padding: var(--s-5) var(--gutter-phone) var(--s-4);
 }
 
 .title {
@@ -65,10 +74,13 @@
   align-items: center;
 }
 
-/* Clear and Show N characters (board live-test-phone): the main button twice as wide. */
+/* Clear and Show N characters (board live-test-phone): the main button twice as wide, always in view. */
 .actions {
+  flex: none;
   display: flex;
   gap: var(--s-2);
+  padding: var(--s-3) var(--gutter-phone) var(--s-5);
+  border-top: var(--border) solid var(--line);
 }
 
 .clear {

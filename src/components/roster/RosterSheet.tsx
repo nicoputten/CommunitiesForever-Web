@@ -143,20 +143,19 @@ export function RosterSheet({ query, professions, onChange, count, sort = false 
               </div>
             </>
           )}
-
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.clear}
-              disabled={active === 0}
-              onClick={() => onChange({ ...query, classes: [], roles: [], level: undefined, profession: undefined })}
-            >
-              Clear
-            </button>
-            <button type="button" className={styles.done} onClick={() => dialog.current?.close()}>
-              Show {count} {count === 1 ? "character" : "characters"}
-            </button>
-          </div>
+        </div>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.clear}
+            disabled={active === 0}
+            onClick={() => onChange({ ...query, classes: [], roles: [], level: undefined, profession: undefined })}
+          >
+            Clear
+          </button>
+          <button type="button" className={styles.done} onClick={() => dialog.current?.close()}>
+            Show {count} {count === 1 ? "character" : "characters"}
+          </button>
         </div>
       </dialog>
     </>

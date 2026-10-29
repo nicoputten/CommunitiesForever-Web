@@ -20,14 +20,12 @@ export function DoomsdayTabs({ tab }: { tab?: DoomsdayTab }) {
     if (current.offsetLeft + current.offsetWidth > row.clientWidth) row.scrollLeft = current.offsetLeft;
   }, [tab]);
   return (
-    <div className={styles.tabsWrap}>
-      <nav ref={nav} aria-label="Doomsday" className={styles.tabs}>
-        {DOOMSDAY_TABS.map((t) => (
-          <Link key={t.tab} href={t.href} className={styles.tab} aria-current={t.tab === tab ? "page" : undefined}>
-            {t.label}
-          </Link>
-        ))}
-      </nav>
-    </div>
+    <nav ref={nav} aria-label="Doomsday" className={styles.tabs}>
+      {DOOMSDAY_TABS.map((t) => (
+        <Link key={t.tab} href={t.href} className={styles.tab} aria-current={t.tab === tab ? "page" : undefined}>
+          {t.label}
+        </Link>
+      ))}
+    </nav>
   );
 }
