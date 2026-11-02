@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- After "Start fresh from launch", the first weekly recap covers the time since the reset and is posted once. Doomsday's best streak no longer counts the beta.
 - Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
 
 ## v0.6.1 (2026-10-30)

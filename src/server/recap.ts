@@ -187,7 +187,7 @@ export function runDueRecap(db: Db, now: number, siteName: string): Recap | unde
   const latest = latestRecap(db);
   if (latest !== undefined ? latest.end >= moment : moment <= startedAt) return undefined;
 
-  const start = latest?.end ?? recapMomentAtOrBefore(schedule, moment - 1);
+  const start = latest?.end ?? firstStart(db, schedule, moment);
   const number = (latest?.data.week ?? 0) + 1;
   const sequence =
     (db.select({ week: recaps.week }).from(recaps).orderBy(desc(recaps.week)).limit(1).get()?.week ?? 0) + 1;
@@ -204,6 +204,15 @@ export function runDueRecap(db: Db, now: number, siteName: string): Recap | unde
     .run();
   if (getBotSettings(db).recap) enqueueBotEvent(db, "recap", postedRecap(recap), now);
   return recap;
+}
+
+/**
+ * The start of the first shown recap's week: the recap moment before, but never before the launch cut-off. A week
+ * that started before it would count as a beta recap (recapBase) and be hidden, so it would be computed and posted
+ * again every minute (WEB-70).
+ */
+function firstStart(db: Db, schedule: RecapSchedule, moment: number): number {
+  return Math.max(recapMomentAtOrBefore(schedule, moment - 1), cutoffAt(db));
 }
 
 /** The site's base URL (AUTH_URL), for the recap's link; empty when unset. */
@@ -250,7 +259,7 @@ function dressForBot(
 export function previewRecap(db: Db, now: number, siteName: string): Recap {
   const schedule = recapSchedule(db);
   const latest = latestRecap(db);
-  const start = latest?.end ?? recapMomentAtOrBefore(schedule, now);
+  const start = latest?.end ?? firstStart(db, schedule, now + 1);
   const week = assembleWeek(
     db,
     (latest?.data.week ?? 0) + 1,
