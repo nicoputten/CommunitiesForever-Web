@@ -41,8 +41,11 @@ function extent(paths: readonly string[]): { minX: number; minY: number; maxX: n
   return { minX, minY, maxX, maxY };
 }
 
+/** The frame of a continent: its zones, not its terrain (Quel'Thalas runs off the top of the world, WEB-77). */
 function bounds(cont: "K" | "E"): ViewBox {
-  const { minX, minY, maxX, maxY } = extent(map.zones.filter((z) => z.cont === cont).map((z) => z.d));
+  const { minX, minY, maxX, maxY } = extent(
+    map.zones.filter((z) => z.cont === cont && z.kind === "zone").map((z) => z.d),
+  );
   return {
     x: Math.max(0, Math.floor(minX - CONTINENT_MARGIN)),
     y: Math.max(0, Math.floor(minY - CONTINENT_MARGIN)),

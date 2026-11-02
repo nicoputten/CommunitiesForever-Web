@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Map: the world map now has WoW: Forever's own shapes, traced from its in-game maps: Vanilla coasts and zone borders instead of Cataclysm's (a dry Thousand Needles, Vanilla Darkshore, Azshara, Stonetalon and Stranglethorn), Mount Hyjal, The Riverglades and Shen'dralas where Forever puts them, Quel'Thalas as land north of the Plaguelands, no Uldum or Grim Batol.
 - Dungeon pages: a Quests box shows which quests for the dungeon are in friends’ quest logs, and who has them.
 - Uploader: a What’s new page lists the changes in each version of the app; the app’s update link opens it at the new version.
 - After "Start fresh from launch", the first weekly recap covers the time since the reset and is posted once. Doomsday's best streak no longer counts the beta.
