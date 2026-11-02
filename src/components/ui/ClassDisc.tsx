@@ -11,8 +11,8 @@ export interface ClassDiscProps {
   level?: number;
   /** md 44 px (roster rows), sm 28 px (roll call chips), xs 26 px (roster table), report 38 px without level (session
    * report rows), avatar 30 px (character page, other characters), card 36 px (map hover card), sheet 44 px without
-   * level (phone character sheet). */
-  size?: "md" | "sm" | "xs" | "avatar" | "report" | "card" | "sheet";
+   * level (phone character sheet), quest 22 px (dungeon page, Quests box). */
+  size?: "md" | "sm" | "xs" | "avatar" | "report" | "card" | "sheet" | "quest";
   /** Live data (< 6 h): the class glow of DESIGN.md §4. */
   live?: boolean;
 }

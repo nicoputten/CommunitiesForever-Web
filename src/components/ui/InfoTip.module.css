@@ -38,6 +38,36 @@
   letter-spacing: 0;
 }
 
+/* The "+N" chip (WEB-76, board dungeon-quests): a pill in the same 44 px tap area. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--size-more-w);
+  height: var(--size-more-h);
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  border: var(--border) solid var(--line-more);
+  background: var(--surface-more);
+  color: var(--text-chip);
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.button:has(.chip) {
+  width: auto;
+  min-width: var(--size-touch);
+  margin: calc((var(--size-more-h) - var(--size-touch)) / 2) 0;
+}
+
+.button:hover .chip,
+.button[aria-expanded="true"] .chip {
+  border-color: var(--gold);
+  color: var(--text-strong);
+}
+
 .button:hover .icon,
 .button[aria-expanded="true"] .icon {
   color: var(--gold-bright);

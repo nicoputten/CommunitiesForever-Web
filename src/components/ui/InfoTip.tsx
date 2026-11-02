@@ -6,9 +6,10 @@ import styles from "./InfoTip.module.css";
 /**
  * The ⓘ next to a heading (WEB-65, board live-test-site-fixes): an explanation that helps a player, out of the page's
  * way. Opens on hover, focus or tap; Esc, a tap outside or blur closes it. On a phone the panel opens below the icon
- * and is kept inside the screen. The one tooltip of the site.
+ * and is kept inside the screen. The one tooltip of the site. `chip` puts a "+2" chip in place of the ⓘ (the dungeon page's
+ * Quests box, WEB-76: the names that didn't fit), with its own accessible name.
  */
-export function InfoTip({ children }: { children: ReactNode }) {
+export function InfoTip({ children, chip }: { children: ReactNode; chip?: { text: string; label: string } }) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const root = useRef<HTMLSpanElement>(null);
@@ -64,7 +65,7 @@ export function InfoTip({ children }: { children: ReactNode }) {
         ref={button}
         type="button"
         className={styles.button}
-        aria-label="More info"
+        aria-label={chip?.label ?? "More info"}
         aria-describedby={id}
         aria-expanded={open}
         onClick={() => {
@@ -77,8 +78,8 @@ export function InfoTip({ children }: { children: ReactNode }) {
           setOpen(false);
         }}
       >
-        <span aria-hidden="true" className={styles.icon}>
-          i
+        <span aria-hidden="true" className={chip === undefined ? styles.icon : styles.chip}>
+          {chip?.text ?? "i"}
         </span>
       </button>
       <span ref={panel} id={id} role="tooltip" className={styles.panel} data-align={align} hidden={!open}>

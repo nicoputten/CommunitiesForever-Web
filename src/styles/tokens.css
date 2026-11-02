@@ -921,6 +921,13 @@
   --size-tip: 280px; /* the panel's max width */
   --fs-tip: 12.5px; /* the panel's text */
   --line-tip: rgba(212, 175, 106, 0.45); /* the panel's 1 px gold border */
+  /* Dungeon page, Quests box (WEB-76, board dungeon-quests) */
+  --size-disc-quest: 22px; /* a holder's class disc */
+  --size-more-w: 36px; /* the "+N" chip */
+  --size-more-h: 28px;
+  --line-more: rgba(174, 182, 195, 0.3); /* the "+N" chip */
+  --surface-more: #0e1626; /* the "+N" chip */
+  --size-quest-row: 28px; /* a holder's line */
   /* Uploader "What's new" (WEB-73, boards uploader-changes, uploader-changes-states) */
   --size-reading: 860px; /* uploader-changes: the page's reading width */
   --version-hit: radial-gradient(

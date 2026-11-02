@@ -50,6 +50,8 @@ export interface FitCharacter {
   level?: number;
   /** The class text colour token, for the name. */
   colorToken?: string;
+  /** The upload's classFile, for a class disc (Quests box, WEB-76). */
+  classFile?: string;
   /** The friend's display name. */
   friend?: string;
   /** "+3 over"; undefined when it fits. */
@@ -181,6 +183,7 @@ function fitCharacter(c: CharacterView, over?: string): FitCharacter {
   if (c.level !== undefined) v.level = c.level;
   const token = classInfo(c.classFile)?.textToken;
   if (token !== undefined) v.colorToken = token;
+  if (c.classFile !== undefined) v.classFile = c.classFile;
   if (c.ownerName !== undefined) v.friend = c.ownerName;
   if (over !== undefined) v.over = over;
   return v;
