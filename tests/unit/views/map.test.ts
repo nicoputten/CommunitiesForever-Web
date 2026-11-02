@@ -154,7 +154,7 @@ describe("continents", () => {
     expect(parseContinent(undefined)).toBe("azeroth");
   });
 
-  it("frames both continents, centred, or one continent with every zone of it inside", () => {
+  it("frames both continents, centred, or one continent with every zone of it inside (not the terrain)", () => {
     const world = continentViewBox("azeroth");
     const kal = continentViewBox("kalimdor");
     const ek = continentViewBox("eastern-kingdoms");
@@ -169,7 +169,7 @@ describe("continents", () => {
       ["eastern-kingdoms", "E"],
     ] as const) {
       const box = continentViewBox(continent);
-      for (const z of map.zones.filter((zone) => zone.cont === cont)) {
+      for (const z of map.zones.filter((zone) => zone.cont === cont && zone.kind === "zone")) {
         expect(z.lx).toBeGreaterThan(box.x);
         expect(z.lx).toBeLessThan(box.x + box.width);
         expect(z.ly).toBeGreaterThan(box.y);

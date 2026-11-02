@@ -1024,7 +1024,8 @@ Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon
 ### WEB-77 The map in Forever's shapes
 Nico noticed the world map showed Cataclysm's world (2026-11-02). The source SVGs (Syrio, WEB-02) are Cataclysm-era: Darkshore, Azshara, Stonetalon, Desolace, the Barrens, the Cape of Stranglethorn and the flooded Thousand Needles were Cataclysm's, and the Forever zones were hand-drawn guesses. Nico chose to trace Forever's own continent maps (warcraft.wiki.gg "Forever map comparison"), keeping every Forever zone.
 - `tools/map/build_zones.py` traces the coast and every zone border from Forever's two continent maps (read from a gitignored local folder, `tools/map/README.md`) and lays them onto the SVGs' world frame, so the map keeps its size and place. Zephras Isle stays hand-drawn.
-- Uldum and Grim Batol (terrain) are gone, as on Forever's maps; Quel'Thalas (land without a zone) is left off, as before. Alterac stays part of Hillsbrad.
+- Uldum and Grim Batol (terrain) are gone, as on Forever's maps; Quel'Thalas (land without a zone north of Eastern Plaguelands) is new terrain, like Gilneas (Nico, 2026-11-02). It runs off the top of the world, so a continent is framed on its zones, not its terrain (`src/core/views/map.ts`). Alterac stays part of Hillsbrad.
+- Label points moved where labels collided (Undercity and Western Plaguelands, Stonetalon and Desolace), checked on every view, desktop and phone.
 - Dungeon markers, cities and label points moved with their zone.
 - `--forever-only` is gone: Forever's changes are now part of the full build.
 - The credit for Forever's maps is a backlog item (Nico: "no credit for now").

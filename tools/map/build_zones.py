@@ -47,7 +47,7 @@ import numpy as np
 import shapely
 from playwright.sync_api import sync_playwright
 from shapely import affinity
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Polygon, box
 from shapely.ops import polylabel, unary_union
 
 # ---------------------------------------------------------------- configuration
@@ -127,7 +127,7 @@ LINES = {
 LABEL_OVERRIDES = {
     "teldrassil": (191.5, 117.2), "tirisfal": (661.8, 151.6), "mulgore": (247.1, 569.7), "elwynn": (717.9, 655.5),
     "stv": (769.3, 804.5), "durotar": (376.4, 492.8), "barrens": (313.8, 514), "hillsbrad": (732.8, 274.8),
-    "stonetalon": (183.3, 440), "westfall": (661.2, 742.9), "epl": (905, 168), "wpl": (782, 176),
+    "stonetalon": (148, 404), "westfall": (661.2, 742.9), "epl": (905, 168), "wpl": (800, 165), "quelthalas": (925, 86),
 }
 
 # Zephras Isle (WEB-31): in Skywall, the elemental plane of air, not on Azeroth (warcraft.wiki.gg "Zephras Isle"), so on
@@ -168,13 +168,12 @@ TEXT_BOXES = {"K": [(355, 328, 640, 357)], "E": [(350, 368, 537, 398), (415, 399
 UPSAMPLE = 4          # zone borders are smoothed on a grid this many times finer than the image
 
 # Zones only Forever's maps have (docs/WOW-FOREVER.md "Zones"), after the SVG ones: (id, name, continent, kind).
+# Quel'Thalas: the land north of Eastern Plaguelands, with a border of its own and no zone (as on the 2004 map): terrain.
 NEW_ZONES = [
     ("riverglades", "The Riverglades",       "E", "zone"),
     ("shendralas",  "Shen'dralas",           "K", "zone"),
+    ("quelthalas",  "Quel'Thalas",           "E", "terrain"),
 ]
-# Traced so their neighbours stop at their border, then left off the map: Quel'Thalas, the land north of Eastern
-# Plaguelands, with a border of its own and no zone (as on the 2004 map; the map never drew it).
-UNDRAWN = {"quelthalas": "E"}
 
 # Where each zone is on Forever's maps: points in image px inside the zone, read off the maps (Claude, WEB-77) with
 # the SVG zones laid over them as a check. A zone grows from them to the map's border lines (grow()); land no
@@ -519,7 +518,7 @@ def trace_continent(rgb, c):
     """The zones of continent c traced from Forever's map rgb, in image px (pixel i spans [i, i + 1)): {id: geometry}."""
     land = land_mask(rgb, c)
     h, w = land.shape
-    ids = [k for k, (cont, _) in zone_specs().items() if cont == c and k in SEEDS] +           [k for k, cont in UNDRAWN.items() if cont == c]
+    ids = [k for k, (cont, _) in zone_specs().items() if cont == c and k in SEEDS]
     seeds = np.zeros((h, w), np.int32)
     for i, k in enumerate(ids, 1):
         for x, y in SEEDS[k]:
@@ -531,8 +530,8 @@ def trace_continent(rgb, c):
     cost = np.exp((LINE_LUM - lum) / LINE_SOFT)
     letters = dilate(erode(lum < LETTER_LUM, 1), 2)
     for bx0, by0, bx1, by1 in TEXT_BOXES[c]:
-        box = (slice(by0, by1), slice(bx0, bx1))
-        cost[box] = np.where(letters[box], 1, cost[box])
+        cell = (slice(by0, by1), slice(bx0, bx1))
+        cost[cell] = np.where(letters[cell], 1, cost[cell])
     labels = grow(cost, land, seeds)
 
     # smooth the borders: the argmax of the blurred, upsampled one-hot maps, in a crop around the land
@@ -545,8 +544,7 @@ def trace_continent(rgb, c):
         p = upsample(blur((crop == i).astype(np.float32)), UPSAMPLE)
         better = p > best
         arg[better], best[better] = i, p[better]
-    return {k: affinity.translate(raster_poly(arg == i, UPSAMPLE), x0, y0) for i, k in enumerate(ids, 1)
-            if k not in UNDRAWN}
+    return {k: affinity.translate(raster_poly(arg == i, UPSAMPLE), x0, y0) for i, k in enumerate(ids, 1)}
 
 
 def fit_forever_maps(images, svg):
@@ -668,6 +666,8 @@ def main():
 
     placed = fit_forever_maps(images, {z["id"]: place(z["geom"], z["cont"]) for z in zones})
     placed.update(inset_zones())
+    world = box(0, 0, WORLD_W, WORLD_H)   # Quel'Thalas reaches past the top of the world frame
+    placed = {k: g.intersection(world) for k, g in placed.items()}
     names = zone_names()
     zones = [{"id": k, "name": names[k], "cont": c, "kind": kind} for k, (c, kind) in zone_specs().items()
              if k in placed and not placed[k].is_empty]
