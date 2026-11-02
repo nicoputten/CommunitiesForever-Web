@@ -15,3 +15,6 @@ next-env.d.ts
 *.sqlite-shm
 .venv-map/
 __pycache__/
+
+# Forever's continent maps (Blizzard images, read by tools/map/build_zones.py, never committed)
+tools/map/forever/

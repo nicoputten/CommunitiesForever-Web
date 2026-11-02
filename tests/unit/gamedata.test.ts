@@ -226,12 +226,20 @@ describe("map zones", () => {
     "duskwood", "deadwind", "swamp", "blasted", "stv",
   ]; // prettier-ignore
 
+  // Uldum and Grim Batol were terrain (no one plays there) and are not on Forever's maps (WEB-77).
+  const notOnForever = ["uldum", "grimbatol"];
+
   it("keeps the existing ids, in order, and adds Forever's zones after them", () => {
-    expect(map.zones.map((z) => z.id)).toEqual([...vanilla, "riverglades", "shendralas", "zephras"]);
+    expect(map.zones.map((z) => z.id)).toEqual([
+      ...vanilla.filter((id) => !notOnForever.includes(id)),
+      "riverglades",
+      "shendralas",
+      "zephras",
+    ]);
   });
 
   it("has terrain only where no one plays", () => {
-    expect(map.zones.filter((z) => z.kind === "terrain").map((z) => z.id)).toEqual(["uldum", "gilneas", "grimbatol"]);
+    expect(map.zones.filter((z) => z.kind === "terrain").map((z) => z.id)).toEqual(["gilneas"]);
   });
 
   it("draws Thousand Needles dry: one outline, no lake or islands", () => {

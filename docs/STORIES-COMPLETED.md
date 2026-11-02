@@ -1020,3 +1020,12 @@ Backlog (bot BOT-11 left the recap without class icons for lack of it). Each rec
 Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon-quests` (designer first, Nico 2026-11-02). A Quests box on the dungeon page, under Who fits (on a phone after Who fits, before Planned here): the dungeon's quests in friends' quest logs, most holders first, each with its holders as a class disc and the name in class colour; 4 on desktop, 3 on a phone, the rest behind a "+N" chip that opens the ⓘ tooltip ("Also has it"). With none: "Nobody has a quest for this dungeon"; the box stays. The view model's holders carry their `classFile`.
 - No zone per quest (Nico, 2026-11-02): the quest log only has the dungeon's own header, so the board's grey zone would repeat the dungeon's name.
 - Done (this PR).
+
+### WEB-77 The map in Forever's shapes
+Nico noticed the world map showed Cataclysm's world (2026-11-02). The source SVGs (Syrio, WEB-02) are Cataclysm-era: Darkshore, Azshara, Stonetalon, Desolace, the Barrens, the Cape of Stranglethorn and the flooded Thousand Needles were Cataclysm's, and the Forever zones were hand-drawn guesses. Nico chose to trace Forever's own continent maps (warcraft.wiki.gg "Forever map comparison"), keeping every Forever zone.
+- `tools/map/build_zones.py` traces the coast and every zone border from Forever's two continent maps (read from a gitignored local folder, `tools/map/README.md`) and lays them onto the SVGs' world frame, so the map keeps its size and place. Zephras Isle stays hand-drawn.
+- Uldum and Grim Batol (terrain) are gone, as on Forever's maps; Quel'Thalas (land without a zone) is left off, as before. Alterac stays part of Hillsbrad.
+- Dungeon markers, cities and label points moved with their zone.
+- `--forever-only` is gone: Forever's changes are now part of the full build.
+- The credit for Forever's maps is a backlog item (Nico: "no credit for now").
+- Done (this PR).
