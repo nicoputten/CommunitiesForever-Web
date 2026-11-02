@@ -38,7 +38,7 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - WEB-73 Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version; UP-10 proposal, left out of WEB-35b). Data done (2026-11-02): `releaseNotes`, `noteLines`, `noteBlocks` (`src/core/releases.ts`), `readReleaseNotes` (`src/server/releases.ts`), and `notesUrl` in `GET updates/status`. The page waits for its board (Nico, 2026-11-02: designer first).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
-- Dungeons: who has which dungeon quests.
+- WEB-76 Dungeons: who has which dungeon quests. The data is already uploaded (quest log `area`, addon CF-19). View model done (2026-11-02): `dungeonQuests` and `DungeonPage.quests` (`src/core/views/dungeon.ts`). The dungeon page's box waits for its board (Nico, 2026-11-02: designer first).
 - Final emblem and logo for the site.
 - Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
 - Doomsday across a clock change (bug hunt 2026-11-02, finding 6; before 28 Mar 2027): `scheduleAt` (`src/core/doomsday/engine.ts`) gives one UTC offset, today's, and `dayStart` and the kill scoring use it for past days too. After a DST change, days and kills from before it are placed 1 h off, and on the day of the change "resets … in" is 1 h off until the change. The addon does the same (the game clock's offset), so decide with the addon first. Fix: each day's offset from the realm time zone at that day (as `zonedToUtc` does for the recap), with a test across 28 Mar and 31 Oct 2027.
