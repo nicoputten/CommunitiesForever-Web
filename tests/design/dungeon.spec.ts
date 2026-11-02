@@ -63,6 +63,14 @@ test("dungeon: design values", async ({ page }) => {
   });
   await expectStyles(fits.getByText("Lia Thornwhisper", { exact: true }), { color: "var(--priest)" });
   await expectStyles(fits.getByText("Grom Ashfeller", { exact: true }), { color: characterName("WARRIOR").color! });
+  // WEB-76: the quests friends have for Scarlet Monastery, shared by its wings.
+  const quests = page.getByRole("region", { name: "Quests" });
+  await expectStyles(quests.getByRole("heading", { name: "Quests" }), {
+    "font-family": "var(--font-display)",
+    color: "var(--gold-bright)",
+  });
+  await expectStyles(quests.getByRole("listitem").first(), { "font-size": "var(--fs-body)", color: "var(--text)" });
+  await expectStyles(quests.getByText("Bob Example", { exact: true }), { color: characterName("ROGUE").color! });
   const planned = page.getByRole("region", { name: "Planned here" }).getByRole("link").first();
   await expectStyles(planned, {
     "background-color": "var(--surface-planned)",
@@ -95,6 +103,7 @@ test("dungeon: without wings, nothing planned or ran", async ({ page }) => {
   await openScreen(page, "/dungeons/rfc");
   await expect(page.getByText("Nothing planned here yet.")).toBeVisible();
   await expect(page.getByText("Not yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText("No quests for it in anyone's log.")).toBeVisible();
   await expectAccessible(page);
   await expectScreenshot(page, "dungeon-empty");
 });

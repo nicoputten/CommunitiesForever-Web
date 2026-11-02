@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dungeon pages: a Quests box lists the quests friends have in their log for that dungeon, and who has each.
 - Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
 
 ## v0.6.1 (2026-10-30)

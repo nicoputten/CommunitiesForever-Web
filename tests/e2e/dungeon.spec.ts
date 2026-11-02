@@ -51,6 +51,14 @@ test("from the map's dungeon entrance to the dungeon page and Plan a run", async
   await expect(fits.getByText("Ves Doombringer", { exact: true })).toBeVisible();
   const planned = page.getByRole("region", { name: "Planned here" });
   await expect(planned.locator(`a[href="/runs/${runId}"]`)).toContainText("Ves Doombringer");
+  // WEB-76: the quests in friends' logs under the dungeon's header; Scarlet Monastery's on every wing.
+  const quests = page.getByRole("region", { name: "Quests" });
+  if (phone) await expect(quests).toContainText("No quests for it in anyone's log.");
+  else {
+    const first = quests.getByRole("listitem").first();
+    await expect(first).toContainText("Into The Scarlet Monastery");
+    await expect(first).toContainText("Bob Example 41, Lia Thornwhisper 37");
+  }
   // The Map tab stays current on a dungeon page.
   const nav = phone ? page.locator("[data-tabbar]") : page.getByRole("banner");
   await expect(nav.getByRole("link", { name: "Map" })).toHaveAttribute("aria-current", "page");

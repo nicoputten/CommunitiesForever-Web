@@ -80,6 +80,12 @@ CommunitiesForeverDB = {
                 ["points"] = 0,
               },
             },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "Into The Scarlet Monastery",
+                ["area"] = "Scarlet Monastery",
+              },
+            },
             ["updatedAt"] = 1793026800,
             ["pvp"] = {
               ["hk"] = 1450,
@@ -4403,6 +4409,16 @@ CommunitiesForeverDB = {
               {
                 ["name"] = "Shadow",
                 ["points"] = 0,
+              },
+            },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "Into The Scarlet Monastery",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9202] = {
+                ["title"] = "Mythology of the Titans",
+                ["area"] = "Scarlet Monastery",
               },
             },
             ["updatedAt"] = 1793041200,
