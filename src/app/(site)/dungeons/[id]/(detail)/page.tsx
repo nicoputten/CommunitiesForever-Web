@@ -17,8 +17,7 @@ const color = (token: string | undefined) =>
 /**
  * A dungeon's page (WEB-42, board `dungeon-page`): the hero over the map around its entrance, with Scarlet
  * Monastery's wings and Plan a run; who fits per role; the runs planned here and in the other wings; the runs that ran
- * here; the quests friends have for it (WEB-76). The layout above answers 404 for a raid or an unknown id and sends
- * `/dungeons/sm` to its first wing.
+ * here. The layout above answers 404 for a raid or an unknown id and sends `/dungeons/sm` to its first wing.
  */
 export default async function DungeonPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
@@ -174,33 +173,6 @@ export default async function DungeonPage({ params }: { params: Promise<{ id: st
                   ))}
                 </ul>
               </div>
-            )}
-          </section>
-
-          {/* WEB-76 (no board): the quests in friends' logs for this dungeon, built from Who fits' lists. */}
-          <section className={runs.box} aria-labelledby="quests-here">
-            <h2 id="quests-here" className={runs.boxTitle}>
-              Quests
-            </h2>
-            {page.quests.length === 0 ? (
-              <p className={runs.body}>No quests for it in anyone&apos;s log.</p>
-            ) : (
-              <ul className={styles.role}>
-                {page.quests.map((q) => (
-                  <li key={q.id} className={styles.fit}>
-                    {q.title}
-                    <p className={runs.small}>
-                      {q.holders.map((c, i) => (
-                        <span key={c.guid}>
-                          {i > 0 && ", "}
-                          <Name c={c} />
-                          {c.level !== undefined && ` ${c.level}`}
-                        </span>
-                      ))}
-                    </p>
-                  </li>
-                ))}
-              </ul>
             )}
           </section>
 

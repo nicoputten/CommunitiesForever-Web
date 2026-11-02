@@ -38,6 +38,7 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version), then `notesUrl` in `GET updates/status` points to it (UP-10 proposal; left out of WEB-35b).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
+- WEB-76 Dungeons: who has which dungeon quests. The data is already uploaded (quest log `area`, addon CF-19). View model done (2026-11-02): `dungeonQuests` and `DungeonPage.quests` (`src/core/views/dungeon.ts`). The dungeon page's box waits for its board (Nico, 2026-11-02: designer first).
 - Final emblem and logo for the site.
 - Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
 - The class per name in recap cards (award winners, the cards' characters), so the bot can put its class icon before them (bot BOT-11 left the recap without icons for lack of it).

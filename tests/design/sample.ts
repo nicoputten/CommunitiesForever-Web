@@ -64,11 +64,8 @@ interface Sample {
   seen?: [string, number];
   /** Made this many seconds before NOW: missing from earlier sample files (a new character). */
   made?: number;
-  /**
-   * Quest log: the character board's titles under invented quest IDs, in board order (WEB-23); `[title, header]` for
-   * one under a quest-log header (the addon's `area`), such as a dungeon's (WEB-76).
-   */
-  quests?: Record<number, string | [string, string]>;
+  /** Quest log: the character board's titles under invented quest IDs, in board order (WEB-23). */
+  quests?: Record<number, string>;
 }
 
 const NICO: Sample[] = [
@@ -151,7 +148,6 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 5 * H,
         seen: ["The Deadmines", 5 * H],
-        quests: { 9201: ["Into The Scarlet Monastery", "Scarlet Monastery"] },
       },
       {
         guid: "Player-1-0000B002",
@@ -263,10 +259,6 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 1 * H,
         seen: ["Stranglethorn Vale", 1 * H],
-        quests: {
-          9201: ["Into The Scarlet Monastery", "Scarlet Monastery"],
-          9202: ["Mythology of the Titans", "Scarlet Monastery"],
-        },
       },
       {
         guid: "Player-1-0000E002",
@@ -318,12 +310,7 @@ function char(c: Sample, now: number, owner: string, before: boolean): Lua {
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),
     ...(c.quests !== undefined && {
-      quests: Object.fromEntries(
-        Object.entries(c.quests).map(([id, q]): [string, Lua] => [
-          id,
-          typeof q === "string" ? { title: q } : { title: q[0], area: q[1] },
-        ]),
-      ),
+      quests: Object.fromEntries(Object.entries(c.quests).map(([id, title]) => [id, { title }])),
     }),
     updatedAt: now - c.lastPlayed,
     ...doomsdayChar(owner, c, before),
