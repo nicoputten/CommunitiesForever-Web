@@ -1011,3 +1011,7 @@ Bug hunt before launch (2026-11-02), Nico chose "reject": one owner upload from 
 Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTag with its case (every other check ignores case), and after "Start fresh" the first launch upload read "12 new characters" instead of "First upload", because the first accepted upload was a beta one.
 - `siteName` uses `sameBattleTag`; `firstOkId` is the first accepted upload at or after the cut-off.
 - Done (this PR).
+
+### WEB-72 The class per name in the recap
+Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
+- Done (this PR).

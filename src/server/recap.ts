@@ -1,7 +1,8 @@
 import { and, asc, desc, eq, gt, gte, lt, ne } from "drizzle-orm";
+import { cardClasses } from "@/core/recap/classes";
 import { MAP_ZONES, mapZone, recapChar } from "@/core/recap/input";
 import { buildRecap } from "@/core/recap/recap";
-import type { History, Recap, RecapChar, Week, WeekSighting } from "@/core/recap/types";
+import type { History, Recap, RecapChar, RecapFriend, Week, WeekSighting } from "@/core/recap/types";
 import { nextRecapMoment, recapMomentAtOrBefore, type RecapSchedule } from "@/core/recap/week";
 import { adminBattleTag } from "./access";
 import { enqueueBotEvent } from "./bot";
@@ -197,7 +198,7 @@ export function runDueRecap(db: Db, now: number, siteName: string): Recap | unde
   const input = doomsdayInput(db, moment);
   const doomsday = input !== undefined ? recapSection(input, start, moment) : undefined;
   if (doomsday !== undefined) recap.doomsday = doomsday;
-  dressForBot(db, recap, number, start, moment, week.after);
+  dressForBot(db, recap, number, start, moment, week.after, week.friends);
   db.insert(recaps)
     .values({ week: sequence, start, end: moment, computedAt: now, data: recap, snapshot: week.after })
     .onConflictDoNothing()
@@ -226,7 +227,7 @@ function siteBase(): string {
 
 /**
  * WEB-66 (docs/BOT-API.md "Visual posts"): what the bot's visual recap needs besides the texts: the week's feats, the
- * award winner's class, the image ids (the award header, the zone crop of S1 or S13) and the page for "The full week".
+ * award winner's class, the class per name in each card (WEB-72), the image ids (the award header, the zone crop of S1 or S13) and the page for "The full week".
  */
 function dressForBot(
   db: Db,
@@ -235,6 +236,7 @@ function dressForBot(
   start: number,
   end: number,
   snapshot: Record<string, RecapChar>,
+  friends: readonly RecapFriend[],
 ): void {
   recap.numbers.feats = db
     .select({ guid: feats.guid })
@@ -248,6 +250,11 @@ function dressForBot(
       .sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0]?.classFile;
     if (classFile !== undefined) recap.award.classFile = classFile;
     recap.award.image = `recap-${number}-header`;
+  }
+  // WEB-72: the class per name, for the bot's class icons.
+  for (const card of [...(recap.award !== undefined ? [recap.award] : []), ...recap.cards]) {
+    const classes = cardClasses(card, snapshot, friends);
+    if (classes !== undefined) card.classes = classes;
   }
   const map = recap.cards.find((c) => c.id === "S13") ?? recap.cards.find((c) => c.id === "S1");
   if (map !== undefined) map.image = `recap-${number}-zone`;
