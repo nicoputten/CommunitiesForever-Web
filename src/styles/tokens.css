@@ -928,4 +928,13 @@
   --line-more: rgba(174, 182, 195, 0.3); /* the "+N" chip */
   --surface-more: #0e1626; /* the "+N" chip */
   --size-quest-row: 28px; /* a holder's line */
+  /* Uploader "What's new" (WEB-73, boards uploader-changes, uploader-changes-states) */
+  --size-reading: 860px; /* uploader-changes: the page's reading width */
+  --version-hit: radial-gradient(
+    circle at 0% 0%,
+    rgba(212, 175, 106, 0.16),
+    rgba(12, 18, 30, 0.85) 55%
+  ); /* the linked version */
+  --ring-version-hit: 0 0 0 3px rgba(212, 175, 106, 0.18); /* uploader-changes: the linked version's glow */
+  --dur-version-hit: 3s; /* uploader-changes: the linked version's glow fades after */
 }

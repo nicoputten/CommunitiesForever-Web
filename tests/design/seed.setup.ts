@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { answerRun, planRun, setTimeZone } from "../e2e/runs";
+import { E2E } from "../../playwright.config";
 import { signInAs } from "../e2e/session";
+import { publishReleases } from "../e2e/uploaderApi";
 import { ADMIN, sampleSavedVariables, type SampleDay } from "./sample";
 
 // Seeds the design server's fresh database with the sample data through the real upload route, as the admin: the
@@ -71,4 +73,26 @@ test("plan the sample runs", async ({ page, context, baseURL }) => {
 
   await as(ADMIN);
   await answerRun(page, wc, "maybe", "Player-1-0000A002");
+});
+
+// The uploader's kept versions and their notes (WEB-73, board uploader-changes), published as the release workflow
+// would. "Now" is FIXED_NOW, so the newest is dated 19 Nov 2026.
+test("publish the sample uploader releases", async ({ page, context, baseURL }) => {
+  await signInAs(context, baseURL!, ADMIN);
+  // The desktop and phone projects run this file again: publish once.
+  await page.goto("/uploader/changes");
+  if ((await page.getByRole("heading", { name: "v0.3.1" }).count()) > 0) return;
+  const statuses = await publishReleases(page.request, E2E.deploySecret, [
+    { version: "0.2.0", notes: "- First version with automatic updates.\n- Finds World of Warcraft by itself." },
+    { version: "0.2.4", notes: "- Fixed a crash when World of Warcraft was installed on a second drive." },
+    {
+      version: "0.3.0",
+      notes: "- Runs from the website now show up in the addon.\n- New: Upload now in the tray menu.\n- Faster start-up.",
+    },
+    {
+      version: "0.3.1",
+      notes: "- Fixed: uploads could stop after the PC woke from sleep.\n- The tray icon shows when an update is ready.",
+    },
+  ]);
+  expect(statuses).toEqual([201, 201, 201, 201]);
 });

@@ -9,6 +9,7 @@ import { PageTitle } from "@/components/ui/PageTitle";
 import { PairingRequest } from "@/components/uploader/PairingRequest";
 import { TokenByHand } from "@/components/uploader/TokenByHand";
 import { UploaderList } from "@/components/uploader/UploaderList";
+import { UploaderTabs } from "@/components/uploader/UploaderTabs";
 import { DownloadIcon } from "@/components/ui/icons";
 import { OwnHistory } from "@/components/uploader/OwnHistory";
 import {
@@ -22,13 +23,14 @@ import {
   parseOlder,
   uploaderRows,
 } from "@/core/views/uploader";
-import { aboutSize } from "@/core/releases";
+import { aboutSize, CHANGES_PATH } from "@/core/releases";
 import { getDb } from "@/server/db";
 import { readCurrent } from "@/server/releases";
 import { activeTokens, findPairing, limits, type PendingPairing } from "@/server/uploader";
 import { listOwnUploads } from "@/server/uploads";
 import { createTokenAction, decideAction, revokeAction } from "./actions";
 import styles from "@/components/uploader/Uploader.module.css";
+import changes from "@/components/uploader/Changes.module.css";
 
 export const metadata: Metadata = { title: "Uploader" };
 
@@ -88,6 +90,7 @@ export default async function UploaderPage({
           Rather upload a file yourself? <Link href="/upload">Upload manually</Link>
         </p>
       </div>
+      <UploaderTabs tab="app" />
 
       {notice !== undefined && (
         <p role="status" className={noticeOk(notice) ? styles.noticeOk : styles.notice}>
@@ -118,6 +121,11 @@ export default async function UploaderPage({
               ? "Not released yet · Windows 10 and 11"
               : `${release.version} · Windows 10 and 11 · ${aboutSize(release.size)}`}
           </p>
+          {release !== undefined && (
+            <Link href={`${CHANGES_PATH}#${release.version}`} className={changes.whatsNew}>
+              What’s new in {release.version} ›
+            </Link>
+          )}
           <ol className={styles.steps}>
             <li className={styles.step}>
               <span className={styles.stepNumber} aria-hidden="true">

@@ -52,6 +52,8 @@ export default defineConfig({
       // Discord linking (WEB-39): made-up values; Discord itself is never called.
       DISCORD_CLIENT_ID: "e2e-discord-client-id",
       DISCORD_CLIENT_SECRET: "e2e-discord-secret",
+      // The uploader's releases (WEB-73): the seed publishes the board's versions.
+      UPLOADER_DEPLOY_SECRET: E2E.deploySecret,
     },
     port,
     // Always a fresh server: a reused one would have another database and clock.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { clockDay, clockTime, clockTimeAt } from "@/core/views/clock";
+import { calendarDate, clockDay, clockTime, clockTimeAt } from "@/core/views/clock";
 import { capitalize } from "@/core/views/text";
 
 const subscribe = () => () => {};
@@ -20,13 +20,14 @@ export function LocalTime({
   capital?: boolean;
   /** "today at 21:14", "on Thu 23 Oct at 23:40": after "uploaded" (WEB-20). */
   phrase?: boolean;
-  /** "27 Oct" ("today", "yesterday"); "time": with the time on today and yesterday (WEB-34). */
-  day?: "date" | "time";
+  /** "27 Oct" ("today", "yesterday"); "time": with the time on today and yesterday (WEB-34); "calendar": "29 Oct 2026" (WEB-73). */
+  day?: "date" | "time" | "calendar";
 }) {
   const text = useSyncExternalStore(
     subscribe,
     () => {
       const now = Math.floor(Date.now() / 1000);
+      if (day === "calendar") return calendarDate(at);
       if (day !== undefined) return clockDay(at, now, day === "time");
       return (phrase ? clockTimeAt : clockTime)(at, now);
     },

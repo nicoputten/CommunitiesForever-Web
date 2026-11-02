@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clockDay, clockParts, dayGroup } from "@/core/views/clock";
+import { calendarDate, clockDay, clockParts, dayGroup } from "@/core/views/clock";
 import { historyLine } from "@/core/views/upload";
 import {
   ACTIVE_SECONDS,
@@ -51,6 +51,16 @@ describe("clockDay", () => {
     expect(clockDay(NOW - DAY, NOW, true, "UTC")).toBe("yesterday 21:14");
     expect(clockDay(NOW - 13 * DAY, NOW, true, "UTC")).toBe("14 Oct");
     expect(clockDay(NOW - 365 * DAY, NOW, false, "UTC")).toBe("27 Oct 2025");
+  });
+});
+
+describe("calendarDate", () => {
+  it("is day, month and year, also this year (What's new, WEB-73)", () => {
+    expect(calendarDate(NOW, "UTC")).toBe("27 Oct 2026");
+    expect(calendarDate(NOW - 365 * DAY, "UTC")).toBe("27 Oct 2025");
+  });
+  it("is the day in the viewer's zone", () => {
+    expect(calendarDate(Date.UTC(2026, 9, 28, 23, 30) / 1000, "Europe/Amsterdam")).toBe("29 Oct 2026");
   });
 });
 

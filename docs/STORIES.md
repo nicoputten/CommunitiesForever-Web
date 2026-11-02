@@ -35,7 +35,6 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 
 
 ### Backlog (unordered, not yet stories)
-- WEB-73 Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version; UP-10 proposal, left out of WEB-35b). Data done (2026-11-02): `releaseNotes`, `noteLines`, `noteBlocks` (`src/core/releases.ts`), `readReleaseNotes` (`src/server/releases.ts`), and `notesUrl` in `GET updates/status`. The page waits for its board (Nico, 2026-11-02: designer first).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
 - Final emblem and logo for the site.

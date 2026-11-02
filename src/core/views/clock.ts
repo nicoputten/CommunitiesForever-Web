@@ -75,6 +75,12 @@ export function clockParts(at: number, now: number, timeZone?: string): { time: 
   return { time, date: `${f.weekday} ${f.day} ${f.month}${f.year === thisYear ? "" : ` ${f.year}`}` };
 }
 
+/** A calendar date with the year (uploader "What's new", WEB-73): "29 Oct 2026". */
+export function calendarDate(at: number, timeZone?: string): string {
+  const f = fields(at, { year: "numeric", month: "short", day: "numeric" }, timeZone);
+  return `${f.day} ${f.month} ${f.year}`;
+}
+
 export type DayGroup = "today" | "week" | "earlier";
 
 export const DAY_GROUPS: Record<DayGroup, string> = { today: "Today", week: "This week", earlier: "Earlier" };

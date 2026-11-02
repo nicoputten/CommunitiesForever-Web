@@ -1021,6 +1021,11 @@ Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon
 - No zone per quest (Nico, 2026-11-02): the quest log only has the dungeon's own header, so the board's grey zone would repeat the dungeon's name.
 - Done (this PR).
 
+### WEB-73 Uploader "What's new" page
+Backlog (UP-10 proposal, left out of WEB-35b). Boards `uploader-changes`, `uploader-changes-states` (designer first, Nico 2026-11-02). `/uploader/changes`: one box per version the update feed keeps, newest first, its id the plain version so the app's `notesUrl` (`#0.3.1`) lands on it; the linked box glows and the glow fades after 3 s (it stays without motion). "The app · What’s new" tabs on both uploader pages and "What’s new in 0.3.1 ›" in Get the app. Before the first release: "No versions yet" and Back to the app.
+- Nico (2026-11-02): a date on the newest version only (the feed has no date for older ones); "No notes for this version" for a version without notes; paragraphs as plain text and nested bullets indented.
+- Done (this PR).
+
 ### WEB-77 The map in Forever's shapes
 Nico noticed the world map showed Cataclysm's world (2026-11-02). The source SVGs (Syrio, WEB-02) are Cataclysm-era: Darkshore, Azshara, Stonetalon, Desolace, the Barrens, the Cape of Stranglethorn and the flooded Thousand Needles were Cataclysm's, and the Forever zones were hand-drawn guesses. Nico chose to trace Forever's own continent maps (warcraft.wiki.gg "Forever map comparison"), keeping every Forever zone.
 - `tools/map/build_zones.py` traces the coast and every zone border from Forever's two continent maps (read from a gitignored local folder, `tools/map/README.md`) and lays them onto the SVGs' world frame, so the map keeps its size and place. Zephras Isle stays hand-drawn.
