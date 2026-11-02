@@ -40,6 +40,12 @@
   font-size: var(--fs-body-sm);
 }
 
+.disc[data-size="quest"] {
+  width: var(--size-disc-quest);
+  height: var(--size-disc-quest);
+  font-size: var(--fs-tiny);
+}
+
 .disc[data-class="shaman"] {
   color: var(--on-shaman);
 }

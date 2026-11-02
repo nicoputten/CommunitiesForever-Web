@@ -80,6 +80,16 @@ CommunitiesForeverDB = {
                 ["points"] = 0,
               },
             },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "In the Name of the Light",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9202] = {
+                ["title"] = "Into The Scarlet Monastery",
+                ["area"] = "Scarlet Monastery",
+              },
+            },
             ["updatedAt"] = 1793026800,
             ["pvp"] = {
               ["hk"] = 1450,
@@ -128,6 +138,20 @@ CommunitiesForeverDB = {
               {
                 ["name"] = "Restoration",
                 ["points"] = 19,
+              },
+            },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "In the Name of the Light",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9202] = {
+                ["title"] = "Into The Scarlet Monastery",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9204] = {
+                ["title"] = "Hearts of Zeal",
+                ["area"] = "Scarlet Monastery",
               },
             },
             ["updatedAt"] = 1792958400,
@@ -3898,6 +3922,12 @@ CommunitiesForeverDB = {
                 ["points"] = 0,
               },
             },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "In the Name of the Light",
+                ["area"] = "Scarlet Monastery",
+              },
+            },
             ["updatedAt"] = 1792267200,
             ["pvp"] = {
               ["hk"] = 9,
@@ -4403,6 +4433,20 @@ CommunitiesForeverDB = {
               {
                 ["name"] = "Shadow",
                 ["points"] = 0,
+              },
+            },
+            ["quests"] = {
+              [9201] = {
+                ["title"] = "In the Name of the Light",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9203] = {
+                ["title"] = "Compendium of the Fallen",
+                ["area"] = "Scarlet Monastery",
+              },
+              [9204] = {
+                ["title"] = "Hearts of Zeal",
+                ["area"] = "Scarlet Monastery",
               },
             },
             ["updatedAt"] = 1793041200,
@@ -5592,6 +5636,12 @@ CommunitiesForeverDB = {
             {
               ["name"] = "Protection",
               ["points"] = 10,
+            },
+          },
+          ["quests"] = {
+            [9201] = {
+              ["title"] = "In the Name of the Light",
+              ["area"] = "Scarlet Monastery",
             },
           },
           ["updatedAt"] = 1792785600,

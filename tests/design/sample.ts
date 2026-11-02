@@ -64,8 +64,9 @@ interface Sample {
   seen?: [string, number];
   /** Made this many seconds before NOW: missing from earlier sample files (a new character). */
   made?: number;
-  /** Quest log: the character board's titles under invented quest IDs, in board order (WEB-23). */
-  quests?: Record<number, string>;
+  /** Quest log: the character board's titles under invented quest IDs, in board order (WEB-23); with the quest log's
+   * header for the dungeon page's Quests box (WEB-76). */
+  quests?: Record<number, string | { title: string; area: string }>;
 }
 
 const NICO: Sample[] = [
@@ -111,6 +112,9 @@ const NICO: Sample[] = [
     ],
     lastPlayed: 3 * D,
     seen: ["The Barrens", 3 * D],
+    quests: {
+      9201: { title: "In the Name of the Light", area: "Scarlet Monastery" },
+    },
   },
   {
     guid: "Player-1-0000A003",
@@ -148,6 +152,10 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 5 * H,
         seen: ["The Deadmines", 5 * H],
+        quests: {
+          9201: { title: "In the Name of the Light", area: "Scarlet Monastery" },
+          9202: { title: "Into The Scarlet Monastery", area: "Scarlet Monastery" },
+        },
       },
       {
         guid: "Player-1-0000B002",
@@ -166,6 +174,11 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 1 * D,
         seen: ["Hillsbrad Foothills", 1 * D],
+        quests: {
+          9201: { title: "In the Name of the Light", area: "Scarlet Monastery" },
+          9202: { title: "Into The Scarlet Monastery", area: "Scarlet Monastery" },
+          9204: { title: "Hearts of Zeal", area: "Scarlet Monastery" },
+        },
         made: 1.5 * D,
       },
     ],
@@ -235,6 +248,9 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 9 * D,
         seen: ["Stonetalon Mountains", 9 * D],
+        quests: {
+          9201: { title: "In the Name of the Light", area: "Scarlet Monastery" },
+        },
       },
     ],
   },
@@ -259,6 +275,11 @@ const FRIENDS: { battleTag: string; displayName: string; receivedAgo: number; vi
         ],
         lastPlayed: 1 * H,
         seen: ["Stranglethorn Vale", 1 * H],
+        quests: {
+          9201: { title: "In the Name of the Light", area: "Scarlet Monastery" },
+          9203: { title: "Compendium of the Fallen", area: "Scarlet Monastery" },
+          9204: { title: "Hearts of Zeal", area: "Scarlet Monastery" },
+        },
       },
       {
         guid: "Player-1-0000E002",
@@ -310,7 +331,9 @@ function char(c: Sample, now: number, owner: string, before: boolean): Lua {
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),
     ...(c.quests !== undefined && {
-      quests: Object.fromEntries(Object.entries(c.quests).map(([id, title]) => [id, { title }])),
+      quests: Object.fromEntries(
+        Object.entries(c.quests).map(([id, q]) => [id, typeof q === "string" ? { title: q } : q]),
+      ),
     }),
     updatedAt: now - c.lastPlayed,
     ...doomsdayChar(owner, c, before),
