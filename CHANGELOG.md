@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.7.0 (2026-11-02)
 - Map: the world map now has WoW: Forever's own shapes, traced from its in-game maps: Vanilla coasts and zone borders instead of Cataclysm's (a dry Thousand Needles, Vanilla Darkshore, Azshara, Stonetalon and Stranglethorn), Mount Hyjal, The Riverglades and Shen'dralas where Forever puts them, Quel'Thalas as land north of the Plaguelands, no Uldum or Grim Batol.
 - Dungeon pages: a Quests box shows which quests for the dungeon are in friends’ quest logs, and who has them.
