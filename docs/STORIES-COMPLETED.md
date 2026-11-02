@@ -994,3 +994,8 @@ Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "
 - Each answer keeps its character's name when the site knows it (`run_answers.name`, migration 0025), refreshed on every write; a character the site no longer has shows by that name, else "Unknown character" (`UNKNOWN_CHARACTER`), on the site and in the bot's payload. Every other place that fell back to a GUID uses it too.
 - The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
 - Done (this PR).
+
+### WEB-71 Site name and "First upload" after the cut-off
+Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTag with its case (every other check ignores case), and after "Start fresh" the first launch upload read "12 new characters" instead of "First upload", because the first accepted upload was a beta one.
+- `siteName` uses `sameBattleTag`; `firstOkId` is the first accepted upload at or after the cut-off.
+- Done (this PR).

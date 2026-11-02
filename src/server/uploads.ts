@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
   battleTagsOf,
@@ -360,8 +360,14 @@ const STORED = {
 
 type StoredRow = Pick<typeof uploads.$inferSelect, Exclude<keyof typeof STORED, "device">> & { device: string | null };
 
+/** The site's first accepted upload; after the launch cut-off, the first one after it (WEB-71). */
 export function firstOkId(db: Db): number | undefined {
-  return db.select({ id: uploads.id }).from(uploads).where(eq(uploads.status, "ok")).orderBy(asc(uploads.id)).get()?.id;
+  return db
+    .select({ id: uploads.id })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), gte(uploads.uploadedAt, cutoffAt(db))))
+    .orderBy(asc(uploads.id))
+    .get()?.id;
 }
 
 function stored(row: StoredRow, firstOk: number | undefined): StoredUpload {

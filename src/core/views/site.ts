@@ -1,3 +1,4 @@
+import { sameBattleTag } from "../access";
 import { daysOld, isOld } from "./age";
 
 // Site-wide facts: the site name and the stale-site banner (docs/ARCHITECTURE.md "UI").
@@ -14,12 +15,13 @@ export interface UploadInfo {
 
 /**
  * The community name of the newest admin upload that has one; "CommunitiesForever" before that. Uploads of other
- * people never name the site. Equal upload times: the later one in the list wins.
+ * people never name the site; BattleTags compare without case. Equal upload times: the later one in the list wins.
  */
 export function siteName(uploads: readonly UploadInfo[], adminBattleTag: string): string {
   let newest: UploadInfo | undefined;
   for (const u of uploads) {
-    if (u.uploadedBy !== adminBattleTag || u.communityName === undefined || u.communityName === "") continue;
+    if (!sameBattleTag(u.uploadedBy, adminBattleTag) || u.communityName === undefined || u.communityName === "")
+      continue;
     if (newest === undefined || u.uploadedAt >= newest.uploadedAt) newest = u;
   }
   return newest?.communityName ?? DEFAULT_SITE_NAME;
