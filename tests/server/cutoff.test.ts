@@ -1,14 +1,23 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Recap } from "@/core/recap/types";
 import { listMembers, putGuest } from "@/server/access";
 import { clearCutoff, storeCutoff } from "@/server/cutoff";
 import { openDatabase, type Db } from "@/server/db";
-import { botEvents, doomsdayGoals, feats, feedDays, recaps, sightings, uploads } from "@/server/db/schema";
+import {
+  botEvents,
+  doomsdayGoals,
+  doomsdayStatus,
+  feats,
+  feedDays,
+  recaps,
+  sightings,
+  uploads,
+} from "@/server/db/schema";
 import { getBotSettings, setTimeZone, updateBotSettings } from "@/server/discord";
-import { latestRecap, recapByNumber, storedRecaps } from "@/server/recap";
+import { latestRecap, recapByNumber, runDueRecap, storedRecaps } from "@/server/recap";
 import { getRun, listRuns, planRunFor } from "@/server/runs";
 import { loadState, rebuild, upload } from "@/server/uploads";
 
@@ -130,5 +139,44 @@ describe("the launch cut-off", () => {
     ).toEqual([runs.beta, runs.launch].sort());
     expect(storedRecaps(db).map((r) => r.week)).toEqual([1, 2]);
     expect(db.select().from(doomsdayGoals).all().length).toBeGreaterThan(0);
+  });
+
+  it("starts the first recap after it at the cut-off, once (WEB-70)", () => {
+    // The recap's time zone is the owner's.
+    vi.stubEnv("ADMIN_BATTLETAG", ADMIN);
+    setTimeZone(db, ADMIN, "Europe/Amsterdam", "picked", BETA);
+    upload(db, file(BETA, { vesPlayed: BETA }), ADMIN, BETA, ADMIN);
+    runDueRecap(db, BETA, "Friends");
+    // Wed 4 Nov 2026; the recap is due on Sundays at 13:00 Amsterdam time.
+    const cutoff = Date.UTC(2026, 10, 4) / 1000;
+    storeCutoff(db, cutoff, ADMIN, cutoff);
+    rebuild(db, ADMIN);
+    const events = db.select().from(botEvents).all().length;
+    const sunday = Date.UTC(2026, 10, 8, 12) / 1000;
+    for (let minute = 0; minute < 3; minute++) runDueRecap(db, sunday + minute * 60, "Friends");
+    expect(storedRecaps(db).map((r) => [r.data.week, r.start, r.end])).toEqual([[1, cutoff, sunday]]);
+    expect(db.select().from(botEvents).all().length).toBe(events + 1);
+    // The next week follows on.
+    runDueRecap(db, sunday + 7 * 86400, "Friends");
+    expect(storedRecaps(db).map((r) => [r.data.week, r.start])).toEqual([
+      [1, cutoff],
+      [2, sunday],
+    ]);
+    vi.unstubAllEnvs();
+  });
+
+  it("forgets the addon's streak and best from the beta (WEB-70)", () => {
+    const goals = (at: number) =>
+      new TextEncoder().encode(`return { schemaVersion = 2,
+        self = { battleTag = "${ADMIN}", displayName = "Nico", version = ${at}, chars = {
+          G = { name = "Grom Example", classFile = "WARRIOR", level = 1, updatedAt = ${at}, lastPlayed = ${at} } },
+          goals = { days = { [${day(at)}] = { set = { "d.quests10" }, done = { ["d.quests10"] = ${at} }, at = ${at} } },
+            weeks = {}, streak = { n = 12 }, best = 12 } },
+        settings = { clubId = 1, clubName = "Friends" } }`);
+    storeCutoff(db, CUTOFF, ADMIN, CUTOFF);
+    upload(db, goals(LAUNCH), ADMIN, LAUNCH, ADMIN);
+    const status = db.select().from(doomsdayStatus).all();
+    expect(status.map((s) => [s.streak, s.best])).toEqual([[null, null]]);
+    expect(db.select().from(doomsdayGoals).all().length).toBe(1);
   });
 });
