@@ -1,7 +1,6 @@
 # Changelog
 
 ## Unreleased
-- Uploader: a "What's new" page lists each kept version of the app with its notes; the app's update message links to it.
 - Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
 
 ## v0.6.1 (2026-10-30)

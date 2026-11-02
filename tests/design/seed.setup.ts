@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { answerRun, planRun, setTimeZone } from "../e2e/runs";
 import { signInAs } from "../e2e/session";
-import { publishRelease } from "../e2e/uploaderApi";
 import { ADMIN, sampleSavedVariables, type SampleDay } from "./sample";
 
 // Seeds the design server's fresh database with the sample data through the real upload route, as the admin: the
@@ -72,22 +71,4 @@ test("plan the sample runs", async ({ page, context, baseURL }) => {
 
   await as(ADMIN);
   await answerRun(page, wc, "maybe", "Player-1-0000A002");
-});
-
-// The sample uploader releases (WEB-73): the uploader page's version and the "What's new" page. The desktop and phone
-// projects run this file again: publish once.
-test("publish the sample uploader releases", async ({ page, context, baseURL }) => {
-  await signInAs(context, baseURL!, ADMIN);
-  await page.goto("/uploader/changes");
-  if ((await page.getByRole("heading", { name: "0.4.0" }).count()) > 0) return;
-  const status = await publishRelease(page.request, [
-    { version: "0.3.0", notes: "- Finds World of Warcraft by itself\n- Uploads after every session" },
-    {
-      version: "0.3.1",
-      notes:
-        "Fixes after the first week.\n\n- Fixed:\n  - the tray icon after a restart\n  - Reconnect after a revoked token\n- Faster uploads",
-    },
-    { version: "0.4.0" },
-  ]);
-  expect(status).toBe(201);
 });

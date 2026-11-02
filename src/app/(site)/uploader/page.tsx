@@ -22,7 +22,7 @@ import {
   parseOlder,
   uploaderRows,
 } from "@/core/views/uploader";
-import { aboutSize, CHANGES_PATH } from "@/core/releases";
+import { aboutSize } from "@/core/releases";
 import { getDb } from "@/server/db";
 import { readCurrent } from "@/server/releases";
 import { activeTokens, findPairing, limits, type PendingPairing } from "@/server/uploader";
@@ -118,11 +118,6 @@ export default async function UploaderPage({
               ? "Not released yet · Windows 10 and 11"
               : `${release.version} · Windows 10 and 11 · ${aboutSize(release.size)}`}
           </p>
-          {release !== undefined && (
-            <p className={styles.manual}>
-              <Link href={`${CHANGES_PATH}#${release.version}`}>What&apos;s new</Link>
-            </p>
-          )}
           <ol className={styles.steps}>
             <li className={styles.step}>
               <span className={styles.stepNumber} aria-hidden="true">
