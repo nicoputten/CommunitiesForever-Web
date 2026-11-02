@@ -1,8 +1,7 @@
-import { createHash } from "node:crypto";
 import { expect, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "./session";
-import { pollToken, startPairing } from "./uploaderApi";
+import { pollToken, publishReleases, startPairing } from "./uploaderApi";
 
 // WEB-34: the uploader page against the real server, at desktop and phone size. Each project signs in as its own
 // guest with "may upload", so the two don't see each other's uploaders.
@@ -118,32 +117,9 @@ test("a token by hand is shown once and can be revoked", async ({ page }, info) 
 test("a published release turns on Download for Windows", async ({ page }) => {
   // Each run and project publishes a newer version: the site refuses an older one.
   const version = `1.0.${Date.now()}${Math.floor(Math.random() * 10)}`;
-  const id = "CommunitiesForever.Upload";
-  const pkg = Buffer.from(`package ${version}`);
-  const feed = JSON.stringify({
-    Assets: [
-      {
-        PackageId: id,
-        Version: version,
-        Type: "Full",
-        FileName: `${id}-${version}-full.nupkg`,
-        SHA256: createHash("sha256").update(pkg).digest("hex"),
-        Size: pkg.length,
-      },
-    ],
-  });
-  const published = await page.request.post("/api/uploader/v1/releases", {
-    headers: { authorization: `Bearer ${E2E.deploySecret}` },
-    multipart: {
-      setup: { name: `${id}-win-Setup.exe`, mimeType: "application/octet-stream", buffer: Buffer.from("setup") },
-      full: { name: `${id}-${version}-full.nupkg`, mimeType: "application/octet-stream", buffer: pkg },
-      feed: { name: "releases.win.json", mimeType: "application/json", buffer: Buffer.from(feed) },
-      // WEB-35b: the signature is required; the site doesn't check it (the app does).
-      signature: { name: "releases.win.json.sig", mimeType: "application/octet-stream", buffer: Buffer.from("sig") },
-    },
-  });
+  const [status] = await publishReleases(page.request, E2E.deploySecret, [{ version }]);
   // The other project may have published a newer one at the same moment (409): either way there is a release.
-  expect([201, 409]).toContain(published.status());
+  expect([201, 409]).toContain(status);
 
   await page.goto("/uploader");
   const button = page.getByRole("link", { name: "Download for Windows" });
@@ -152,4 +128,34 @@ test("a published release turns on Download for Windows", async ({ page }) => {
   const download = page.waitForEvent("download");
   await button.click();
   expect((await download).suggestedFilename()).toBe("CommunitiesForever-Uploader-Setup.exe");
+});
+
+test("What's new shows the notes of each kept version, the app's link lands on its version", async ({ page }) => {
+  // The other project's release tests publish at the same moment, and a publish keeps only the versions its feed
+  // lists: publish and look again until this test's two versions are the newest.
+  await expect(async () => {
+    const minor = `${Date.now()}${Math.floor(Math.random() * 10)}`;
+    const older = `2.${minor}.0`;
+    const newer = `2.${minor}.1`;
+    const statuses = await publishReleases(page.request, E2E.deploySecret, [
+      { version: older, notes: "- Faster start-up.\n  - Even on a slow disk." },
+      { version: newer, notes: "Fixes after the first week.\n\n- Fixed: the **tray** icon after a restart." },
+    ]);
+    expect(statuses).toEqual([201, 201]);
+
+    await page.goto("/uploader");
+    await page.getByRole("link", { name: `What’s new in ${newer} ›` }).click();
+    await expect(page).toHaveURL((url) => url.pathname === "/uploader/changes" && url.hash === `#${newer}`);
+    const latest = page.getByRole("region", { name: `v${newer}` });
+    await expect(latest).toContainText("Latest");
+    await expect(latest.getByText("Fixes after the first week.")).toBeVisible();
+    await expect(latest.getByRole("listitem")).toHaveText("Fixed: the tray icon after a restart.");
+    const previous = page.getByRole("region", { name: `v${older}` });
+    await expect(previous).not.toContainText("Latest");
+    await expect(previous.getByRole("listitem").getByRole("listitem")).toHaveText("Even on a slow disk.");
+  }).toPass({ timeout: 30_000 });
+
+  await page.getByRole("link", { name: "The app" }).click();
+  await expect(page).toHaveURL(/\/uploader$/);
+  await expect(page.getByRole("link", { name: "The app" })).toHaveAttribute("aria-current", "page");
 });

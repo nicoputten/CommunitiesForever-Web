@@ -21,6 +21,7 @@ import { localTime, nextDays, runWhen, untilStart, weekEnd, type DayOption } fro
 import { byLevel, compareText, type CharacterView, type PersonView } from "./characters";
 import { levelFit, type FitKind, type LevelFit } from "../levelFit";
 import { initials, joinNames } from "./text";
+import { UNKNOWN_CHARACTER } from "./text";
 
 // The Runs pages (WEB-40, boards `runs`, `run-detail`, `run-create`, `runs-phone`): the list by This week, Later and
 // Past with its filters, a run's page, and Plan a run. Times in the viewer's own zone; names only.
@@ -212,7 +213,7 @@ function characterView(c: CharacterView, r: LevelRange): RunCharacterView {
   const info = classInfo(c.classFile);
   const v: RunCharacterView = {
     guid: c.guid,
-    name: c.name ?? c.guid,
+    name: c.name ?? UNKNOWN_CHARACTER,
     role: slotRole(c.role),
     fits: levelFit(c.level, r.min, r.max).canPick,
     fit: levelFit(c.level, r.min, r.max).kind,
@@ -269,7 +270,10 @@ function answerChoice(ctx: Ctx, run: RunRecord): AnswerChoice {
 }
 
 function charName(ctx: Ctx, a: RunAnswer): string {
-  return a.guid === undefined ? friendName(ctx, a.battleTag) : (ctx.byGuid.get(a.guid)?.name ?? a.guid);
+  // WEB-69: never a raw GUID; the name kept with the answer, else "Unknown character".
+  return a.guid === undefined
+    ? friendName(ctx, a.battleTag)
+    : (ctx.byGuid.get(a.guid)?.name ?? a.name ?? UNKNOWN_CHARACTER);
 }
 
 /** Roles open with no character in range of that role among those who haven't answered. */
@@ -796,7 +800,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     couldJoin: candidates.slice(0, 6).map((ch) => {
       const info = classInfo(ch.classFile);
       const v: CouldJoinView = {
-        character: ch.name ?? ch.guid,
+        character: ch.name ?? UNKNOWN_CHARACTER,
         friend: ch.ownerName ?? "",
         role: slotRole(ch.role),
       };
@@ -811,7 +815,7 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     picker: picker(ctx, run),
     couldFill: candidates
       .slice(0, 3)
-      .map((ch) => [ch.name ?? ch.guid, ch.level].filter((x) => x !== undefined).join(" ")),
+      .map((ch) => [ch.name ?? UNKNOWN_CHARACTER, ch.level].filter((x) => x !== undefined).join(" ")),
     maybes: listed("maybe"),
     reserves: listed("reserve"),
     mayMove: mayMove && !closed,
@@ -828,10 +832,13 @@ export function runDetail(input: RunsInput, id: number): RunDetail | undefined {
     const bar: LeadBar = {
       state: mine?.answer === "in" ? "playing" : mine === undefined || mine.answer === "cant" ? "out" : "benched",
     };
-    if (mine !== undefined && mine.answer !== "cant" && ch !== undefined) {
+    if (mine !== undefined && mine.answer !== "cant") {
+      // WEB-69: also when the site no longer has the character: its kept name (or "Unknown character") and role.
       bar.character = charName(ctx, mine);
       bar.role = ROLE_LABEL[mine.role];
       bar.initials = initials(bar.character);
+    }
+    if (mine !== undefined && mine.answer !== "cant" && ch !== undefined) {
       if (ch.classFile !== undefined) bar.classFile = ch.classFile;
       const info = classInfo(ch.classFile);
       if (info !== undefined) bar.colorToken = info.textToken;
@@ -918,7 +925,7 @@ function pickerCharacter(c: CharacterView, r: LevelRange): PickerCharacter {
   const own = slotRole(c.role);
   const v: PickerCharacter = {
     guid: c.guid,
-    name: c.name ?? c.guid,
+    name: c.name ?? UNKNOWN_CHARACTER,
     initials: initials(c.name),
     line: [[c.level, c.className].filter((x) => x !== undefined).join(" "), c.mainTreeName]
       .filter((x) => x !== undefined && x !== "")
@@ -1009,7 +1016,7 @@ function openFact(ctx: Ctx, run: RunRecord, role: SlotRole, left: number): strin
   const nobody = `No ${role} in range`;
   return below === undefined
     ? nobody
-    : `${nobody} · ${below.name ?? below.guid} is ${levelFit(below.level, r.min, r.max).label}`;
+    : `${nobody} · ${below.name ?? UNKNOWN_CHARACTER} is ${levelFit(below.level, r.min, r.max).label}`;
 }
 
 // --- Plan a run -------------------------------------------------------------------------------------------------------
@@ -1063,7 +1070,7 @@ function bestFit(mine: readonly CharacterView[], r: LevelRange): DungeonOption["
   const best = bestOf(mine, r);
   if (best === undefined) return undefined;
   const { c, fit } = best;
-  const name = (c.name ?? c.guid).split(" ")[0]!;
+  const name = (c.name ?? UNKNOWN_CHARACTER).split(" ")[0]!;
   switch (fit.kind) {
     case "fits":
     case "over":

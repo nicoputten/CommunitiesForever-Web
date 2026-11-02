@@ -48,15 +48,23 @@ export function feedsSince(feeds: readonly PersonFeed[], cutoff: number): Person
   });
 }
 
-/** Doomsday goals without days and weeks from before the cut-off (by `at`, else the whole day or week). */
+/**
+ * Doomsday goals without days and weeks from before the cut-off (by `at`, else the whole day or week), and without the
+ * addon's streak and best, which count the beta too (WEB-70): the site counts them again from the days it keeps.
+ */
 export function goalsSince(all: readonly PersonGoals[], cutoff: number): PersonGoals[] {
   const keep = <T extends { at?: number }>(records: Record<number, T>, end: (n: number) => number) =>
     Object.fromEntries(
       Object.entries(records).filter(([n, r]) => (r.at !== undefined ? r.at >= cutoff : end(Number(n)) > cutoff)),
     ) as Record<number, T>;
-  return all.map((g) => ({
-    ...g,
-    days: keep(g.days, (n) => (n + 1) * DAY),
-    weeks: keep(g.weeks, (w) => (w * 7 + 3) * DAY),
-  }));
+  return all.map((g) => {
+    const out: PersonGoals = {
+      ...g,
+      days: keep(g.days, (n) => (n + 1) * DAY),
+      weeks: keep(g.weeks, (w) => (w * 7 + 3) * DAY),
+    };
+    delete out.streak;
+    delete out.best;
+    return out;
+  });
 }

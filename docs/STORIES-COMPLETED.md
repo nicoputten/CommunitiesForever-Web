@@ -988,3 +988,50 @@ Decided with Nico (2026-10-29, for addon CF-63). An answer item from the game ma
 ### WEB-68 Test posts with pictures
 Nico (2026-10-29, "Yes, fix now"): the Discord page's test posts still showed the old text board. The site draws sample pictures with the same renderer as the real ones and the bot's own made-up names (Test Friend, Another Test, Testy McTestface): the daily board, a big and a strip feat card, the recap's award header and zone crop, at fixed ids `sample-<name>` behind the bot token. The `test` event carries their ids per kind (`images`, optional within v1; `docs/BOT-API.md`). The bot reads them in its own follow-up.
 - Done (this PR): `src/core/cards/samples.ts`, `cardFor`'s `sample-` ids, the test action's `images`.
+
+### WEB-69 Never a raw GUID for a character
+Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "You lead as ·". The character had left the data: the uploader's own newest record decides their characters (`src/core/merge.ts`), so a retail character added by a retail upload is removed by the next Forever upload, while the run kept its GUID.
+- Each answer keeps its character's name when the site knows it (`run_answers.name`, migration 0025), refreshed on every write; a character the site no longer has shows by that name, else "Unknown character" (`UNKNOWN_CHARACTER`), on the site and in the bot's payload. Every other place that fell back to a GUID uses it too.
+- The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
+- Done (this PR).
+
+### WEB-70 Launch cut-off: the first recap, the beta streak
+Bug hunt before launch (2026-11-02). After "Start fresh", the first recap's week started at the recap moment before the cut-off, so `recapBase` took it for a beta recap and hid it, and the minute check computed and posted it again every minute. The addon's streak and best from the beta also survived the cut-off and set Doomsday's best streak.
+- The first week after the cut-off starts at the cut-off (`firstStart`, `src/server/recap.ts`); `goalsSince` drops the addon's `streak` and `best`, so the site counts them from the days it keeps.
+- Done (this PR).
+
+### WEB-74 The owner's file from another community
+Bug hunt before launch (2026-11-02), Nico chose "reject": one owner upload from another community (the retail test) moved the site to it. Friends' uploads were then refused until the owner uploaded a Forever file again, and everyone in the retail file became a member for good.
+- Once a community is set, the owner's file is held to it like everyone's: rejected as "other community" ("This ledger is for another community" on the upload screen), nothing merged, no members added.
+- The community is that of the owner's uploads since the launch cut-off, so the clean path to a new in-game community (new clubId) is "Start fresh from launch", then the owner's upload. Until then, friends' files are "no community yet" and are checked again when sent again. Undo and Start fresh again to redo it.
+- The rebuild follows the same rule, starting the community anew at the cut-off.
+- Done (this PR).
+
+### WEB-71 Site name and "First upload" after the cut-off
+Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTag with its case (every other check ignores case), and after "Start fresh" the first launch upload read "12 new characters" instead of "First upload", because the first accepted upload was a beta one.
+- `siteName` uses `sameBattleTag`; `firstOkId` is the first accepted upload at or after the cut-off.
+- Done (this PR).
+
+### WEB-72 The class per name in the recap
+Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
+- Done (this PR).
+
+### WEB-76 Dungeons: who has which dungeon quests
+Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon-quests` (designer first, Nico 2026-11-02). A Quests box on the dungeon page, under Who fits (on a phone after Who fits, before Planned here): the dungeon's quests in friends' quest logs, most holders first, each with its holders as a class disc and the name in class colour; 4 on desktop, 3 on a phone, the rest behind a "+N" chip that opens the ⓘ tooltip ("Also has it"). With none: "Nobody has a quest for this dungeon"; the box stays. The view model's holders carry their `classFile`.
+- No zone per quest (Nico, 2026-11-02): the quest log only has the dungeon's own header, so the board's grey zone would repeat the dungeon's name.
+- Done (this PR).
+
+### WEB-73 Uploader "What's new" page
+Backlog (UP-10 proposal, left out of WEB-35b). Boards `uploader-changes`, `uploader-changes-states` (designer first, Nico 2026-11-02). `/uploader/changes`: one box per version the update feed keeps, newest first, its id the plain version so the app's `notesUrl` (`#0.3.1`) lands on it; the linked box glows and the glow fades after 3 s (it stays without motion). "The app · What’s new" tabs on both uploader pages and "What’s new in 0.3.1 ›" in Get the app. Before the first release: "No versions yet" and Back to the app.
+- Nico (2026-11-02): a date on the newest version only (the feed has no date for older ones); "No notes for this version" for a version without notes; paragraphs as plain text and nested bullets indented.
+- Done (this PR).
+
+### WEB-77 The map in Forever's shapes
+Nico noticed the world map showed Cataclysm's world (2026-11-02). The source SVGs (Syrio, WEB-02) are Cataclysm-era: Darkshore, Azshara, Stonetalon, Desolace, the Barrens, the Cape of Stranglethorn and the flooded Thousand Needles were Cataclysm's, and the Forever zones were hand-drawn guesses. Nico chose to trace Forever's own continent maps (warcraft.wiki.gg "Forever map comparison"), keeping every Forever zone.
+- `tools/map/build_zones.py` traces the coast and every zone border from Forever's two continent maps (read from a gitignored local folder, `tools/map/README.md`) and lays them onto the SVGs' world frame, so the map keeps its size and place. Zephras Isle stays hand-drawn.
+- Uldum and Grim Batol (terrain) are gone, as on Forever's maps; Quel'Thalas (land without a zone north of Eastern Plaguelands) is new terrain, like Gilneas (Nico, 2026-11-02). It runs off the top of the world, so a continent is framed on its zones, not its terrain (`src/core/views/map.ts`). Alterac stays part of Hillsbrad.
+- Label points moved where labels collided (Undercity and Western Plaguelands, Stonetalon and Desolace), checked on every view, desktop and phone.
+- Dungeon markers, cities and label points moved with their zone.
+- `--forever-only` is gone: Forever's changes are now part of the full build.
+- The credit for Forever's maps is a backlog item (Nico: "no credit for now").
+- Done (this PR).

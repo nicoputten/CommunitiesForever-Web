@@ -134,6 +134,8 @@ export interface RecapCard {
   classFile?: string;
   /** WEB-66: the card's image id: the award header, or the zone crop of a card with a map (S1, S13). */
   image?: string;
+  /** WEB-72: the class of each character and friend the card names (name as in its texts → classFile). */
+  classes?: Record<string, string>;
 }
 
 export interface RecapDoomsday {

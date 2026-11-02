@@ -95,9 +95,9 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                   You lead as{" "}
                   <strong className={styles.leadName} style={color(bar.colorToken)}>
                     {bar.character}
-                  </strong>{" "}
-                  · {bar.role}
-                  {bar.line !== undefined && <span className={styles.leadLine}>{bar.line}</span>}
+                  </strong>
+                  {bar.role !== undefined && ` · ${bar.role}`}
+                  {bar.line !== undefined && bar.line !== "" && <span className={styles.leadLine}>{bar.line}</span>}
                 </p>
               ) : (
                 <p className={styles.leadText}>

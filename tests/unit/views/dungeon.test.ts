@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { RunAnswer, RunRecord } from "@/core/runs";
 import { peopleViews, recordCharacters } from "@/core/views/characters";
-import { dungeonPage, dungeonPageId, mapDungeons, plannedSummary, RAN_SHOWN } from "@/core/views/dungeon";
+import {
+  dungeonPage,
+  dungeonPageId,
+  dungeonQuests,
+  mapDungeons,
+  plannedSummary,
+  RAN_SHOWN,
+} from "@/core/views/dungeon";
 import { entranceMap } from "@/core/views/map";
 import type { RunsInput } from "@/core/views/runs";
 import { NOW, sample } from "./sample";
@@ -250,5 +257,54 @@ describe("the hero's map", () => {
     expect(m.box.y + m.box.height / 2).toBe(y);
     expect(m.zones).toContain("tirisfal");
     expect(m.coasts).toContain("E");
+  });
+});
+
+describe("dungeonQuests (WEB-76)", () => {
+  const chars = recordCharacters(data, NOW);
+  const ves = chars.find((c) => c.name === "Ves Doombringer")!;
+  const lia = chars.find((c) => c.name === "Lia Thornwhisper")!;
+  const tok = chars.find((c) => c.name === "Tok Ironhide")!;
+  const withQuests = [
+    {
+      ...ves,
+      quests: [
+        { id: "1050", title: "Mythology of the Titans", area: "Scarlet Monastery", dungeon: true },
+        { id: "1048", title: "Into The Scarlet Monastery", area: "Scarlet Monastery" },
+        { id: "2", title: "Sharptalon's Claw", area: "Ashenvale" },
+      ],
+    },
+    { ...lia, quests: [{ id: "1048", title: "Into The Scarlet Monastery", area: " Scarlet Monastery " }] },
+    {
+      ...tok,
+      quests: [
+        { id: "1049", title: "Compendium of the Fallen" },
+        { id: "9", area: "Zul'Farrak" },
+      ],
+    },
+  ];
+
+  it("lists the instance's quests from their log header, most holders first, highest level first", () => {
+    expect(dungeonQuests(withQuests, "sm")).toEqual([
+      {
+        id: "1048",
+        title: "Into The Scarlet Monastery",
+        holders: [
+          expect.objectContaining({ name: "Ves Doombringer", level: 39, classFile: "WARLOCK" }),
+          expect.objectContaining({ name: "Lia Thornwhisper", level: 37, classFile: "PRIEST" }),
+        ],
+      },
+      { id: "1050", title: "Mythology of the Titans", holders: [expect.objectContaining({ name: "Ves Doombringer" })] },
+    ]);
+    expect(dungeonQuests(withQuests, "zf")).toEqual([
+      { id: "9", title: "Quest 9", holders: [expect.objectContaining({ name: "Tok Ironhide" })] },
+    ]);
+  });
+
+  it("shows the instance's quests on every wing's page, and none without them", () => {
+    const withLogs = input({ characters: withQuests });
+    expect(dungeonPage(withLogs, "sm-library")?.quests.map((q) => q.id)).toEqual(["1048", "1050"]);
+    expect(dungeonPage(withLogs, "rfk")?.quests).toEqual([]);
+    expect(dungeonPage(input(), "sm-armory")?.quests).toEqual([]);
   });
 });

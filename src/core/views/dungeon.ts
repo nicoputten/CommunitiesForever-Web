@@ -5,6 +5,7 @@ import {
   RUNNABLE_DUNGEONS,
   classInfo,
   dungeonPosition,
+  resolveZone,
   rolesFor,
   type LevelRange,
   type RunnableDungeon,
@@ -21,10 +22,11 @@ import {
   type SlotRole,
 } from "../runs";
 import { dayLabel, localTime, runWhen } from "../runTime";
-import { byLevel, type CharacterView } from "./characters";
+import { byLevel, compareText, type CharacterView } from "./characters";
 import type { Continent } from "./mapMarkers";
 import { joinNames } from "./text";
 import type { RunsInput } from "./runs";
+import { UNKNOWN_CHARACTER } from "./text";
 
 // The dungeon page (WEB-42, board `dungeon-page`, decided with Nico 2026-10-28): one page per dungeon a group runs
 // (`RUNNABLE_DUNGEONS`: Scarlet Monastery as its four wings), who fits per role, the runs planned here and in the
@@ -48,6 +50,8 @@ export interface FitCharacter {
   level?: number;
   /** The class text colour token, for the name. */
   colorToken?: string;
+  /** The upload's classFile, for a class disc (Quests box, WEB-76). */
+  classFile?: string;
   /** The friend's display name. */
   friend?: string;
   /** "+3 over"; undefined when it fits. */
@@ -88,6 +92,14 @@ export interface RanRunView {
   result: string;
 }
 
+/** A quest in friends' logs under this dungeon's header (WEB-76), with who has it. */
+export interface DungeonQuest {
+  id: string;
+  title: string;
+  /** Highest level first. */
+  holders: FitCharacter[];
+}
+
 export interface WingLink {
   label: string;
   href: string;
@@ -116,6 +128,8 @@ export interface DungeonPage {
   /** "Cathedral on Wed 4 Nov 20:00 (Femke)": upcoming runs in the other wings. */
   otherWings: { text: string; href: string }[];
   ran: RanRunView[];
+  /** Quests friends have for this dungeon (WEB-76): most holders first. Scarlet Monastery's are on every wing. */
+  quests: DungeonQuest[];
 }
 
 function rangeText(r: LevelRange): string {
@@ -165,10 +179,11 @@ function names(input: RunsInput): Names {
 }
 
 function fitCharacter(c: CharacterView, over?: string): FitCharacter {
-  const v: FitCharacter = { guid: c.guid, name: c.name ?? c.guid };
+  const v: FitCharacter = { guid: c.guid, name: c.name ?? UNKNOWN_CHARACTER };
   if (c.level !== undefined) v.level = c.level;
   const token = classInfo(c.classFile)?.textToken;
   if (token !== undefined) v.colorToken = token;
+  if (c.classFile !== undefined) v.classFile = c.classFile;
   if (c.ownerName !== undefined) v.friend = c.ownerName;
   if (over !== undefined) v.over = over;
   return v;
@@ -233,7 +248,7 @@ function plannedView(input: RunsInput, n: Names, run: RunRecord): PlannedRunView
   const lead = run.answers.find((a) => sameBattleTag(a.battleTag, run.organiser) && a.answer === "in");
   const c = n.character(lead?.guid);
   if (c !== undefined) {
-    v.lead = { name: c.name ?? c.guid };
+    v.lead = { name: c.name ?? UNKNOWN_CHARACTER };
     const token = classInfo(c.classFile)?.textToken;
     if (token !== undefined) v.lead.colorToken = token;
   }
@@ -245,6 +260,25 @@ function levelsLine(dungeon: RunnableDungeon): string {
 }
 
 /** The dungeon page of a runnable dungeon id ("sm-armory", "rfc"); undefined for an unknown id. */
+/**
+ * The quests in friends' logs for an instance (WEB-76): those under its quest-log header (the addon's `area`, CF-19,
+ * read through the instance's zone texts). The log doesn't say which wing, so a wing's page shows the instance's.
+ */
+export function dungeonQuests(characters: readonly CharacterView[], instanceId: string): DungeonQuest[] {
+  const byId = new Map<string, { title: string; holders: CharacterView[] }>();
+  for (const c of characters) {
+    for (const q of c.quests) {
+      if (q.area === undefined || resolveZone(q.area).dungeon?.id !== instanceId) continue;
+      const entry = byId.get(q.id) ?? { title: q.title ?? `Quest ${q.id}`, holders: [] };
+      entry.holders.push(c);
+      byId.set(q.id, entry);
+    }
+  }
+  return [...byId.entries()]
+    .map(([id, e]) => ({ id, title: e.title, holders: e.holders.sort(byLevel).map((c) => fitCharacter(c)) }))
+    .sort((a, b) => b.holders.length - a.holders.length || compareText(a.title, b.title) || compareText(a.id, b.id));
+}
+
 export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefined {
   const dungeon = runDungeon(id);
   const instance = DUNGEONS.find((d) => d.id === dungeon?.instanceId);
@@ -284,6 +318,7 @@ export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefin
         result:
           r.outcome?.kind === "done" ? `Ran it · ${r.outcome.came} of ${r.outcome.signedUp} signed-up came` : "Ran it",
       })),
+    quests: dungeonQuests(input.characters, instance.id),
   };
   const position = dungeonPosition(instance);
   if (position !== undefined) page.entrance = { zone: instance.zone, ...position };

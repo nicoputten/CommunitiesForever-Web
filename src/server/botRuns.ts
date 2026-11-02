@@ -9,6 +9,7 @@ import { effectiveTimeZone, linkForDiscordUser } from "./discord";
 import { charactersOf, listRuns, runPayload, type StoredRun } from "./runs";
 import { apiError } from "./session";
 import { loadState } from "./uploads";
+import { UNKNOWN_CHARACTER } from "@/core/views/text";
 
 // The bot's run actions (WEB-40, docs/BOT-API.md "Run actions"): done for a Discord user, only when that account is
 // linked (WEB-39) to someone who may sign in. The site checks every right itself; the bot only passes the user on.
@@ -98,7 +99,7 @@ export function pickableCharacters(db: Db, run: StoredRun, battleTag: string) {
       .sort((a, b) => LEAD_ORDER[a.fit.kind] - LEAD_ORDER[b.fit.kind])
       .map(({ c, fit }) => ({
         guid: c.guid,
-        name: c.name ?? c.guid,
+        name: c.name ?? UNKNOWN_CHARACTER,
         level: c.level ?? null,
         classFile: c.classFile ?? null,
         role: c.role ?? null,
@@ -180,7 +181,7 @@ export function planChoices(db: Db, friend: BotFriend, now: number) {
             ? null
             : {
                 guid: lead.c.guid,
-                name: lead.c.name ?? lead.c.guid,
+                name: lead.c.name ?? UNKNOWN_CHARACTER,
                 level: lead.c.level ?? null,
                 classFile: lead.c.classFile ?? null,
                 role: slotRole(lead.c.role),

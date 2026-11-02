@@ -51,6 +51,12 @@ describe("site name", () => {
     ).toBe("Doombringers");
   });
 
+  it("matches the admin's BattleTag without case (WEB-71)", () => {
+    expect(siteName([{ uploadedBy: admin.toUpperCase(), uploadedAt: 10, communityName: "Doombringers" }], admin)).toBe(
+      "Doombringers",
+    );
+  });
+
   it("ignores other people's uploads and uploads without a name", () => {
     expect(
       siteName(

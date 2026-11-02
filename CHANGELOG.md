@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 (2026-11-02)
+- Map: the world map now has WoW: Forever's own shapes, traced from its in-game maps: Vanilla coasts and zone borders instead of Cataclysm's (a dry Thousand Needles, Vanilla Darkshore, Azshara, Stonetalon and Stranglethorn), Mount Hyjal, The Riverglades and Shen'dralas where Forever puts them, Quel'Thalas as land north of the Plaguelands, no Uldum or Grim Batol.
+- Dungeon pages: a Quests box shows which quests for the dungeon are in friends’ quest logs, and who has them.
+- Uploader: a What’s new page lists the changes in each version of the app; the app’s update link opens it at the new version.
+- After "Start fresh from launch", the first weekly recap covers the time since the reset and is posted once. Doomsday's best streak no longer counts the beta.
+- Upload: once the site has its community, the owner's file from another community (such as a retail test) is refused like anyone's, and no one in it becomes a member. To move to a new in-game community: Start fresh from launch, then the owner uploads first.
+- After "Start fresh from launch", the first upload after it says "First upload" in the upload history again.
+- Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
+
 ## v0.6.1 (2026-10-30)
 - Runs: a note with an answer from the game ("Late, start without me") shows under that answer on the run page, and goes to Discord with it.
 - Discord page: the test buttons send the bot sample pictures too (the board, a feat card, the recap header and map), so a test post looks like the real one once the bot reads them.
