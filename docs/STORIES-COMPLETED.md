@@ -994,3 +994,7 @@ Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "
 - Each answer keeps its character's name when the site knows it (`run_answers.name`, migration 0025), refreshed on every write; a character the site no longer has shows by that name, else "Unknown character" (`UNKNOWN_CHARACTER`), on the site and in the bot's payload. Every other place that fell back to a GUID uses it too.
 - The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
 - Done (this PR).
+
+### WEB-72 The class per name in the recap
+Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
+- Done (this PR).

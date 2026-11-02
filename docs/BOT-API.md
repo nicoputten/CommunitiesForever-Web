@@ -589,6 +589,8 @@ The `recap` event (and `recap/latest`) gains:
 | `award.classFile` | the winner's class, for the embed's colour |
 | `award.image` | the award header's id (`recap-<week>-header`) |
 | `cards[].image` | the zone crop's id (`recap-<week>-zone`) on a card with a map (`S1`, `S13`) |
+| `award.classes`, `cards[].classes` | WEB-72, optional within v1: `{ "<name>": "<classFile>" }` for every character and friend the card names in its `title` or `text`, and the card's `friends`. A character name maps to its own class; a friend's display name to the class of their highest-level character (as `award.classFile`). Keys are exactly as written in the texts; left out when the card names nobody with a known class |
 | `url` | the site's page for "The full week ↗": the Doomsday page's Week tab (Nico, 2026-10-29) |
 
 - The layout (one message, the header embed, an embed per card, Doomsday, the challenge, the link buttons) is the bot's, as `bot-visual-recap` shows. If an image fails, the embeds go out without it.
+- WEB-72: with `classes`, the bot can put the class icon before each name in a card's text: match the longest names first (a friend "Mira" and her character "Mira Sunstrider"), whole names only. Cards from before WEB-72 have none; then names show without icon.
