@@ -19,7 +19,7 @@ import {
 import { getBotSettings, setTimeZone, updateBotSettings } from "@/server/discord";
 import { latestRecap, recapByNumber, runDueRecap, storedRecaps } from "@/server/recap";
 import { getRun, listRuns, planRunFor } from "@/server/runs";
-import { loadState, rebuild, upload } from "@/server/uploads";
+import { getUpload, loadState, rebuild, upload } from "@/server/uploads";
 
 // WEB-62: the launch cut-off. Beta uploads before it count only for who may sign in; launch uploads after it lose
 // what dates from before it (a beta character carried along is ignored). Runs, recaps and feats from before it are
@@ -123,7 +123,9 @@ describe("the launch cut-off", () => {
     expect(recapByNumber(db, 1)?.start).toBe(LAUNCH);
 
     // A launch upload: Grom is new; Ves and Mira, last played in the beta, stay out.
-    upload(db, file(LAUNCH, { vesPlayed: BETA + 100, grom: true }), ADMIN, LAUNCH, ADMIN);
+    const launchUpload = upload(db, file(LAUNCH, { vesPlayed: BETA + 100, grom: true }), ADMIN, LAUNCH, ADMIN);
+    // It's the site's first upload again (WEB-71).
+    expect(getUpload(db, launchUpload.id)?.first).toBe(true);
     expect(Object.keys(loadState(db)!.data.characters)).toEqual(["G"]);
     // The site's first upload after the cut-off: everything in it is already had, no feat posts.
     expect(db.select().from(botEvents).all().length).toBe(before.events);
