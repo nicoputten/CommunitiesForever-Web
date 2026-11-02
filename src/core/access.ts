@@ -103,9 +103,11 @@ export function fileOwner(data: Dataset): string | undefined {
 
 /**
  * Whether a readable file from `uploader` is accepted (the uploader may upload; checked before).
- * It must be their own file (`self.battleTag`) and, unless the admin uploads, of the admin's community
- * (`settings.clubId`). `community` is that of the admin's uploads; undefined before the admin's first upload, when
- * only the admin can upload.
+ * It must be their own file (`self.battleTag`) and of the site's community (`settings.clubId`). `community` is that of
+ * the admin's uploads since the launch cut-off; undefined before the admin's first one, when only the admin can upload
+ * and the admin's file sets it. After that the admin is held to it too (WEB-74): one file from another community (a
+ * retail test) must not move the site or make its people members. Moving to a new community is "Start fresh", then
+ * the admin's upload.
  */
 export function checkFile(
   uploader: string,
@@ -116,8 +118,7 @@ export function checkFile(
   const owner = fileOwner(data);
   if (!sameBattleTag(owner, uploader))
     return owner !== undefined ? { code: "not-your-file", owner } : { code: "not-your-file" };
-  if (sameBattleTag(uploader, admin)) return undefined;
-  if (community === undefined) return { code: "no-community-yet" };
+  if (community === undefined) return sameBattleTag(uploader, admin) ? undefined : { code: "no-community-yet" };
   if (data.community.id !== community) return { code: "other-community" };
   return undefined;
 }

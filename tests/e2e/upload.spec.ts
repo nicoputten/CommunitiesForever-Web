@@ -17,9 +17,10 @@ const shown = (page: Page) => zone(page).locator(":scope > p:not([role=status])"
 const MEMBERS: Record<string, string> = { desktop: "Desktop#4101", phone: "Phone#4102" };
 const memberOf = (info: TestInfo) => MEMBERS[info.project.name] ?? "Desktop#4101";
 
-/** The admin's file that names the members, in the e2e community (the same bytes every run: a no-op again). */
+/** The admin's file that names the members, in the sample's community (WEB-74: the admin is held to it; the same
+ * bytes every run: a no-op again). */
 const ADMIN_FILE = Buffer.from(`CommunitiesForeverDB = { global = { schemaVersion = 1,
-  settings = { clubId = 77, clubName = "E2E Club" },
+  settings = { clubId = "40000001", clubName = "Doombringers" },
   self = { battleTag = "${E2E.admin}", version = 1000, chars = {} },
   people = { ["Desktop#4101"] = { version = 1 }, ["Phone#4102"] = { version = 1 } } } }`);
 
@@ -30,7 +31,7 @@ function ownFile(battleTag: string): Buffer {
   version = Math.max(version + 1, Date.now());
   const id = `${version}${Math.floor(Math.random() * 1e6)}`;
   return Buffer.from(`CommunitiesForeverDB = { global = { schemaVersion = 1,
-    settings = { clubId = 77, clubName = "E2E Club" },
+    settings = { clubId = "40000001", clubName = "Doombringers" },
     self = { battleTag = "${battleTag}", version = ${version}, chars = {
       ["Player-1-${id}"] = { name = "E2E Character", level = 12, classFile = "MAGE", updatedAt = ${version} } } } } }`);
 }
