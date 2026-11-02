@@ -5,6 +5,7 @@ import { nowSeconds } from "@/app/clock";
 import { getViewer } from "@/app/viewer";
 import { PlusIcon } from "@/components/ui/icons";
 import { EntranceMap } from "@/components/dungeon/EntranceMap";
+import { QuestsBox } from "@/components/dungeon/QuestsBox";
 import styles from "@/components/dungeon/Dungeon.module.css";
 import runs from "@/components/runs/Runs.module.css";
 import { dungeonPage, dungeonPageId, type FitCharacter } from "@/core/views/dungeon";
@@ -16,8 +17,8 @@ const color = (token: string | undefined) =>
 
 /**
  * A dungeon's page (WEB-42, board `dungeon-page`): the hero over the map around its entrance, with Scarlet
- * Monastery's wings and Plan a run; who fits per role; the runs planned here and in the other wings; the runs that ran
- * here. The layout above answers 404 for a raid or an unknown id and sends `/dungeons/sm` to its first wing.
+ * Monastery's wings and Plan a run; who fits per role and who has its quests (WEB-76); the runs planned here and in the
+ * other wings; the runs that ran here. The layout above answers 404 for a raid or an unknown id and sends `/dungeons/sm` to its first wing.
  */
 export default async function DungeonPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
@@ -74,48 +75,51 @@ export default async function DungeonPage({ params }: { params: Promise<{ id: st
       </section>
 
       <div className={styles.columns}>
-        <section className={runs.box} aria-labelledby="who-fits">
-          <div className={styles.fitsHead}>
-            <h2 id="who-fits" className={runs.boxTitle}>
-              Who fits
-            </h2>
-          </div>
-          {page.noCharacters ? (
-            <p className={runs.body}>No characters yet. Who fits shows once friends have uploaded.</p>
-          ) : (
-            <div className={styles.roles}>
-              {page.whoFits.map((r) => (
-                <div key={r.role}>
-                  <h3 className={styles.roleTitle} id={`role-${r.role}`}>
-                    {r.title}
-                  </h3>
-                  {r.characters.length === 0 ? (
-                    <p className={styles.nobody}>
-                      Nobody in range.
-                      {r.short !== undefined && (
-                        <>
-                          <br />
-                          <Name c={r.short} /> {r.short.level} is {r.short.levels} level
-                          {r.short.levels === 1 ? "" : "s"} short.
-                        </>
-                      )}
-                    </p>
-                  ) : (
-                    <ul className={styles.role} aria-labelledby={`role-${r.role}`}>
-                      {r.characters.map((c) => (
-                        <li key={c.guid} className={styles.fit}>
-                          <Name c={c} /> {c.level}
-                          {c.over !== undefined && <span className={styles.dim}> · {c.over}</span>}
-                          {c.friend !== undefined && <span className={styles.dim}> · {c.friend}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
+        <div className={styles.main}>
+          <section className={runs.box} aria-labelledby="who-fits">
+            <div className={styles.fitsHead}>
+              <h2 id="who-fits" className={runs.boxTitle}>
+                Who fits
+              </h2>
             </div>
-          )}
-        </section>
+            {page.noCharacters ? (
+              <p className={runs.body}>No characters yet. Who fits shows once friends have uploaded.</p>
+            ) : (
+              <div className={styles.roles}>
+                {page.whoFits.map((r) => (
+                  <div key={r.role}>
+                    <h3 className={styles.roleTitle} id={`role-${r.role}`}>
+                      {r.title}
+                    </h3>
+                    {r.characters.length === 0 ? (
+                      <p className={styles.nobody}>
+                        Nobody in range.
+                        {r.short !== undefined && (
+                          <>
+                            <br />
+                            <Name c={r.short} /> {r.short.level} is {r.short.levels} level
+                            {r.short.levels === 1 ? "" : "s"} short.
+                          </>
+                        )}
+                      </p>
+                    ) : (
+                      <ul className={styles.role} aria-labelledby={`role-${r.role}`}>
+                        {r.characters.map((c) => (
+                          <li key={c.guid} className={styles.fit}>
+                            <Name c={c} /> {c.level}
+                            {c.over !== undefined && <span className={styles.dim}> · {c.over}</span>}
+                            {c.friend !== undefined && <span className={styles.dim}> · {c.friend}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+          <QuestsBox quests={page.quests} />
+        </div>
 
         <div className={styles.aside}>
           <section className={runs.box} aria-labelledby="planned-here">

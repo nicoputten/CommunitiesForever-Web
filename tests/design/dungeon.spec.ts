@@ -14,7 +14,8 @@ import {
 import { ADMIN } from "./sample";
 
 // WEB-42: design checks of the dungeon page (board dungeon-page) on SM Armory with the sample runs (seed.setup.ts
-// "plan the sample runs": one run in Armory, one in Cathedral), and the map's dungeon entrance popover.
+// "plan the sample runs": one run in Armory, one in Cathedral), and the map's dungeon entrance popover. WEB-76: its
+// Quests box (board dungeon-quests) with the sample's Scarlet Monastery quests, one held by five characters.
 
 test.beforeEach(async ({ context, baseURL }) => {
   await signInAs(context, baseURL!, ADMIN);
@@ -70,6 +71,44 @@ test("dungeon: design values", async ({ page }) => {
   });
 });
 
+test("dungeon: Quests design values", async ({ page }) => {
+  await openScreen(page, ARMORY);
+  const quests = page.getByRole("region", { name: "Quests" });
+  await expectStyles(quests, { "background-color": "var(--surface-box)", "border-radius": "var(--r-panel)" });
+  await expectStyles(quests.getByRole("heading", { name: "Quests" }), {
+    "font-family": "var(--font-display)",
+    "font-size": "var(--fs-name)",
+    color: "var(--gold-bright)",
+  });
+  await expectStyles(quests.getByText("4 quests"), { "font-size": "var(--fs-meta)", color: "var(--text-dim)" });
+  const light = quests.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "In the Name of the Light" }) });
+  await expectStyles(light.getByRole("heading"), {
+    "font-size": "var(--fs-name-sm)",
+    "font-weight": "var(--fw-medium)",
+    color: "var(--text-strong)",
+  });
+  const who = light.getByRole("list", { name: "Who has In the Name of the Light" });
+  await expectStyles(who.getByText("Bob Example", { exact: true }), {
+    color: characterName("ROGUE").color!,
+    "font-size": "var(--fs-body)",
+  });
+  await expectStyles(who.getByRole("img", { name: "Rogue" }), { width: "var(--size-disc-quest)" });
+  // 4 holders on desktop, 3 on a phone; the rest behind "+N", in the ⓘ tooltip.
+  const more = who.getByRole("button", { name: isPhone(page) ? "2 more" : "1 more" });
+  await expectStyles(more.locator("span"), {
+    "min-width": "var(--size-more-w)",
+    height: "var(--size-more-h)",
+    "border-color": "var(--line-more)",
+    "background-color": "var(--surface-more)",
+  });
+  await more.click();
+  const tip = page.getByRole("tooltip").filter({ hasText: "Also has it" });
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText("Grom Ashfeller");
+  await expectStyles(tip, { "background-color": "var(--surface-tooltip)", "border-color": "var(--line-tip)" });
+  await expectAccessible(page);
+});
+
 test("dungeon: touch targets", async ({ page }) => {
   test.skip(!isPhone(page));
   await openScreen(page, ARMORY);
@@ -95,6 +134,10 @@ test("dungeon: without wings, nothing planned or ran", async ({ page }) => {
   await openScreen(page, "/dungeons/rfc");
   await expect(page.getByText("Nothing planned here yet.")).toBeVisible();
   await expect(page.getByText("Not yet.", { exact: true })).toBeVisible();
+  await expectStyles(page.getByText("Nobody has a quest for this dungeon"), {
+    "font-size": "var(--fs-body)",
+    color: "var(--text-muted)",
+  });
   await expectAccessible(page);
   await expectScreenshot(page, "dungeon-empty");
 });

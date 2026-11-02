@@ -290,8 +290,8 @@ describe("dungeonQuests (WEB-76)", () => {
         id: "1048",
         title: "Into The Scarlet Monastery",
         holders: [
-          expect.objectContaining({ name: "Ves Doombringer", level: 39 }),
-          expect.objectContaining({ name: "Lia Thornwhisper", level: 37 }),
+          expect.objectContaining({ name: "Ves Doombringer", level: 39, classFile: "WARLOCK" }),
+          expect.objectContaining({ name: "Lia Thornwhisper", level: 37, classFile: "PRIEST" }),
         ],
       },
       { id: "1050", title: "Mythology of the Titans", holders: [expect.objectContaining({ name: "Ves Doombringer" })] },

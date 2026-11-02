@@ -270,6 +270,106 @@
   color: var(--text-nobody);
 }
 
+/* --- quests (WEB-76, board dungeon-quests) ------------------------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+  min-width: 0;
+}
+
+.questsTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.questCount {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.noQuests {
+  padding: var(--s-1) 0;
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+}
+
+.quests {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) 0;
+  border-bottom: var(--border) solid var(--line-row);
+}
+
+.quest:last-child {
+  border-bottom: 0;
+}
+
+.questTitle {
+  font-size: var(--fs-name-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-strong);
+}
+
+.holders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1-5) var(--s-3-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.holder {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-75);
+  min-height: var(--size-quest-row);
+  font-size: var(--fs-body);
+  white-space: nowrap;
+}
+
+.more {
+  display: inline-flex;
+}
+
+.moreTitle {
+  display: block;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.moreName {
+  display: block;
+}
+
+/* 4 holders on desktop, 3 on a phone; the rest behind "+N". */
+.more[data-only="phone"] {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .holder[data-only="desktop"],
+  .more[data-only="desktop"] {
+    display: none;
+  }
+
+  .more[data-only="phone"] {
+    display: inline-flex;
+  }
+}
+
 /* --- planned here -------------------------------------------------------------------------------------------------- */
 
 .planned {
