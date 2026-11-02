@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Upload: once the site has its community, the owner's file from another community (such as a retail test) is refused like anyone's, and no one in it becomes a member. To move to a new in-game community: Start fresh from launch, then the owner uploads first.
 - Runs: a character the site no longer knows (such as one dropped by its owner's newer upload) shows by the name it had, or "Unknown character", never as a code; "You lead as" no longer shows an empty "·".
 
 ## v0.6.1 (2026-10-30)

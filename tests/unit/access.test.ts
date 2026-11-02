@@ -148,10 +148,11 @@ describe("checkFile", () => {
     expect(checkFile("Nico#1000", nico, undefined, "Nico#1000")).toBeUndefined();
   });
 
-  it("holds the admin to their own file too, but not to the community", () => {
+  it("holds the admin to their own file and, once set, to the community (WEB-74)", () => {
     expect(checkFile("Nico#1000", ada, "7", "Nico#1000")).toEqual({ code: "not-your-file", owner: "Ada#1001" });
     const nico = file('self = { battleTag = "Nico#1000" }, settings = { clubId = 9 }');
-    expect(checkFile("Nico#1000", nico, "7", "Nico#1000")).toBeUndefined();
+    expect(checkFile("Nico#1000", nico, "7", "Nico#1000")).toEqual({ code: "other-community" });
+    expect(checkFile("nico#1000", nico, "9", "Nico#1000")).toBeUndefined();
   });
 
   it("reads the community of every addon release", () => {

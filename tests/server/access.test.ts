@@ -18,6 +18,7 @@ import {
   unblock,
 } from "@/server/access";
 import { loadAdminView } from "@/server/admin";
+import { storeCutoff } from "@/server/cutoff";
 import { openDatabase, type Db } from "@/server/db";
 import { uploads } from "@/server/db/schema";
 import { loadState, rebuild, upload, UploadForbiddenError } from "@/server/uploads";
@@ -50,6 +51,7 @@ afterEach(() => {
 
 const up = (file: Uint8Array, user: string, now = 1000) => upload(db, file, user, now, ADMIN);
 const role = (tag: string) => currentRole(db, tag, ADMIN);
+const statuses = () => db.select({ s: uploads.status, r: uploads.rejection }).from(uploads).orderBy(uploads.id).all();
 
 describe("membership", () => {
   it("makes every BattleTag of an accepted upload a member", () => {
@@ -120,11 +122,35 @@ describe("upload rules", () => {
     expect(db.select().from(uploads).all()[1]).toMatchObject({ rejection: "other-community", community: "8" });
   });
 
-  it("follows the community of the admin's newest upload", () => {
+  it("holds the admin to the community too, and adds no members from their other file (WEB-74)", () => {
     up(nicoFile, ADMIN);
-    up(own(ADMIN, 8, "people = {}"), ADMIN, 2000);
-    expect(up(own("Bob#2002", 7), "Bob#2002").rejection).toEqual({ code: "other-community" });
-    expect(up(own("Bob#2002", 8, "people = {}"), "Bob#2002").status).toBe("ok");
+    const before = loadState(db)?.data;
+    const retail = own(ADMIN, 8, `presence = { R = { battleTag = "Rex#8008", lastSeen = 1 } }`);
+    const r = up(retail, ADMIN, 2000);
+    expect(r).toMatchObject({ status: "rejected", rejection: { code: "other-community" } });
+    expect(r.reason).toBe("This file is for another community.");
+    expect(role("Rex#8008")).toBeUndefined();
+    expect(loadState(db)?.data).toEqual(before);
+    expect(up(own("Bob#2002", 7, "people = {}"), "Bob#2002").status).toBe("ok");
+    expect(rebuild(db, ADMIN)).toEqual({ ok: 2, rejected: 1 });
+    expect(role("Rex#8008")).toBeUndefined();
+  });
+
+  it("moves to a new community with Start fresh and the admin's next upload (WEB-74)", () => {
+    up(nicoFile, ADMIN);
+    storeCutoff(db, 3000, ADMIN, 3000);
+    rebuild(db, ADMIN);
+    // Before the admin's first upload after the cut-off only the admin can upload, whatever the community.
+    expect(up(own("Bob#2002", 9, "people = {}"), "Bob#2002", 3100).rejection).toEqual({ code: "no-community-yet" });
+    expect(up(own(ADMIN, 9, "people = {}"), ADMIN, 3200).status).toBe("ok");
+    expect(up(own("Bob#2002", 9, "people = {}"), "Bob#2002", 3300).status).toBe("ok");
+    expect(up(own("Ada#1001", 7, "people = {}"), "Ada#1001", 3400).rejection).toEqual({ code: "other-community" });
+    expect(up(own(ADMIN, 7, "people = {}"), ADMIN, 3500).rejection).toEqual({ code: "other-community" });
+    // The beta's members stay (they may sign in); the rebuild comes to the same.
+    expect(role("Ada#1001")).toBe("member");
+    const before = statuses();
+    rebuild(db, ADMIN);
+    expect(statuses()).toEqual(before);
   });
 
   it("does not let a file rejected as someone else's block its owner", () => {
@@ -145,8 +171,6 @@ describe("upload rules", () => {
     up(own("Bob#2002", 7), "Bob#2002");
     up(own("Bob#2002", 8), "Bob#2002");
     up(own("Ada#1001", 7), "Bob#2002");
-    const statuses = () =>
-      db.select({ s: uploads.status, r: uploads.rejection }).from(uploads).orderBy(uploads.id).all();
     const before = statuses();
     expect(rebuild(db, ADMIN)).toEqual({ ok: 2, rejected: 2 });
     expect(statuses()).toEqual(before);

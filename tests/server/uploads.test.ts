@@ -52,7 +52,7 @@ const day1 = lua(`
     Old = { name = "Old Alt", level = 5, updatedAt = 90 },
     Same = { name = "Same Alt", level = 7, updatedAt = 80 } } },
   locations = { A = { zone = "Durotar", seenAt = 100 } },
-  settings = { clubId = 1, clubName = "Friends" },
+  settings = { clubId = "40000001", clubName = "Friends" },
 `);
 const day2 = lua(`
   self = { battleTag = "Ada#1001", version = 200, chars = {
@@ -61,6 +61,7 @@ const day2 = lua(`
     Same = { name = "Same Alt", level = 7, updatedAt = 80 } } },
   presence = { B = { battleTag = "Bob#2002", lastSeen = 190 } },
   locations = { A = { zone = "The Barrens", seenAt = 200 }, B = { zone = "Mulgore", seenAt = 190 } },
+  settings = { clubId = "40000001", clubName = "Friends" },
 `);
 
 describe("database", () => {
@@ -210,7 +211,7 @@ describe("upload", () => {
         .map((c) => [c.guid, c.sourceUpload]),
     );
     expect(sources).toEqual({ A: 2, B: 2, Same: 1 });
-    expect(loadState(db)?.data.community).toEqual({ id: "1", name: "Friends" });
+    expect(loadState(db)?.data.community).toEqual({ id: "40000001", name: "Friends" });
   });
 
   it("does not bring a removed character back from an older file uploaded later", () => {

@@ -994,3 +994,10 @@ Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "
 - Each answer keeps its character's name when the site knows it (`run_answers.name`, migration 0025), refreshed on every write; a character the site no longer has shows by that name, else "Unknown character" (`UNKNOWN_CHARACTER`), on the site and in the bot's payload. Every other place that fell back to a GUID uses it too.
 - The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
 - Done (this PR).
+
+### WEB-74 The owner's file from another community
+Bug hunt before launch (2026-11-02), Nico chose "reject": one owner upload from another community (the retail test) moved the site to it. Friends' uploads were then refused until the owner uploaded a Forever file again, and everyone in the retail file became a member for good.
+- Once a community is set, the owner's file is held to it like everyone's: rejected as "other community" ("This ledger is for another community" on the upload screen), nothing merged, no members added.
+- The community is that of the owner's uploads since the launch cut-off, so the clean path to a new in-game community (new clubId) is "Start fresh from launch", then the owner's upload. Until then, friends' files are "no community yet" and are checked again when sent again. Undo and Start fresh again to redo it.
+- The rebuild follows the same rule, starting the community anew at the cut-off.
+- Done (this PR).
