@@ -1,8 +1,7 @@
-import { createHash } from "node:crypto";
 import { expect, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "./session";
-import { pollToken, startPairing } from "./uploaderApi";
+import { pollToken, publishRelease, startPairing } from "./uploaderApi";
 
 // WEB-34: the uploader page against the real server, at desktop and phone size. Each project signs in as its own
 // guest with "may upload", so the two don't see each other's uploaders.
@@ -115,35 +114,12 @@ test("a token by hand is shown once and can be revoked", async ({ page }, info) 
   await expect(page.getByLabel(/Copy it now/)).toHaveCount(0);
 });
 
-test("a published release turns on Download for Windows", async ({ page }) => {
+test("a published release turns on Download for Windows, with its notes on What's new", async ({ page }) => {
   // Each run and project publishes a newer version: the site refuses an older one.
   const version = `1.0.${Date.now()}${Math.floor(Math.random() * 10)}`;
-  const id = "CommunitiesForever.Upload";
-  const pkg = Buffer.from(`package ${version}`);
-  const feed = JSON.stringify({
-    Assets: [
-      {
-        PackageId: id,
-        Version: version,
-        Type: "Full",
-        FileName: `${id}-${version}-full.nupkg`,
-        SHA256: createHash("sha256").update(pkg).digest("hex"),
-        Size: pkg.length,
-      },
-    ],
-  });
-  const published = await page.request.post("/api/uploader/v1/releases", {
-    headers: { authorization: `Bearer ${E2E.deploySecret}` },
-    multipart: {
-      setup: { name: `${id}-win-Setup.exe`, mimeType: "application/octet-stream", buffer: Buffer.from("setup") },
-      full: { name: `${id}-${version}-full.nupkg`, mimeType: "application/octet-stream", buffer: pkg },
-      feed: { name: "releases.win.json", mimeType: "application/json", buffer: Buffer.from(feed) },
-      // WEB-35b: the signature is required; the site doesn't check it (the app does).
-      signature: { name: "releases.win.json.sig", mimeType: "application/octet-stream", buffer: Buffer.from("sig") },
-    },
-  });
+  const notes = "- Fixed:\n  - the **tray** icon\n- [Faster](https://example.org) uploads";
   // The other project may have published a newer one at the same moment (409): either way there is a release.
-  expect([201, 409]).toContain(published.status());
+  expect([201, 409]).toContain(await publishRelease(page.request, [{ version, notes }]));
 
   await page.goto("/uploader");
   const button = page.getByRole("link", { name: "Download for Windows" });
@@ -152,4 +128,12 @@ test("a published release turns on Download for Windows", async ({ page }) => {
   const download = page.waitForEvent("download");
   await button.click();
   expect((await download).suggestedFilename()).toBe("CommunitiesForever-Uploader-Setup.exe");
+  // WEB-73: What's new, at the newest version's anchor, the notes as plain text.
+  await page.getByRole("link", { name: "What's new" }).click();
+  await expect(page).toHaveURL(/\/uploader\/changes#1\.0\.\d+$/);
+  const newest = page.locator("section").filter({ hasText: "Newest" });
+  await expect(newest.getByRole("listitem").filter({ hasText: /^Fixed:/ })).toBeVisible();
+  await expect(newest.getByText("the tray icon", { exact: true })).toBeVisible();
+  await expect(newest.getByText("Faster uploads", { exact: true })).toBeVisible();
+  await expect(newest.getByRole("link")).toHaveCount(0);
 });

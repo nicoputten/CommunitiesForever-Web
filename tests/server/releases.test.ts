@@ -230,7 +230,7 @@ describe("releases", () => {
         latest: "1.0.0",
         releasedAt: expect.any(Number),
         minimumVersion: "1.0.0",
-        notesUrl: null,
+        notesUrl: "http://localhost:3000/uploader/changes#1.0.0",
       });
     } finally {
       delete process.env.UPLOADER_MINIMUM_VERSION;

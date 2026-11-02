@@ -35,7 +35,6 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 
 
 ### Backlog (unordered, not yet stories)
-- Uploader "What's new" page (`/uploader/changes`, one section per kept version from the feed's release notes, an anchor per version), then `notesUrl` in `GET updates/status` points to it (UP-10 proposal; left out of WEB-35b).
 - Recipe search, once addon CF-38 ships ("who can craft Bolt of Silk Cloth?").
 - Activity feed (level ups, profession gains, dungeon runs per day).
 - Dungeons: who has which dungeon quests.

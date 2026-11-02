@@ -60,3 +60,11 @@ test("empty map: screenshot", async ({ page }) => {
   await openScreen(page, "/");
   await expectScreenshot(page, "empty-map");
 });
+
+// WEB-73: the uploader's "What's new" before the first release.
+test("empty uploader changes: accessibility and touch targets", async ({ page }) => {
+  await openScreen(page, "/uploader/changes");
+  await page.getByRole("region", { name: "Nothing released yet" }).waitFor();
+  await expectAccessible(page);
+  if (isPhone(page)) await expectTouchTargets(page);
+});

@@ -12,7 +12,9 @@ import {
   type ReleaseAsset,
   ReleaseError,
   releaseFileKind,
+  releaseNotes,
   SIGNATURE_NAME,
+  type VersionNotes,
 } from "@/core/releases";
 import { dataDir } from "./db";
 import { boundaryOf, receiveFiles } from "./multipart";
@@ -54,6 +56,11 @@ async function readFeed(): Promise<ReleaseAsset[]> {
   } catch {
     return [];
   }
+}
+
+/** Each version the feed keeps with its release notes, newest first: the "What's new" page (WEB-73). */
+export async function readReleaseNotes(): Promise<VersionNotes[]> {
+  return releaseNotes(await readFeed());
 }
 
 /** A file the feed may serve: the feed, its signature or a package it lists. Undefined for anything else. */

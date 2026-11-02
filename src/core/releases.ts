@@ -200,9 +200,18 @@ export function minimumVersion(value: string | undefined): string | null {
   return /^\d+\.\d+\.\d+$/.test(v) ? v : null;
 }
 
-export function updateStatus(current: CurrentRelease, minimum: string | null): UpdateStatus {
-  return { latest: current.version, releasedAt: current.publishedAt, minimumVersion: minimum, notesUrl: null };
+/** `site`: the site's base URL; `notesUrl` is its "What's new" page at the newest version (WEB-73). */
+export function updateStatus(current: CurrentRelease, minimum: string | null, site: string): UpdateStatus {
+  return {
+    latest: current.version,
+    releasedAt: current.publishedAt,
+    minimumVersion: minimum,
+    notesUrl: `${site.replace(/\/+$/, "")}${CHANGES_PATH}#${current.version}`,
+  };
 }
+
+/** The uploader's "What's new" page (WEB-73): a section per kept version, its id the version. */
+export const CHANGES_PATH = "/uploader/changes";
 
 /** "about 64 MB" (uploader-page board: "about [size]"). */
 export function aboutSize(bytes: number): string {
@@ -257,4 +266,36 @@ export function releaseNotes(assets: readonly ReleaseAsset[]): VersionNotes[] {
       version: a.Version,
       lines: typeof a.NotesMarkdown === "string" ? noteLines(a.NotesMarkdown) : [],
     }));
+}
+
+/** A bullet with the bullets under it. */
+export interface NoteItem {
+  text: string;
+  items: NoteItem[];
+}
+
+export type NoteBlock = { kind: "paragraph"; text: string } | { kind: "list"; items: NoteItem[] };
+
+/** The lines as paragraphs and nested lists; a bullet deeper than the one above it goes under that one. */
+export function noteBlocks(lines: readonly NoteLine[]): NoteBlock[] {
+  const out: NoteBlock[] = [];
+  for (const line of lines) {
+    if (line.depth === 0) {
+      out.push({ kind: "paragraph", text: line.text });
+      continue;
+    }
+    let list = out.at(-1);
+    if (list?.kind !== "list") {
+      list = { kind: "list", items: [] };
+      out.push(list);
+    }
+    let target = list.items;
+    for (let level = 1; level < line.depth; level++) {
+      const parent = target.at(-1);
+      if (parent === undefined) break;
+      target = parent.items;
+    }
+    target.push({ text: line.text, items: [] });
+  }
+  return out;
 }

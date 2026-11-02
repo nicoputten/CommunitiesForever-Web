@@ -5,6 +5,7 @@ import {
   compareVersions,
   isSafeName,
   minimumVersion,
+  noteBlocks,
   noteLines,
   parseFeed,
   type ReleaseAsset,
@@ -118,11 +119,12 @@ describe("update status", () => {
   });
 
   it("answers the newest release", () => {
-    expect(updateStatus({ version: "1.1.0", setup: "x", size: 1, publishedAt: 1793000000 }, null)).toEqual({
+    const current = { version: "1.1.0", setup: "x", size: 1, publishedAt: 1793000000 };
+    expect(updateStatus(current, null, "https://wow.example.org/")).toEqual({
       latest: "1.1.0",
       releasedAt: 1793000000,
       minimumVersion: null,
-      notesUrl: null,
+      notesUrl: "https://wow.example.org/uploader/changes#1.1.0",
     });
   });
 });
@@ -161,6 +163,32 @@ describe("release notes (WEB-73)", () => {
       { version: "0.3.0", lines: [{ text: "Newer", depth: 1 }] },
       { version: "0.2.0", lines: [{ text: "Older", depth: 1 }] },
       { version: "0.1.0", lines: [] },
+    ]);
+  });
+});
+
+describe("noteBlocks", () => {
+  it("nests bullets under the one above, between paragraphs", () => {
+    expect(
+      noteBlocks([
+        { text: "Intro", depth: 0 },
+        { text: "Fixed", depth: 1 },
+        { text: "the tray icon", depth: 2 },
+        { text: "Faster", depth: 1 },
+        { text: "Thanks", depth: 0 },
+        { text: "Orphan", depth: 3 },
+      ]),
+    ).toEqual([
+      { kind: "paragraph", text: "Intro" },
+      {
+        kind: "list",
+        items: [
+          { text: "Fixed", items: [{ text: "the tray icon", items: [] }] },
+          { text: "Faster", items: [] },
+        ],
+      },
+      { kind: "paragraph", text: "Thanks" },
+      { kind: "list", items: [{ text: "Orphan", items: [] }] },
     ]);
   });
 });
