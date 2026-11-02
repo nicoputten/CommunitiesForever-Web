@@ -209,3 +209,52 @@ export function aboutSize(bytes: number): string {
   const mb = bytes / (1024 * 1024);
   return mb < 1 ? "about 1 MB" : `about ${Math.round(mb)} MB`;
 }
+
+/** A line of a version's release notes (WEB-73): a bullet (at its depth) or a paragraph, as plain text. */
+export interface NoteLine {
+  text: string;
+  /** 0 for a paragraph; 1 for a top-level bullet, 2 for one under it, … */
+  depth: number;
+}
+
+/** One kept version's release notes, for the "What's new" page. */
+export interface VersionNotes {
+  version: string;
+  lines: NoteLine[];
+}
+
+const MAX_NOTE_LINES = 200;
+const MAX_NOTE_LENGTH = 1000;
+
+/**
+ * Release notes as plain text lines (WEB-73). They are Velopack's `NotesMarkdown`, the uploader's CHANGELOG section:
+ * bullets, nested by two spaces, and paragraphs. The little Markdown in them is taken out, never rendered as HTML:
+ * `**bold**`, `` `code` `` and `[text](url)` become their text; headings become paragraphs.
+ */
+export function noteLines(markdown: string): NoteLine[] {
+  const out: NoteLine[] = [];
+  for (const raw of markdown.split(/\r\n|\r|\n/)) {
+    if (raw.trim() === "") continue;
+    const bullet = /^( *)[-*+] +(.*)$/.exec(raw.replace(/\t/g, "  "));
+    const depth = bullet !== null ? Math.min(Math.floor(bullet[1]!.length / 2), 3) + 1 : 0;
+    const text = (bullet !== null ? bullet[2]! : raw.trim().replace(/^#+ +/, ""))
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\*\*|__|`/g, "")
+      .trim()
+      .slice(0, MAX_NOTE_LENGTH);
+    if (text !== "") out.push({ text, depth });
+    if (out.length >= MAX_NOTE_LINES) break;
+  }
+  return out;
+}
+
+/** Each version the feed keeps with its notes (from its full package), newest first. */
+export function releaseNotes(assets: readonly ReleaseAsset[]): VersionNotes[] {
+  return assets
+    .filter((a) => a.Type === "Full")
+    .sort((a, b) => compareVersions(b.Version, a.Version))
+    .map((a) => ({
+      version: a.Version,
+      lines: typeof a.NotesMarkdown === "string" ? noteLines(a.NotesMarkdown) : [],
+    }));
+}

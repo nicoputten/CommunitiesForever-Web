@@ -5,9 +5,11 @@ import {
   compareVersions,
   isSafeName,
   minimumVersion,
+  noteLines,
   parseFeed,
   type ReleaseAsset,
   releaseFileKind,
+  releaseNotes,
   updateStatus,
 } from "@/core/releases";
 
@@ -128,4 +130,37 @@ describe("update status", () => {
 it("says about how big the installer is", () => {
   expect(aboutSize(64 * 1024 * 1024 + 300_000)).toBe("about 64 MB");
   expect(aboutSize(1000)).toBe("about 1 MB");
+});
+
+describe("release notes (WEB-73)", () => {
+  it("reads the CHANGELOG section as plain lines: bullets with their depth, paragraphs, no Markdown", () => {
+    const md = [
+      "- Retail test mode: started with `--retail`, **its own** settings.",
+      "  - Nested, see [the site](https://example.test/x).",
+      "",
+      "## Heading",
+      "Plain line\r",
+      "- ",
+    ].join("\n");
+    expect(noteLines(md)).toEqual([
+      { text: "Retail test mode: started with --retail, its own settings.", depth: 1 },
+      { text: "Nested, see the site.", depth: 2 },
+      { text: "Heading", depth: 0 },
+      { text: "Plain line", depth: 0 },
+    ]);
+  });
+
+  it("lists each kept version from its full package, newest first", () => {
+    const notes = releaseNotes([
+      asset("0.2.0", { NotesMarkdown: "- Older" }),
+      asset("0.3.0", { Type: "Delta", FileName: "CommunitiesForever.Upload-0.3.0-delta.nupkg", NotesMarkdown: "- x" }),
+      asset("0.3.0", { NotesMarkdown: "- Newer" }),
+      asset("0.1.0"),
+    ]);
+    expect(notes).toEqual([
+      { version: "0.3.0", lines: [{ text: "Newer", depth: 1 }] },
+      { version: "0.2.0", lines: [{ text: "Older", depth: 1 }] },
+      { version: "0.1.0", lines: [] },
+    ]);
+  });
 });
