@@ -41,6 +41,7 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 - Dungeons: who has which dungeon quests.
 - Final emblem and logo for the site.
 - Dungeon catalogue: every dungeon with who cleared it, the group's first clear as a feat (Nico, 2026-10-28: brainstorm after E8 Doomsday, then designs).
+- Doomsday across a clock change (bug hunt 2026-11-02, finding 6; before 28 Mar 2027): `scheduleAt` (`src/core/doomsday/engine.ts`) gives one UTC offset, today's, and `dayStart` and the kill scoring use it for past days too. After a DST change, days and kills from before it are placed 1 h off, and on the day of the change "resets … in" is 1 h off until the change. The addon does the same (the game clock's offset), so decide with the addon first. Fix: each day's offset from the realm time zone at that day (as `zonedToUtc` does for the recap), with a test across 28 Mar and 31 Oct 2027.
 
 ## E9 Live test fixes (2026-10-29)
 Nico tested the live site read-only on 29 Oct 2026. The brief is `docs/DESIGN-BRIEF-LIVE-TEST.md`, with the boards `live-test-findings`, `live-test-site-fixes` and `live-test-phone` (the bot's are `bot-visual-*`). Where `docs/DOOMSDAY.md` disagrees on the PvP Virgin rule or the day label, the brief is newer and wins. Bugs 1, 2, 4 and 5 are data rules: the engine worker builds them, and WEB-65 shows the results. Nothing here changes live settings or data.

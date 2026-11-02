@@ -995,6 +995,11 @@ Live v0.6.1 (Nico's retail test): a run's lead showed as "Player-6842-…" and "
 - The organiser's bar keeps the role and leaves out an empty "·"; "Change character or role" stays.
 - Done (this PR).
 
+### WEB-70 Launch cut-off: the first recap, the beta streak
+Bug hunt before launch (2026-11-02). After "Start fresh", the first recap's week started at the recap moment before the cut-off, so `recapBase` took it for a beta recap and hid it, and the minute check computed and posted it again every minute. The addon's streak and best from the beta also survived the cut-off and set Doomsday's best streak.
+- The first week after the cut-off starts at the cut-off (`firstStart`, `src/server/recap.ts`); `goalsSince` drops the addon's `streak` and `best`, so the site counts them from the days it keeps.
+- Done (this PR).
+
 ### WEB-72 The class per name in the recap
 Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
 - Done (this PR).
