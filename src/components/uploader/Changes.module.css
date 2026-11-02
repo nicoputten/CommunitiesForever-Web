@@ -1,0 +1,194 @@
+/* The uploader's "What's new" page (boards `uploader-changes`, `uploader-changes-states`, WEB-73) and the two tabs it
+   shares with the uploader page. One box per kept version at a reading width, newest first. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4-5);
+  width: 100%;
+  max-width: var(--size-reading);
+  margin-inline: auto;
+}
+
+/* --- tabs ------------------------------------------------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: var(--s-1);
+  border-bottom: var(--border) solid var(--line-bar-phone);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4);
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.tab:hover {
+  color: var(--text-strong);
+}
+
+.tab[aria-current="page"] {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-current);
+}
+
+/* --- versions --------------------------------------------------------------------------------------------------- */
+
+.version {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  padding: var(--s-4-5) var(--s-5);
+  border-radius: var(--r-panel);
+  background: var(--surface-box);
+  border: var(--border) solid var(--line-box);
+  scroll-margin-top: calc(var(--size-bar) + var(--s-6));
+}
+
+/* The version the app linked to (`#0.3.1`) glows; the glow is its own layer, so it fades with opacity only. */
+.version:target::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--border) * -1);
+  z-index: -1;
+  border-radius: inherit;
+  border: var(--border) solid var(--gold);
+  background: var(--version-hit);
+  box-shadow: var(--ring-version-hit);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .version:target::before {
+    animation: fade var(--dur-card) var(--ease-out) var(--dur-version-hit) forwards;
+  }
+}
+
+@keyframes fade {
+  to {
+    opacity: 0;
+  }
+}
+
+.versionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-3);
+}
+
+.versionTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-tag);
+  color: var(--gold-pale);
+}
+
+.date {
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.latest {
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+}
+
+.anchor {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+  text-decoration: none;
+}
+
+.anchor:hover {
+  color: var(--gold-bright);
+}
+
+.items,
+.paragraph,
+.none {
+  font-size: var(--fs-body);
+  line-height: var(--lh-prose);
+  color: var(--text-chip);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  margin: 0;
+  padding-left: var(--s-5);
+}
+
+.items .items {
+  margin-top: var(--s-1-5);
+}
+
+.none {
+  color: var(--text-dim);
+}
+
+/* --- no versions yet -------------------------------------------------------------------------------------------- */
+
+.empty {
+  align-items: flex-start;
+}
+
+.emptyTitle {
+  font-family: var(--font-name);
+  font-size: var(--fs-name-card);
+  color: var(--text-strong);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-chip-on);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  color: var(--gold-bright);
+  text-decoration: none;
+}
+
+.back:hover {
+  background: var(--tint-hover);
+  color: var(--gold-bright);
+}
+
+/* --- on the uploader page --------------------------------------------------------------------------------------- */
+
+.whatsNew {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  font-size: var(--fs-body);
+}
+
+/* The board has no "#" link on a phone (the box itself is the anchor). */
+@media (max-width: 767px) {
+  .anchor {
+    display: none;
+  }
+}
