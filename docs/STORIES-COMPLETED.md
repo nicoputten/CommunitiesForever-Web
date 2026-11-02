@@ -1015,3 +1015,8 @@ Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTa
 ### WEB-72 The class per name in the recap
 Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
 - Done (this PR).
+
+### WEB-73 Uploader "What's new" page
+Backlog (UP-10 proposal, left out of WEB-35b). Boards `uploader-changes`, `uploader-changes-states` (designer first, Nico 2026-11-02). `/uploader/changes`: one box per version the update feed keeps, newest first, its id the plain version so the app's `notesUrl` (`#0.3.1`) lands on it; the linked box glows and the glow fades after 3 s (it stays without motion). "The app · What’s new" tabs on both uploader pages and "What’s new in 0.3.1 ›" in Get the app. Before the first release: "No versions yet" and Back to the app.
+- Nico (2026-11-02): a date on the newest version only (the feed has no date for older ones); "No notes for this version" for a version without notes; paragraphs as plain text and nested bullets indented.
+- Done (this PR).

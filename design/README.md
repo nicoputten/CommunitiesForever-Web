@@ -28,6 +28,8 @@ View them: `npm run design`, then open http://localhost:4400.
 | `loading` | `Loading.dc.html` | Skeletons, stale site banner, old friend data |
 | `design-system` | `DesignSystem.dc.html` | Tokens and components |
 | `uploader-page` | `SiteUploader.dc.html` | Uploader page: download, steps, pairing approval, your uploaders and tokens, your upload history (WEB-34; from the uploader workshop, history added 2026-10-27) |
+| `uploader-changes` | `SA01Changes.dc.html` | Uploader: What’s new (`/uploader/changes`), one box per kept version, the linked one highlighted; The app · What’s new tabs and the link on the uploader page (WEB-73) |
+| `uploader-changes-states` | `SA02ChangesStates.dc.html` | Uploader What’s new: a long bullet, no versions yet (WEB-73) |
 | `discord-settings` | `BotAdmin.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page: link your Discord, admin settings for the bot (WEB-39; from the Discord bot workshop) |
 | `discord-settings-runs` | `BotAdmin-runs.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page with the runs section: runs channel, reminder time, ask now from the game, mark runs done (WEB-39, WEB-40) |
 | `runs` | `SiteRuns.dc.html` | **Superseded** by `asks-now` and the `runs-v2-*` boards. Runs page: this week, later, past, "runs I can join", your answers (WEB-40) |
