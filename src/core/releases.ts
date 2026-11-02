@@ -200,12 +200,102 @@ export function minimumVersion(value: string | undefined): string | null {
   return /^\d+\.\d+\.\d+$/.test(v) ? v : null;
 }
 
-export function updateStatus(current: CurrentRelease, minimum: string | null): UpdateStatus {
-  return { latest: current.version, releasedAt: current.publishedAt, minimumVersion: minimum, notesUrl: null };
+/** `site`: the site's base URL; `notesUrl` is its "What's new" page at the newest version (WEB-73). */
+export function updateStatus(current: CurrentRelease, minimum: string | null, site: string): UpdateStatus {
+  return {
+    latest: current.version,
+    releasedAt: current.publishedAt,
+    minimumVersion: minimum,
+    notesUrl: `${site.replace(/\/+$/, "")}${CHANGES_PATH}#${current.version}`,
+  };
 }
+
+/** The uploader's "What's new" page (WEB-73): a section per kept version, its id the version. */
+export const CHANGES_PATH = "/uploader/changes";
 
 /** "about 64 MB" (uploader-page board: "about [size]"). */
 export function aboutSize(bytes: number): string {
   const mb = bytes / (1024 * 1024);
   return mb < 1 ? "about 1 MB" : `about ${Math.round(mb)} MB`;
+}
+
+/** A line of a version's release notes (WEB-73): a bullet (at its depth) or a paragraph, as plain text. */
+export interface NoteLine {
+  text: string;
+  /** 0 for a paragraph; 1 for a top-level bullet, 2 for one under it, … */
+  depth: number;
+}
+
+/** One kept version's release notes, for the "What's new" page. */
+export interface VersionNotes {
+  version: string;
+  lines: NoteLine[];
+}
+
+const MAX_NOTE_LINES = 200;
+const MAX_NOTE_LENGTH = 1000;
+
+/**
+ * Release notes as plain text lines (WEB-73). They are Velopack's `NotesMarkdown`, the uploader's CHANGELOG section:
+ * bullets, nested by two spaces, and paragraphs. The little Markdown in them is taken out, never rendered as HTML:
+ * `**bold**`, `` `code` `` and `[text](url)` become their text; headings become paragraphs.
+ */
+export function noteLines(markdown: string): NoteLine[] {
+  const out: NoteLine[] = [];
+  for (const raw of markdown.split(/\r\n|\r|\n/)) {
+    if (raw.trim() === "") continue;
+    const bullet = /^( *)[-*+] +(.*)$/.exec(raw.replace(/\t/g, "  "));
+    const depth = bullet !== null ? Math.min(Math.floor(bullet[1]!.length / 2), 3) + 1 : 0;
+    const text = (bullet !== null ? bullet[2]! : raw.trim().replace(/^#+ +/, ""))
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\*\*|__|`/g, "")
+      .trim()
+      .slice(0, MAX_NOTE_LENGTH);
+    if (text !== "") out.push({ text, depth });
+    if (out.length >= MAX_NOTE_LINES) break;
+  }
+  return out;
+}
+
+/** Each version the feed keeps with its notes (from its full package), newest first. */
+export function releaseNotes(assets: readonly ReleaseAsset[]): VersionNotes[] {
+  return assets
+    .filter((a) => a.Type === "Full")
+    .sort((a, b) => compareVersions(b.Version, a.Version))
+    .map((a) => ({
+      version: a.Version,
+      lines: typeof a.NotesMarkdown === "string" ? noteLines(a.NotesMarkdown) : [],
+    }));
+}
+
+/** A bullet with the bullets under it. */
+export interface NoteItem {
+  text: string;
+  items: NoteItem[];
+}
+
+export type NoteBlock = { kind: "paragraph"; text: string } | { kind: "list"; items: NoteItem[] };
+
+/** The lines as paragraphs and nested lists; a bullet deeper than the one above it goes under that one. */
+export function noteBlocks(lines: readonly NoteLine[]): NoteBlock[] {
+  const out: NoteBlock[] = [];
+  for (const line of lines) {
+    if (line.depth === 0) {
+      out.push({ kind: "paragraph", text: line.text });
+      continue;
+    }
+    let list = out.at(-1);
+    if (list?.kind !== "list") {
+      list = { kind: "list", items: [] };
+      out.push(list);
+    }
+    let target = list.items;
+    for (let level = 1; level < line.depth; level++) {
+      const parent = target.at(-1);
+      if (parent === undefined) break;
+      target = parent.items;
+    }
+    target.push({ text: line.text, items: [] });
+  }
+  return out;
 }

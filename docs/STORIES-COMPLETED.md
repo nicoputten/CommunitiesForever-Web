@@ -1000,6 +1000,13 @@ Bug hunt before launch (2026-11-02). After "Start fresh", the first recap's week
 - The first week after the cut-off starts at the cut-off (`firstStart`, `src/server/recap.ts`); `goalsSince` drops the addon's `streak` and `best`, so the site counts them from the days it keeps.
 - Done (this PR).
 
+### WEB-74 The owner's file from another community
+Bug hunt before launch (2026-11-02), Nico chose "reject": one owner upload from another community (the retail test) moved the site to it. Friends' uploads were then refused until the owner uploaded a Forever file again, and everyone in the retail file became a member for good.
+- Once a community is set, the owner's file is held to it like everyone's: rejected as "other community" ("This ledger is for another community" on the upload screen), nothing merged, no members added.
+- The community is that of the owner's uploads since the launch cut-off, so the clean path to a new in-game community (new clubId) is "Start fresh from launch", then the owner's upload. Until then, friends' files are "no community yet" and are checked again when sent again. Undo and Start fresh again to redo it.
+- The rebuild follows the same rule, starting the community anew at the cut-off.
+- Done (this PR).
+
 ### WEB-71 Site name and "First upload" after the cut-off
 Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTag with its case (every other check ignores case), and after "Start fresh" the first launch upload read "12 new characters" instead of "First upload", because the first accepted upload was a beta one.
 - `siteName` uses `sameBattleTag`; `firstOkId` is the first accepted upload at or after the cut-off.

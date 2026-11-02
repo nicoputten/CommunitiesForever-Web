@@ -267,13 +267,16 @@ function retry(earlier: UploadResult): boolean {
   return earlier.rejection?.code === "no-community-yet" || earlier.rejection?.code === "other-community";
 }
 
-/** The community of the admin's newest accepted upload that names one; undefined before that. */
+/**
+ * The community of the admin's newest accepted upload since the launch cut-off that names one; undefined before that
+ * (WEB-74: "Start fresh" lets the admin's next upload set the community again).
+ */
 function adminCommunity(db: Db | Tx, admin: string | undefined): string | undefined {
   if (admin === undefined) return undefined;
   const rows = db
     .select({ uploadedBy: uploads.uploadedBy, community: uploads.community })
     .from(uploads)
-    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.community)))
+    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.community), gte(uploads.uploadedAt, cutoffAt(db))))
     .orderBy(desc(uploads.id))
     .all();
   return rows.find((r) => sameBattleTag(r.uploadedBy, admin))?.community ?? undefined;
@@ -411,6 +414,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     const ids = tx.select({ id: uploads.id }).from(uploads).orderBy(asc(uploads.id)).all();
     let state: State | undefined;
     let community: string | undefined;
+    let launched = false;
     const counts: RebuildResult = { ok: 0, rejected: 0 };
     tx.delete(members).run();
     clearHistory(tx);
@@ -425,6 +429,11 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
         .get();
       if (row === undefined) continue;
       const beta = row.uploadedAt < cutoff;
+      // WEB-74: the cut-off starts the community anew; the admin's first upload after it sets it.
+      if (!beta && !launched) {
+        launched = true;
+        community = undefined;
+      }
       const result = beta ? read(gunzipSync(row.raw)) : since(read(gunzipSync(row.raw)), cutoff);
       if (beta) {
         if (result.ok && checkFile(row.uploadedBy, result.data, community, admin) === undefined) {
