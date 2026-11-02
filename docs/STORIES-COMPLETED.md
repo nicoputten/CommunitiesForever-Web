@@ -1020,3 +1020,8 @@ Backlog (bot BOT-11 left the recap without class icons for lack of it). Each rec
 Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon-quests` (designer first, Nico 2026-11-02). A Quests box on the dungeon page, under Who fits (on a phone after Who fits, before Planned here): the dungeon's quests in friends' quest logs, most holders first, each with its holders as a class disc and the name in class colour; 4 on desktop, 3 on a phone, the rest behind a "+N" chip that opens the ⓘ tooltip ("Also has it"). With none: "Nobody has a quest for this dungeon"; the box stays. The view model's holders carry their `classFile`.
 - No zone per quest (Nico, 2026-11-02): the quest log only has the dungeon's own header, so the board's grey zone would repeat the dungeon's name.
 - Done (this PR).
+
+### WEB-73 Uploader "What's new" page
+Backlog (UP-10 proposal, left out of WEB-35b). Boards `uploader-changes`, `uploader-changes-states` (designer first, Nico 2026-11-02). `/uploader/changes`: one box per version the update feed keeps, newest first, its id the plain version so the app's `notesUrl` (`#0.3.1`) lands on it; the linked box glows and the glow fades after 3 s (it stays without motion). "The app · What’s new" tabs on both uploader pages and "What’s new in 0.3.1 ›" in Get the app. Before the first release: "No versions yet" and Back to the app.
+- Nico (2026-11-02): a date on the newest version only (the feed has no date for older ones); "No notes for this version" for a version without notes; paragraphs as plain text and nested bullets indented.
+- Done (this PR).
