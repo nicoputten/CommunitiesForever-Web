@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Dungeon pages: a Quests box shows which quests for the dungeon are in friends’ quest logs, and who has them.
 - After "Start fresh from launch", the first weekly recap covers the time since the reset and is posted once. Doomsday's best streak no longer counts the beta.
 - Upload: once the site has its community, the owner's file from another community (such as a retail test) is refused like anyone's, and no one in it becomes a member. To move to a new in-game community: Start fresh from launch, then the owner uploads first.
 - After "Start fresh from launch", the first upload after it says "First upload" in the upload history again.

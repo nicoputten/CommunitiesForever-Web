@@ -1015,3 +1015,8 @@ Bug hunt before launch (2026-11-02). The site name compared the admin's BattleTa
 ### WEB-72 The class per name in the recap
 Backlog (bot BOT-11 left the recap without class icons for lack of it). Each recap card and the award carry `classes`, name → classFile, for every character and friend the card names in its texts and the card's friends (a friend: their highest-level character's class), optional within v1 (`docs/BOT-API.md` "Recap"). Pure in `src/core/recap/classes.ts`, added by `dressForBot`. The bot side is its own story.
 - Done (this PR).
+
+### WEB-76 Dungeons: who has which dungeon quests
+Backlog (the data came with the addon's quest log `area`, CF-19). Board `dungeon-quests` (designer first, Nico 2026-11-02). A Quests box on the dungeon page, under Who fits (on a phone after Who fits, before Planned here): the dungeon's quests in friends' quest logs, most holders first, each with its holders as a class disc and the name in class colour; 4 on desktop, 3 on a phone, the rest behind a "+N" chip that opens the ⓘ tooltip ("Also has it"). With none: "Nobody has a quest for this dungeon"; the box stays. The view model's holders carry their `classFile`.
+- No zone per quest (Nico, 2026-11-02): the quest log only has the dungeon's own header, so the board's grey zone would repeat the dungeon's name.
+- Done (this PR).
