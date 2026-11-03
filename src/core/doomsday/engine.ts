@@ -241,8 +241,11 @@ interface Friend {
   goals?: DoomsdayInput["goals"][string];
   kills: ScoredKill[];
   deaths: { t: number; char: string }[];
-  /** Any honorable kill or any PvP point (duels included), ever: no PvP Virgin (live test 2026-10-29). */
-  killedEver: boolean;
+  /**
+   * A real fight on any character, ever: an honorable kill, a duel or a finished battleground (CF-78, Nico 2026-11-03).
+   * No PvP Virgin then; PvP points from goals without a fight (emotes, the flag) don't end it.
+   */
+  foughtEver: boolean;
 }
 
 /** Points of a friend's goals done in a set of day and week records, each in the pool version recorded with it. */
@@ -281,13 +284,19 @@ export function prepare(input: DoomsdayInput) {
     const chars = Object.values(data.characters).filter((c) => c.owner === p.key && c.hasRecord);
     const kills: Kill[] = [];
     const deaths: { t: number; char: string }[] = [];
+    let foughtEver = chars.some(
+      (c) => (c.pvp?.hk ?? 0) > 0 || (c.pvp?.duelsWon ?? 0) > 0 || (c.pvp?.duelsLost ?? 0) > 0,
+    );
     for (const f of input.feed) {
       if (f.owner !== p.key) continue;
       for (const k of f.entry.pvpKills ?? []) kills.push({ ...k, char: f.guid });
       for (const d of f.entry.deaths ?? []) if (d.t !== undefined) deaths.push({ t: d.t, char: f.guid });
+      // A finished duel, or a finished battleground (CF-23: won or lost), on any day.
+      if ((f.entry.duels ?? []).some((d) => d.won !== undefined)) foughtEver = true;
+      if (f.entry.runs.some((r) => r.kind === "pvp" && r.won !== undefined)) foughtEver = true;
     }
     const scored = scoreKills(kills, s, community);
-    const killedEver = kills.length > 0 || chars.some((c) => (c.pvp?.hk ?? 0) > 0);
+    if (kills.length > 0) foughtEver = true;
     const goals = input.goals[p.key];
     return {
       key: p.key,
@@ -297,7 +306,7 @@ export function prepare(input: DoomsdayInput) {
       ...(goals !== undefined ? { goals } : {}),
       kills: scored,
       deaths,
-      killedEver,
+      foughtEver,
     };
   });
   const byKey = new Map(friends.map((f) => [f.key, f]));
@@ -349,17 +358,8 @@ export function prepare(input: DoomsdayInput) {
       kills: f.kills.filter((k) => k.track === "pvp" && k.counted && days(k.day)).length,
     };
   };
-  // Any PvP point ends PvP Virgin too, a duel's included (Nico, live test 2026-10-29).
-  for (const f of friends) {
-    if (!f.killedEver && f.hasRecord) {
-      const all = totals(
-        f,
-        () => true,
-        () => true,
-      );
-      if (all.pvp > 0) f.killedEver = true;
-    }
-  }
+  // A duel a friend recorded against them is a real fight too, also when their own feed lacks it.
+  for (const d of allDuels) for (const key of [d.a, d.b]) if (byKey.has(key)) byKey.get(key)!.foughtEver = true;
   return { s, friends, byKey, active, allDuels, records, owner, duelPoints, killPoints, killApprox, totals };
 }
 
@@ -368,9 +368,9 @@ export function periodTotals(
   input: DoomsdayInput,
   days: (n: number) => boolean,
   weeks: (w: number) => boolean,
-): { key: string; name: string; pve: number; pvp: number; goals: number; kills: number; killedEver: boolean }[] {
+): { key: string; name: string; pve: number; pvp: number; goals: number; kills: number; foughtEver: boolean }[] {
   const p = prepare(input);
-  return p.active.map((f) => ({ key: f.key, name: f.name, killedEver: f.killedEver, ...p.totals(f, days, weeks) }));
+  return p.active.map((f) => ({ key: f.key, name: f.name, foughtEver: f.foughtEver, ...p.totals(f, days, weeks) }));
 }
 
 /** The whole snapshot for `now`. */
@@ -554,7 +554,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   // --- friends ---
   const out: FriendDoomsday[] = friends.map((f) => {
     const status = !f.hasRecord ? "noAddon" : f.goals === undefined ? "noDoomsday" : "active";
-    const base: FriendDoomsday = { friendKey: f.key, name: f.name, status, pvpVirgin: f.hasRecord && !f.killedEver };
+    const base: FriendDoomsday = { friendKey: f.key, name: f.name, status, pvpVirgin: f.hasRecord && !f.foughtEver };
     if (status !== "active" || f.goals === undefined) return base;
 
     const situation = situationOf(f.chars);
@@ -675,7 +675,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
         pvp: t.pvp,
         goals: t.goals,
         kills: t.kills,
-        killedEver: f.killedEver,
+        foughtEver: f.foughtEver,
       };
     });
     const prev = previous && {

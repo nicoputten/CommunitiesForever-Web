@@ -58,7 +58,7 @@ describe("Doomsday golden cases", () => {
       expect(pool(slot)).toEqual(golden.pools[slot]);
   });
 
-  // CF-70: the catalogue, in pool order, as the addon's Doomsday.GOALS.
+  // CF-70, CF-79: the catalogue, in pool order, as the addon's Doomsday.GOALS.
   it("catalogue", () => {
     const list = GOALS.map((g) => {
       const out: Record<string, unknown> = { id: g.id, slot: g.slot };
@@ -68,8 +68,11 @@ describe("Doomsday golden cases", () => {
         ["points", g.points],
         ["text", g.text],
         ["short", g.short],
+        ["retired", g.retired],
+        ["needs", g.needs],
         ["can", g.can],
         ["fallback", g.fallback],
+        ["canFrom", g.canFrom],
       ] as const)
         if (value !== undefined) out[key] = value;
       return out;

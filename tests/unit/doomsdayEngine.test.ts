@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
+import { canDo, pool } from "@/core/doomsday/rules";
 
 // WEB-58: feat records as the Feats tab (WEB-60) shows them: display-ready titles, the epic item and a rank's rank.
 
@@ -163,5 +164,54 @@ describe("points per pool version", () => {
 
   it("scores today's drawn set in the site's pool version before the addon recorded it", () => {
     expect(ada({}).today!.goals.every((g) => g.points === 5)).toBe(true);
+  });
+});
+
+// WEB-80 (addon CF-78): only a real fight ends PvP Virgin.
+describe("PvP Virgin", () => {
+  const today = doomsdaySnapshot(input).schedule.day;
+  const feedDay = (entry: object) => ({
+    guid: "G",
+    owner: "Ada#1001",
+    day: today,
+    entry: { quests: {}, ranks: {}, learned: [], runs: [], ...entry },
+  });
+  const virgin = (extra: Partial<DoomsdayInput>) =>
+    doomsdaySnapshot({
+      ...input,
+      goals: {
+        "Ada#1001": {
+          // A taunt goal done: PvP points without a fight.
+          days: { [today]: { set: ["p.flex"], swapped: {}, done: { "p.flex": 1 } } },
+          weeks: {},
+        },
+      },
+      ...extra,
+    }).friends.find((f) => f.friendKey === "Ada#1001")!.pvpVirgin;
+
+  it("stays after PvP points from a goal without a fight", () => {
+    expect(virgin({})).toBe(true);
+  });
+
+  it("ends with a finished battleground or a duel", () => {
+    expect(virgin({ feed: [feedDay({ runs: [{ name: "Warsong Gulch", kind: "pvp", won: false, with: [] }] })] })).toBe(
+      false,
+    );
+    expect(virgin({ feed: [feedDay({ runs: [{ name: "Warsong Gulch", kind: "pvp", with: [] }] })] })).toBe(true);
+    expect(virgin({ feed: [feedDay({ duels: [{ t: 1, won: true, vs: "Stranger Name" }] })] })).toBe(false);
+  });
+});
+
+// WEB-80 (addon CF-79): a retired goal and a `canFrom` check apply from their pool version on.
+describe("pool versions", () => {
+  it("keeps w.ilvl3 in pool version 1 only", () => {
+    expect(pool("weekly", 1)).toContain("w.ilvl3");
+    expect(pool("weekly", 2)).not.toContain("w.ilvl3");
+  });
+
+  it("checks b.zone25's level only from pool version 2", () => {
+    expect(canDo("b.zone25", { highest: 12 }, 1)).toBe(true);
+    expect(canDo("b.zone25", { highest: 12 }, 2)).toBe(false);
+    expect(canDo("b.zone25", { highest: 25 }, 2)).toBe(true);
   });
 });

@@ -406,7 +406,7 @@ export function recapSection(input: DoomsdayInput, start: number, end: number) {
   }
   const top3 = (track: "pve" | "pvp") =>
     totals
-      .filter((t) => (track === "pve" || t.killedEver) && t[track] > 0)
+      .filter((t) => (track === "pve" || t.foughtEver) && t[track] > 0)
       .sort((a, b) => b[track] - a[track] || a.name.localeCompare(b.name, "en"))
       .slice(0, 3)
       .map((t) => ({ name: t.name, points: t[track] }));
