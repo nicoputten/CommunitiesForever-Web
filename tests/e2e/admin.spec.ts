@@ -140,6 +140,14 @@ test("the owner makes a friend an admin, who helps without the owner's controls,
   await expect(theirs.getByTestId("owner-bar")).toContainText("You're an admin. Some settings are for the owner only.");
   await expect(theirs.getByRole("region", { name: "Danger zone" })).toHaveCount(0);
   await expect(theirs.getByRole("region", { name: "Uploader devices" })).toHaveCount(0);
+  // WEB-79: the Mission pool is the owner's: no box, and an old link says so.
+  await expect(theirs.getByRole("region", { name: "Doomsday missions" })).toHaveCount(0);
+  await theirs.goto("/admin/missions");
+  await expect(theirs.getByText("Only the owner can do this.")).toHaveText(
+    "Only the owner can do this. Nothing was changed.",
+  );
+  await expect(theirs.getByRole("region", { name: "The pool" })).toHaveCount(0);
+  await theirs.goto("/admin");
   await expect(theirs.getByRole("button", { name: /^(Make|Remove) admin/ })).toHaveCount(0);
   await expect(theirs.getByRole("region", { name: "Admin changes" })).toContainText(`made ${helper.name} an admin`);
   await theirs.goto("/discord");
