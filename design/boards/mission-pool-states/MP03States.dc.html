@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mission pool · states</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+.strings{font:12.5px/1.5 Inter,sans-serif;color:#C9CFD9;padding:16px 18px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);align-self:start}
+.strings h3{margin:0 0 8px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+.strings ol{margin:0;padding-left:22px;columns:2;column-gap:26px}
+.strings li{padding:1px 0}
+.strings .tl{margin-top:10px;color:#D4AF6A;font-size:11px;letter-spacing:.1em;text-transform:uppercase}.ttp{position:absolute;z-index:5;background:rgba(6,10,18,.97);border:1px solid #5C6A85;padding:8px 10px;font:12.5px/1.45 Inter,sans-serif;color:#C9CFD9;box-shadow:0 6px 18px rgba(0,0,0,.6);white-space:nowrap}
+.ttp b{display:block;font-size:13.5px;color:#FFFFFF;font-weight:600}
+.ver{scroll-margin-top:90px;padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:10px}
+.ver.hit{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.16),rgba(12,18,30,.85) 55%);box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.vh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.vh h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.vh span{font-size:13px;color:#8E98A8}
+.vh a{margin-left:auto;font-size:12px;color:#6E7888;text-decoration:none}
+.ver ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55;color:#C9CFD9}
+.vh .ltag{font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;background:#D4AF6A;color:#0B0F14;text-transform:uppercase;letter-spacing:.05em}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid rgba(212,175,106,.18)}
+.tabs2 a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;color:#AEB6C3;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 a.act{color:#F3EBDA;border-bottom-color:#D4AF6A;font-weight:600}
+.qr{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.qr:last-child{border-bottom:0}
+.qt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.qt b{font:500 15px Inter,sans-serif;color:#F3EBDA}
+.qt span{font-size:12px;color:#7E8898}
+.who{display:flex;flex-wrap:wrap;gap:6px 14px}
+.ch{display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;min-height:28px}
+.more{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:28px;padding:0 8px;border-radius:999px;border:1px solid rgba(174,182,195,.3);font:600 12px Inter,sans-serif;color:#C9CFD9;background:#0E1626}
+.phone{width:375px;border-radius:28px;overflow:hidden;border:1px solid rgba(212,175,106,.3);box-shadow:0 30px 80px rgba(0,0,0,.5);background:#070C15}
+.cap2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#D4AF6A;margin-bottom:8px}
+.H1b{margin:0;font:38px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3DFAE}
+.subb{margin:6px 0 0;font-size:15px;color:#8E98A8;line-height:1.5;max-width:1200px}
+.reuse{padding:14px 16px;border-radius:12px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);font-size:13px;line-height:1.55;color:#C9CFD9}
+.reuse b{color:#F3EBDA}
+.reuse h3{margin:0 0 6px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+
+.own{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid rgba(212,175,106,.5);color:#F3DFAE}
+.sum{display:flex;flex-wrap:wrap;gap:8px}
+.sum span{display:inline-flex;align-items:baseline;gap:6px;padding:8px 12px;border-radius:10px;background:#0E1626;border:1px solid rgba(174,182,195,.14);font-size:13px;color:#AEB6C3}
+.sum b{font:20px Marcellus,serif;color:#F3EBDA;font-weight:400}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{position:relative;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:5px;padding:10px;border-radius:10px;background:#0E1626;border:1px solid rgba(174,182,195,.14);min-height:132px;box-sizing:border-box;text-decoration:none;color:#E6E1D6}
+.day .dt{display:flex;flex-wrap:wrap;gap:4px;justify-content:space-between;align-items:center;font:600 13px Inter,sans-serif;color:#F3EBDA}
+.day .m{font-size:12px;line-height:1.35;color:#C9CFD9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day .m.pvp{color:#F6B3AD}
+.day.lock{opacity:.6;background:#0A111D}
+.day.chg{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.14),#0E1626 60%)}
+.day.sel{box-shadow:0 0 0 2px #F0D08E}
+.cbadge{font:700 9px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 5px;border-radius:999px;background:#D4AF6A;color:#0B0F14}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
+.pve{background:#7FD99A}.pvpd{background:#F08A80}
+.ptbl{width:100%;border-collapse:collapse;font-size:14px;color:#C9CFD9}
+.ptbl th{text-align:left;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7E8898;padding:8px 10px;border-bottom:1px solid rgba(212,175,106,.3);white-space:nowrap}
+.ptbl td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.ptbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.ptbl tr.off td{opacity:.45}
+.ptbl tr.grp td{padding:14px 10px 6px;font:16px 'Marcellus SC',serif;color:#F0D08E;border-bottom:1px solid rgba(212,175,106,.2)}
+.seg3{display:inline-flex;border:1px solid rgba(174,182,195,.25);border-radius:999px;overflow:hidden}
+.seg3 span{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;font-size:12px;color:#AEB6C3}
+.seg3 span.on{background:rgba(212,175,106,.18);color:#F3EBDA;font-weight:600}
+.swt{position:relative;display:inline-block;width:40px;height:22px;border-radius:11px;background:#D4AF6A;vertical-align:middle}
+.swt:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#0B0F14}
+.swt.off{background:#2A3446}.swt.off:after{right:auto;left:3px;background:#8E98A8}
+.bar2{display:inline-block;width:70px;height:6px;border-radius:3px;background:#1B2232;vertical-align:middle;margin-right:8px;position:relative;overflow:hidden}
+.bar2 i{position:absolute;left:0;top:0;bottom:0;background:#7FD99A}
+.slot{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.slot .k{font-size:12px;color:#8E98A8}
+.slot .t{font-size:15px;color:#F3EBDA}
+.slot .src{font-size:12px;color:#8E98A8;margin-left:8px}
+.warn2{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(240,167,116,.08);border:1px solid rgba(240,167,116,.35);font-size:13px;color:#F6C29C}
+.lockic{display:inline-flex}
+.mono2{font:12px ui-monospace,Menlo,monospace;color:#8E98A8}
+
+</style>
+</helmet>
+<div style="width: 2480px; box-sizing: border-box; padding: 48px 56px 64px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px">
+  <div><h1 class="H1b">Owner · Mission pool · states</h1><p class="subb">Locked days, a friend who saw the normal draw, switching off, a changed week, the log.</p></div><div style="display: grid; grid-template-columns: 1160px 460px; gap: 40px; align-items: start"><div style="display: grid; grid-template-columns: 560px 560px; gap: 28px 40px; align-items: start"><div><div class="cap2">Locked day (today, tomorrow)</div><section class="box" style="width: 400px"><div style="display: flex; justify-content: space-between; align-items: center"><h2 class="bt">Wed 5 Nov · evening</h2><svg class="lockic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E98A8" stroke-width="2.2" aria-label="locked"><rect x="5" y="11" width="14" height="10" rx="1"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div>
+      <div style="font-size: 13px; color: #8E98A8">Locked</div><div class="slot" style="grid-template-columns: 86px minmax(0, 1fr)"><span class="k">Daily 1</span><span class="t">Gain a level</span></div><div class="slot" style="grid-template-columns: 86px minmax(0, 1fr)"><span class="k">Daily 2</span><span class="t">Run a dungeon with a friend</span></div><div class="slot" style="grid-template-columns: 86px minmax(0, 1fr)"><span class="k">Daily 3</span><span class="t">Earn 5 profession skill points</span></div><div class="slot" style="grid-template-columns: 86px minmax(0, 1fr)"><span class="k">Hunt</span><span class="t">Hunt: Night Elf Druids</span></div></section></div><div><div class="cap2">A friend saw the normal draw on a changed day</div><section class="box" style="width: 520px"><div style="display: flex; justify-content: space-between; align-items: center"><h2 class="bt">Fri 31 Oct · evening</h2><span class="cbadge">changed</span></div>
+      <div class="warn2">Bob saw the normal draw <span style="margin-left: auto"><span style="display: inline-flex; width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(212,175,106,.55); color: #D4AF6A; font: 600 11px/16px Inter, sans-serif; justify-content: center; vertical-align: 2px" aria-label="More info">i</span></span></div></section></div><div><div class="cap2">Switching a mission off</div><section class="box" style="width: 520px"><h2 class="bt">Switch off “Explore a zone”?</h2><div style="font-size: 14px; color: #C9CFD9">Won’t come up from Thu 6.</div>
+      <div style="display: flex; gap: 8px"><a href="#" class="btn ghost">Cancel</a><a href="#" class="btn pri">Switch off</a></div></section></div><div><div class="cap2">A changed week</div><section class="box" style="width: 520px"><div style="display: flex; justify-content: space-between; align-items: center"><h2 class="bt">Week 46 · from Sun 9 19:00</h2><span class="cbadge">changed</span></div>
+      <div class="slot"><span class="k">Weekly 1</span><span class="t">Run 3 different dungeons</span><span></span></div><div class="slot"><span class="k">Weekly 2</span><span class="t">Gain 3 levels</span><span></span></div>
+      <div class="slot"><span class="k">Weekly 3</span><span class="t">Group with 3 different friends<span class="src"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F0D08E" stroke-width="2.2" aria-label="pinned"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8"></path></svg> pinned</span></span><span></span></div><div class="slot"><span class="k">Bounty</span><span class="t">50 honorable kills</span><span></span></div>
+      <div style="font-size: 13px; color: #8E98A8">Locks Sat 8 19:00</div></section></div><div><div class="cap2">Logged in Admin changes</div><section class="box" style="width: 520px"><h2 class="bt">Admin changes</h2><div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; color: #C9CFD9"><span><b style="color: #F3EBDA">Ada</b> pinned Run a dungeon with a friend on Fri 7</span><span style="color: #7E8898">21:40</span></div><div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; color: #C9CFD9"><span><b style="color: #F3EBDA">Ada</b> rerolled Daily 3 on Fri 7</span><span style="color: #7E8898">21:41</span></div><div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; color: #C9CFD9"><span><b style="color: #F3EBDA">Ada</b> switched off Explore a zone</span><span style="color: #7E8898">21:44</span></div><div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13px; color: #C9CFD9"><span><b style="color: #F3EBDA">Ada</b> set Earn 5 skill points to Often</span><span style="color: #7E8898">21:45</span></div></section></div></div><div class="strings"><h3>Visible strings · 39</h3><ol><li>Wed 5 Nov · evening</li><li>Locked</li><li>Daily 1</li><li>Gain a level</li><li>Daily 2</li><li>Run a dungeon with a friend</li><li>Daily 3</li><li>Earn 5 profession skill points</li><li>Hunt</li><li>Hunt: Night Elf Druids</li><li>Fri 31 Oct · evening</li><li>changed</li><li>Bob saw the normal draw</li><li>i</li><li>Switch off “Explore a zone”?</li><li>Won’t come up from Thu 6.</li><li>Cancel</li><li>Switch off</li><li>Week 46 · from Sun 9 19:00</li><li>Weekly 1</li><li>Run 3 different dungeons</li><li>Weekly 2</li><li>Gain 3 levels</li><li>Weekly 3</li><li>Group with 3 different friends</li><li>pinned</li><li>Bounty</li><li>50 honorable kills</li><li>Locks Sat 8 19:00</li><li>Admin changes</li><li>Ada</li><li>pinned Run a dungeon with a friend on Fri 7</li><li>21:40</li><li>rerolled Daily 3 on Fri 7</li><li>21:41</li><li>switched off Explore a zone</li><li>21:44</li><li>set Earn 5 skill points to Often</li><li>21:45</li></ol><div class="tl">Tooltips &amp; menus</div><ol><li>Lock icon: Locked · changes reach friends from the next free day</li><li>ⓘ on Bob saw the normal draw: Bob’s points count for the missions Bob had.</li></ol><div style="margin-top: 10px; font-size: 11px; color: #6E7888">Window chrome (title, tabs) not listed.</div></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1800,"height":1154}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

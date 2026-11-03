@@ -3,6 +3,7 @@ import type { DoomsdaySnapshot } from "@/core/doomsday/snapshot";
 import type { Db } from "./db";
 import { doomsdayGoals, doomsdayStatus, feats, feedDays } from "./db/schema";
 import { doomsdayResetSetting, getBotSettings } from "./discord";
+import { doomsdaySchedule } from "./missionPool";
 import { loadState } from "./uploads";
 
 // The Doomsday engine's input from what the site stores (WEB-58): each friend's goals (WEB-55), the feed, the merged
@@ -15,6 +16,7 @@ export function doomsdayInput(db: Db | Tx, now: number): DoomsdayInput | undefin
   const state = loadState(db as Db);
   if (state === undefined) return undefined;
   const settings = getBotSettings(db);
+  const schedule = doomsdaySchedule(db, now);
   const goals: Record<string, DoomsdayInput["goals"][string]> = {};
   const goalsOf = (owner: string) => (goals[owner] ??= { days: {}, weeks: {} });
   for (const row of db.select().from(doomsdayGoals).all()) {
@@ -36,6 +38,7 @@ export function doomsdayInput(db: Db | Tx, now: number): DoomsdayInput | undefin
       .from(feedDays)
       .all(),
     feats: db.select().from(feats).all(),
+    ...(schedule !== undefined ? { schedule } : {}),
   };
 }
 

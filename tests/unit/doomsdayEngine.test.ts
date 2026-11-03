@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
+import { canDo, drawWeek, EPOCH, goal, pointsFor, pool, POOL_VERSION, weekOf } from "@/core/doomsday/rules";
 
 // WEB-58: feat records as the Feats tab (WEB-60) shows them: display-ready titles, the epic item and a rank's rank.
 
@@ -136,5 +137,96 @@ describe("PvE weekly progress", () => {
     expect(progress["w.dungeonFriends2"]).toEqual({ value: 1, target: 2 });
     // Not in the feed: no progress at all.
     expect(progress["w.discover5"]).toBeUndefined();
+  });
+});
+
+// WEB-80 (addon CF-69): each stored day and week scores in the pool version recorded with it.
+describe("points per pool version", () => {
+  const today = doomsdaySnapshot(input).schedule.day;
+  const record = (pool: number | undefined) => ({
+    set: ["d.quests10", "d.quests20", "d.level"],
+    swapped: {},
+    done: { "d.quests10": 1, "d.level": 2 },
+    ...(pool !== undefined ? { pool } : {}),
+  });
+  const ada = (days: DoomsdayInput["goals"][string]["days"]) =>
+    doomsdaySnapshot({ ...input, goals: { "Ada#1001": { days, weeks: {} } } }).friends.find(
+      (f) => f.friendKey === "Ada#1001",
+    )!;
+
+  it("keeps the flat points of pool version 1 next to a day of pool version 2", () => {
+    const f = ada({ [today - 2]: record(undefined), [today - 1]: record(1), [today]: record(2) });
+    // 5 + 5 for each day of version 1 (with or without pool), 3 + 3 for today's of version 2.
+    expect(f.points!.allTime.pve).toBe(10 + 10 + 6);
+    expect(f.points!.today.pve).toBe(6);
+    expect(f.today!.goals.map((g) => g.points)).toEqual([3, 5, 3]);
+  });
+
+  it("scores today's drawn set in the site's pool version before the addon recorded it", () => {
+    const goals = ada({}).today!.goals;
+    expect(goals.map((g) => g.points)).toEqual(goals.map((g) => pointsFor(g.goal.id, POOL_VERSION)));
+  });
+});
+
+// WEB-80 (addon CF-78): only a real fight ends PvP Virgin.
+describe("PvP Virgin", () => {
+  const today = doomsdaySnapshot(input).schedule.day;
+  const feedDay = (entry: object) => ({
+    guid: "G",
+    owner: "Ada#1001",
+    day: today,
+    entry: { quests: {}, ranks: {}, learned: [], runs: [], ...entry },
+  });
+  const virgin = (extra: Partial<DoomsdayInput>) =>
+    doomsdaySnapshot({
+      ...input,
+      goals: {
+        "Ada#1001": {
+          // A taunt goal done: PvP points without a fight.
+          days: { [today]: { set: ["p.flex"], swapped: {}, done: { "p.flex": 1 } } },
+          weeks: {},
+        },
+      },
+      ...extra,
+    }).friends.find((f) => f.friendKey === "Ada#1001")!.pvpVirgin;
+
+  it("stays after PvP points from a goal without a fight", () => {
+    expect(virgin({})).toBe(true);
+  });
+
+  it("ends with a finished battleground or a duel", () => {
+    expect(virgin({ feed: [feedDay({ runs: [{ name: "Warsong Gulch", kind: "pvp", won: false, with: [] }] })] })).toBe(
+      false,
+    );
+    expect(virgin({ feed: [feedDay({ runs: [{ name: "Warsong Gulch", kind: "pvp", with: [] }] })] })).toBe(true);
+    expect(virgin({ feed: [feedDay({ duels: [{ t: 1, won: true, vs: "Stranger Name" }] })] })).toBe(false);
+  });
+});
+
+// WEB-80 (addon CF-79): a retired goal and a `canFrom` check apply from their pool version on.
+describe("pool versions", () => {
+  it("keeps w.ilvl3 in pool version 1 only", () => {
+    expect(pool("weekly", 1)).toContain("w.ilvl3");
+    expect(pool("weekly", 2)).not.toContain("w.ilvl3");
+  });
+
+  it("checks b.zone25's level only from pool version 2", () => {
+    expect(canDo("b.zone25", { highest: 12 }, 1)).toBe(true);
+    expect(canDo("b.zone25", { highest: 12 }, 2)).toBe(false);
+    expect(canDo("b.zone25", { highest: 25 }, 2)).toBe(true);
+  });
+});
+
+// WEB-80 (addon CF-77): from pool version 2 the 3 weeklies take 3 different categories; weeks of version 1 don't.
+describe("the weekly draw by category", () => {
+  const weeks = Array.from({ length: 30 }, (_, i) => weekOf(EPOCH) + i);
+  const categories = (w: number, version: number) => drawWeek(w, version).weeklies.map((id) => goal(id)!.category);
+
+  it("takes 3 different categories from pool version 2", () => {
+    for (const w of weeks) expect(new Set(categories(w, 2)).size, String(w)).toBe(3);
+  });
+
+  it("keeps pool version 1's draw without categories", () => {
+    expect(weeks.some((w) => new Set(categories(w, 1)).size < 3)).toBe(true);
   });
 });

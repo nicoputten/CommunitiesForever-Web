@@ -92,7 +92,7 @@ export function LadderCard({
               {v.initials}
             </span>
             {v.name} <span className={`${base.pill} ${base.pillVirgin}`}>PvP Virgin</span>
-            <span>not ranked: no kills on any character, ever</span>
+            <span>not ranked: no fight on any character yet</span>
           </div>
         ))}
       </div>
@@ -127,8 +127,8 @@ export function PvpDetails({ view }: { view: PvpView }) {
         )}
         {view.pvpVirgin && (
           <p className={base.note}>
-            <span className={`${base.pill} ${base.pillVirgin}`}>PvP Virgin</span> not ranked: no kills on any character,
-            ever
+            <span className={`${base.pill} ${base.pillVirgin}`}>PvP Virgin</span> not ranked: no fight on any character
+            yet
           </p>
         )}
         {view.ranks.map((r) => (

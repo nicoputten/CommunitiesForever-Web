@@ -1,6 +1,7 @@
 import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
+import type { Often } from "@/core/doomsday/missionPool";
 import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
@@ -574,3 +575,47 @@ export const recapStart = sqliteTable("recap_start", {
   id: integer("id").primaryKey(),
   startedAt: integer("started_at").notNull(),
 });
+
+// The Mission pool (WEB-78, src/server/missionPool.ts): the owner's settings per Doomsday mission, their pins and
+// rerolls, and the plan of the days and weeks. Not derived: a rebuild of the uploads leaves them alone.
+
+/** A mission's setting; a mission without a row is on and Normal. */
+export const missionSettings = sqliteTable("mission_settings", {
+  /** The goal id (docs/DOOMSDAY.md). */
+  id: text("id").primaryKey(),
+  off: integer("off", { mode: "boolean" }).notNull(),
+  often: text("often").$type<Often>().notNull(),
+  changedAt: integer("changed_at").notNull(),
+  changedBy: text("changed_by").notNull(),
+});
+
+/** The owner's pin or reroll of one slot (0..3) of a day or week. */
+export const missionOverrides = sqliteTable(
+  "mission_overrides",
+  {
+    period: text("period").$type<"day" | "week">().notNull(),
+    n: integer("n").notNull(),
+    slot: integer("slot").notNull(),
+    id: text("id").notNull(),
+    kind: text("kind").$type<"pin" | "reroll">().notNull(),
+    at: integer("at").notNull(),
+    by: text("by").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.period, t.n, t.slot] })],
+);
+
+/**
+ * The plan of a day or week (the 3 PvE dailies or weeklies, then the Skirmish or Bounty): frozen when it locks, as
+ * last computed while free. Written by every change, so the plan never changes by itself.
+ */
+export const missionPlan = sqliteTable(
+  "mission_plan",
+  {
+    period: text("period").$type<"day" | "week">().notNull(),
+    n: integer("n").notNull(),
+    plan: text("plan", { mode: "json" }).$type<string[]>().notNull(),
+    /** When it last changed. */
+    at: integer("at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.period, t.n] })],
+);

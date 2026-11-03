@@ -31,6 +31,9 @@ import {
   undoStartFreshAction,
 } from "../actions";
 import styles from "../admin.module.css";
+import missions from "@/components/missions/MissionPool.module.css";
+import { missionPoolBox } from "@/core/views/missionPool";
+import { missionPool } from "@/server/missionPool";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -48,9 +51,12 @@ export default async function AdminPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const owner = (await getViewer())?.owner === true;
+  const viewer = await getViewer();
+  const owner = viewer?.owner === true;
   const view = loadAdminView(getDb(), nowSeconds(), undefined, owner);
   const cutoff = owner ? getCutoff(getDb()) : undefined;
+  const mission =
+    owner && viewer !== undefined ? missionPoolBox(missionPool(getDb(), viewer.battleTag, nowSeconds())) : undefined;
   const refused = refusedText(one(params.refused), one(params.who));
   const ownerName = view.ownerName ?? "the owner";
   return (
@@ -289,6 +295,27 @@ export default async function AdminPage({
                   ))}
                 </ul>
               )}
+            </AdminPanel>
+          )}
+          {mission !== undefined && (
+            <AdminPanel id="admin-missions" title="Doomsday missions" aside={<WhoTag owner />}>
+              <div className={missions.entry}>
+                <ul className={missions.sum} aria-label="Doomsday missions">
+                  <li>
+                    <b>{mission.missions}</b>missions
+                  </li>
+                  <li>
+                    <b>{mission.changed}</b>
+                    {mission.changed === 1 ? "changed day" : "changed days"}
+                  </li>
+                  <li>
+                    <b>{mission.today}</b>today
+                  </li>
+                </ul>
+                <Link href="/admin/missions" className={`${missions.button} ${missions.secondary}`}>
+                  Open mission pool
+                </Link>
+              </div>
             </AdminPanel>
           )}
           {owner && (

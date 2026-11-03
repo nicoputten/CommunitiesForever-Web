@@ -18,9 +18,8 @@ import {
   dayOf,
   DUNGEON_BOSSES,
   dayStart,
-  draw,
-  drawWeek,
   duels as duelsOf,
+  entryPool,
   type DuelRecord,
   type DuelResult,
   elo,
@@ -31,9 +30,13 @@ import {
   goalsForWeek,
   type Kill,
   ladder,
+  type MissionSchedule,
   POINTS,
+  POOL_VERSION,
   type Schedule,
   type ScoredKill,
+  scheduledDraw,
+  scheduledWeek,
   scoreKills,
   type Situation,
   streak,
@@ -97,6 +100,8 @@ export interface DoomsdayInput {
   /** Every stored feed day of every character. */
   feed: readonly { guid: string; owner: string; day: number; entry: FeedDay }[];
   feats: readonly StoredFeat[];
+  /** WEB-78: the Mission pool's changed days and weeks (the schedule the addons get). */
+  schedule?: MissionSchedule;
 }
 
 // --- time ------------------------------------------------------------------------------------------------------
@@ -236,16 +241,19 @@ interface Friend {
   goals?: DoomsdayInput["goals"][string];
   kills: ScoredKill[];
   deaths: { t: number; char: string }[];
-  /** Any honorable kill or any PvP point (duels included), ever: no PvP Virgin (live test 2026-10-29). */
-  killedEver: boolean;
+  /**
+   * A real fight on any character, ever: an honorable kill, a duel or a finished battleground (CF-78, Nico 2026-11-03).
+   * No PvP Virgin then; PvP points from goals without a fight (emotes, the flag) don't end it.
+   */
+  foughtEver: boolean;
 }
 
-/** Points of a friend's goals done in a set of day and week records. */
+/** Points of a friend's goals done in a set of day and week records, each in the pool version recorded with it. */
 function goalPointsOf(records: readonly (GoalRecord | undefined)[]): { pve: number; pvp: number; goals: number } {
   const out = { pve: 0, pvp: 0, goals: 0 };
   for (const r of records) {
     for (const id of Object.keys(r?.done ?? {})) {
-      const p = goalPoints(id);
+      const p = goalPoints(id, entryPool(r));
       if (p === undefined) continue;
       out[p.track] += p.points;
       out.goals++;
@@ -276,13 +284,19 @@ export function prepare(input: DoomsdayInput) {
     const chars = Object.values(data.characters).filter((c) => c.owner === p.key && c.hasRecord);
     const kills: Kill[] = [];
     const deaths: { t: number; char: string }[] = [];
+    let foughtEver = chars.some(
+      (c) => (c.pvp?.hk ?? 0) > 0 || (c.pvp?.duelsWon ?? 0) > 0 || (c.pvp?.duelsLost ?? 0) > 0,
+    );
     for (const f of input.feed) {
       if (f.owner !== p.key) continue;
       for (const k of f.entry.pvpKills ?? []) kills.push({ ...k, char: f.guid });
       for (const d of f.entry.deaths ?? []) if (d.t !== undefined) deaths.push({ t: d.t, char: f.guid });
+      // A finished duel, or a finished battleground (CF-23: won or lost), on any day.
+      if ((f.entry.duels ?? []).some((d) => d.won !== undefined)) foughtEver = true;
+      if (f.entry.runs.some((r) => r.kind === "pvp" && r.won !== undefined)) foughtEver = true;
     }
     const scored = scoreKills(kills, s, community);
-    const killedEver = kills.length > 0 || chars.some((c) => (c.pvp?.hk ?? 0) > 0);
+    if (kills.length > 0) foughtEver = true;
     const goals = input.goals[p.key];
     return {
       key: p.key,
@@ -292,7 +306,7 @@ export function prepare(input: DoomsdayInput) {
       ...(goals !== undefined ? { goals } : {}),
       kills: scored,
       deaths,
-      killedEver,
+      foughtEver,
     };
   });
   const byKey = new Map(friends.map((f) => [f.key, f]));
@@ -344,17 +358,8 @@ export function prepare(input: DoomsdayInput) {
       kills: f.kills.filter((k) => k.track === "pvp" && k.counted && days(k.day)).length,
     };
   };
-  // Any PvP point ends PvP Virgin too, a duel's included (Nico, live test 2026-10-29).
-  for (const f of friends) {
-    if (!f.killedEver && f.hasRecord) {
-      const all = totals(
-        f,
-        () => true,
-        () => true,
-      );
-      if (all.pvp > 0) f.killedEver = true;
-    }
-  }
+  // A duel a friend recorded against them is a real fight too, also when their own feed lacks it.
+  for (const d of allDuels) for (const key of [d.a, d.b]) if (byKey.has(key)) byKey.get(key)!.foughtEver = true;
   return { s, friends, byKey, active, allDuels, records, owner, duelPoints, killPoints, killApprox, totals };
 }
 
@@ -363,9 +368,9 @@ export function periodTotals(
   input: DoomsdayInput,
   days: (n: number) => boolean,
   weeks: (w: number) => boolean,
-): { key: string; name: string; pve: number; pvp: number; goals: number; kills: number; killedEver: boolean }[] {
+): { key: string; name: string; pve: number; pvp: number; goals: number; kills: number; foughtEver: boolean }[] {
   const p = prepare(input);
-  return p.active.map((f) => ({ key: f.key, name: f.name, killedEver: f.killedEver, ...p.totals(f, days, weeks) }));
+  return p.active.map((f) => ({ key: f.key, name: f.name, foughtEver: f.foughtEver, ...p.totals(f, days, weeks) }));
 }
 
 /** The whole snapshot for `now`. */
@@ -378,8 +383,8 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   const inWeek = (n: number) => n >= firstOfWeek && n < firstOfWeek + 7;
 
   // --- today and this week's goals ---
-  const dayDraw = draw(today);
-  const weekDraw = drawWeek(week);
+  const dayDraw = scheduledDraw(today, input.schedule);
+  const weekDraw = scheduledWeek(week, input.schedule);
   const todayGoals = [...dayDraw.dailies, ...(dayDraw.skirmish !== undefined ? [dayDraw.skirmish] : [])].map((id) =>
     goalRef(id),
   );
@@ -393,11 +398,13 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     done: Readonly<Record<string, number>>,
     zone: string | undefined,
     progress: (id: string) => FriendGoal["progress"],
+    // The pool version of the recorded day or week; the site's own for a set it drew (no record yet).
+    pool: number,
   ): FriendGoal[] =>
     set.map((id) => {
       const original = swapped[id];
       const ref = goalRef(id, id === "p.frontLine" || id === "b.zone25" ? zone : undefined);
-      const g: FriendGoal = { goal: ref, columnId: original ?? id, points: goalPoints(id)?.points ?? 0 };
+      const g: FriendGoal = { goal: ref, columnId: original ?? id, points: goalPoints(id, pool)?.points ?? 0 };
       if (original !== undefined) g.swappedFrom = goalRef(original);
       if (done[id] !== undefined) g.doneAt = done[id];
       const p = progress(id);
@@ -547,20 +554,22 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   // --- friends ---
   const out: FriendDoomsday[] = friends.map((f) => {
     const status = !f.hasRecord ? "noAddon" : f.goals === undefined ? "noDoomsday" : "active";
-    const base: FriendDoomsday = { friendKey: f.key, name: f.name, status, pvpVirgin: f.hasRecord && !f.killedEver };
+    const base: FriendDoomsday = { friendKey: f.key, name: f.name, status, pvpVirgin: f.hasRecord && !f.foughtEver };
     if (status !== "active" || f.goals === undefined) return base;
 
     const situation = situationOf(f.chars);
     const dayRecord = f.goals.days[today];
     const daySet =
-      dayRecord !== undefined && dayRecord.set.length > 0 ? dayRecord : { ...goalsForDay(today, situation), done: {} };
+      dayRecord !== undefined && dayRecord.set.length > 0
+        ? dayRecord
+        : { ...goalsForDay(today, situation, POOL_VERSION, input.schedule), done: {} };
     const dayZone = zoneFor(today, 4, situation.highestToday ?? situation.highest);
     const done = dayRecord?.done ?? {};
     const weekRecord = f.goals.weeks[week];
     const weekSet =
       weekRecord !== undefined && weekRecord.set.length > 0
         ? weekRecord
-        : { ...goalsForWeek(week, situation), done: {} };
+        : { ...goalsForWeek(week, situation, POOL_VERSION, input.schedule), done: {} };
     const weekZone = zoneFor(week, 5, situation.highest);
 
     const first: NonNullable<FriendDoomsday["today"]>["duels"]["first"] = [];
@@ -599,7 +608,14 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     const friend: FriendDoomsday = {
       ...base,
       today: {
-        goals: friendGoals(daySet.set, daySet.swapped, done, dayZone, killProgress(f, dayDays, dayZone)),
+        goals: friendGoals(
+          daySet.set,
+          daySet.swapped,
+          done,
+          dayZone,
+          killProgress(f, dayDays, dayZone),
+          dayRecord !== undefined ? entryPool(dayRecord) : POOL_VERSION,
+        ),
         ...(finished !== undefined ? { finishedAt: finished } : {}),
         duels: {
           first,
@@ -620,6 +636,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
             (kills, pve) => (id: string) =>
               kills(id) ?? pve(id)
           )(killProgress(f, weekDays, weekZone), pveWeekProgress(f, weekDays)),
+          weekRecord !== undefined ? entryPool(weekRecord) : POOL_VERSION,
         ),
       },
       points: {
@@ -658,7 +675,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
         pvp: t.pvp,
         goals: t.goals,
         kills: t.kills,
-        killedEver: f.killedEver,
+        foughtEver: f.foughtEver,
       };
     });
     const prev = previous && {

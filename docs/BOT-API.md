@@ -314,7 +314,7 @@ Errors (besides the ones above): `400 unknown_dungeon`, `invalid_time` (no time,
 The contract for the bot's Doomsday stories (BOT-14 to BOT-16), agreed before the site builds it (2026-10-28), so the bot can build its formatting against it. The rules are in the addon repo's `docs/DOOMSDAY.md`. Everything here is optional within v1: an older site has none of it, and a bot that doesn't know an event type skips and acknowledges it.
 
 Common rules:
-- **Two tracks, never summed.** Points always come as `{ "pve": n, "pvp": n }`. `pvp` is `null` for a **PvP Virgin** (no kill on any character, ever): shown, never ranked.
+- **Two tracks, never summed.** Points always come as `{ "pve": n, "pvp": n }`. A **PvP Virgin** (no fight on any character yet: no honorable kill, duel or finished battleground; CF-78) is shown with their PvP points (from goals without a fight, such as emotes) and never ranked.
 - **No data is not 0.** A friend without Doomsday data (an older addon, or no addon) is never listed with 0 points: they are named in `withoutData` instead.
 - Names only: friends by display name, characters by full name. Never BattleTags or Discord ids, no pings. Gold never as an amount.
 - **Days and weeks.** A Doomsday day runs from the reset to the next one (default 19:00 realm time, a site setting) and is named after the date it starts on. `day` and `week` are the day and week numbers of `DOOMSDAY.md`. `start`, `end` and `resetAt` are Unix seconds (UTC); the bot shows them with Discord's timestamp markup (`<t:…:R>` for "resets in …").
@@ -402,7 +402,7 @@ At each reset, with the Board switch on: the new day's board. The bot posts it i
 
 - `goals`: the day's draw, in slot order.
 - `friends`: every friend with Doomsday data, most goals done first, then by name. A row's `goals` lists only the slots that differ from the day's goal or are done (`slot`, `id`, `done`, `at`, `swappedFrom`, `progress`); a slot not listed is the day's goal, not done.
-- `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (struck through). `today`, `week`: points per track (`pvp` `null` for a PvP Virgin). `streak`, `best`: days.
+- `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (struck through). `today`, `week`: points per track (a PvP Virgin's PvP points too, WEB-80; `null` before WEB-80). `streak`, `best`: days.
 - `withoutData`: friends on the site without Doomsday data (no row).
 - `crown`: `{ "name", "at" }`, the first friend to finish the 3 PvE dailies, or `null`. No points.
 - `yesterdayCrown`: `{ "name" }`, the crown of the previous Doomsday day, or `null` when nobody took it (bot BOT-15, Nico 2026-10-28: "Yesterday's crown: Tok."). Optional: the bot shows the line only when it is sent.
@@ -451,7 +451,7 @@ On Sunday at the reset (the week turns), with the Ladder switch on: the week tha
 - `duelChampion`: the best Elo rating among friends who duelled that week (start 1000, K = 32), or `null`. `mostKillsInZone`: the most counted kills by one friend in one zone, or `null`.
 - `battlegrounds`: kept apart from the kills above. `friends`: the top 5 by battleground points; `games`: the group's wins and losses per battleground. `null` without a battleground that week.
 - `label`: the week as people say it (bot BOT-16, Nico 2026-10-28): "week" and the ISO 8601 week number of the Monday after the week's start, in the realm's time zone. Optional: without it the bot shows "week of <start>".
-- `pvpVirgins`: friends not ranked on the PvP ladder ("not ranked: no kills on any character, ever"); empty when none.
+- `pvpVirgins`: friends not ranked on the PvP ladder ("not ranked: no fight on any character yet"); empty when none.
 
 ### Look-up `doomsday`
 `GET lookup/doomsday?discordUserId=<id>&friend=<display name>`. `friend` is optional; without it, the asker (`403 not_linked` when not linked). `404 no_data` before any Doomsday data on the site, `404 not_found` for an unknown friend.

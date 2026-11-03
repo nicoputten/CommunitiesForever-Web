@@ -780,7 +780,7 @@ function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number
             >
               <span style={{ color: tok("--card-pve") }}>{r.today.pve}</span>
               <span style={{ color: tok("--text-dim"), margin: "0 6px" }}>·</span>
-              <span style={{ color: tok("--card-pvp") }}>{r.today.pvp ?? 0}</span>
+              <span style={{ color: tok("--card-pvp") }}>{r.today.pvp}</span>
             </div>
             <div
               style={{
