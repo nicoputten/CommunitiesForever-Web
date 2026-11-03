@@ -117,11 +117,13 @@ describe("the plan", () => {
   });
 
   it("a pin pushes the normal mission of its category to another one", () => {
-    const n = TODAY + 3; // normal: d.ilvl, d.dungeon, d.quests10
-    expect(normalPlan("day", n).slice(0, 3)).toEqual(["d.ilvl", "d.dungeon", "d.quests10"]);
-    const plan = chain(n, 1, {}, { [n]: { 0: { id: "d.zone5", kind: "pin" } } })[0]!;
-    expect(plan[0]).toBe("d.zone5");
-    expect(plan).not.toContain("d.quests10");
+    const n = TODAY + 3;
+    const normal = normalPlan("day", n);
+    // Pinned in the first slot: a daily of the third slot's category.
+    const pin = pool("daily").find((id) => id !== normal[2] && goal(id)?.category === goal(normal[2]!)?.category)!;
+    const plan = chain(n, 1, {}, { [n]: { 0: { id: pin, kind: "pin" } } })[0]!;
+    expect(plan[0]).toBe(pin);
+    expect(plan).not.toContain(normal[2]);
     expectDrawRules([plan]);
   });
 
@@ -222,10 +224,12 @@ describe("stats", () => {
   it("saw the normal draw: friends whose set before swaps is the normal draw instead of the plan", () => {
     const n = 20763;
     const normal = normalPlan("day", n);
-    const plan = ["d.quests20", normal[1]!, normal[2]!, normal[3]!];
+    // Two dailies the normal draw doesn't have: the plan's and Cy's swap.
+    const [planned, swap] = pool("daily").filter((id) => !normal.includes(id));
+    const plan = [planned!, normal[1]!, normal[2]!, normal[3]!];
     const records = [
       rec("Bob#1002", "day", n, [...normal]),
-      rec("Cy#1003", "day", n, ["d.quests10", ...normal.slice(1)], { "d.quests10": normal[0]! }),
+      rec("Cy#1003", "day", n, [swap!, ...normal.slice(1)], { [swap!]: normal[0]! }),
       rec("Ada#1001", "day", n, plan),
       rec("Dee#1004", "day", n + 1, [...normal]),
     ];

@@ -1,4 +1,14 @@
-import { DAY, dayOf, dayStart, goalsForDay, goalsForWeek, weekOf, weekStart, type Schedule } from "@/core/doomsday/rules";
+import {
+  DAY,
+  dayOf,
+  dayStart,
+  goalsForDay,
+  goalsForWeek,
+  POOL_VERSION,
+  weekOf,
+  weekStart,
+  type Schedule,
+} from "@/core/doomsday/rules";
 import { zoneOffset } from "@/core/doomsday/engine";
 
 // The design sample's Doomsday (WEB-63): the fields the addon's CF-52, CF-53, CF-55 and CF-56 write (as
@@ -244,6 +254,6 @@ export function doomsdayPerson(
 
   return {
     feed,
-    goals: { days, weeks, streak: 0, best: 0, pool: 1, reset: 68400 },
+    goals: { days, weeks, streak: 0, best: 0, pool: POOL_VERSION, reset: 68400 },
   };
 }
