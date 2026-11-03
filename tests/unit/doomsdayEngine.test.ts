@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
-import { canDo, pool } from "@/core/doomsday/rules";
+import { canDo, drawWeek, EPOCH, goal, pool, weekOf } from "@/core/doomsday/rules";
 
 // WEB-58: feat records as the Feats tab (WEB-60) shows them: display-ready titles, the epic item and a rank's rank.
 
@@ -213,5 +213,19 @@ describe("pool versions", () => {
     expect(canDo("b.zone25", { highest: 12 }, 1)).toBe(true);
     expect(canDo("b.zone25", { highest: 12 }, 2)).toBe(false);
     expect(canDo("b.zone25", { highest: 25 }, 2)).toBe(true);
+  });
+});
+
+// WEB-80 (addon CF-77): from pool version 2 the 3 weeklies take 3 different categories; weeks of version 1 don't.
+describe("the weekly draw by category", () => {
+  const weeks = Array.from({ length: 30 }, (_, i) => weekOf(EPOCH) + i);
+  const categories = (w: number, version: number) => drawWeek(w, version).weeklies.map((id) => goal(id)!.category);
+
+  it("takes 3 different categories from pool version 2", () => {
+    for (const w of weeks) expect(new Set(categories(w, 2)).size, String(w)).toBe(3);
+  });
+
+  it("keeps pool version 1's draw without categories", () => {
+    expect(weeks.some((w) => new Set(categories(w, 1)).size < 3)).toBe(true);
   });
 });

@@ -2663,7 +2663,19 @@ function drawOne(list: readonly string[], n: number, salt: number, previous: rea
   return available[pick(n, salt, available.length) - 1];
 }
 
-function drawDailies(list: readonly string[], n: number, previous: readonly string[]): string[] {
+/**
+ * Whether a slot's 3 goals take 3 different categories: the PvE dailies always, the PvE weeklies from pool version 2
+ * (CF-77, Nico 2026-11-03); weeks of pool version 1 keep the draw without categories.
+ */
+export function distinctCategories(slot: GoalSlot, version = POOL_VERSION): boolean {
+  return slot === "daily" || (slot === "weekly" && version >= 2);
+}
+
+/**
+ * 3 goals of 3 different categories: slot k takes `candidates[pick(n, salts[k], #candidates)]` from the list minus
+ * the categories taken and minus `previous`; if none is left, `previous` is allowed again (categories still differ).
+ */
+function drawByCategory(list: readonly string[], n: number, previous: readonly string[], salts: readonly number[]) {
   const chosen: string[] = [];
   const categories = new Set<string>();
   for (let slot = 0; slot < 3; slot++) {
@@ -2672,14 +2684,19 @@ function drawDailies(list: readonly string[], n: number, previous: readonly stri
     let c = candidates(true);
     if (c.length === 0) c = candidates(false);
     if (c.length === 0) break;
-    const id = c[pick(n, SALT.dailies[slot]!, c.length) - 1]!;
+    const id = c[pick(n, salts[slot]!, c.length) - 1]!;
     chosen.push(id);
     categories.add(BY_ID.get(id)!.category!);
   }
   return chosen;
 }
 
-function drawWeeklies(list: readonly string[], week: number, previous: readonly string[]): string[] {
+function drawDailies(list: readonly string[], n: number, previous: readonly string[]): string[] {
+  return drawByCategory(list, n, previous, SALT.dailies);
+}
+
+function drawWeeklies(list: readonly string[], week: number, previous: readonly string[], version: number): string[] {
+  if (distinctCategories("weekly", version)) return drawByCategory(list, week, previous, SALT.weeklies);
   const chosen: string[] = [];
   for (let slot = 0; slot < 3; slot++) {
     let c = list.filter((id) => !chosen.includes(id) && !previous.includes(id));
@@ -2763,7 +2780,7 @@ export function drawWeek(week: number, version = POOL_VERSION): WeekDraw {
     if (result === undefined) {
       const prev = previous ?? { weeklies: [] };
       result = {
-        weeklies: drawWeeklies(weeklyPool, w, prev.weeklies),
+        weeklies: drawWeeklies(weeklyPool, w, prev.weeklies, version),
         bounty: drawOne(bountyPool, w, SALT.bounty, prev.bounty !== undefined ? [prev.bounty] : []),
       };
       weekCache.set(key + w, result);

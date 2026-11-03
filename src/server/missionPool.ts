@@ -17,7 +17,17 @@ import {
   SLOTS,
   type StoredGoals,
 } from "@/core/doomsday/missionPool";
-import { dayOf, dayStart, EPOCH, goal, type MissionSchedule, pool, type Schedule, weekOf } from "@/core/doomsday/rules";
+import {
+  dayOf,
+  dayStart,
+  distinctCategories,
+  EPOCH,
+  goal,
+  type MissionSchedule,
+  pool,
+  type Schedule,
+  weekOf,
+} from "@/core/doomsday/rules";
 import { AccessError } from "./access";
 import { logChange, requireOwner } from "./admins";
 import { cutoffAt } from "./cutoff";
@@ -187,10 +197,12 @@ export function pinMission(
     throw new AccessError("That mission doesn't fit that slot.");
   change(db, by, now, owner, (tx, before) => {
     const p = find(before, period, n);
-    // Another slot of the day with the same mission, or a daily of the same category, can't stay.
+    // Another slot with the same mission, or a daily (from pool version 2 also a weekly) of the same category, can't
+    // stay.
     const clash = p.plan.findIndex(
       (x, i) =>
-        i !== slot && (x === id || (i < 3 && SLOTS[period][slot] === "daily" && goal(x)?.category === g.category)),
+        i !== slot &&
+        (x === id || (i < 3 && distinctCategories(SLOTS[period][slot]!) && goal(x)?.category === g.category)),
     );
     if (clash !== -1)
       tx.delete(missionOverrides)

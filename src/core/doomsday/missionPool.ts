@@ -3,6 +3,7 @@ import type { GoalRecord } from "./record";
 import {
   DAY,
   dayStart,
+  distinctCategories,
   draw,
   drawWeek,
   goal,
@@ -81,10 +82,13 @@ function weighted(kind: GoalSlot, settings: Settings): boolean {
   return pool(kind).some((id) => isOn(settings, id) && settingOf(settings, id).often !== "normal");
 }
 
-/** Whether `id` may go in `slot` next to the other slots' missions: different missions, 3 categories for dailies. */
+/**
+ * Whether `id` may go in `slot` next to the other slots' missions: different missions, 3 categories for the dailies and,
+ * from pool version 2, the weeklies (CF-77).
+ */
 function fits(period: Period, slot: number, id: string, others: readonly (string | undefined)[]): boolean {
   if (others.some((o, i) => i !== slot && o === id)) return false;
-  if (SLOTS[period][slot] !== "daily") return true;
+  if (!distinctCategories(SLOTS[period][slot]!)) return true;
   return !others.some((o, i) => i !== slot && o !== undefined && i < 3 && category(o) === category(id));
 }
 
