@@ -1,4 +1,5 @@
 import { battleTagKey, battleTagName, sameBattleTag } from "../access";
+import { missionName, missionPlace, missionSlot } from "../doomsday/missionPool";
 import { timeAgo } from "./age";
 
 // The admin page (WEB-18, no board; layout decided with Nico): members from the data, the guest list, blocks, and when
@@ -24,7 +25,15 @@ export type LogAction =
   | "cutoff"
   | "cutoffUndone"
   | "botToken"
-  | "deviceRevoked";
+  | "deviceRevoked"
+  // WEB-78: the Mission pool.
+  | "missionOff"
+  | "missionOn"
+  | "missionOften"
+  | "missionPinned"
+  | "missionRerolled"
+  | "missionDayRerolled"
+  | "missionDayNormal";
 
 /** The changes only the owner can make: their log lines carry the crown. */
 const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
@@ -34,6 +43,13 @@ const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
   "cutoffUndone",
   "botToken",
   "deviceRevoked",
+  "missionOff",
+  "missionOn",
+  "missionOften",
+  "missionPinned",
+  "missionRerolled",
+  "missionDayRerolled",
+  "missionDayNormal",
 ]);
 
 export interface LogInput {
@@ -195,11 +211,27 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
         b(target),
         ...(entry.detail !== undefined ? [t(` of ${nameOf(entry.detail)}`)] : []),
       ];
+    case "missionOff":
+      return [t("switched off "), b(missionName(target))];
+    case "missionOn":
+      return [t("switched on "), b(missionName(target))];
+    case "missionOften":
+      return [t("set "), b(missionName(target)), t(" to "), b(OFTEN_NAME[entry.detail ?? ""] ?? "Normal")];
+    case "missionPinned":
+      return [t("pinned "), b(missionName(target)), t(` on ${missionPlace(entry.detail)}`)];
+    case "missionRerolled":
+      return [t("rerolled "), b(missionSlot(entry.detail)), t(` on ${missionPlace(entry.detail)}`)];
+    case "missionDayRerolled":
+      return [t("rerolled "), b(missionPlace(entry.detail))];
+    case "missionDayNormal":
+      return [t("set "), b(missionPlace(entry.detail)), t(" back to the normal draw")];
     case "discordSetting":
     case "botToken":
       return [t(entry.detail ?? "changed a Discord setting")];
   }
 }
+
+const OFTEN_NAME: Readonly<Record<string, string>> = { rare: "Rare", normal: "Normal", often: "Often" };
 
 /** "Last seen 2 h ago", "Last seen yesterday"; "Not seen yet" before their first visit since WEB-18. */
 export function seenText(at: number | undefined, now: number): string {

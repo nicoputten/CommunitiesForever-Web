@@ -3,6 +3,7 @@ import { cleanLabel } from "@/core/uploader";
 import { gameFriends, uploaderRuns } from "@/core/uploaderRuns";
 import { doomsdayResetNow, effectiveTimeZone, getBotSettings } from "@/server/discord";
 import { receivedIds } from "@/server/gameItems";
+import { doomsdaySchedule } from "@/server/missionPool";
 import { listRuns, openAsks } from "@/server/runs";
 import { tokenGuard } from "@/server/session";
 import { touchToken } from "@/server/uploader";
@@ -13,6 +14,12 @@ import { loadState } from "@/server/uploads";
 // addon's planned runs file, which the uploader writes as Data\Runs.lua (UP-12). Any active upload token.
 
 export const dynamic = "force-dynamic";
+
+/** WEB-58's reset and offset, with WEB-78's schedule once the owner changed a day (addon CF-68). */
+function doomsdayAnswer(db: Parameters<typeof getBotSettings>[0], now: number) {
+  const schedule = doomsdaySchedule(db, now);
+  return { ...doomsdayResetNow(getBotSettings(db), now), ...(schedule !== undefined ? { schedule } : {}) };
+}
 
 export function GET(req: Request): Response {
   const caller = tokenGuard(req);
@@ -30,7 +37,7 @@ export function GET(req: Request): Response {
     reminderMinutes: getBotSettings(db).reminderMinutes,
     siteUrl: siteUrl(req),
     received: receivedIds(db, caller.battleTag),
-    doomsday: doomsdayResetNow(getBotSettings(db), now),
+    doomsday: doomsdayAnswer(db, now),
     friends: gameFriends(data, caller.battleTag),
     now,
   });

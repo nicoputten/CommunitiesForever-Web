@@ -675,9 +675,135 @@ export interface FriendSet {
   zone?: string;
 }
 
-/** One friend's goals for day n. */
-export function goalsForDay(n: number, s: Situation = {}, version = POOL_VERSION): FriendSet {
+// ===== The schedule (WEB-78, addon CF-68) =====
+
+/**
+ * The site's changed days and weeks (the Mission pool): per day the 3 PvE dailies and the Skirmish, per week the 3 PvE
+ * weeklies and the Bounty. Keys are day and week numbers as decimal strings. `v`: the site's time of its last change.
+ */
+export interface MissionSchedule {
+  v: number;
+  days?: Record<string, { daily?: string[]; skirmish?: string }>;
+  weeks?: Record<string, { weekly?: string[]; bounty?: string }>;
+}
+
+/** Days from yesterday to 16 ahead, weeks from last week to 3 ahead: what a schedule may hold. */
+export const SCHEDULE_DAYS = { before: 1, after: 16 } as const;
+export const SCHEDULE_WEEKS = { before: 1, after: 3 } as const;
+
+const SCHEDULE_ID = /^[A-Za-z0-9.]{1,24}$/;
+
+function isTable(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null && !Array.isArray(x);
+}
+
+function scheduleId(x: unknown): string | undefined {
+  return typeof x === "string" && SCHEDULE_ID.test(x) ? x : undefined;
+}
+
+function scheduleList(x: unknown): string[] | undefined {
+  if (!Array.isArray(x) || x.length !== 3) return undefined;
+  const ids = x.map(scheduleId);
+  if (ids.some((id) => id === undefined) || new Set(ids).size !== 3) return undefined;
+  return ids as string[];
+}
+
+function scheduleKey(key: string, low: number, high: number): number | undefined {
+  if (!/^-?\d+$/.test(key)) return undefined;
+  const n = Number(key);
+  return n >= low && n <= high ? n : undefined;
+}
+
+function checkPart<T extends object>(
+  raw: unknown,
+  low: number,
+  high: number,
+  list: string,
+  single: string,
+): Record<string, T> | undefined | null {
+  if (raw === undefined) return undefined;
+  if (!isTable(raw)) return null;
+  const out: Record<string, T> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const n = scheduleKey(key, low, high);
+    if (n === undefined || !isTable(value)) continue;
+    const entry: Record<string, unknown> = {};
+    const ids = scheduleList(value[list]);
+    if (ids !== undefined) entry[list] = ids;
+    const id = scheduleId(value[single]);
+    if (id !== undefined) entry[single] = id;
+    if (Object.keys(entry).length > 0) out[String(n)] = entry as T;
+  }
+  return out;
+}
+
+/**
+ * A schedule as received, checked (CF-68 "Check it"): undefined for a broken one; out-of-window days and weeks, broken
+ * fields and unknown fields dropped. Ids are only checked for their form here: an id this version doesn't know falls
+ * back when used.
+ */
+export function checkSchedule(raw: unknown, day: number, week: number): MissionSchedule | undefined {
+  if (!isTable(raw)) return undefined;
+  const v = raw.v;
+  if (typeof v !== "number" || !Number.isInteger(v) || v <= 0) return undefined;
+  const days = checkPart<{ daily?: string[]; skirmish?: string }>(
+    raw.days,
+    day - SCHEDULE_DAYS.before,
+    day + SCHEDULE_DAYS.after,
+    "daily",
+    "skirmish",
+  );
+  const weeks = checkPart<{ weekly?: string[]; bounty?: string }>(
+    raw.weeks,
+    week - SCHEDULE_WEEKS.before,
+    week + SCHEDULE_WEEKS.after,
+    "weekly",
+    "bounty",
+  );
+  if (days === null || weeks === null) return undefined;
+  const out: MissionSchedule = { v };
+  if (days !== undefined && Object.keys(days).length > 0) out.days = days;
+  if (weeks !== undefined && Object.keys(weeks).length > 0) out.weeks = weeks;
+  return out;
+}
+
+function inPool(ids: readonly string[] | undefined, slot: GoalSlot, version: number): ids is string[] {
+  if (ids === undefined) return false;
+  const list = pool(slot, version);
+  return ids.every((id) => list.includes(id));
+}
+
+/**
+ * Day n's set before swaps with the schedule (CF-68 "Use it"): a listed slot takes the scheduled mission when this
+ * version knows it (a list only when it knows all 3), else the normal draw's. The normal draw's chain never changes.
+ */
+export function scheduledDraw(n: number, schedule?: MissionSchedule, version = POOL_VERSION): DayDraw {
   const d = draw(n, version);
+  const s = schedule?.days?.[String(n)];
+  if (s === undefined) return d;
+  const out: DayDraw = { ...d, dailies: inPool(s.daily, "daily", version) ? [...s.daily] : d.dailies };
+  if (s.skirmish !== undefined && inPool([s.skirmish], "skirmish", version)) out.skirmish = s.skirmish;
+  return out;
+}
+
+/** Week w's set before swaps with the schedule; as scheduledDraw. */
+export function scheduledWeek(week: number, schedule?: MissionSchedule, version = POOL_VERSION): WeekDraw {
+  const d = drawWeek(week, version);
+  const s = schedule?.weeks?.[String(week)];
+  if (s === undefined) return d;
+  const out: WeekDraw = { ...d, weeklies: inPool(s.weekly, "weekly", version) ? [...s.weekly] : d.weeklies };
+  if (s.bounty !== undefined && inPool([s.bounty], "bounty", version)) out.bounty = s.bounty;
+  return out;
+}
+
+/** One friend's goals for day n. */
+export function goalsForDay(
+  n: number,
+  s: Situation = {},
+  version = POOL_VERSION,
+  schedule?: MissionSchedule,
+): FriendSet {
+  const d = scheduledDraw(n, schedule, version);
   const swapped: Record<string, string> = {};
   const set = swapList(d.dailies, s, swapped, version);
   if (d.skirmish !== undefined) set.push(swapList([d.skirmish], s, swapped, version)[0]!);
@@ -686,8 +812,13 @@ export function goalsForDay(n: number, s: Situation = {}, version = POOL_VERSION
 }
 
 /** One friend's goals for a week. */
-export function goalsForWeek(week: number, s: Situation = {}, version = POOL_VERSION): FriendSet {
-  const d = drawWeek(week, version);
+export function goalsForWeek(
+  week: number,
+  s: Situation = {},
+  version = POOL_VERSION,
+  schedule?: MissionSchedule,
+): FriendSet {
+  const d = scheduledWeek(week, schedule, version);
   const swapped: Record<string, string> = {};
   const set = swapList(d.weeklies, s, swapped, version);
   if (d.bounty !== undefined) set.push(swapList([d.bounty], s, swapped, version)[0]!);

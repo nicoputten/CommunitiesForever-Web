@@ -1,4 +1,5 @@
 import { battleTagKey, sameBattleTag } from "./access";
+import type { MissionSchedule } from "./doomsday/rules";
 import { levelFit } from "./levelFit";
 import type { Dataset } from "./model";
 import { offsetSeconds } from "./runTime";
@@ -148,6 +149,8 @@ export interface UploaderDoomsday {
   offset?: number;
   offsetUntil?: number;
   offsetAfter?: number;
+  /** WEB-78: the Mission pool's changed days and weeks (addon CF-68); left out while the owner never changed any. */
+  schedule?: MissionSchedule;
 }
 
 const SOURCE: Record<RunSource, GameSource> = { website: "site", discord: "discord", game: "game" };
@@ -265,6 +268,7 @@ export function uploaderRuns(input: UploaderRunsInput): UploaderRuns {
     updatedAt: Math.max(
       changedAt(input.runs, input.asks ?? [], now),
       input.doomsday?.changedAt ?? 0,
+      input.doomsday?.schedule?.v ?? 0,
       input.friends?.changedAt ?? 0,
     ),
     reminderMinutes: input.reminderMinutes,
