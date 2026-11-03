@@ -427,3 +427,22 @@ export function RankInsignia({ rank, ...props }: IconProps & { rank: number }) {
     </svg>
   );
 }
+
+/** mission-pool: a locked day (today, tomorrow). */
+export function LockIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={2.2} {...props}>
+      <rect x="5" y="11" width="14" height="10" rx="1" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </Icon>
+  );
+}
+
+/** mission-pool-steering: a pinned mission. */
+export function PinIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" strokeWidth={2.2} {...props}>
+      <path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8" />
+    </Icon>
+  );
+}

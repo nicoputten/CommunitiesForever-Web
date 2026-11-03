@@ -382,6 +382,10 @@ export function refusedText(refused: string | undefined, who: string | undefined
       return "Friends can be made admin after their first sign-in.";
     case "cant-sign-in":
       return "Only friends who may sign in can be made admin.";
+    case "locked":
+      return "That day is locked. Nothing was changed.";
+    case "mission":
+      return "That mission can’t go there. Nothing was changed.";
     default:
       return undefined;
   }

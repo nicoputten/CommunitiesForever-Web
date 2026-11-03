@@ -937,4 +937,18 @@
   ); /* the linked version */
   --ring-version-hit: 0 0 0 3px rgba(212, 175, 106, 0.18); /* uploader-changes: the linked version's glow */
   --dur-version-hit: 3s; /* uploader-changes: the linked version's glow fades after */
+  /* Mission pool (WEB-79, boards mission-pool, mission-pool-steering, mission-pool-states) */
+  --size-day-tile: 132px; /* mission-pool: a day's height, and its width on a phone */
+  --surface-day-locked: #0a111d; /* mission-pool: today and tomorrow */
+  --opacity-locked: 0.6; /* mission-pool: today and tomorrow */
+  --day-changed: radial-gradient(circle at 0% 0%, rgba(212, 175, 106, 0.14), #0e1626 60%); /* a changed day */
+  --ring-day-selected: 0 0 0 2px #f0d08e; /* mission-pool-steering: the open day */
+  --fs-micro: 9px; /* mission-pool: the "changed" badge */
+  --pvp-soft: #f6b3ad; /* mission-pool: a PvP mission on a day */
+  --size-editor: 470px; /* mission-pool-steering: the day editor next to the days */
+  --size-slot-key: 64px; /* mission-pool-steering: "Daily 1" */
+  --size-btn-compact: 34px; /* mission-pool-steering: Reroll, Pick… (desktop; --size-touch on a phone) */
+  --size-done-bar: 70px; /* mission-pool: the Done bar */
+  --size-done-bar-h: 6px;
+  --size-pick: 400px; /* mission-pool-steering: the Pick… list */
 }

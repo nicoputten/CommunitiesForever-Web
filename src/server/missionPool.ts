@@ -17,7 +17,7 @@ import {
   SLOTS,
   type StoredGoals,
 } from "@/core/doomsday/missionPool";
-import { dayOf, dayStart, goal, type MissionSchedule, pool, weekOf } from "@/core/doomsday/rules";
+import { dayOf, dayStart, EPOCH, goal, type MissionSchedule, pool, type Schedule, weekOf } from "@/core/doomsday/rules";
 import { AccessError } from "./access";
 import { logChange, requireOwner } from "./admins";
 import { cutoffAt } from "./cutoff";
@@ -277,6 +277,10 @@ export function doomsdaySchedule(db: Db | Tx, now: number): MissionSchedule | un
 
 export interface MissionPoolData {
   now: number;
+  /** The realm clock now. */
+  s: Schedule;
+  /** The first day the stats count (the launch cut-off's day, or the first Doomsday day). */
+  fromDay: number;
   today: number;
   week: number;
   plan: FullPlan;
@@ -299,7 +303,7 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
     .all()
     .map((r) => ({ owner: r.owner, period: r.period, n: r.n, data: r.data }));
   const cutoff = cutoffAt(db);
-  const fromDay = cutoff > 0 ? dayOf(cutoff, c.s) : 0;
+  const fromDay = cutoff > 0 ? Math.max(dayOf(cutoff, c.s), EPOCH) : EPOCH;
   const sawNormal: MissionPoolData["sawNormal"] = [];
   for (const period of ["day", "week"] as const) {
     const changed = Object.entries(state.stored[period])
@@ -312,6 +316,8 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
   }
   return {
     now,
+    s: c.s,
+    fromDay,
     today: c.today,
     week: c.week,
     plan,
