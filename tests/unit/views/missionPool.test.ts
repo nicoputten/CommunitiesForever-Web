@@ -42,9 +42,9 @@ describe("the Mission pool page", () => {
       "Europe/Amsterdam",
     );
     expect(v.counts).toEqual([
-      { label: "Daily PvE", count: 13 },
+      { label: "Daily PvE", count: 42 },
       { label: "Skirmish", count: 3 },
-      { label: "Weekly", count: 15 },
+      { label: "Weekly", count: 27 },
       { label: "Bounty", count: 5 },
       { label: "Off", count: 1 },
     ]);
@@ -57,9 +57,9 @@ describe("the Mission pool page", () => {
     expect(v.since).toBe("since launch · 5 days");
     expect(v.offFrom).toBe("Won’t come up from Wed 11.");
     expect(v.groups.map((g) => g.title)).toEqual([
-      "Daily · PvE · 14",
+      "Daily · PvE · 43",
       "Skirmish · PvP · 3",
-      "Weekly · 15",
+      "Weekly · 27",
       "Bounty · PvP · 5",
     ]);
     expect(v.groups[0]!.rows[0]).toMatchObject({ text: "Finish 10 quests", off: true, cameUp: "—", done: "—" });
@@ -122,6 +122,6 @@ describe("the Mission pool page", () => {
   });
 
   it("the Admin page's box", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 37, changed: 0, today: "Mon 9" });
+    expect(missionPoolBox(input())).toEqual({ missions: 78, changed: 0, today: "Mon 9" });
   });
 });

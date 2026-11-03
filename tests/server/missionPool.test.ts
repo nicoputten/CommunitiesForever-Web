@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { normalPlan } from "@/core/doomsday/missionPool";
-import { dayStart, goal, weekStart } from "@/core/doomsday/rules";
+import { dayStart, goal, pool, weekStart } from "@/core/doomsday/rules";
 import { logParts } from "@/core/views/admin";
 import { touchLastSeen } from "@/server/access";
 import { appointAdmin, listLog, OwnerOnlyError } from "@/server/admins";
@@ -93,17 +93,23 @@ describe("the lock window", () => {
 
 describe("steering and the schedule", () => {
   it("a pin goes into the schedule, every slot of the day; back to normal leaves { v }", () => {
-    const n = TODAY + 3; // normal: d.ilvl, d.dungeon, d.quests10, p.untouchable
-    pinMission(db, OWNER, "day", n, 1, "d.bosses3", NOW, OWNER);
+    const n = TODAY + 3;
+    const normal = normalPlan("day", n);
+    // A daily of a category the day doesn't have, and on neither day next to it.
+    const near = [...normalPlan("day", n - 1), ...normal, ...normalPlan("day", n + 1)];
+    const pin = pool("daily").find(
+      (id) => !near.includes(id) && !normal.some((x) => goal(x)?.category === goal(id)?.category),
+    )!;
+    pinMission(db, OWNER, "day", n, 1, pin, NOW, OWNER);
     expect(doomsdaySchedule(db, NOW + 5)).toEqual({
       v: NOW,
-      days: { [String(n)]: { daily: ["d.ilvl", "d.bosses3", "d.quests10"], skirmish: "p.untouchable" } },
+      days: { [String(n)]: { daily: [normal[0], pin, normal[2]], skirmish: normal[3] } },
     });
     backToNormal(db, OWNER, "day", n, NOW + 10, OWNER);
     expect(doomsdaySchedule(db, NOW + 20)).toEqual({ v: NOW + 10 });
     expect(logText()).toEqual([
       `${OWNER}set Thu 12 back to the normal draw`,
-      `${OWNER}pinned Defeat 3 dungeon bosses on Thu 12`,
+      `${OWNER}pinned ${goal(pin)!.text} on Thu 12`,
     ]);
   });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
-import { canDo, drawWeek, EPOCH, goal, pool, weekOf } from "@/core/doomsday/rules";
+import { canDo, drawWeek, EPOCH, goal, pointsFor, pool, POOL_VERSION, weekOf } from "@/core/doomsday/rules";
 
 // WEB-58: feat records as the Feats tab (WEB-60) shows them: display-ready titles, the epic item and a rank's rank.
 
@@ -163,7 +163,8 @@ describe("points per pool version", () => {
   });
 
   it("scores today's drawn set in the site's pool version before the addon recorded it", () => {
-    expect(ada({}).today!.goals.every((g) => g.points === 5)).toBe(true);
+    const goals = ada({}).today!.goals;
+    expect(goals.map((g) => g.points)).toEqual(goals.map((g) => pointsFor(g.goal.id, POOL_VERSION)));
   });
 });
 

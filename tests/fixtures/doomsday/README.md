@@ -14,7 +14,7 @@ and the tests switch to it; this file can then go.
 
 ## `doomsday-cases.json`
 The addon's golden cases (`tests/fixtures/doomsday-cases.json` in the addon repo), copied byte for byte from addon
-commit `4a17466a37436a464030c8ff9074f0df78c8a3ed` (`develop` after CF-78, PR #185, and CF-79, PR #186: the PvP Virgin `ladder` cases and the full catalogue, WEB-80 parts 2 and 3; before it CF-70, PR #181, and CF-69, PR #182: `pools.catalogue` and `pointsPerGoal`, WEB-80 part 1; before it CF-68, PR #172, the schedule cases agreed with WEB-78, and CF-55a, PR #97). Prettier leaves it alone
+commit `c109b1945b7f8352e3dd89f6b48d5dafd76fc930` (CF-77, branch `feature/cf-77-pool-version-2`: pool version 2, WEB-80 part 4; to be copied again from `develop` once CF-77 merges; before it `4a17466`, CF-78, PR #185, and CF-79, PR #186: the PvP Virgin `ladder` cases and the full catalogue, WEB-80 parts 2 and 3; before it CF-70, PR #181, and CF-69, PR #182: `pools.catalogue` and `pointsPerGoal`, WEB-80 part 1; before it CF-68, PR #172, the schedule cases agreed with WEB-78, and CF-55a, PR #97). Prettier leaves it alone
 (`.prettierignore`). Never edited here: a rule change updates
 the addon's `docs/DOOMSDAY.md`, this file and both copies in the same release. `tests/unit/doomsday.golden.test.ts`
-checks `src/core/doomsday/rules.ts` against it; cases marked `addonOnly` (goal progress, a recorded day kept) are skipped.
+checks `src/core/doomsday/rules.ts` against it; cases marked `addonOnly` (goal progress, a recorded day kept) are skipped. A case with `pool` runs in that pool version, one without it in pool version 1 (CF-77).
