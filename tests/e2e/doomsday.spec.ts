@@ -92,7 +92,7 @@ test("Doomsday ladder, PvP details and feats", async ({ page }) => {
   if (isPhone(page)) await page.goto("/doomsday/ladder?track=pvp");
   await expect(pvp.locator("summary").filter({ hasText: "Bob" })).toHaveCount(1);
   await expect(pvp.locator("summary").filter({ hasText: "Femke" })).toHaveCount(0);
-  await expect(pvp.getByText("not ranked: no kills on any character, ever")).toBeVisible();
+  await expect(pvp.getByText("not ranked: no fight on any character yet")).toBeVisible();
 
   // A row opens to the split per character; the viewer's is open.
   await expect(pvp.locator("details[open]").filter({ hasText: "Nico" })).toContainText("Ves Doombringer");

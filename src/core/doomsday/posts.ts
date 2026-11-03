@@ -46,8 +46,8 @@ export interface BoardData {
     /** The goals on the grid: the PvE dailies, the Hunt, the Skirmish and the Duel slot. */
     goalCount: number;
     crossedOut: boolean;
-    today: { pve: number; pvp: number | null };
-    week: { pve: number; pvp: number | null };
+    today: { pve: number; pvp: number };
+    week: { pve: number; pvp: number };
     streak: number;
     best: number;
     pvpVirgin: boolean;
@@ -107,8 +107,9 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
         gridCount(f.today!.goals, f.today!.duels.first.length),
       ),
       crossedOut: f.today!.finishedAt !== undefined,
-      today: { pve: f.points?.today.pve ?? 0, pvp: f.pvpVirgin ? null : (f.points?.today.pvp ?? 0) },
-      week: { pve: f.points?.week.pve ?? 0, pvp: f.pvpVirgin ? null : (f.points?.week.pvp ?? 0) },
+      // A PvP Virgin can have PvP points from goals without a fight (CF-78): sent, the Virgin pill stays.
+      today: { pve: f.points?.today.pve ?? 0, pvp: f.points?.today.pvp ?? 0 },
+      week: { pve: f.points?.week.pve ?? 0, pvp: f.points?.week.pvp ?? 0 },
       streak: f.streak?.current ?? 0,
       best: f.streak?.best ?? 0,
       pvpVirgin: f.pvpVirgin,

@@ -93,8 +93,8 @@ const BOARD: BoardData = {
       doneCount: 3,
       goalCount: 6,
       crossedOut: true,
-      today: { pve: 15, pvp: null },
-      week: { pve: 30, pvp: null },
+      today: { pve: 15, pvp: 0 },
+      week: { pve: 30, pvp: 0 },
       streak: 7,
       best: 7,
       pvpVirgin: true,
@@ -186,7 +186,7 @@ const SPECS: Record<string, CardSpec> = {
   "board-start": boardCard(
     {
       ...BOARD,
-      friends: BOARD.friends.map((f) => ({ ...f, goals: [], today: { pve: 0, pvp: f.pvpVirgin ? null : 0 } })),
+      friends: BOARD.friends.map((f) => ({ ...f, goals: [], today: { pve: 0, pvp: 0 } })),
       crown: null,
     },
     BOARD.start + 60,
