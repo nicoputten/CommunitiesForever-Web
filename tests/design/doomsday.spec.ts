@@ -170,10 +170,10 @@ test("doomsday: design values", async ({ page }) => {
     await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
   }
 
-  const goal = page.getByTestId("goal").filter({ hasText: "Finish 5 quests in one zone" });
+  const goal = page.getByTestId("goal").filter({ hasText: "Play 2 characters" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
-  await expectStyles(goal.getByText("Finish 5 quests in one zone"), {
+  await expectStyles(goal.getByText("Play 2 characters"), {
     "font-family": "var(--font-name)",
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
@@ -244,13 +244,13 @@ for (const tab of TABS) {
 
 test("doomsday roster chips: design values", async ({ page }) => {
   await openScreen(page, "/roster");
-  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 80 PvP 67/ });
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 51 PvP 62/ });
   await expectStyles(chip, {
     "background-color": "var(--surface-dd-chip)",
     "border-color": "var(--line-control)",
     "font-size": "var(--fs-meta)",
   });
-  await expectStyles(chip.getByText("PvE 80"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText("PvE 51"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
 });

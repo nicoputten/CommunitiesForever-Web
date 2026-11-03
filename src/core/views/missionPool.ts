@@ -20,6 +20,7 @@ import {
   goalPoints,
   partOfDay,
   pool,
+  POOL_VERSION,
   type Schedule,
   shortLabel,
   weekStart,
@@ -227,7 +228,8 @@ function row(id: string, kind: string, setting: MissionSetting, stats: MissionSt
     id,
     text: missionText(id),
     short: shortLabel(id),
-    points: `+${goalPoints(id)?.points ?? 0}`,
+    // In the site's pool version: flat in pool version 1, each mission's own points from version 2 (WEB-80).
+    points: `+${goalPoints(id, POOL_VERSION)?.points ?? 0}`,
     cameUp: stats === undefined ? "—" : String(cameUp),
     swapped: stats === undefined ? "—" : String(stats.swapped),
     done,
