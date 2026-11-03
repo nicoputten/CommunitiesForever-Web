@@ -18,8 +18,6 @@ import {
   dayOf,
   DUNGEON_BOSSES,
   dayStart,
-  draw,
-  drawWeek,
   duels as duelsOf,
   type DuelRecord,
   type DuelResult,
@@ -31,9 +29,13 @@ import {
   goalsForWeek,
   type Kill,
   ladder,
+  type MissionSchedule,
   POINTS,
+  POOL_VERSION,
   type Schedule,
   type ScoredKill,
+  scheduledDraw,
+  scheduledWeek,
   scoreKills,
   type Situation,
   streak,
@@ -97,6 +99,8 @@ export interface DoomsdayInput {
   /** Every stored feed day of every character. */
   feed: readonly { guid: string; owner: string; day: number; entry: FeedDay }[];
   feats: readonly StoredFeat[];
+  /** WEB-78: the Mission pool's changed days and weeks (the schedule the addons get). */
+  schedule?: MissionSchedule;
 }
 
 // --- time ------------------------------------------------------------------------------------------------------
@@ -378,8 +382,8 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   const inWeek = (n: number) => n >= firstOfWeek && n < firstOfWeek + 7;
 
   // --- today and this week's goals ---
-  const dayDraw = draw(today);
-  const weekDraw = drawWeek(week);
+  const dayDraw = scheduledDraw(today, input.schedule);
+  const weekDraw = scheduledWeek(week, input.schedule);
   const todayGoals = [...dayDraw.dailies, ...(dayDraw.skirmish !== undefined ? [dayDraw.skirmish] : [])].map((id) =>
     goalRef(id),
   );
@@ -553,14 +557,16 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     const situation = situationOf(f.chars);
     const dayRecord = f.goals.days[today];
     const daySet =
-      dayRecord !== undefined && dayRecord.set.length > 0 ? dayRecord : { ...goalsForDay(today, situation), done: {} };
+      dayRecord !== undefined && dayRecord.set.length > 0
+        ? dayRecord
+        : { ...goalsForDay(today, situation, POOL_VERSION, input.schedule), done: {} };
     const dayZone = zoneFor(today, 4, situation.highestToday ?? situation.highest);
     const done = dayRecord?.done ?? {};
     const weekRecord = f.goals.weeks[week];
     const weekSet =
       weekRecord !== undefined && weekRecord.set.length > 0
         ? weekRecord
-        : { ...goalsForWeek(week, situation), done: {} };
+        : { ...goalsForWeek(week, situation, POOL_VERSION, input.schedule), done: {} };
     const weekZone = zoneFor(week, 5, situation.highest);
 
     const first: NonNullable<FriendDoomsday["today"]>["duels"]["first"] = [];

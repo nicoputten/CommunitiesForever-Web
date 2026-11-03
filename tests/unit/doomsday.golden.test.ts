@@ -15,6 +15,9 @@ import {
   goalsForDay,
   goalsForWeek,
   ladder,
+  checkSchedule,
+  scheduledDraw,
+  scheduledWeek,
   pick,
   points,
   pool,
@@ -140,7 +143,23 @@ describe("Doomsday golden cases", () => {
     expect(ladder(c.friends, c.previous)).toEqual(c.expect);
   });
 
+  it.each(cases(golden.scheduleCheck))("schedule check: $note", (c: any) => {
+    const day = dayOf(c.serverTime, { offset: c.offset, reset: c.reset });
+    expect(checkSchedule(c.input, day, weekOf(day)) ?? null).toEqual(c.expect);
+  });
+
+  it.each(cases(golden.scheduled.filter((c: any) => c.addonOnly !== true)))("scheduled: $note", (c: any) => {
+    if (c.situation !== undefined) {
+      const got = goalsForDay(c.day, c.situation, POOL_VERSION, c.schedule);
+      expect({ set: got.set, swapped: got.swapped }).toEqual(c.expect);
+    } else if (c.day !== undefined) {
+      const d = scheduledDraw(c.day, c.schedule);
+      expect({ dailies: d.dailies, skirmish: d.skirmish }).toEqual(c.expect);
+    } else expect(scheduledWeek(c.week, c.schedule)).toEqual(c.expect);
+  });
+
   it("skips only the addon's own cases", () => {
+    expect(golden.scheduled.filter((c: any) => c.addonOnly === true).length).toBe(1);
     expect(golden.progress.every((c: any) => c.addonOnly === true)).toBe(true);
   });
 });
