@@ -30,6 +30,10 @@ View them: `npm run design`, then open http://localhost:4400.
 | `uploader-page` | `SiteUploader.dc.html` | Uploader page: download, steps, pairing approval, your uploaders and tokens, your upload history (WEB-34; from the uploader workshop, history added 2026-10-27) |
 | `uploader-changes` | `SA01Changes.dc.html` | Uploader: What’s new (`/uploader/changes`), one box per kept version, the linked one highlighted; The app · What’s new tabs and the link on the uploader page (WEB-73) |
 | `uploader-changes-states` | `SA02ChangesStates.dc.html` | Uploader What’s new: a long bullet, no versions yet (WEB-73) |
+| `mission-pool` | `MP01Pool.dc.html` | Mission pool (`/admin/missions`, owner only): counts, the next 14 days and 2 weeks, the pool with stats and How often, desktop and 375 px (WEB-79) |
+| `mission-pool-steering` | `MP02Edit.dc.html` | Mission pool: editing a free day (pin, Reroll, Pick…, Reroll day, Back to normal draw), the Pick… list (WEB-79) |
+| `mission-pool-states` | `MP03States.dc.html` | Mission pool states: a locked day, a friend who saw the normal draw, switching a mission off, a changed week, the Admin changes log (WEB-79) |
+| `mission-pool-admin-entry` | `MP04Entry.dc.html` | Admin page: the owner-only Doomsday missions box (WEB-79) |
 | `discord-settings` | `BotAdmin.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page: link your Discord, admin settings for the bot (WEB-39; from the Discord bot workshop) |
 | `discord-settings-runs` | `BotAdmin-runs.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page with the runs section: runs channel, reminder time, ask now from the game, mark runs done (WEB-39, WEB-40) |
 | `runs` | `SiteRuns.dc.html` | **Superseded** by `asks-now` and the `runs-v2-*` boards. Runs page: this week, later, past, "runs I can join", your answers (WEB-40) |
@@ -83,3 +87,5 @@ The `discord-page*` boards (2026-10-28, from the web engine's prompt for WEB-58)
 The co-admin boards (2026-10-29, from `docs/DESIGN-PROMPT-ADMINS.md`) are new boards: no admin-page board existed, so `admin-coadmins` follows the live /admin page. Its Danger zone shows WEB-62's box as built. All BattleTags on them are made up.
 
 The live-test boards (2026-10-29, canvas "Doombringers v2", section "Live test · 29 Oct") come with Nico's brief `docs/DESIGN-BRIEF-LIVE-TEST.md`, which says what to change. One real account name on `live-test-findings` was replaced by a made-up one before committing.
+
+The Mission pool boards (2026-11-03) show example missions; the page lists the real pool (`docs/STORIES.md` E10). All names on them are made up.

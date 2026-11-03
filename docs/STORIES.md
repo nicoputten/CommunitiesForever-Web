@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-29): E9, the live test of 29 Oct: WEB-65 (site fixes) and WEB-66 (rules and bot images) side by side, with the bot's BOT-20 on WEB-66's contract (WEB-66: Nico's brief parts 2 and 5; no designer notes or legends in any image or text). Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release.
+Build order (2026-10-29): E9, the live test of 29 Oct: WEB-65 (site fixes) and WEB-66 (rules and bot images) side by side, with the bot's BOT-20 on WEB-66's contract (WEB-66: Nico's brief parts 2 and 5; no designer notes or legends in any image or text). Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release. Next (2026-11-03): E10 Mission pool, WEB-78 then WEB-79, with the addon's CF-68 alongside WEB-78 (they share the schedule's shape and golden cases).
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -102,3 +102,57 @@ Boards `live-test-site-fixes` (desktop) and `live-test-phone` (375 px). Decided 
   - every new visible string is listed in the PR
   - as every UI story: design checks, Playwright, screenshots after Nico's OK
 
+
+## E10 Mission pool (2026-11-03)
+An owner-only page for Doomsday's missions: every mission with its stats, the next 14 days and 2 weeks, and steering for days that aren't locked yet. Boards: `mission-pool` (the page), `mission-pool-steering` (editing a day), `mission-pool-states` (locked day, a friend who saw the normal draw, switching off, a changed week, the log) and `mission-pool-admin-entry` (the Admin page box).
+
+**How it works** (decided with Nico, 2026-11-03):
+- The normal draw stays as it is (addon `docs/DOOMSDAY.md` "The algorithm, exactly"), on both sides. The site sends only **changed** days and weeks: days whose set differs from the normal draw. Unchanged days need nothing, so a friend without fresh data still sees the right missions on them.
+- The changes travel as a **schedule** in the runs answer (`doomsday.schedule`), through the uploader's `Runs.lua` (no uploader change: it passes the whole answer through) and from addon to addon (addon CF-68). An addon without the schedule, or older than CF-68, shows the normal draw.
+- **Lock window:** today and tomorrow can't be changed; a week locks 24 h before it starts. The server refuses a change to a locked day or week, whatever the page shows. A day in progress keeps the set the addon recorded.
+- The page reaches neither the addon nor Discord in any other way, and it changes no points: the site keeps scoring each friend from the set that friend's addon recorded.
+
+**Where the boards are not the rules:**
+- The missions on the boards are examples. The page lists the real pool (`POOL_VERSION`, addon `docs/DOOMSDAY.md`), grouped Daily PvE, Skirmish, Weekly, Bounty, and Hunt only once the Hunt is on (`HUNT_SINCE`). Until then the days show 3 dailies and the Skirmish, and there is no Hunt row or slot.
+- The Duel slot shows "every day" and can't be changed.
+- The zone of the day and of the week stay computed; they are not part of the schedule.
+
+### WEB-78 Mission pool: schedule, steering and stats (no UI)
+The data and rules behind the page; WEB-79 shows them.
+- **Settings per mission** (owner only): on or off, and how often: Rare, Normal, Often. Stored with the change time; every mission starts on, Normal.
+- **The site's plan for the next 14 days and the next 2 weeks:**
+  - Start from the normal draw.
+  - Every free (unlocked) day or week is redrawn where a setting asks for it: a mission that is off is replaced in its slot, and a mission set to Rare or Often is drawn less or more often than Normal (weights 1, 2, 4). The replacements follow the draw's rules: 3 different categories for the dailies, no mission on two days or weeks running, only missions that are on.
+  - The owner's own changes win over that: **pin** a mission in a slot, **reroll** a slot, **reroll the day** (all its slots, pins kept), and **back to the normal draw** (removes the owner's changes for that day). A pin stays when the settings change; a reroll is random and is stored, so the plan never changes by itself.
+  - A day or week whose plan equals the normal draw isn't stored as changed.
+  - When a day or week enters the lock window, its plan is frozen as it is; later setting changes don't touch it.
+  - Swaps stay the addon's, per friend, on top of the planned set.
+- **The schedule in the runs answer:** `doomsday.schedule = { v, days = { ["<n>"] = { daily = { id, id, id }, skirmish = id, hunt = id }, … }, weeks = { ["<week>"] = { weekly = { id, id, id }, bounty = id }, … } }`, from yesterday to the last planned day and week, changed ones only. `v` is the server time of the last change to anything in it. Every field is optional; an empty schedule is left out. The exact shape and the slot rules are agreed with the addon in CF-68, and golden cases for them go into `doomsday-cases.json` on both sides.
+- **Stats per mission, since the launch cut-off,** from the stored goal records (`doomsday_goals`):
+  - **Came up:** the days or weeks it was in a set that at least one friend recorded. Days nobody played don't count.
+  - **Swapped:** how often a friend got another mission instead of it.
+  - **Done:** of the friends who had it, the share who finished it.
+  - **Last:** when it last came up.
+- **A friend who saw the normal draw:** for a changed day, which friends recorded a set (before swaps) that is the normal draw instead of the plan. Their points still count for the missions they had.
+- **Admin changes:** every change is logged ("Ada pinned Run a dungeon with a friend on Fri 7", "Ada rerolled Daily 3 on Fri 7", "Ada switched off Explore a zone", "Ada set Earn 5 skill points to Often"), with the real mission names.
+- **Owner only:** the server actions check `isOwner`; admins and friends get "Only the owner can do this".
+- **Compatibility (rule 8):** new tables and settings only, empty at the start; an older addon ignores `doomsday.schedule`. The stats read existing goal records, older ones included.
+- Done when:
+  - unit tests: the plan for off, Rare and Often settings, pins, rerolls, back to normal, the lock window (today, tomorrow, a week 24 h before its start), never twice in a row and different categories in a redrawn day, the stats from a set of goal records, and "saw the normal draw"
+  - the schedule's golden cases pass on the site and in the addon (CF-68)
+  - a change to a locked day or week is refused by the server
+
+### WEB-79 Mission pool page (boards `mission-pool*`)
+The owner's page at `/admin/missions`, as on the boards, with WEB-78's data.
+- **Admin page:** a new owner-only box "Doomsday missions" in the right column, under Uploader devices and above the Danger zone: the number of missions and changed days, today's day, and "Open mission pool". Admins never see it (`mission-pool-admin-entry`).
+- **The page** (`mission-pool`):
+  - the counts per kind and "Off"
+  - **Next 14 days:** one tile per day with its missions' short labels; "today" and "tomorrow" locked; "changed" on a changed day; "1 changed" in the title; the ⓘ
+  - **Next 2 weeks:** each week from its start, its weeklies and Bounty; "changed" and "Locks Sat 8 19:00" where they apply
+  - **The pool:** per kind, each mission with Short, Points, Came up, Swapped, Done, Last, and How often (Rare · Normal · Often) or Off with the Discord page's toggle; the ⓘ
+  - at 375 px the days scroll sideways and the pool becomes one line per mission ("Came up 18 · done 71% · last Mon") with "Show all"
+- **Steering a day** (`mission-pool-steering`): a free day opens an editor under the days: its name and span ("Fri 7 Nov · evening", "Fri 19:00 → Sat 19:00"), per slot the mission with "pinned" or "rerolled", "Reroll" and "Pick…" (only missions of that kind that are on, with "also Wed 5" for one already in the next days), "Reroll day", "Back to normal draw", and a warning when a mission is also on the day before or after ("Finish 10 quests is also on Thu 6"). A week opens the same editor for its weeklies and Bounty.
+- **States** (`mission-pool-states`): a locked day shows its set with the lock and no buttons; a changed day in the past shows "Bob saw the normal draw" with its ⓘ; switching a mission off asks first ("Switch off “Explore a zone”?", "Won’t come up from Thu 6.", Cancel, Switch off); the Admin changes log shows the page's changes.
+- Times shown in the viewer's own time zone, as everywhere (the reset is realm time, shown local).
+- Empty and error states: no goal records yet (stats "—"), the Hunt off (no Hunt row or slot).
+- Done when: as every UI story (design checks, Playwright at both sizes, screenshots after Nico's OK); every visible string is listed in the PR; an admin who isn't the owner can't open the page or see the box.
