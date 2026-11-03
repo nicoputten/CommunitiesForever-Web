@@ -3,7 +3,7 @@
 Open stories only, in build order. Done stories move to `docs/STORIES-COMPLETED.md`.
 Each story: criteria are testable. "Manual" items are steps only Nico can do; they go in the PR.
 
-Build order (2026-10-29): E9, the live test of 29 Oct: WEB-65 (site fixes) and WEB-66 (rules and bot images) side by side, with the bot's BOT-20 on WEB-66's contract (WEB-66: Nico's brief parts 2 and 5; no designer notes or legends in any image or text). Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release. Next (2026-11-03): E10 Mission pool, WEB-78 then WEB-79, with the addon's CF-68 alongside WEB-78 (they share the schedule's shape and golden cases).
+Build order (2026-10-29): E9, the live test of 29 Oct: WEB-65 (site fixes) and WEB-66 (rules and bot images) side by side, with the bot's BOT-20 on WEB-66's contract (WEB-66: Nico's brief parts 2 and 5; no designer notes or legends in any image or text). Doomsday (E8, `docs/STORIES-COMPLETED.md`) is done and waits for the release. Next (2026-11-03): E10 Mission pool, WEB-78 then WEB-79, with the addon's CF-68 alongside WEB-78 (they share the schedule's shape and golden cases). Then (2026-11-03): E11 Doomsday mission catalogue, WEB-80 in four parts alongside the addon's CF-69, CF-78, CF-79 and CF-77, then WEB-81.
 
 ## Every UI story
 - Build the screen in our Next.js app with the tokens from `src/styles/tokens.css` and real data through the view models. The board in `design/boards/` is a **visual reference only**: match its spacing, type and colours, never copy its markup or runtime.
@@ -156,3 +156,40 @@ The owner's page at `/admin/missions`, as on the boards, with WEB-78's data.
 - Times shown in the viewer's own time zone, as everywhere (the reset is realm time, shown local).
 - Empty and error states: no goal records yet (stats "—"), the Hunt off (no Hunt row or slot).
 - Done when: as every UI story (design checks, Playwright at both sizes, screenshots after Nico's OK); every visible string is listed in the PR; an admin who isn't the owner can't open the page or see the box.
+
+## E11 Doomsday mission catalogue (2026-11-03)
+The site's copy of the approved Doomsday catalogue and its rule changes, so that the site and the addon draw and score identically when the addon's pool version 2 ships (addon E18). The approved list is the addon repo's `docs/DOOMSDAY-CATALOGUE.md`: 118 PvE dailies in 15 categories, 50 weeklies (with `w.blueGear` in place of `w.ilvl3`) and 100 PvP missions (Skirmish and Bounty). The rules stay in the addon's `docs/DOOMSDAY.md`; the golden cases in `tests/fixtures/doomsday/doomsday-cases.json` pin both copies. The story was drafted in the addon repo (`docs/WEB-STORIES-DOOMSDAY-CATALOGUE.md`) so both sides were agreed in one review.
+
+**Build order:** WEB-80 in four parts, one PR each, each merged once its addon counterpart is merged. Until part 4 the site's draw and scoring stay those of the addon's released pool version 1.
+
+| Part | Pairs with | What |
+|---|---|---|
+| 1 | CF-69, CF-70 (merged) | every catalogue entry already in the addon (text, short label, category, points, `can`, `fallback`); points per goal by the pool version recorded with each day and week |
+| 2 | CF-78 | only a real fight ends PvP Virgin |
+| 3 | CF-79 | the weekly, Skirmish and Bounty entries; a retired goal leaves the pool only from its version on |
+| 4 | CF-77 | pool version 2: the new `since` values, `POOL_VERSION = 2`, the weekly draw by category |
+
+WEB-81 (the Mission pool page for every mission) follows part 1; its screenshot baselines need Nico's OK.
+
+### WEB-80 The site's copy of the pool: catalogue, labels, points (pairs with CF-69, CF-70, CF-77, CF-78, CF-79)
+- The TypeScript pool gets every catalogue mission with its id, slot, category (15 categories for the PvE dailies), text, short label and points. Missions without `since` are in the catalogue but never drawn, as today.
+- **Points per goal** (CF-69): a day's and a week's points come from its `done` ids and the pool version recorded with them: the entry's own `pool`, else the friend's `goals.pool`, else 1. Days and weeks of pool version 1 keep 5 per daily, Skirmish and Hunt and 15 per weekly and Bounty; from pool version 2 each goal's own points (a goal without a size keeps the flat value; the Hunt stays 5). An unknown id (a newer pool) counts nothing, as today. Crown, crossing out and the streak are unchanged (they count goals).
+- The site stores the pool version with each day and week as it receives it, so a friend's stored day keeps the points of the pool version recorded with it, whatever that friend's addon sends later.
+- **Pool version 2** (CF-77) ships in the same release as the addon's: the draw with 15 categories, the new `since` values, `POOL_VERSION = 2`, and the weekly draw by category (3 different categories, as the dailies; weeks of pool version 1 keep the draw without categories).
+- **Golden cases:** the new keys (`pools.catalogue`, `pointsPerGoal`, the PvP Virgin `ladder` cases, the pool-2 `draws`) are copied byte-identical from the addon's `doomsday-cases.json` and pass unchanged; the existing cases keep passing.
+- Every place that shows points (the /dailies page, the roster, the ladder, the Mission pool page, Discord recaps through the bot's data) shows the per-goal totals. Points per track stay side by side, never added together.
+- Labels and texts come from the pool, never typed twice.
+- **PvP Virgin** (CF-78, Nico 2026-11-03): a friend stays a PvP Virgin until a real fight: an honorable kill, a duel or a finished battleground. PvP points from goals without a fight (emotes, the PvP flag) count on the PvP track but don't end it. The ladder, the roster and the bot's data use the same rule; golden `ladder` cases pin it.
+- **Compatibility (rule 8):** every field read is optional: an entry without `pool` falls back to `goals.pool`, then 1; ids the site doesn't know keep counting nothing. Records stored before this story have no `pool` and score as pool version 1, which is what they were drawn in.
+- Done when: every part's golden cases pass unchanged; unit tests for points per pool version (a stored day of version 1 next to one of version 2, a friend whose `goals.pool` changes after the day was stored); visible strings listed in each part's PR.
+
+### WEB-81 The Mission pool page for every mission (pairs with WEB-78, WEB-79)
+The page was built for 37 missions (14 PvE dailies). With every catalogue mission it needs:
+- **Group and filter:** the pool table grouped by slot, then by category (15 for the dailies), each group folded open or shut with its count ("Cooking · 9"); filters for slot, category and state (in the pool / waiting for data / off); a search box on title, label and id.
+- **Waiting missions shown:** a catalogue mission not yet in the pool (no `since` in the site's pool version) is listed greyed with "waiting for data" and the VERIFY number from the catalogue when known; it can't be scheduled or set to Often, and How often is disabled with that reason as its tooltip.
+- **Points column** with each mission's points (1, 3, 5) in the pool version the page shows, and the day tiles show the day's PvE total.
+- **Pick…** in the day editor: a searchable list with the category filter, only missions that can go in that slot (in the pool, category not taken that day); the refusal line stays for anything else.
+- **Phone:** the groups start folded with their counts; "Show all N" works per group; the table never scrolls sideways.
+- **Counts header:** "Daily PvE · 118" and so on per slot, and how many are in the pool now.
+- Works with pool versions 1 and 2.
+- Done when: as every UI story; screenshot baselines (desktop and phone) for the grouped table, a folded group, the filters, and Pick… with search, after Nico's OK.
