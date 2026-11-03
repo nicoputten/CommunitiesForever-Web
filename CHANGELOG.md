@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Doomsday: the owner has a Mission pool page (Admin › Doomsday missions): every mission with how often it came up, was swapped and was done, the next 14 days and 2 weeks, and steering for days that aren't locked yet: switch a mission off, make it come up rarely or often, pin or reroll a mission on a day, or reroll the whole day. The game gets the changed days with the runs, so everyone sees the same missions; an addon without the schedule shows the normal draw.
+- Doomsday: the mission "Play 2 of your characters" is now called "Play 2 characters".
 
 ## v0.7.0 (2026-11-02)
 - Map: the world map now has WoW: Forever's own shapes, traced from its in-game maps: Vanilla coasts and zone borders instead of Cataclysm's (a dry Thousand Needles, Vanilla Darkshore, Azshara, Stonetalon and Stranglethorn), Mount Hyjal, The Riverglades and Shen'dralas where Forever puts them, Quel'Thalas as land north of the Plaguelands, no Uldum or Grim Batol.

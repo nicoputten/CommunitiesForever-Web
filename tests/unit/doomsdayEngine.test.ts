@@ -138,3 +138,30 @@ describe("PvE weekly progress", () => {
     expect(progress["w.discover5"]).toBeUndefined();
   });
 });
+
+// WEB-80 (addon CF-69): each stored day and week scores in the pool version recorded with it.
+describe("points per pool version", () => {
+  const today = doomsdaySnapshot(input).schedule.day;
+  const record = (pool: number | undefined) => ({
+    set: ["d.quests10", "d.quests20", "d.level"],
+    swapped: {},
+    done: { "d.quests10": 1, "d.level": 2 },
+    ...(pool !== undefined ? { pool } : {}),
+  });
+  const ada = (days: DoomsdayInput["goals"][string]["days"]) =>
+    doomsdaySnapshot({ ...input, goals: { "Ada#1001": { days, weeks: {} } } }).friends.find(
+      (f) => f.friendKey === "Ada#1001",
+    )!;
+
+  it("keeps the flat points of pool version 1 next to a day of pool version 2", () => {
+    const f = ada({ [today - 2]: record(undefined), [today - 1]: record(1), [today]: record(2) });
+    // 5 + 5 for each day of version 1 (with or without pool), 3 + 3 for today's of version 2.
+    expect(f.points!.allTime.pve).toBe(10 + 10 + 6);
+    expect(f.points!.today.pve).toBe(6);
+    expect(f.today!.goals.map((g) => g.points)).toEqual([3, 5, 3]);
+  });
+
+  it("scores today's drawn set in the site's pool version before the addon recorded it", () => {
+    expect(ada({}).today!.goals.every((g) => g.points === 5)).toBe(true);
+  });
+});

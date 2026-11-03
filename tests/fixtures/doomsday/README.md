@@ -14,7 +14,7 @@ and the tests switch to it; this file can then go.
 
 ## `doomsday-cases.json`
 The addon's golden cases (`tests/fixtures/doomsday-cases.json` in the addon repo), copied byte for byte from addon
-commit `289005c40fa117782e7c48f351fa9f2127a8802a` (CF-68, addon PR #172, merged: the schedule cases `scheduleCheck` and `scheduled` agreed with WEB-78; before it, CF-55a, PR #97). Prettier leaves it alone
+commit `b722967e40221a4f8c1564ee4ac5ef8b670b495e` (`develop` after CF-70, PR #181, and CF-69, PR #182: the catalogue `pools.catalogue` and `pointsPerGoal`, WEB-80; before it CF-68, PR #172, the schedule cases agreed with WEB-78, and CF-55a, PR #97). Prettier leaves it alone
 (`.prettierignore`). Never edited here: a rule change updates
 the addon's `docs/DOOMSDAY.md`, this file and both copies in the same release. `tests/unit/doomsday.golden.test.ts`
 checks `src/core/doomsday/rules.ts` against it; cases marked `addonOnly` (goal progress, a recorded day kept) are skipped.

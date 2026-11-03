@@ -17,6 +17,11 @@ export interface GoalRecord {
   done: Record<string, number>;
   /** When the addon last changed this day or week: the newer one wins. */
   at?: number;
+  /**
+   * The pool version its set was drawn in (addon CF-69): the entry's own `pool`, else the sender's `goals.pool` when
+   * it was read. Missing on records stored before WEB-80: pool version 1. Its points follow it (`entryPool`).
+   */
+  pool?: number;
 }
 
 /** One person's goals from one upload. */
@@ -80,6 +85,8 @@ function readRecord(t: Table, maxSet: number): GoalRecord {
   const record: GoalRecord = { set, swapped, done };
   const at = count(t, "at");
   if (at !== undefined) record.at = at;
+  const pool = count(t, "pool");
+  if (pool !== undefined && Number.isInteger(pool) && pool >= 1) record.pool = pool;
   return record;
 }
 
@@ -118,6 +125,9 @@ function readGoals(owner: string, value: LuaValue | undefined): PersonGoals | un
   if (streak !== undefined) goals.streak = streak;
   if (best !== undefined) goals.best = best;
   if (pool !== undefined) goals.pool = pool;
+  // A day or week keeps the pool version it was drawn in, whatever the sender's addon sends later (WEB-80).
+  if (pool !== undefined && Number.isInteger(pool) && pool >= 1)
+    for (const r of [...Object.values(goals.days), ...Object.values(goals.weeks)]) r.pool ??= pool;
   if (reset !== undefined && reset < SECONDS_PER_DAY) goals.reset = reset;
   return goals;
 }

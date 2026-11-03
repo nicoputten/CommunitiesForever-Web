@@ -11,7 +11,9 @@ import {
   drawWeek,
   duels,
   duration,
+  entryPool,
   EPOCH,
+  GOALS,
   goalsForDay,
   goalsForWeek,
   ladder,
@@ -20,6 +22,7 @@ import {
   scheduledWeek,
   pick,
   points,
+  pointsFor,
   pool,
   POOL_VERSION,
   realmOffset,
@@ -53,6 +56,25 @@ describe("Doomsday golden cases", () => {
     expect(SALT.weeklies).toEqual(golden.salts.weeklies);
     for (const slot of ["daily", "weekly", "skirmish", "bounty"] as const)
       expect(pool(slot)).toEqual(golden.pools[slot]);
+  });
+
+  // CF-70: the catalogue, in pool order, as the addon's Doomsday.GOALS.
+  it("catalogue", () => {
+    const list = GOALS.map((g) => {
+      const out: Record<string, unknown> = { id: g.id, slot: g.slot };
+      for (const [key, value] of [
+        ["category", g.category],
+        ["since", g.since],
+        ["points", g.points],
+        ["text", g.text],
+        ["short", g.short],
+        ["can", g.can],
+        ["fallback", g.fallback],
+      ] as const)
+        if (value !== undefined) out[key] = value;
+      return out;
+    });
+    expect(list).toEqual(golden.pools.catalogue);
   });
 
   it.each(cases(golden.pick))("pick($n, $salt, $count)", (c: any) => {
@@ -128,6 +150,14 @@ describe("Doomsday golden cases", () => {
 
   it.each(cases(golden.points))("points $#", (c: any) => {
     expect(points(c.done, c.killPoints, c.duelPoints)).toEqual(c.expect);
+  });
+
+  // CF-69: points per goal in the pool version of each day and week.
+  it.each(cases(golden.pointsPerGoal))("points per goal: $note", (c: any) => {
+    const pool = entryPool(c.entry, c.goalsPool);
+    expect(pool).toBe(c.expect.pool);
+    expect(points(c.done, 0, 0, pool)).toEqual({ pve: c.expect.pve, pvp: c.expect.pvp });
+    for (const id of Object.keys(c.done)) expect(pointsFor(id, pool), id).toBe(c.expect.goals[id]);
   });
 
   it.each(cases(golden.crown))("crown $#", (c: any) => {

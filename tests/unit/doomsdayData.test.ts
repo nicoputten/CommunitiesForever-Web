@@ -85,10 +85,17 @@ describe("Doomsday data in uploads", () => {
             swapped: {},
             done: { "d.quests10": 1793216000, "d.level": 1793219000 },
             at: 1793219000,
+            pool: 1,
           },
         },
         weeks: {
-          2965: { set: ["w.days3", "w.quests50", "w.cap", "b.kills50"], swapped: {}, done: {}, at: 1793219000 },
+          2965: {
+            set: ["w.days3", "w.quests50", "w.cap", "b.kills50"],
+            swapped: {},
+            done: {},
+            at: 1793219000,
+            pool: 1,
+          },
         },
         streak: 3,
         best: 7,
@@ -103,6 +110,7 @@ describe("Doomsday data in uploads", () => {
             swapped: { "d.altLevel": "d.level" },
             done: {},
             at: 1793218000,
+            pool: 1,
           },
         },
         weeks: {},
@@ -112,6 +120,21 @@ describe("Doomsday data in uploads", () => {
         reset: 68400,
       },
     ]);
+  });
+
+  it("keeps the pool version each day and week was drawn in (CF-69, WEB-80)", () => {
+    const goals = (body: string) =>
+      readAllGoals(
+        parseLua(`return { schemaVersion = 2, self = { battleTag = "Ada#1001", goals = { ${body} } } }`),
+      )[0]!;
+    // The entry's own pool wins; an entry without one takes goals.pool.
+    const both = goals(
+      "pool = 2, days = { [20761] = { set = {}, done = {}, pool = 1 }, [20762] = { set = {}, done = {} } }",
+    );
+    expect([both.days[20761]!.pool, both.days[20762]!.pool]).toEqual([1, 2]);
+    // Neither: no pool stored, scored as pool version 1. A broken pool is dropped.
+    const none = goals("days = { [20761] = { set = {}, done = {} }, [20762] = { set = {}, done = {}, pool = 0 } }");
+    expect([none.days[20761]!.pool, none.days[20762]!.pool]).toEqual([undefined, undefined]);
   });
 
   it("caps lists as the addon does", () => {

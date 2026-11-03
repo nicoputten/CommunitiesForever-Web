@@ -19,6 +19,7 @@ import {
   DUNGEON_BOSSES,
   dayStart,
   duels as duelsOf,
+  entryPool,
   type DuelRecord,
   type DuelResult,
   elo,
@@ -244,12 +245,12 @@ interface Friend {
   killedEver: boolean;
 }
 
-/** Points of a friend's goals done in a set of day and week records. */
+/** Points of a friend's goals done in a set of day and week records, each in the pool version recorded with it. */
 function goalPointsOf(records: readonly (GoalRecord | undefined)[]): { pve: number; pvp: number; goals: number } {
   const out = { pve: 0, pvp: 0, goals: 0 };
   for (const r of records) {
     for (const id of Object.keys(r?.done ?? {})) {
-      const p = goalPoints(id);
+      const p = goalPoints(id, entryPool(r));
       if (p === undefined) continue;
       out[p.track] += p.points;
       out.goals++;
@@ -397,11 +398,13 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     done: Readonly<Record<string, number>>,
     zone: string | undefined,
     progress: (id: string) => FriendGoal["progress"],
+    // The pool version of the recorded day or week; the site's own for a set it drew (no record yet).
+    pool: number,
   ): FriendGoal[] =>
     set.map((id) => {
       const original = swapped[id];
       const ref = goalRef(id, id === "p.frontLine" || id === "b.zone25" ? zone : undefined);
-      const g: FriendGoal = { goal: ref, columnId: original ?? id, points: goalPoints(id)?.points ?? 0 };
+      const g: FriendGoal = { goal: ref, columnId: original ?? id, points: goalPoints(id, pool)?.points ?? 0 };
       if (original !== undefined) g.swappedFrom = goalRef(original);
       if (done[id] !== undefined) g.doneAt = done[id];
       const p = progress(id);
@@ -605,7 +608,14 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     const friend: FriendDoomsday = {
       ...base,
       today: {
-        goals: friendGoals(daySet.set, daySet.swapped, done, dayZone, killProgress(f, dayDays, dayZone)),
+        goals: friendGoals(
+          daySet.set,
+          daySet.swapped,
+          done,
+          dayZone,
+          killProgress(f, dayDays, dayZone),
+          dayRecord !== undefined ? entryPool(dayRecord) : POOL_VERSION,
+        ),
         ...(finished !== undefined ? { finishedAt: finished } : {}),
         duels: {
           first,
@@ -626,6 +636,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
             (kills, pve) => (id: string) =>
               kills(id) ?? pve(id)
           )(killProgress(f, weekDays, weekZone), pveWeekProgress(f, weekDays)),
+          weekRecord !== undefined ? entryPool(weekRecord) : POOL_VERSION,
         ),
       },
       points: {
