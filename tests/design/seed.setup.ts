@@ -7,7 +7,7 @@ import { ADMIN, sampleSavedVariables, type SampleDay } from "./sample";
 
 // Seeds the design server's fresh database with the sample data through the real upload route, as the admin: the
 // day before first, then the design sample, so upload 2 has a session report with level ups and skill gains (WEB-20).
-// The merged result is the design sample.
+// The merged result is the design sample. The design sample carries the launch probe (WEB-82) for the Admin box.
 test("upload the sample data", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, ADMIN);
   for (const day of [2, 3] satisfies SampleDay[]) {
@@ -16,7 +16,7 @@ test("upload the sample data", async ({ page, context, baseURL }) => {
         file: {
           name: "CommunitiesForever.lua",
           mimeType: "text/plain",
-          buffer: Buffer.from(sampleSavedVariables({ day })),
+          buffer: Buffer.from(sampleSavedVariables({ day, probe: day === 3 })),
         },
       },
     });

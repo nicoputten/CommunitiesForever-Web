@@ -159,3 +159,20 @@ test("admin: co-admins", async ({ page }, info) => {
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
 });
+
+// WEB-82: the owner's Probe results box (no board; the Doomsday missions box's entry look): the line and Download.
+test("admin: probe results", async ({ page }, info) => {
+  await openScreen(page, "/admin");
+  const box = page.getByRole("region", { name: "Probe results" });
+  await expectStyles(box, { ...SURFACE, "border-radius": "var(--r-panel)", "background-color": "var(--surface)" });
+  await expectStyles(box.getByRole("heading", { name: "Probe results" }), { ...TYPE.section, color: "var(--gold-bright)" });
+  await expect(box.getByTestId("probe-line")).toContainText("1 friend · newest");
+  await expectStyles(box.getByTestId("probe-line"), { "font-size": "var(--fs-meta)", color: "var(--text-dim)" });
+  const download = box.getByRole("link", { name: "Download probe results" });
+  await expect(download).toHaveAttribute("href", "/api/admin/probe");
+  await expectStyles(download, { color: "var(--gold-bright)", "border-radius": "var(--r-btn)", "min-height": "var(--size-touch)" });
+  const out = process.env.SCREENSHOT_OUT;
+  if (out) await box.screenshot({ path: `${out}/probe-box-${info.project.name}.png` });
+  const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
+  expect(file.suggestedFilename()).toMatch(/^probe-results-\d{4}-\d{2}-\d{2}\.json$/);
+});
