@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v0.8.1 (2026-11-04)
 - Admin: the owner can download the launch-probe results that friends' uploads carry (Admin › Probe results), one entry per friend. Nobody else sees them.
 
 ## v0.8.0 (2026-11-03)
