@@ -30,6 +30,12 @@ describe("design sample data", () => {
     ]);
     expect(data.characters["Player-1-0000A001"]?.mainTreeName).toBe("Destruction");
   });
+
+  it("reads the same with the launch probe (WEB-82)", () => {
+    const text = sampleSavedVariables({ probe: true });
+    expect(text).toContain('["probe"]');
+    expect(normalize(parseLua(text))).toEqual(normalize(parseLua(sampleSavedVariables())));
+  });
 });
 
 // WEB-21: files to upload by hand (tests/fixtures/sample/README.md), made from the same sample on consecutive days.

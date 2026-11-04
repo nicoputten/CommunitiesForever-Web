@@ -34,6 +34,8 @@ import styles from "../admin.module.css";
 import missions from "@/components/missions/MissionPool.module.css";
 import { missionPoolBox } from "@/core/views/missionPool";
 import { missionPool } from "@/server/missionPool";
+import { probeFriendsText } from "@/core/probe";
+import { loadProbeSummary } from "@/server/probe";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -42,7 +44,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 /**
  * The admin page (WEB-18, no board; layout decided with Nico, DESIGN.md §11), for the owner and admins (WEB-64,
  * boards `admin-coadmins`, `admin-as-admin`): the Admins box and members, guests and blocks on the left; the admin
- * changes log, and for the owner the uploader devices and the Danger zone (WEB-62), on the right. Owner-only controls
+ * changes log, and for the owner the uploader devices, the probe results (WEB-82) and the Danger zone (WEB-62), on the right. Owner-only controls
  * are left out for admins; the actions check again. layout.tsx checks the role.
  */
 export default async function AdminPage({
@@ -57,6 +59,7 @@ export default async function AdminPage({
   const cutoff = owner ? getCutoff(getDb()) : undefined;
   const mission =
     owner && viewer !== undefined ? missionPoolBox(missionPool(getDb(), viewer.battleTag, nowSeconds())) : undefined;
+  const probe = owner ? loadProbeSummary(getDb()) : undefined;
   const refused = refusedText(one(params.refused), one(params.who));
   const ownerName = view.ownerName ?? "the owner";
   return (
@@ -316,6 +319,23 @@ export default async function AdminPage({
                   Open mission pool
                 </Link>
               </div>
+            </AdminPanel>
+          )}
+          {probe !== undefined && (
+            <AdminPanel id="admin-probe" title="Probe results" aside={<WhoTag owner />}>
+              {probe.newestAt === undefined ? (
+                <PanelEmpty>No probe results yet.</PanelEmpty>
+              ) : (
+                <div className={missions.entry}>
+                  <p className={co.hint} data-testid="probe-line">
+                    {probeFriendsText(probe.friends)} · newest <LocalTime at={probe.newestAt} day="time" />
+                  </p>
+                  <a href="/api/admin/probe" download className={`${missions.button} ${missions.secondary}`}>
+                    Download
+                    <span className="visually-hidden"> probe results</span>
+                  </a>
+                </div>
+              )}
             </AdminPanel>
           )}
           {owner && (
