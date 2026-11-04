@@ -193,3 +193,15 @@ The page was built for 37 missions (14 PvE dailies). With every catalogue missio
 - **Counts header:** "Daily PvE · 118" and so on per slot, and how many are in the pool now.
 - Works with pool versions 1 and 2.
 - Done when: as every UI story; screenshot baselines (desktop and phone) for the grouped table, a folded group, the filters, and Pick… with search, after Nico's OK.
+
+## E12 Launch probe (2026-11-04)
+
+### WEB-82 Download the friends' launch-probe results (owner only, pairs with the addon's hidden probe)
+The addon runs a hidden probe of which game APIs work on Forever and keeps the compact results in `CommunitiesForeverDB.global.probe` (per client flavour, per item: `{ status, detail, at, build, ... }`, at most ~30 KB). They ride along in every upload; the owner downloads them to analyse them, so friends don't need the separate probe addon.
+- **Admin page box "Probe results"** (owner only, in the side column): one line with how many friends have results and the newest upload time, and a **Download** button. Without results: "No probe results yet." and no button. Admins never see the box.
+- **The download** (`GET /api/admin/probe`): a JSON file, one entry per friend: their newest accepted upload that has a probe section, with display name, BattleTag, upload time and the probe section as it is in the file.
+- **Read from the stored raw uploads** with our Lua parser (rule 2): not in `normalize`, not in the derived tables, no new table. Whether an upload has a probe section is remembered per file hash in memory, so the page doesn't parse every upload on each view.
+- **Owner only** (`isOwner`, checked on the server): admins and friends get 403, without a session 401.
+- **Nowhere else:** no probe detail on any page, in the bot data or in logs. Only the box's count and time and the owner's download.
+- **Compatibility (rule 4):** a file with a probe section normalizes exactly as the same file without it; files without one (every release so far) are unchanged.
+- Done when: unit tests (reading, choosing the newest per friend, refusals), the design checks for the box, screenshot baselines after Nico's OK, every new visible string listed in the PR.

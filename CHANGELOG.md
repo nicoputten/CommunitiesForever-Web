@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Admin: the owner can download the launch-probe results that friends' uploads carry (Admin › Probe results), one entry per friend. Nobody else sees them.
 
 ## v0.8.0 (2026-11-03)
 - Doomsday: the owner has a Mission pool page (Admin › Doomsday missions): every mission with how often it came up, was swapped and was done, the next 14 days and 2 weeks, and steering for days that aren't locked yet: switch a mission off, make it come up rarely or often, pin or reroll a mission on a day, or reroll the whole day. The game gets the changed days with the runs, so everyone sees the same missions; an addon without the schedule shows the normal draw.

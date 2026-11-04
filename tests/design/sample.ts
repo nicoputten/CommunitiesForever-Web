@@ -376,10 +376,28 @@ export interface SampleOptions {
   day?: SampleDay;
   /** With the Doomsday fields (goals, feed, PvP; WEB-63); a test that brings its own feed turns them off. */
   doomsday?: boolean;
+  /** With the hidden launch probe's results (WEB-82): the seed's design sample only, for the Admin page's box. */
+  probe?: boolean;
+}
+
+/** A made-up probe section in the addon's shape (WEB-82): per client flavour, per item. */
+function sampleProbe(at: number): Lua {
+  return {
+    era: {
+      "C_Club.GetSubscribedClubs": { at, build: "1.15.8", detail: "1 club", status: "ok" },
+      GetGuildRosterInfo: { at: at + 1, build: "1.15.8", detail: "attempt to call a nil value", status: "error" },
+    },
+  };
 }
 
 /** The sample as the SavedVariables file the game writes. */
-export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3, doomsday = true }: SampleOptions = {}): string {
+export function sampleSavedVariables({
+  self = ADMIN,
+  now = NOW,
+  day = 3,
+  doomsday = true,
+  probe = false,
+}: SampleOptions = {}): string {
   const ago = (3 - day) * D;
   const later = (t: number) => (ago === 0 ? t : Math.max(t, ago + H));
   const mine = NICO.map((c) => asOf(c, ago)).filter((c) => c !== undefined);
@@ -408,6 +426,7 @@ export function sampleSavedVariables({ self = ADMIN, now = NOW, day = 3, doomsda
       ]),
     ),
     presence,
+    ...(probe && { probe: sampleProbe(now - ago - H) }),
     schemaVersion: 2,
     self: {
       battleTag: self,

@@ -1,5 +1,5 @@
 import { getToken } from "next-auth/jwt";
-import { mayAdmin, mayUpload, type Role, roleOf } from "@/core/access";
+import { isOwner, mayAdmin, mayUpload, type Role, roleOf } from "@/core/access";
 import { botBearerToken } from "@/core/bot";
 import { bearerToken } from "@/core/uploader";
 import { adminBattleTag, loadAccessList } from "./access";
@@ -26,7 +26,8 @@ export async function sessionBattleTag(
   return undefined;
 }
 
-export type Need = "member" | "upload" | "admin";
+/** "owner": ADMIN_BATTLETAG only, not the admins the owner appointed (WEB-64, WEB-82). */
+export type Need = "member" | "upload" | "admin" | "owner";
 
 export interface Caller {
   db: Db;
@@ -52,6 +53,7 @@ export async function guard(req: Request, need: Need = "member"): Promise<Caller
   if (role === undefined) return deny(403, "You're not on the list.");
   if (need === "upload" && !mayUpload(battleTag, list)) return deny(403, "You may not upload.");
   if (need === "admin" && !mayAdmin(battleTag, list)) return deny(403, "Only the admin may do this.");
+  if (need === "owner" && !isOwner(battleTag, list)) return deny(403, "Only the owner may do this.");
   return { db, battleTag, role };
 }
 
