@@ -182,6 +182,8 @@ describe("upload response", () => {
       [{ unreadable: "newer-format", schemaVersion: 3 }, "newer_format", "Newer addon: format 3"],
       [{ rejection: { code: "not-your-file" } }, "not_your_file", "Not your file"],
       [{ rejection: { code: "other-community" } }, "other_community", "Another community"],
+      // WEB-84: no community picked in the addon; the same code for the app.
+      [{ rejection: { code: "other-community", none: true } }, "other_community", "No community picked"],
       [{ rejection: { code: "no-community-yet" } }, "no_community_yet", "Before the admin's first upload"],
       // WEB-83: after a community switch; the same code for the app.
       [{ rejection: { code: "no-community-yet", next: true } }, "no_community_yet", "Before the admin's next upload"],

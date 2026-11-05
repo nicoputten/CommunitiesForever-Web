@@ -398,6 +398,19 @@ function viewOf(phase: Phase, a: Actions): View {
               "This ledger doesn't say whose it is. Nothing was changed.",
             );
     case "other-community":
+      // WEB-84: no community or guild picked in the addon (as at launch); the admin's file too.
+      if (phase.none === true) {
+        const say =
+          "The addon in this file has no community or guild picked. Pick one in the addon, /reload and upload again.";
+        return alert(
+          "This ledger has no community",
+          <>
+            The addon in this file has no community or guild picked. Pick one in the addon, {em("/reload")} and upload
+            again.
+          </>,
+          say,
+        );
+      }
       return alert(
         "This ledger is for another community",
         <>

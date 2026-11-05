@@ -107,6 +107,11 @@ describe("uploadOutcome", () => {
     expect(uploadOutcome(200, rejected({ rejection: { code: "other-community" } }), LEDGER)).toEqual({
       kind: "other-community",
     });
+    // WEB-84: a file of no community at all.
+    expect(uploadOutcome(200, rejected({ rejection: { code: "other-community", none: true } }), LEDGER)).toEqual({
+      kind: "other-community",
+      none: true,
+    });
     expect(uploadOutcome(200, rejected({ rejection: { code: "no-community-yet" } }), LEDGER)).toEqual({
       kind: "no-community-yet",
     });
@@ -179,6 +184,7 @@ describe("history", () => {
     expect(rejectionLine({ unreadable: "newer-format", schemaVersion: 3 })).toBe("Newer addon: format 3");
     expect(rejectionLine({ rejection: "not-your-file" })).toBe("Not your file");
     expect(rejectionLine({ rejection: "other-community" })).toBe("Another community");
+    expect(rejectionLine({ rejection: "other-community", none: true })).toBe("No community picked");
     expect(rejectionLine({ rejection: "no-community-yet" })).toBe("Before the admin's first upload");
     expect(rejectionLine({ rejection: "no-community-yet", next: true })).toBe("Before the admin's next upload");
     expect(rejectionLine({})).toBe("Couldn't be read");
@@ -258,6 +264,10 @@ describe("storedOutcome (report page, WEB-20)", () => {
     });
     expect(of({ rejection: "not-your-file" })).toBe("not-your-file");
     expect(of({ rejection: "other-community" })).toBe("other-community");
+    expect(storedOutcome({ ...at, status: "rejected", rejection: "other-community", none: true })).toEqual({
+      kind: "other-community",
+      none: true,
+    });
     expect(of({ rejection: "no-community-yet" })).toBe("no-community-yet");
     expect(storedOutcome({ ...at, status: "rejected", rejection: "no-community-yet", next: true })).toEqual({
       kind: "no-community-yet",

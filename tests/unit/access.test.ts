@@ -139,7 +139,26 @@ describe("checkFile", () => {
     expect(checkFile("Ada#1001", ada, "8", "Nico#1000")).toEqual({ code: "other-community" });
     expect(checkFile("Ada#1001", file('self = { battleTag = "Ada#1001" }'), "7", "Nico#1000")).toEqual({
       code: "other-community",
+      none: true,
     });
+  });
+
+  it("never takes a file without a community, the admin's neither, set or not (WEB-84)", () => {
+    const nico = file('self = { battleTag = "Nico#1000" }');
+    for (const community of [undefined, "7"]) {
+      for (const adminUploaded of [false, true]) {
+        expect(checkFile("Nico#1000", nico, community, "Nico#1000", adminUploaded)).toEqual({
+          code: "other-community",
+          none: true,
+        });
+      }
+    }
+    expect(rejectionText({ code: "other-community", none: true })).toBe(
+      "This file has no community: pick the community or guild in the addon, then upload again.",
+    );
+    expect(rejectionText({ code: "other-community" })).toBe("This file is for another community.");
+    // Someone else's file without a community is still "not your file" first.
+    expect(checkFile("Ada#1001", nico, undefined, "Nico#1000")).toEqual({ code: "not-your-file", owner: "Nico#1000" });
   });
 
   it("lets only the admin upload before the admin's first upload", () => {
