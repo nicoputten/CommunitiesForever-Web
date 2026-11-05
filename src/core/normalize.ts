@@ -300,8 +300,81 @@ function battleTagName(battleTag: string | undefined): string | undefined {
   return cleanName(battleTag?.split("#")[0]);
 }
 
+/** The key of an "aid:<accountId>" person, for an account ID. */
+export function aidKey(accountId: string): string {
+  return `aid:${accountId}`;
+}
+
+/** "aid:<accountId>" -> BattleTag key, for every person with a BattleTag whose account ID is known. */
+export function linkedAids(d: Dataset): Map<string, string> {
+  const links = new Map<string, string>();
+  // Sorted, so when two BattleTags claim one account ID (a broken file) the same one wins whatever the order.
+  for (const p of Object.values(d.people).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))) {
+    if (p.battleTag === undefined || p.accountId === undefined) continue;
+    const aid = aidKey(p.accountId);
+    if (aid !== p.key && !links.has(aid)) links.set(aid, p.key);
+  }
+  return links;
+}
+
+/**
+ * WEB-86: someone known only through the community is stored under "aid:<accountId>" (addon CF-28). Once the data
+ * proves their BattleTag (their own upload's `self.battleTag` with `self.accountId`, or a record keyed by BattleTag
+ * that carries `aid`), the "aid:" person is merged into the BattleTag, as the addon's Merge.absorb does: their
+ * characters move over, the fields of the newer record win (an own display name it lacks comes from the other),
+ * removals are kept with the later time.
+ */
+function absorbAids(d: Dataset): void {
+  for (const [aid, key] of linkedAids(d)) {
+    const from = d.people[aid];
+    const into = d.people[key];
+    if (from === undefined || into === undefined || from.battleTag !== undefined) continue;
+    const [newer, older] = newerFirst(into, from);
+    const removed = dict<number>();
+    for (const [guid, at] of [...Object.entries(from.removed), ...Object.entries(into.removed)]) {
+      removed[guid] = Math.max(removed[guid] ?? at, at);
+    }
+    d.people[key] = compact({
+      ...newer,
+      key,
+      battleTag: into.battleTag,
+      accountId: into.accountId,
+      ownDisplayName: newer.ownDisplayName ?? older.ownDisplayName,
+      isUploader: into.isUploader || from.isUploader,
+      hasRecord: into.hasRecord || from.hasRecord,
+      removed,
+    });
+    delete d.people[aid];
+    for (const c of Object.values(d.characters)) if (c.owner === aid) c.owner = key;
+    if (d.uploader === aid) d.uploader = key;
+  }
+}
+
+/** The newer of two people (a record beats none, then version, then receivedAt; a tie: the first), then the other. */
+function newerFirst(a: Person, b: Person): [Person, Person] {
+  const ra = [a.hasRecord ? 1 : 0, a.version ?? 0, a.receivedAt ?? 0];
+  const rb = [b.hasRecord ? 1 : 0, b.version ?? 0, b.receivedAt ?? 0];
+  for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return ra[i]! > rb[i]! ? [a, b] : [b, a];
+  return [a, b];
+}
+
+/**
+ * The name of a person without a display name or BattleTag (an "aid:" key, WEB-86): their first character by name,
+ * as the addon shows them (Linker: CF-28, without the online sort the site has no use for). Undefined without a named
+ * character.
+ */
+function firstCharacterName(d: Dataset, key: string): string | undefined {
+  let first: string | undefined;
+  for (const c of Object.values(d.characters)) {
+    if (c.owner !== key || c.name === undefined || c.name.trim() === "") continue;
+    if (first === undefined || c.name < first) first = c.name;
+  }
+  return cleanName(first);
+}
+
 /**
  * Derives what follows from the rest, so normalize and merge agree and finalize(finalize(d)) equals finalize(d):
+ * - an "aid:" person the data links to a BattleTag is merged into that BattleTag (WEB-86)
  * - a person for every BattleTag in presence (no record: hasRecord false)
  * - character owners: the presence link wins over the record that lists the character (addon rule)
  * - a stub for every GUID in presence or locations without a character
@@ -309,6 +382,7 @@ function battleTagName(battleTag: string | undefined): string | undefined {
  * - display names
  */
 export function finalize(d: Dataset): Dataset {
+  absorbAids(d);
   for (const { battleTag } of Object.values(d.presence)) {
     if (d.people[battleTag] === undefined) {
       d.people[battleTag] = person(battleTag, {
@@ -335,7 +409,7 @@ export function finalize(d: Dataset): Dataset {
   }
 
   for (const p of Object.values(d.people)) {
-    p.displayName = p.ownDisplayName ?? battleTagName(p.battleTag) ?? "Unknown player";
+    p.displayName = p.ownDisplayName ?? battleTagName(p.battleTag) ?? firstCharacterName(d, p.key) ?? "Unknown player";
   }
   return d;
 }

@@ -19,7 +19,7 @@ import { readFeeds, type PersonFeed } from "@/core/feed";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
-import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
+import { dict, linkedAids, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import {
   type Fallback,
   type KeepPerson,
@@ -38,7 +38,7 @@ import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
-import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
+import { clearHistory, recordFeeds, recordGoals, recordSightings, relinkHistory } from "./history";
 import { cutoffAt } from "./cutoff";
 import {
   latestSwitch,
@@ -242,7 +242,7 @@ export function upload(
     const { data: after, kept } = keepMembers(tx, merged, proof, admin);
     const summary = diff(before?.data, after);
     writeState(tx, after, sourcesFor(before, after, id));
-    recordHistory(tx, result, kept, id);
+    recordHistory(tx, result, after, kept, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
     // Feats (WEB-56) and the Discord bot's milestones (WEB-38): none posted for the site's first upload, where
     // everything is new.
@@ -473,23 +473,30 @@ function keepMembers(
   };
 }
 
-/** The file's feed, Doomsday goals and sightings, of the people and characters kept only. */
+/**
+ * The file's feed, Doomsday goals and sightings, of the people and characters kept only. An "aid:" key the merged data
+ * links to a BattleTag is recorded under the BattleTag, and history stored under it before moves over (WEB-86).
+ */
 function recordHistory(
   tx: Tx,
   result: Extract<Read, { ok: true }>,
+  after: Dataset,
   kept: { person: (key: string) => boolean; guid: (guid: string) => boolean },
   uploadId: number,
 ): void {
+  const links = linkedAids(after);
+  const owner = (key: string) => (Object.hasOwn(after.people, key) ? key : (links.get(key) ?? key));
   recordFeeds(
     tx,
-    result.feeds.filter((f) => kept.person(f.owner)),
+    result.feeds.map((f) => ({ ...f, owner: owner(f.owner) })).filter((f) => kept.person(f.owner)),
     uploadId,
   );
   recordGoals(
     tx,
-    result.goals.filter((g) => kept.person(g.owner)),
+    result.goals.map((g) => ({ ...g, owner: owner(g.owner) })).filter((g) => kept.person(g.owner)),
     uploadId,
   );
+  relinkHistory(tx, links);
   const locations = Object.fromEntries(Object.entries(result.data.locations).filter(([guid]) => kept.guid(guid)));
   recordSightings(tx, locations, uploadId);
 }
@@ -760,7 +767,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       const summary: UploadSummary = { ...diff(state?.data, after), ...(runAnswers > 0 ? { runAnswers } : {}) };
       const previous = state?.data;
       state = { data: after, ...sourcesFor(state, after, id) };
-      recordHistory(tx, result, kept, id);
+      recordHistory(tx, result, after, kept, id);
       // The same feats again, never their events (WEB-56).
       recordFeats(tx, { id, uploadedAt: row.uploadedAt }, previous, after, diff(previous, after), result.feeds);
       tx.update(uploads)

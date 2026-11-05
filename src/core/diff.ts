@@ -1,4 +1,5 @@
 import type { Character, Dataset, Person } from "./model";
+import { aidKey } from "./normalize";
 import { dataTime, viaName } from "./people";
 
 // What changed between two states (before and after an upload), for the upload result and history (WEB-08), and
@@ -133,7 +134,9 @@ export function diff(before: Dataset | undefined, after: Dataset): UploadSummary
   };
 
   for (const [key, p] of Object.entries(after.people)) {
-    if (before?.people[key] === undefined) summary.newPeople.push({ key, displayName: p.displayName });
+    // WEB-86: someone known before by their "aid:" key and now by their BattleTag is not new.
+    const wasAid = p.accountId !== undefined && before?.people[aidKey(p.accountId)] !== undefined;
+    if (before?.people[key] === undefined && !wasAid) summary.newPeople.push({ key, displayName: p.displayName });
   }
   summary.newPeople.sort((a, b) => compare(a.key, b.key));
 

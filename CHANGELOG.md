@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.9.2 (2026-11-05)
+- Guild members who run the addon but aren't anyone's Battle.net friend now show by their first character's name instead of "Unknown player", everywhere a name shows. Once a file shows their BattleTag (their own upload, or a friend's with the addon version that shares BattleTags over the guild), they become one person with their BattleTag, keep their characters, activity and Doomsday, and can sign in when they have a character in the guild.
+
 ## v0.9.1 (2026-11-05)
 - Access: only friends with a character in the in-game community or guild are members. Battle.net friends outside it no longer get in, and no longer show on the map, roster, roll call, Doomsday or Discord, even when an older file names them. With the addon version that sends the community's members, anyone's upload adds friends who joined. The owner's first upload from that version removes everyone without a character in the community, with their data (blocks, guests and admins stay), each one a line in Admin changes. Until then nobody new becomes a member except the uploader.
 

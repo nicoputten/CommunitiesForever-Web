@@ -106,3 +106,49 @@ export function clearHistory(tx: Tx): void {
   tx.delete(feats).run();
   tx.delete(sightings).run();
 }
+
+/**
+ * WEB-86: once the data links an "aid:<accountId>" person to their BattleTag (`linkedAids`), their history recorded
+ * under the "aid:" key moves to the BattleTag: feed days and feats change owner; a Doomsday day or week and the status
+ * keep the copy with the newer `at` (on an equal one the BattleTag's stays), so one person never has two rows.
+ */
+export function relinkHistory(tx: Tx, links: ReadonlyMap<string, string>): void {
+  for (const [from, to] of links) {
+    tx.update(feedDays).set({ owner: to }).where(eq(feedDays.owner, from)).run();
+    tx.update(feats).set({ owner: to }).where(eq(feats.owner, from)).run();
+    for (const row of tx.select().from(doomsdayGoals).where(eq(doomsdayGoals.owner, from)).all()) {
+      const target = and(eq(doomsdayGoals.owner, to), eq(doomsdayGoals.period, row.period), eq(doomsdayGoals.n, row.n));
+      const stored = tx.select({ at: doomsdayGoals.at }).from(doomsdayGoals).where(target).get();
+      if (stored !== undefined && (stored.at ?? 0) >= (row.at ?? 0)) continue;
+      const values = { at: row.at, sourceUpload: row.sourceUpload, data: row.data };
+      tx.insert(doomsdayGoals)
+        .values({ owner: to, period: row.period, n: row.n, ...values })
+        .onConflictDoUpdate({ target: [doomsdayGoals.owner, doomsdayGoals.period, doomsdayGoals.n], set: values })
+        .run();
+    }
+    tx.delete(doomsdayGoals).where(eq(doomsdayGoals.owner, from)).run();
+    const status = tx.select().from(doomsdayStatus).where(eq(doomsdayStatus.owner, from)).get();
+    if (status !== undefined) {
+      const stored = tx
+        .select({ at: doomsdayStatus.at })
+        .from(doomsdayStatus)
+        .where(eq(doomsdayStatus.owner, to))
+        .get();
+      if (stored === undefined || (stored.at ?? 0) < (status.at ?? 0)) {
+        const values = {
+          streak: status.streak,
+          best: status.best,
+          pool: status.pool,
+          reset: status.reset,
+          at: status.at,
+          sourceUpload: status.sourceUpload,
+        };
+        tx.insert(doomsdayStatus)
+          .values({ owner: to, ...values })
+          .onConflictDoUpdate({ target: doomsdayStatus.owner, set: values })
+          .run();
+      }
+      tx.delete(doomsdayStatus).where(eq(doomsdayStatus.owner, from)).run();
+    }
+  }
+}
