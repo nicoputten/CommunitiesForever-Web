@@ -140,8 +140,12 @@ describe("upload rules", () => {
     up(nicoFile, ADMIN);
     storeCutoff(db, 3000, ADMIN, 3000);
     rebuild(db, ADMIN);
-    // Before the admin's first upload after the cut-off only the admin can upload, whatever the community.
-    expect(up(own("Bob#2002", 9, "people = {}"), "Bob#2002", 3100).rejection).toEqual({ code: "no-community-yet" });
+    // Before the admin's first upload after the cut-off only the admin can upload, whatever the community. The admin
+    // has uploaded before, so the refusal waits for the admin's next upload (WEB-83).
+    expect(up(own("Bob#2002", 9, "people = {}"), "Bob#2002", 3100).rejection).toEqual({
+      code: "no-community-yet",
+      next: true,
+    });
     expect(up(own(ADMIN, 9, "people = {}"), ADMIN, 3200).status).toBe("ok");
     expect(up(own("Bob#2002", 9, "people = {}"), "Bob#2002", 3300).status).toBe("ok");
     expect(up(own("Ada#1001", 7, "people = {}"), "Ada#1001", 3400).rejection).toEqual({ code: "other-community" });

@@ -11,6 +11,8 @@ import { openDatabase, type Db } from "@/server/db";
 import { communitySwitches, doomsdayGoals, feats, feedDays, sightings, uploads } from "@/server/db/schema";
 import {
   communityState,
+  getUpload,
+  listUploads,
   loadState,
   rebuild,
   switchCommunity,
@@ -220,6 +222,32 @@ describe("switching the community (WEB-83)", () => {
     rebuild(db, OWNER);
     expect(communityState(db, OWNER).id).toBeUndefined();
     expect(code(up(file(OWNER, "Nico", GUILD, "N1", T0 + 400, 12), OWNER, T0 + 400))).toBe("ok");
+  });
+});
+
+describe("the refusal's words after a switch (WEB-83)", () => {
+  it("says 'first upload' before the owner's first upload, 'next upload' after a switch, live and on rebuild", () => {
+    putGuest(db, "Ada#1001", true, OWNER, T0);
+    const first = up(file("Ada#1001", "Ada", GUILD, "A1", T0 - 10), "Ada#1001", T0 - 10);
+    expect(first.rejection).toEqual({ code: "no-community-yet" });
+    expect(first.reason).toBe("The admin has not uploaded yet; until then only the admin can upload.");
+    up(file(OWNER, "Nico", GUILD, "N1", T0), OWNER, T0);
+    switchCommunity(db, OWNER, T0 + 100, OWNER);
+    const waiting = up(file("Ada#1001", "Ada", GUILD, "A1", T0 + 160, 11), "Ada#1001", T0 + 160);
+    expect(waiting.rejection).toEqual({ code: "no-community-yet", next: true });
+    expect(waiting.reason).toBe("The admin has not uploaded from the new community yet; upload again after that.");
+    const lines = () => listUploads(db, 20, OWNER).map((u) => [u.id, u.rejection ?? null, u.next ?? false]);
+    const expected = [
+      [waiting.id, "no-community-yet", true],
+      [2, null, false],
+      [first.id, "no-community-yet", false],
+    ];
+    expect(lines()).toEqual(expected);
+    expect(getUpload(db, waiting.id, OWNER)?.next).toBe(true);
+    rebuild(db, OWNER);
+    expect(lines()).toEqual(expected);
+    const reasons = db.select({ reason: uploads.reason }).from(uploads).orderBy(uploads.id).all();
+    expect(reasons.map((r) => r.reason)).toEqual([first.reason, null, waiting.reason]);
   });
 });
 

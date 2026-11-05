@@ -183,6 +183,8 @@ describe("upload response", () => {
       [{ rejection: { code: "not-your-file" } }, "not_your_file", "Not your file"],
       [{ rejection: { code: "other-community" } }, "other_community", "Another community"],
       [{ rejection: { code: "no-community-yet" } }, "no_community_yet", "Before the admin's first upload"],
+      // WEB-83: after a community switch; the same code for the app.
+      [{ rejection: { code: "no-community-yet", next: true } }, "no_community_yet", "Before the admin's next upload"],
     ];
     for (const [over, rejection, line] of cases) {
       const r = uploaderUploadResponse(

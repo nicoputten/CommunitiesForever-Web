@@ -148,6 +148,17 @@ describe("checkFile", () => {
     expect(checkFile("Nico#1000", nico, undefined, "Nico#1000")).toBeUndefined();
   });
 
+  it("waits for the admin's next upload once the admin has uploaded before (WEB-83)", () => {
+    const r = checkFile("Ada#1001", ada, undefined, "Nico#1000", true);
+    expect(r).toEqual({ code: "no-community-yet", next: true });
+    expect(rejectionText(r!)).toBe("The admin has not uploaded from the new community yet; upload again after that.");
+    expect(rejectionText({ code: "no-community-yet" })).toBe(
+      "The admin has not uploaded yet; until then only the admin can upload.",
+    );
+    const nico = file('self = { battleTag = "Nico#1000" }, settings = { clubId = 9 }');
+    expect(checkFile("Nico#1000", nico, undefined, "Nico#1000", true)).toBeUndefined();
+  });
+
   it("holds the admin to their own file and, once set, to the community (WEB-74)", () => {
     expect(checkFile("Nico#1000", ada, "7", "Nico#1000")).toEqual({ code: "not-your-file", owner: "Ada#1001" });
     const nico = file('self = { battleTag = "Nico#1000" }, settings = { clubId = 9 }');
