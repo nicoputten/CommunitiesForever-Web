@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { and, asc, desc, eq, gt, gte, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
   battleTagsOf,
@@ -431,6 +431,7 @@ const STORED = {
   unreadable: uploads.unreadable,
   schemaVersion: uploads.schemaVersion,
   summary: uploads.summary,
+  community: uploads.community,
   /** The uploader app that sent it (WEB-34 "via DESKTOP-NICO"); null from the upload page. */
   device: uploaderTokens.deviceName,
 };
@@ -471,6 +472,8 @@ function stored(row: StoredRow, firstOk: number | undefined, adminFirst: number 
   };
   if (row.rejection !== null) u.rejection = row.rejection;
   if (row.rejection === "no-community-yet" && adminFirst !== undefined && row.id > adminFirst) u.next = true;
+  // WEB-84: a file of no community at all (none picked in the addon).
+  if (row.rejection === "other-community" && row.community === null) u.none = true;
   if (row.unreadable !== null) u.unreadable = row.unreadable;
   if (row.schemaVersion !== null) u.schemaVersion = row.schemaVersion;
   if (row.summary !== null) u.summary = row.summary;
@@ -609,6 +612,22 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     if (state !== undefined) writeState(tx, state.data, state);
     return counts;
   });
+}
+
+/**
+ * WEB-84: before it, the admin's file without a community (`settings.clubId`) was taken while none was set, so a
+ * database may hold accepted uploads of no community (after the launch cut-off) and their Doomsday goals. A rebuild
+ * applies today's rule to them. Runs at start; true when it rebuilt. Once rebuilt nothing matches, so it runs once.
+ */
+export function rebuildUploadsWithoutCommunity(db: Db, admin = adminBattleTag()): boolean {
+  const stale = db
+    .select({ id: uploads.id })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), isNull(uploads.community), gte(uploads.uploadedAt, cutoffAt(db))))
+    .get();
+  if (stale === undefined) return false;
+  rebuild(db, admin);
+  return true;
 }
 
 // --- derived state -------------------------------------------------------------------------------------------

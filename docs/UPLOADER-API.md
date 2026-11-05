@@ -108,7 +108,7 @@ A token can also be created by hand on the uploader page ("Create a token by han
 ```
 
 - `status`: `ok` (something in it was newer), `nothing_new` (the same file again, or nothing in it newer than what the site has), `rejected`.
-- `rejection` (only with `rejected`): `wrong_file` (another addon's file), `damaged`, `newer_format` (the site doesn't read this addon version yet; `schemaVersion` names it; retry after a site update), `not_your_file`, `other_community`, `no_community_yet` (before the admin's first upload, or after a community switch before the admin's next one, WEB-83; `summaryLine` says which). Treat an unknown code as "not uploaded".
+- `rejection` (only with `rejected`): `wrong_file` (another addon's file), `damaged`, `newer_format` (the site doesn't read this addon version yet; `schemaVersion` names it; retry after a site update), `not_your_file`, `other_community` (also a file with no community or guild picked, WEB-84; `summaryLine` says which), `no_community_yet` (before the admin's first upload, or after a community switch before the admin's next one, WEB-83; `summaryLine` says which). Treat an unknown code as "not uploaded".
 - `summaryLine`: the line the upload history shows: up to three counts, "First upload · N characters", "Nothing new", or the short reason of a rejection.
 - `highlights`: at most 3 lines about what changed (level ups, then skill gains, then new characters), full character names; `[]` for the first upload, `nothing_new` and rejections.
 - `counts`: characters with a record in the uploaded file, and the friends who own them; `null` when the file can't be read.
