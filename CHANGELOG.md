@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.1 (2026-11-05)
 - Access: only friends with a character in the in-game community or guild are members. Battle.net friends outside it no longer get in, and no longer show on the map, roster, roll call, Doomsday or Discord, even when an older file names them. With the addon version that sends the community's members, anyone's upload adds friends who joined. The owner's first upload from that version removes everyone without a character in the community, with their data (blocks, guests and admins stay), each one a line in Admin changes. Until then nobody new becomes a member except the uploader.
 
 ## v0.9.0 (2026-11-05)
