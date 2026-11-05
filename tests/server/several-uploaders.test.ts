@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { canonical } from "@/core/merge";
 import { uploaderUploadResponse } from "@/core/uploader";
 import { openDatabase, type Db } from "@/server/db";
@@ -20,7 +21,7 @@ let db: Db;
 let opened: Db[] = [];
 
 function freshDb(): Db {
-  const d = openDatabase(path.join(dir, `${opened.length}.sqlite`));
+  const d = beforeRosters(openDatabase(path.join(dir, `${opened.length}.sqlite`)));
   opened.push(d);
   return d;
 }

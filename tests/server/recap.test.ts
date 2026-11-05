@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { GET as latestRoute } from "@/app/api/bot/v1/recap/latest/route";
 import { createBotToken } from "@/server/bot";
 import { getDb } from "@/server/db";
@@ -39,7 +40,7 @@ beforeAll(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
   process.env.DATA_DIR = dir;
   process.env.ADMIN_BATTLETAG = ADMIN;
-  token = createBotToken(getDb(), ADMIN, 1);
+  token = createBotToken(beforeRosters(getDb()), ADMIN, 1);
 });
 
 afterAll(() => {

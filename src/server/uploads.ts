@@ -3,7 +3,6 @@ import { gunzipSync, gzipSync } from "node:zlib";
 import { and, asc, desc, eq, gt, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
-  battleTagsOf,
   checkFile,
   type FileRejection,
   fileOwner,
@@ -21,6 +20,17 @@ import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
+import {
+  type Fallback,
+  type KeepPerson,
+  membersOf,
+  onlyMembers,
+  readRoster,
+  type Roster,
+  type RosterFile,
+  rosterHoldsUploader,
+  rosterPeople,
+} from "@/core/members";
 import { adminBattleTag, loadAccessList } from "./access";
 import { logChange, requireOwner } from "./admins";
 import { notifyBotEvents, recordMilestones } from "./bot";
@@ -38,7 +48,18 @@ import {
   switchedAfter,
   type CommunitySwitch,
 } from "./communitySwitch";
-import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
+import {
+  blocks,
+  characters,
+  locations,
+  members,
+  membersBefore,
+  meta,
+  people,
+  presence,
+  uploaderTokens,
+  uploads,
+} from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
 // the derived tables hold the merge of all ok uploads and can be rebuilt from them at any time.
@@ -84,7 +105,15 @@ export interface UploadResult {
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Read =
-  | { ok: true; data: Dataset; feeds: PersonFeed[]; goals: PersonGoals[]; gameItems: GameItem[] }
+  | {
+      ok: true;
+      data: Dataset;
+      feeds: PersonFeed[];
+      goals: PersonGoals[];
+      gameItems: GameItem[];
+      /** The file's roster (WEB-85), when it has one that holds the uploader (checked before the cut-off trims data). */
+      roster?: RosterFile;
+    }
   | { ok: false; reason: string; unreadable: Unreadable; schemaVersion?: number };
 
 /** WEB-62: an upload read after the launch cut-off loses what dates from before it (src/core/cutoff.ts). */
@@ -101,14 +130,17 @@ function since(result: Read, cutoff: number): Read {
 function read(bytes: Uint8Array): Read {
   try {
     const chunk = parseLua(new TextDecoder().decode(bytes));
+    const data = normalize(chunk);
+    const roster = readRoster(chunk);
     // The feed (WEB-41) is read apart from the dataset: it is history, not part of the merged state.
     // So are the game's plans and answers (WEB-43): applied once, after the upload's transaction.
     return {
       ok: true,
-      data: normalize(chunk),
+      data,
       feeds: readFeeds(chunk),
       goals: readAllGoals(chunk),
       gameItems: readGameItems(chunk),
+      ...(roster !== undefined && rosterHoldsUploader(data, roster.guids) ? { roster } : {}),
     };
   } catch (e) {
     if (e instanceof LuaParseError) return { ok: false, reason: e.message, unreadable: "damaged" };
@@ -125,7 +157,8 @@ function read(bytes: Uint8Array): Read {
  * Stores an uploaded SavedVariables file and merges it into the derived tables, all in one transaction.
  * Only someone who may upload can store anything (else UploadForbiddenError). A file that does not parse or
  * normalize, is not the uploader's own or is of another community (src/core/access.ts) is stored as rejected with
- * its reason and changes nothing else. An accepted file makes every BattleTag it names a member.
+ * its reason and changes nothing else. An accepted file makes members of those a roster proves (WEB-85,
+ * src/core/members.ts); the data of anyone who is not a member (nor the owner, an admin or a guest) is left out.
  * The same file again from the same uploader (same SHA-256) is a no-op that returns the earlier result.
  * `deviceId`: the uploader token that sent the file (WEB-33); the checks are exactly those of the upload page.
  */
@@ -145,6 +178,8 @@ export function upload(
 
   const result = since(read(file), cutoffAt(db));
   let events = false;
+  // WEB-85: the owner's first roster, or one that drops a GUID the proof had: every member is checked again.
+  let cleanUp = false;
   const stored = db.transaction((tx): UploadResult => {
     const again = findBySha(tx, sha256, user);
     if (again !== undefined) {
@@ -161,6 +196,7 @@ export function upload(
       .where(and(eq(uploads.uploadedBy, user), eq(uploads.status, "ok")))
       .orderBy(desc(uploads.id))
       .get();
+    const proofBefore = memberProof(tx, admin);
 
     const { id } = tx
       .insert(uploads)
@@ -177,6 +213,8 @@ export function upload(
         rejection: rejection?.code ?? null,
         unreadable: result.ok ? null : result.unreadable,
         deviceId: deviceId ?? null,
+        roster: result.ok && result.roster !== undefined ? [...result.roster.guids] : null,
+        rosterSeenAt: (result.ok ? result.roster?.seenAt : undefined) ?? null,
       })
       .returning({ id: uploads.id })
       .get();
@@ -196,14 +234,15 @@ export function upload(
       return { ...base, status: "rejected", reason: rejectionText(rejection), rejection, counts };
     }
 
+    const proof = memberProof(tx, admin);
+    cleanUp = proof.owner && (!proofBefore.owner || [...(proofBefore.roster ?? [])].some((g) => !proof.roster?.has(g)));
+    addMembers(tx, membersOf(result.data, proof.roster, fallbackOf(proof, id, lastUploadBefore(tx))), id);
     const before = loadState(tx);
-    const after = before === undefined ? result.data : merge(before.data, result.data);
+    const merged = before === undefined ? result.data : merge(before.data, result.data);
+    const { data: after, kept } = keepMembers(tx, merged, proof, admin);
     const summary = diff(before?.data, after);
     writeState(tx, after, sourcesFor(before, after, id));
-    addMembers(tx, result.data, id);
-    recordFeeds(tx, result.feeds, id);
-    recordGoals(tx, result.goals, id);
-    recordSightings(tx, result.data.locations, id);
+    recordHistory(tx, result, kept, id);
     tx.update(uploads).set({ summary }).where(eq(uploads.id, id)).run();
     // Feats (WEB-56) and the Discord bot's milestones (WEB-38): none posted for the site's first upload, where
     // everything is new.
@@ -214,6 +253,7 @@ export function upload(
     return ok;
   });
   if (events) notifyBotEvents();
+  if (cleanUp) cleanUpMembers(db, user, now, admin);
   // WEB-43: the game's plans, answers, asks and pings, then which runs the run log shows. Outside the transaction:
   // each item is applied once (by its id), so an item left out by a crash is applied with the next upload.
   if (stored.status === "ok" && !stored.duplicate && result.ok) {
@@ -350,9 +390,135 @@ export function undoSwitchCommunity(db: Db, by: string, now: number, admin = adm
   return true;
 }
 
-/** Every BattleTag of an accepted file becomes a member; the first upload that named it is kept. */
-function addMembers(tx: Tx, data: Dataset, uploadId: number): void {
-  insertAll(battleTagsOf(data), (slice) =>
+// --- members (WEB-85, src/core/members.ts) ----------------------------------------------------------------------
+
+/**
+ * What proves membership now (WEB-85): the owner's newest roster, and friends' rosters that are newer than it (by
+ * their `seenAt`), so a friend's upload adds who joined since and a stale list never brings back who left. Before the
+ * owner's first roster: every roster so far, and `owner` false (the fallback rule still applies).
+ */
+export interface MemberProof {
+  roster?: Roster;
+  owner: boolean;
+}
+
+export function memberProof(db: Db | Tx, admin = adminBattleTag()): MemberProof {
+  const rows = db
+    .select({ id: uploads.id, uploadedBy: uploads.uploadedBy, seenAt: uploads.rosterSeenAt })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.roster)))
+    .orderBy(desc(uploads.id))
+    .all();
+  const owner = admin !== undefined ? rows.find((r) => sameBattleTag(r.uploadedBy, admin)) : undefined;
+  const ids =
+    owner === undefined
+      ? rows.map((r) => r.id)
+      : [
+          owner.id,
+          ...rows
+            .filter((r) => r.id !== owner.id && r.seenAt !== null && r.seenAt > (owner.seenAt ?? 0))
+            .map((r) => r.id),
+        ];
+  const guids = new Set<string>();
+  for (const id of ids) {
+    const roster = db.select({ roster: uploads.roster }).from(uploads).where(eq(uploads.id, id)).get()?.roster;
+    for (const guid of roster ?? []) guids.add(guid);
+  }
+  return guids.size > 0 ? { roster: guids, owner: owner !== undefined } : { owner: false };
+}
+
+/** Who else a file makes a member besides the proven: nobody once the owner's roster is there (src/core/members.ts). */
+function fallbackOf(proof: MemberProof, uploadId: number, legacyUntil: number): Fallback {
+  if (proof.owner) return "none";
+  return uploadId <= legacyUntil ? "all" : "self";
+}
+
+/** The newest upload from before WEB-85 (its migration wrote it); 0 without one. */
+function lastUploadBefore(db: Db | Tx): number {
+  return db.select().from(membersBefore).where(eq(membersBefore.id, 1)).get()?.lastUpload ?? 0;
+}
+
+/**
+ * The merged data without the people outside the group (WEB-85): kept are the owner, the admins and the guests, and
+ * with a roster those with a character on it; without one every member (and people without a BattleTag), as before.
+ * `kept` tells whose history (feed, Doomsday, sightings) is recorded.
+ */
+function keepMembers(
+  tx: Tx,
+  merged: Dataset,
+  proof: MemberProof,
+  admin: string | undefined,
+): { data: Dataset; kept: { person: (key: string) => boolean; guid: (guid: string) => boolean } } {
+  const list = loadAccessList(tx, admin);
+  const roster = proof.owner ? proof.roster : undefined;
+  const linked = roster !== undefined ? rosterPeople(merged, roster) : undefined;
+  const keep: KeepPerson = (p) => {
+    const tag = p.battleTag;
+    if (tag !== undefined) {
+      const key = battleTagKey(tag);
+      if (sameBattleTag(tag, list.admin) || list.admins?.has(key) === true || list.guests.has(key)) return true;
+      if (list.members.has(key)) return true;
+    }
+    // Once the owner's roster is there, someone without a BattleTag (known only through the community) stays when
+    // proven; before it, as before WEB-85.
+    return linked !== undefined ? linked.has(p.key) : tag === undefined;
+  };
+  const { data, dropped, droppedPeople } = onlyMembers(merged, keep, roster);
+  return {
+    data,
+    kept: {
+      person: (key) => data.people[key] !== undefined || (!droppedPeople.has(key) && roster === undefined),
+      guid: (guid) => !dropped.has(guid),
+    },
+  };
+}
+
+/** The file's feed, Doomsday goals and sightings, of the people and characters kept only. */
+function recordHistory(
+  tx: Tx,
+  result: Extract<Read, { ok: true }>,
+  kept: { person: (key: string) => boolean; guid: (guid: string) => boolean },
+  uploadId: number,
+): void {
+  recordFeeds(
+    tx,
+    result.feeds.filter((f) => kept.person(f.owner)),
+    uploadId,
+  );
+  recordGoals(
+    tx,
+    result.goals.filter((g) => kept.person(g.owner)),
+    uploadId,
+  );
+  const locations = Object.fromEntries(Object.entries(result.data.locations).filter(([guid]) => kept.guid(guid)));
+  recordSightings(tx, locations, uploadId);
+}
+
+/**
+ * WEB-85: the owner's roster arrived for the first time or lost someone. A rebuild applies it to every upload, so
+ * whoever has no character in the community stops being a member and their data, feed, Doomsday and sightings go.
+ * Blocks, guests and admins stay. Each member removed is a line in Admin changes (by the owner, whose upload it was).
+ */
+export function cleanUpMembers(db: Db, by: string, now: number, admin = adminBattleTag()): string[] {
+  const listed = () => db.select({ key: members.key, battleTag: members.battleTag }).from(members).all();
+  const before = listed();
+  rebuild(db, admin);
+  const after = new Set(listed().map((m) => m.key));
+  const blocked = new Set(
+    db
+      .select({ key: blocks.key })
+      .from(blocks)
+      .all()
+      .map((b) => b.key),
+  );
+  const removed = before.filter((m) => !after.has(m.key) && !blocked.has(m.key)).map((m) => m.battleTag);
+  for (const battleTag of removed) logChange(db, by, "memberRemoved", now, battleTag);
+  return removed;
+}
+
+/** The members an accepted file makes (src/core/members.ts); the first upload that named one is kept. */
+function addMembers(tx: Tx, battleTags: string[], uploadId: number): void {
+  insertAll(battleTags, (slice) =>
     tx
       .insert(members)
       .values(slice.map((battleTag) => ({ key: battleTagKey(battleTag), battleTag, firstUpload: uploadId })))
@@ -511,6 +677,9 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     let adminUploaded = false;
     let launched = false;
     const counts: RebuildResult = { ok: 0, rejected: 0 };
+    // WEB-85: what proves membership now decides for every upload; before the owner's roster, the fallback too.
+    const proof = memberProof(tx, admin);
+    const legacyUntil = lastUploadBefore(tx);
     tx.delete(members).run();
     clearHistory(tx);
     // WEB-62: uploads from before the launch cut-off count only for who may sign in (members); the rest are read
@@ -542,7 +711,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
           const fileCommunity = result.data.community.id ?? null;
           if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
           if (sameBattleTag(row.uploadedBy, admin)) adminUploaded = true;
-          addMembers(tx, result.data, id);
+          addMembers(tx, membersOf(result.data, proof.roster, fallbackOf(proof, id, legacyUntil)), id);
         }
         continue;
       }
@@ -583,16 +752,15 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       counts.ok++;
       if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
       if (sameBattleTag(row.uploadedBy, admin)) adminUploaded = true;
-      const after = state === undefined ? result.data : merge(state.data, result.data);
+      addMembers(tx, membersOf(result.data, proof.roster, fallbackOf(proof, id, legacyUntil)), id);
+      const merged = state === undefined ? result.data : merge(state.data, result.data);
+      const { data: after, kept } = keepMembers(tx, merged, proof, admin);
       // The game's answers aren't applied again; the report keeps their count (WEB-43).
       const runAnswers = runAnswersOf(tx as unknown as Db, id);
       const summary: UploadSummary = { ...diff(state?.data, after), ...(runAnswers > 0 ? { runAnswers } : {}) };
       const previous = state?.data;
       state = { data: after, ...sourcesFor(state, after, id) };
-      addMembers(tx, result.data, id);
-      recordFeeds(tx, result.feeds, id);
-      recordGoals(tx, result.goals, id);
-      recordSightings(tx, result.data.locations, id);
+      recordHistory(tx, result, kept, id);
       // The same feats again, never their events (WEB-56).
       recordFeats(tx, { id, uploadedAt: row.uploadedAt }, previous, after, diff(previous, after), result.feeds);
       tx.update(uploads)

@@ -378,6 +378,8 @@ export interface SampleOptions {
   doomsday?: boolean;
   /** With the hidden launch probe's results (WEB-82): the seed's design sample only, for the Admin page's box. */
   probe?: boolean;
+  /** More GUIDs on the roster (`members`, WEB-85): the e2e seed's, for the upload page's members. */
+  moreMembers?: readonly string[];
 }
 
 /** A made-up probe section in the addon's shape (WEB-82): per client flavour, per item. */
@@ -397,6 +399,7 @@ export function sampleSavedVariables({
   day = 3,
   doomsday = true,
   probe = false,
+  moreMembers = [],
 }: SampleOptions = {}): string {
   const ago = (3 - day) * D;
   const later = (t: number) => (ago === 0 ? t : Math.max(t, ago + H));
@@ -410,8 +413,13 @@ export function sampleSavedVariables({
   // Sanne is in the community but doesn't run the addon: one character seen online, no record.
   presence["Player-1-0000F001"] = { battleTag: "Sanne#5150", lastSeen: now - later(3 * D) };
 
+  // WEB-85 (addon CF-89): the community's members, so every character here counts as the group's.
+  const members: Record<string, Lua> = {};
+  for (const guid of [...all.map((c) => c.guid), "Player-1-0000F001", ...moreMembers]) members[guid] = { seenAt: now - H };
+
   const global: Lua = {
     locations,
+    members,
     people: Object.fromEntries(
       friends.map((f) => [
         f.battleTag,
