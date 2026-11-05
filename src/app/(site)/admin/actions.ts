@@ -19,7 +19,7 @@ import { auth } from "@/server/auth";
 import { CUTOFF_CONFIRM } from "@/core/cutoff";
 import { clearCutoff, storeCutoff } from "@/server/cutoff";
 import { getDb, type Db } from "@/server/db";
-import { rebuild } from "@/server/uploads";
+import { rebuild, switchCommunity, undoSwitchCommunity } from "@/server/uploads";
 
 // The admin page's actions (WEB-18; owner and admins since WEB-64). Each checks again who the caller is (CLAUDE.md
 // rule 6): admins run the group, the owner alone appoints admins, starts fresh from launch and revokes others'
@@ -165,5 +165,21 @@ export async function undoStartFreshAction(): Promise<void> {
     rebuild(db);
     logChange(db, by, "cutoffUndone", nowSeconds());
   }, true);
+  revalidatePath("/", "layout");
+}
+
+// --- switching the community (WEB-83; the owner only) ----------------------------------------------------------------
+
+/**
+ * "Switch community": from now on the community is not set and the owner's next upload sets it. Nothing is hidden or
+ * rebuilt. A stale button (the community is already not set) changes nothing.
+ */
+export async function switchCommunityAction(): Promise<void> {
+  await asAdmin((db, by) => switchCommunity(db, by, nowSeconds()), true);
+}
+
+/** Undo, only while the owner hasn't uploaded since: the switch goes and a rebuild reads the files sent meanwhile. */
+export async function undoSwitchCommunityAction(): Promise<void> {
+  await asAdmin((db, by) => undoSwitchCommunity(db, by, nowSeconds()), true);
   revalidatePath("/", "layout");
 }

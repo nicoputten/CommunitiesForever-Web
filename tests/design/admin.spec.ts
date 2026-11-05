@@ -176,3 +176,33 @@ test("admin: probe results", async ({ page }, info) => {
   const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
   expect(file.suggestedFilename()).toMatch(/^probe-results-\d{4}-\d{2}-\d{2}\.json$/);
 });
+
+// WEB-83: the owner's Community box (no board; the Probe results box's entry look) and its dialog (the Make admin
+// dialog's look). Stops at the dialog: switching would change the shared sample database.
+test("admin: community box", async ({ page }, info) => {
+  await openScreen(page, "/admin");
+  const box = page.getByRole("region", { name: "Community", exact: true });
+  await expectStyles(box, { ...SURFACE, "border-radius": "var(--r-panel)", "background-color": "var(--surface)" });
+  await expectStyles(box.getByRole("heading", { name: "Community" }), { ...TYPE.section, color: "var(--gold-bright)" });
+  await expectStyles(box.getByTestId("community-line"), { "font-size": "var(--fs-meta)", color: "var(--text-dim)" });
+  const open = box.getByRole("button", { name: "Switch community…" });
+  await expectStyles(open, { color: "var(--gold-bright)", "border-radius": "var(--r-btn)", "min-height": "var(--size-touch)" });
+  const out = process.env.SCREENSHOT_OUT;
+  if (out) await box.screenshot({ path: `${out}/community-box-${info.project.name}.png` });
+  await open.click();
+  const dialog = page.getByRole("dialog", { name: "Switch to another community?" });
+  await expect(dialog).toBeVisible();
+  await expectStyles(dialog, {
+    "background-color": "var(--surface-menu)",
+    "border-top-left-radius": isPhone(page) ? "var(--r-sheet)" : "var(--r-panel)",
+  });
+  await expectStyles(dialog.getByRole("button", { name: "Switch community", exact: true }), {
+    "background-color": "var(--gold)",
+    color: "var(--on-gold)",
+    "min-height": "var(--size-touch)",
+  });
+  if (out) await page.screenshot({ path: `${out}/community-dialog-${info.project.name}.png` });
+  await expectAccessible(page);
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+});

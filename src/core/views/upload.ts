@@ -37,7 +37,8 @@ export type UploadOutcome =
   | { kind: "nothing-new"; since?: number }
   | { kind: "not-your-file"; owner?: string }
   | { kind: "other-community" }
-  | { kind: "no-community-yet" }
+  /** `next`: after a community switch, waiting for the admin's next upload (WEB-83). */
+  | { kind: "no-community-yet"; next?: true }
   | { kind: "too-large" }
   /** No answer, or one the screen doesn't know: the UI never shows raw error text. */
   | { kind: "failed" };
@@ -101,7 +102,7 @@ export function uploadOutcome(httpStatus: number, body: unknown, fileName: strin
     case "other-community":
       return { kind: "other-community" };
     case "no-community-yet":
-      return { kind: "no-community-yet" };
+      return body.rejection.next === true ? { kind: "no-community-yet", next: true } : { kind: "no-community-yet" };
     default:
       return { kind: "failed" };
   }
@@ -137,7 +138,7 @@ export function ledgerCountsText({ characters, friends }: LedgerCounts): string 
  * it, or "nothing new" for an accepted upload that changed nothing; undefined when there is a report to show.
  */
 export function storedOutcome(
-  u: Pick<StoredUpload, "status" | "rejection" | "unreadable" | "schemaVersion" | "summary" | "uploadedAt">,
+  u: Pick<StoredUpload, "status" | "rejection" | "next" | "unreadable" | "schemaVersion" | "summary" | "uploadedAt">,
 ): Exclude<UploadOutcome, { kind: "done" | "too-large" | "failed" }> | undefined {
   if (u.status === "ok") {
     return u.summary === undefined || uploadReport(u.summary, u.uploadedAt).nothingNew
@@ -158,7 +159,7 @@ export function storedOutcome(
     case "other-community":
       return { kind: "other-community" };
     case "no-community-yet":
-      return { kind: "no-community-yet" };
+      return u.next === true ? { kind: "no-community-yet", next: true } : { kind: "no-community-yet" };
     default:
       return { kind: "not-your-file" };
   }
@@ -173,6 +174,8 @@ export interface StoredUpload {
   uploadedBy: string;
   status: "ok" | "rejected";
   rejection?: FileRejection["code"];
+  /** "No community yet" after the admin's first upload: waiting for the admin's next one (WEB-83). */
+  next?: true;
   unreadable?: Unreadable;
   schemaVersion?: number;
   summary?: UploadSummary;
@@ -220,7 +223,7 @@ export function summaryParts(summary: UploadSummary | undefined, first: boolean)
 }
 
 /** The short reason of a rejected upload in the history. */
-export function rejectionLine(u: Pick<StoredUpload, "rejection" | "unreadable" | "schemaVersion">): string {
+export function rejectionLine(u: Pick<StoredUpload, "rejection" | "next" | "unreadable" | "schemaVersion">): string {
   switch (u.unreadable) {
     case "not-ledger":
       return "Wrong file: another addon's data";
@@ -235,7 +238,7 @@ export function rejectionLine(u: Pick<StoredUpload, "rejection" | "unreadable" |
     case "other-community":
       return "Another community";
     case "no-community-yet":
-      return "Before the admin's first upload";
+      return u.next === true ? "Before the admin's next upload" : "Before the admin's first upload";
   }
   return "Couldn't be read";
 }

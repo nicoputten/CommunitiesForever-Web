@@ -6,6 +6,7 @@ import { AddGuestForm } from "@/components/admin/AddGuestForm";
 import { AdminConfirm } from "@/components/admin/AdminConfirm";
 import { AdminLog } from "@/components/admin/AdminLog";
 import { GuestBadge, OnlineBadge, OwnerBar, RankBadge, RefusedLine, WhoTag } from "@/components/admin/CoAdmins";
+import { CommunitySwitch } from "@/components/admin/CommunitySwitch";
 import { DangerZone } from "@/components/admin/DangerZone";
 import { AdminPanel, PanelEmpty, RowBadge, RowButton } from "@/components/admin/AdminPanel";
 import rows from "@/components/admin/Admin.module.css";
@@ -27,8 +28,10 @@ import {
   revokeDeviceAction,
   setMayUploadAction,
   startFreshAction,
+  switchCommunityAction,
   unblockAction,
   undoStartFreshAction,
+  undoSwitchCommunityAction,
 } from "../actions";
 import styles from "../admin.module.css";
 import missions from "@/components/missions/MissionPool.module.css";
@@ -36,6 +39,7 @@ import { missionPoolBox } from "@/core/views/missionPool";
 import { missionPool } from "@/server/missionPool";
 import { probeFriendsText } from "@/core/probe";
 import { loadProbeSummary } from "@/server/probe";
+import { communityState } from "@/server/uploads";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -44,7 +48,8 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 /**
  * The admin page (WEB-18, no board; layout decided with Nico, DESIGN.md §11), for the owner and admins (WEB-64,
  * boards `admin-coadmins`, `admin-as-admin`): the Admins box and members, guests and blocks on the left; the admin
- * changes log, and for the owner the uploader devices, the probe results (WEB-82) and the Danger zone (WEB-62), on the right. Owner-only controls
+ * changes log, and for the owner the uploader devices, the probe results (WEB-82), the Community box (WEB-83) and the Danger zone (WEB-62), on the
+ * right. Owner-only controls
  * are left out for admins; the actions check again. layout.tsx checks the role.
  */
 export default async function AdminPage({
@@ -60,6 +65,7 @@ export default async function AdminPage({
   const mission =
     owner && viewer !== undefined ? missionPoolBox(missionPool(getDb(), viewer.battleTag, nowSeconds())) : undefined;
   const probe = owner ? loadProbeSummary(getDb()) : undefined;
+  const community = owner ? communityState(getDb()) : undefined;
   const refused = refusedText(one(params.refused), one(params.who));
   const ownerName = view.ownerName ?? "the owner";
   return (
@@ -336,6 +342,36 @@ export default async function AdminPage({
                   </a>
                 </div>
               )}
+            </AdminPanel>
+          )}
+          {community !== undefined && (
+            <AdminPanel
+              id="admin-community"
+              title="Community"
+              aside={<WhoTag owner />}
+              sub="Uploads count only from the in-game community (or guild) picked in the addon. Switch when the group moves to another one: everything uploaded so far stays."
+            >
+              <CommunitySwitch
+                state={community.id !== undefined ? "set" : community.pending !== undefined ? "pending" : "unset"}
+                switchAction={switchCommunityAction}
+                undo={undoSwitchCommunityAction}
+                line={
+                  community.id !== undefined ? (
+                    community.name !== undefined ? (
+                      `Uploads count from ${community.name}.`
+                    ) : (
+                      "Uploads count from the community of your uploads."
+                    )
+                  ) : community.pending !== undefined ? (
+                    <>
+                      Switched at <LocalTime at={community.pending.setAt} />. Your next upload sets the community;
+                      friends&apos; uploads wait for it.
+                    </>
+                  ) : (
+                    "Not set yet: your next upload sets the community."
+                  )
+                }
+              />
             </AdminPanel>
           )}
           {owner && (

@@ -104,6 +104,23 @@ test("Start fresh from launch asks first, and needs `delete all` typed", async (
   await expect(zone.getByRole("button", { name: "Start fresh from launch…" })).toBeVisible();
 });
 
+// WEB-83: the owner's Community box offers Switch community, which asks first. Confirming would change the shared
+// database under the other tests, so this stops at the dialog; the switch itself is tested in
+// tests/server/communitySwitch.test.ts.
+test("Switch community asks first, and says nothing is hidden", async ({ page, context, baseURL }) => {
+  await signInAs(context, baseURL!, E2E.admin);
+  await page.goto("/admin");
+  const box = panel(page, "Community");
+  await expect(box.getByTestId("community-line")).toHaveText(/^Uploads count from .+\.$/);
+  await box.getByRole("button", { name: "Switch community…" }).click();
+  const dialog = page.getByRole("dialog", { name: "Switch to another community?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Nothing is hidden or deleted");
+  await expect(dialog.getByRole("button", { name: "Switch community", exact: true })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+});
+
 // WEB-64: the owner makes a friend an admin and removes them again; the admin sees the page without the owner's
 // boxes. Each project uses its own friend, and leaves them a member.
 const HELPER: Record<string, { tag: string; name: string }> = {
@@ -140,6 +157,8 @@ test("the owner makes a friend an admin, who helps without the owner's controls,
   await expect(theirs.getByTestId("owner-bar")).toContainText("You're an admin. Some settings are for the owner only.");
   await expect(theirs.getByRole("region", { name: "Danger zone" })).toHaveCount(0);
   await expect(theirs.getByRole("region", { name: "Uploader devices" })).toHaveCount(0);
+  // WEB-83: switching the community is the owner's.
+  await expect(theirs.getByRole("region", { name: "Community", exact: true })).toHaveCount(0);
   // WEB-79: the Mission pool is the owner's: no box, and an old link says so.
   await expect(theirs.getByRole("region", { name: "Doomsday missions" })).toHaveCount(0);
   await theirs.goto("/admin/missions");

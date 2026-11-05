@@ -110,6 +110,11 @@ describe("uploadOutcome", () => {
     expect(uploadOutcome(200, rejected({ rejection: { code: "no-community-yet" } }), LEDGER)).toEqual({
       kind: "no-community-yet",
     });
+    // WEB-83: after a community switch.
+    expect(uploadOutcome(200, rejected({ rejection: { code: "no-community-yet", next: true } }), LEDGER)).toEqual({
+      kind: "no-community-yet",
+      next: true,
+    });
   });
 
   it("says the same about an earlier rejected file sent again", () => {
@@ -175,6 +180,7 @@ describe("history", () => {
     expect(rejectionLine({ rejection: "not-your-file" })).toBe("Not your file");
     expect(rejectionLine({ rejection: "other-community" })).toBe("Another community");
     expect(rejectionLine({ rejection: "no-community-yet" })).toBe("Before the admin's first upload");
+    expect(rejectionLine({ rejection: "no-community-yet", next: true })).toBe("Before the admin's next upload");
     expect(rejectionLine({})).toBe("Couldn't be read");
   });
 
@@ -253,5 +259,9 @@ describe("storedOutcome (report page, WEB-20)", () => {
     expect(of({ rejection: "not-your-file" })).toBe("not-your-file");
     expect(of({ rejection: "other-community" })).toBe("other-community");
     expect(of({ rejection: "no-community-yet" })).toBe("no-community-yet");
+    expect(storedOutcome({ ...at, status: "rejected", rejection: "no-community-yet", next: true })).toEqual({
+      kind: "no-community-yet",
+      next: true,
+    });
   });
 });
