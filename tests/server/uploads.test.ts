@@ -4,6 +4,7 @@ import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { canonical } from "@/core/merge";
 import { dataDir, openDatabase, type Db } from "@/server/db";
 import { characters, locations, people, uploads } from "@/server/db/schema";
@@ -28,7 +29,7 @@ beforeEach(() => {
   // Ada is the admin: these tests are about storing and merging, tests/server/access.test.ts about who may upload.
   vi.stubEnv("ADMIN_BATTLETAG", "Ada#1001");
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
-  db = openDatabase(path.join(dir, "test.sqlite"));
+  db = beforeRosters(openDatabase(path.join(dir, "test.sqlite")));
 });
 
 afterEach(() => {
@@ -73,7 +74,7 @@ describe("database", () => {
   it("migrates a file opened again without changes", () => {
     upload(db, day1, "Ada#1001", 1000);
     db.$client.close();
-    db = openDatabase(path.join(dir, "test.sqlite"));
+    db = beforeRosters(openDatabase(path.join(dir, "test.sqlite")));
     expect(db.select().from(uploads).all()).toHaveLength(1);
   });
 });

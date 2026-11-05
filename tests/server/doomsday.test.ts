@@ -4,6 +4,7 @@ import path from "node:path";
 import { and, eq, isNull } from "drizzle-orm";
 import { cardFor } from "@/server/cards";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { boardData, lookupData, recapSection } from "@/core/doomsday/posts";
 import { dayStart, draw } from "@/core/doomsday/rules";
 import { acknowledge } from "@/server/bot";
@@ -58,7 +59,7 @@ let db: Db;
 
 beforeEach(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
-  db = openDatabase(path.join(dir, "test.sqlite"));
+  db = beforeRosters(openDatabase(path.join(dir, "test.sqlite")));
 });
 
 afterEach(() => {

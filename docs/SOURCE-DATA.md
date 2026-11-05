@@ -41,6 +41,7 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `self.goals`, `people[bt].goals` | Doomsday goals (CF-56): `days[n]` and `weeks[w]` each `{ set, swapped[id] = originalId, done[id] = time, at }`, plus `streak`, `best`, `pool` (the pool version), `reset` (seconds after midnight realm time). Ids at most 24 characters, at most 5 per day and 4 per week; numbers 0 or more. `false` is read as nothing sent. The last 7 days and 2 weeks only | Doomsday (WEB-55, WEB-58) |
 | `runs` | Nico's runs in progress | later (backlog) |
 | `probe` | the addon's hidden launch probe: per client flavour, per item `{ status, detail, at, build, ... }`, at most ~30 KB | the owner's download only (WEB-82): never normalized, stored or shown; read from the raw upload |
+| `members` | the selected community's members (addon CF-89, the first release after v1.2.1): `[guid] = { name, seenAt }`, as the uploader's client last saw them, replaced whole on every update. Missing in v1.2.1 and older. Only the GUID keys and the newest `seenAt` are read | who is a member (WEB-85, `src/core/members.ts`) |
 | `settings` | `clubName` only | page title / group name |
 
 Times are Unix seconds. Any field can be missing in older releases.

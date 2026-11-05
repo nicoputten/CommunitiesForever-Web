@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { GET as lookupRoute } from "@/app/api/bot/v1/lookup/[what]/route";
 import { block, putGuest } from "@/server/access";
 import { createBotToken } from "@/server/bot";
@@ -42,7 +43,7 @@ beforeAll(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
   process.env.DATA_DIR = dir;
   process.env.ADMIN_BATTLETAG = ADMIN;
-  const db = getDb();
+  const db = beforeRosters(getDb());
   token = createBotToken(db, ADMIN, 1);
   expect(upload(db, file, ADMIN, NOW, ADMIN).status).toBe("ok");
   linkDiscord(db, ADMIN, { id: NICO_DISCORD, name: "nico_example" }, 1);

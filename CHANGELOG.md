@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Access: only friends with a character in the in-game community or guild are members. Battle.net friends outside it no longer get in, and no longer show on the map, roster, roll call, Doomsday or Discord, even when an older file names them. With the addon version that sends the community's members, anyone's upload adds friends who joined. The owner's first upload from that version removes everyone without a character in the community, with their data (blocks, guests and admins stay), each one a line in Admin changes. Until then nobody new becomes a member except the uploader.
+
 ## v0.9.0 (2026-11-05)
 - Upload: a file without a community or guild picked in the addon is refused, the owner's too, so its characters stay off the site and out of Doomsday and the Discord boards. Once the community or guild is picked, the next upload counts, that day's progress included. Uploads of no community taken by an earlier version are refused again when the site starts.
 - Admin: the owner can move the site to another in-game community (Admin › Community › Switch community…), for example from the guild to a real community once the game allows one. Nothing is hidden: characters, Doomsday, feats, activity and recaps stay. The owner's next upload sets the new community; until then friends' uploads are refused and taken when sent again. Undo until that upload.

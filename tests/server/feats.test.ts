@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import type { MilestonesEvent } from "@/core/bot";
 import { openDatabase, type Db } from "@/server/db";
 import { botEvents, feats } from "@/server/db/schema";
@@ -29,7 +30,7 @@ let db: Db;
 
 beforeEach(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
-  db = openDatabase(path.join(dir, "test.sqlite"));
+  db = beforeRosters(openDatabase(path.join(dir, "test.sqlite")));
 });
 
 afterEach(() => {

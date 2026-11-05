@@ -2,9 +2,10 @@ import type { Dataset } from "./model";
 import { stripEscapes } from "./sanitize";
 
 // Access rules (docs/ARCHITECTURE.md "Access", WEB-06). Battle.net only tells us the BattleTag, so who belongs to the
-// group comes from the uploaded data: the owner and the admins they appoint (WEB-64), members (BattleTags in accepted
-// uploads) and the guest list. The role "admin" covers the owner and the admins; `isOwner` tells the owner apart for
-// what only the owner may do (the launch cut-off, the bot token, appointing admins, others' uploader devices).
+// group comes from the uploaded data: the owner and the admins they appoint (WEB-64), members (BattleTags with a
+// character on the owner's roster, WEB-85) and the guest list. The role "admin" covers the owner and the admins;
+// `isOwner` tells the owner apart for what only the owner may do (the launch cut-off, the bot token, appointing admins,
+// others' uploader devices).
 
 export type Role = "admin" | "member" | "guest";
 
@@ -157,7 +158,7 @@ export function rejectionText(r: FileRejection): string {
   }
 }
 
-/** Every BattleTag a file names: `self`, `people` and `presence`. These become members when the file is accepted. */
+/** Every BattleTag a file names: `self`, `people` and `presence`. Members before the first roster (WEB-85). */
 export function battleTagsOf(data: Dataset): string[] {
   const seen = new Map<string, string>();
   const add = (tag: string | undefined) => {
