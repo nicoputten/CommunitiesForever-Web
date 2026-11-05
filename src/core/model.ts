@@ -7,7 +7,7 @@ export interface Person {
   key: string;
   battleTag?: string;
   accountId?: string;
-  /** Resolved: own display name > BattleTag name part > "Unknown player". */
+  /** Resolved: own display name > BattleTag name part > first character by name (WEB-86) > "Unknown player". */
   displayName: string;
   /** The display name the person set themselves, if any. */
   ownDisplayName?: string;
