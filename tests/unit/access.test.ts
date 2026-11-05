@@ -139,13 +139,43 @@ describe("checkFile", () => {
     expect(checkFile("Ada#1001", ada, "8", "Nico#1000")).toEqual({ code: "other-community" });
     expect(checkFile("Ada#1001", file('self = { battleTag = "Ada#1001" }'), "7", "Nico#1000")).toEqual({
       code: "other-community",
+      none: true,
     });
+  });
+
+  it("never takes a file without a community, the admin's neither, set or not (WEB-84)", () => {
+    const nico = file('self = { battleTag = "Nico#1000" }');
+    for (const community of [undefined, "7"]) {
+      for (const adminUploaded of [false, true]) {
+        expect(checkFile("Nico#1000", nico, community, "Nico#1000", adminUploaded)).toEqual({
+          code: "other-community",
+          none: true,
+        });
+      }
+    }
+    expect(rejectionText({ code: "other-community", none: true })).toBe(
+      "This file has no community: pick the community or guild in the addon, then upload again.",
+    );
+    expect(rejectionText({ code: "other-community" })).toBe("This file is for another community.");
+    // Someone else's file without a community is still "not your file" first.
+    expect(checkFile("Ada#1001", nico, undefined, "Nico#1000")).toEqual({ code: "not-your-file", owner: "Nico#1000" });
   });
 
   it("lets only the admin upload before the admin's first upload", () => {
     expect(checkFile("Ada#1001", ada, undefined, "Nico#1000")).toEqual({ code: "no-community-yet" });
     const nico = file('self = { battleTag = "Nico#1000" }, settings = { clubId = 9 }');
     expect(checkFile("Nico#1000", nico, undefined, "Nico#1000")).toBeUndefined();
+  });
+
+  it("waits for the admin's next upload once the admin has uploaded before (WEB-83)", () => {
+    const r = checkFile("Ada#1001", ada, undefined, "Nico#1000", true);
+    expect(r).toEqual({ code: "no-community-yet", next: true });
+    expect(rejectionText(r!)).toBe("The admin has not uploaded from the new community yet; upload again after that.");
+    expect(rejectionText({ code: "no-community-yet" })).toBe(
+      "The admin has not uploaded yet; until then only the admin can upload.",
+    );
+    const nico = file('self = { battleTag = "Nico#1000" }, settings = { clubId = 9 }');
+    expect(checkFile("Nico#1000", nico, undefined, "Nico#1000", true)).toBeUndefined();
   });
 
   it("holds the admin to their own file and, once set, to the community (WEB-74)", () => {

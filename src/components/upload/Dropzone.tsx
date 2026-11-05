@@ -398,6 +398,19 @@ function viewOf(phase: Phase, a: Actions): View {
               "This ledger doesn't say whose it is. Nothing was changed.",
             );
     case "other-community":
+      // WEB-84: no community or guild picked in the addon (as at launch); the admin's file too.
+      if (phase.none === true) {
+        const say =
+          "The addon in this file has no community or guild picked. Pick one in the addon, /reload and upload again.";
+        return alert(
+          "This ledger has no community",
+          <>
+            The addon in this file has no community or guild picked. Pick one in the addon, {em("/reload")} and upload
+            again.
+          </>,
+          say,
+        );
+      }
       return alert(
         "This ledger is for another community",
         <>
@@ -406,13 +419,14 @@ function viewOf(phase: Phase, a: Actions): View {
         </>,
         `The addon in this file has another community selected. Pick ${a.community} in the addon, /reload and upload again.`,
       );
-    case "no-community-yet":
-      return alert(
-        "The ledger isn't open yet",
-        "Until the admin's first upload, only the admin can upload.",
-        "Until the admin's first upload, only the admin can upload.",
-        tryAgain(a.idle),
-      );
+    case "no-community-yet": {
+      // WEB-83: after a community switch the admin has uploaded before; friends wait for the next upload.
+      const say =
+        phase.next === true
+          ? "Waiting for the admin's next upload from the new community. Upload again after that."
+          : "Until the admin's first upload, only the admin can upload.";
+      return alert("The ledger isn't open yet", say, say, tryAgain(a.idle));
+    }
     case "too-large":
       return alert(
         "That file is too big",

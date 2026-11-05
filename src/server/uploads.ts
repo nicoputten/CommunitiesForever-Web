@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { and, asc, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
   battleTagsOf,
@@ -22,6 +22,7 @@ import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
+import { logChange, requireOwner } from "./admins";
 import { notifyBotEvents, recordMilestones } from "./bot";
 import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
@@ -29,6 +30,14 @@ import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
 import { cutoffAt } from "./cutoff";
+import {
+  latestSwitch,
+  listSwitches,
+  removeSwitch,
+  storeSwitch,
+  switchedAfter,
+  type CommunitySwitch,
+} from "./communitySwitch";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
@@ -143,7 +152,9 @@ export function upload(
       // Same bytes, so the new row replaces the earlier attempt without losing anything.
       tx.delete(uploads).where(eq(uploads.id, again.id)).run();
     }
-    const rejection = result.ok ? checkFile(user, result.data, adminCommunity(tx, admin), admin) : undefined;
+    const rejection = result.ok
+      ? checkFile(user, result.data, adminCommunity(tx, admin), admin, adminFirstOkId(tx, admin) !== undefined)
+      : undefined;
     const previous = tx
       .select({ uploadedAt: uploads.uploadedAt })
       .from(uploads)
@@ -268,18 +279,75 @@ function retry(earlier: UploadResult): boolean {
 }
 
 /**
- * The community of the admin's newest accepted upload since the launch cut-off that names one; undefined before that
- * (WEB-74: "Start fresh" lets the admin's next upload set the community again).
+ * The community of the admin's newest accepted upload since the launch cut-off and since the last community switch
+ * that names one; undefined before that (WEB-74: "Start fresh" lets the admin's next upload set the community again;
+ * WEB-83: so does "Switch community", without hiding anything).
  */
 function adminCommunity(db: Db | Tx, admin: string | undefined): string | undefined {
   if (admin === undefined) return undefined;
   const rows = db
     .select({ uploadedBy: uploads.uploadedBy, community: uploads.community })
     .from(uploads)
-    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.community), gte(uploads.uploadedAt, cutoffAt(db))))
+    .where(
+      and(
+        eq(uploads.status, "ok"),
+        isNotNull(uploads.community),
+        gte(uploads.uploadedAt, cutoffAt(db)),
+        gt(uploads.id, switchedAfter(db)),
+      ),
+    )
     .orderBy(desc(uploads.id))
     .all();
   return rows.find((r) => sameBattleTag(r.uploadedBy, admin))?.community ?? undefined;
+}
+
+/** The site's community for the admin page (WEB-83): its id when set, and the switch still waiting for the owner. */
+export interface CommunityState {
+  /** The `settings.clubId` uploads are held to; undefined while not set. */
+  id?: string;
+  /** Its name (`settings.clubName`) from the merged data, when that is the same community. */
+  name?: string;
+  /** The newest switch, while the owner hasn't uploaded since (Undo is offered only then). */
+  pending?: CommunitySwitch;
+}
+
+export function communityState(db: Db | Tx, admin = adminBattleTag()): CommunityState {
+  const id = adminCommunity(db, admin);
+  if (id !== undefined) {
+    const merged = db.select({ data: meta.data }).from(meta).where(eq(meta.id, 1)).get()?.data.community;
+    return merged?.id === id && merged.name !== undefined ? { id, name: merged.name } : { id };
+  }
+  const last = latestSwitch(db);
+  return last !== undefined ? { pending: last } : {};
+}
+
+/**
+ * "Switch community" (WEB-83): from now on the community is not set, and the owner's next accepted upload sets it.
+ * Nothing is rebuilt or hidden. The owner only (OwnerOnlyError for anyone else); logged in Admin changes. False when the
+ * community is already not set (a stale button): nothing changes.
+ */
+export function switchCommunity(db: Db, by: string, now: number, admin = adminBattleTag()): boolean {
+  return db.transaction((tx) => {
+    requireOwner(tx, by, admin);
+    if (adminCommunity(tx, admin) === undefined) return false;
+    storeSwitch(tx, by, now);
+    logChange(tx, by, "communitySwitched", now);
+    return true;
+  });
+}
+
+/**
+ * Undo of a switch while the owner hasn't uploaded since (the owner only): the row goes and a rebuild reads the files
+ * sent meanwhile as if it never happened (a friend's file refused as "no community yet" counts again). False when
+ * there is nothing to undo.
+ */
+export function undoSwitchCommunity(db: Db, by: string, now: number, admin = adminBattleTag()): boolean {
+  requireOwner(db, by, admin);
+  const { pending } = communityState(db, admin);
+  if (pending === undefined || !removeSwitch(db, pending.id)) return false;
+  rebuild(db, admin);
+  logChange(db, by, "communitySwitchUndone", now);
+  return true;
 }
 
 /** Every BattleTag of an accepted file becomes a member; the first upload that named it is kept. */
@@ -294,8 +362,9 @@ function addMembers(tx: Tx, data: Dataset, uploadId: number): void {
 }
 
 /** The newest uploads, everyone's, for the upload history (WEB-19). */
-export function listUploads(db: Db, limit = 20): StoredUpload[] {
+export function listUploads(db: Db, limit = 20, admin = adminBattleTag()): StoredUpload[] {
   const firstOk = firstOkId(db);
+  const adminFirst = adminFirstOkId(db, admin);
   return db
     .select(STORED)
     .from(uploads)
@@ -303,7 +372,7 @@ export function listUploads(db: Db, limit = 20): StoredUpload[] {
     .orderBy(desc(uploads.id))
     .limit(limit)
     .all()
-    .map((row) => stored(row, firstOk));
+    .map((row) => stored(row, firstOk, adminFirst));
 }
 
 /** One person's newest uploads, from the app and manual (the uploader page's history, WEB-34). */
@@ -315,8 +384,9 @@ export interface OwnUploads {
   devices: string[];
 }
 
-export function listOwnUploads(db: Db, battleTag: string, limit = 20): OwnUploads {
+export function listOwnUploads(db: Db, battleTag: string, limit = 20, admin = adminBattleTag()): OwnUploads {
   const firstOk = firstOkId(db);
+  const adminFirst = adminFirstOkId(db, admin);
   const own = sql`lower(${uploads.uploadedBy}) = ${battleTagKey(battleTag)}`;
   const rows = db
     .select(STORED)
@@ -334,18 +404,22 @@ export function listOwnUploads(db: Db, battleTag: string, limit = 20): OwnUpload
     .orderBy(asc(uploaderTokens.deviceName))
     .all()
     .map((r) => r.name);
-  return { uploads: rows.slice(0, limit).map((row) => stored(row, firstOk)), more: rows.length > limit, devices };
+  return {
+    uploads: rows.slice(0, limit).map((row) => stored(row, firstOk, adminFirst)),
+    more: rows.length > limit,
+    devices,
+  };
 }
 
 /** One upload for its report page; undefined when there is none. */
-export function getUpload(db: Db, id: number): StoredUpload | undefined {
+export function getUpload(db: Db, id: number, admin = adminBattleTag()): StoredUpload | undefined {
   const row = db
     .select(STORED)
     .from(uploads)
     .leftJoin(uploaderTokens, eq(uploads.deviceId, uploaderTokens.id))
     .where(eq(uploads.id, id))
     .get();
-  return row === undefined ? undefined : stored(row, firstOkId(db));
+  return row === undefined ? undefined : stored(row, firstOkId(db), adminFirstOkId(db, admin));
 }
 
 const STORED = {
@@ -357,6 +431,7 @@ const STORED = {
   unreadable: uploads.unreadable,
   schemaVersion: uploads.schemaVersion,
   summary: uploads.summary,
+  community: uploads.community,
   /** The uploader app that sent it (WEB-34 "via DESKTOP-NICO"); null from the upload page. */
   device: uploaderTokens.deviceName,
 };
@@ -373,7 +448,21 @@ export function firstOkId(db: Db): number | undefined {
     .get()?.id;
 }
 
-function stored(row: StoredRow, firstOk: number | undefined): StoredUpload {
+/**
+ * The admin's first accepted upload. A file refused as "no community yet" after it waited for the admin's next upload
+ * (a community switch or a fresh start since), not the first (WEB-83).
+ */
+function adminFirstOkId(db: Db | Tx, admin: string | undefined): number | undefined {
+  if (admin === undefined) return undefined;
+  return db
+    .select({ id: uploads.id })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), sql`lower(${uploads.uploadedBy}) = ${battleTagKey(admin)}`))
+    .orderBy(asc(uploads.id))
+    .get()?.id;
+}
+
+function stored(row: StoredRow, firstOk: number | undefined, adminFirst: number | undefined): StoredUpload {
   const u: StoredUpload = {
     id: row.id,
     uploadedAt: row.uploadedAt,
@@ -382,6 +471,9 @@ function stored(row: StoredRow, firstOk: number | undefined): StoredUpload {
     first: row.id === firstOk,
   };
   if (row.rejection !== null) u.rejection = row.rejection;
+  if (row.rejection === "no-community-yet" && adminFirst !== undefined && row.id > adminFirst) u.next = true;
+  // WEB-84: a file of no community at all (none picked in the addon).
+  if (row.rejection === "other-community" && row.community === null) u.none = true;
   if (row.unreadable !== null) u.unreadable = row.unreadable;
   if (row.schemaVersion !== null) u.schemaVersion = row.schemaVersion;
   if (row.summary !== null) u.summary = row.summary;
@@ -407,13 +499,16 @@ export interface RebuildResult {
  * Recomputes the derived tables and members, and each upload's status, reason and summary, from all stored uploads
  * in upload order. Rejected uploads are read again too: after a site update a file with a newer schema may now be ok,
  * when it is the uploader's own and of the community. Whether the uploader may upload was checked when the file was
- * stored and is not asked again. Blocks and the guest list are not derived and stay as they are.
+ * stored and is not asked again. Blocks and the guest list are not derived and stay as they are. A community switch
+ * (WEB-83) only makes the community "not set" for the uploads after it: the uploads before it count as they did.
  */
 export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
   return db.transaction((tx) => {
     const ids = tx.select({ id: uploads.id }).from(uploads).orderBy(asc(uploads.id)).all();
     let state: State | undefined;
     let community: string | undefined;
+    // WEB-83: whether the admin has an accepted upload yet ("no community yet" then waits for the next one).
+    let adminUploaded = false;
     let launched = false;
     const counts: RebuildResult = { ok: 0, rejected: 0 };
     tx.delete(members).run();
@@ -421,7 +516,14 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     // WEB-62: uploads from before the launch cut-off count only for who may sign in (members); the rest are read
     // without what dates from before it. Their rows (status, summary) stay as they were.
     const cutoff = cutoffAt(tx);
+    // WEB-83: each community switch starts the community anew for the uploads after it; nothing before it changes.
+    const switches = listSwitches(tx);
+    let nextSwitch = 0;
     for (const { id } of ids) {
+      while ((switches[nextSwitch]?.afterUpload ?? Infinity) < id) {
+        community = undefined;
+        nextSwitch++;
+      }
       const row = tx
         .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy, uploadedAt: uploads.uploadedAt })
         .from(uploads)
@@ -439,6 +541,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
         if (result.ok && checkFile(row.uploadedBy, result.data, community, admin) === undefined) {
           const fileCommunity = result.data.community.id ?? null;
           if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
+          if (sameBattleTag(row.uploadedBy, admin)) adminUploaded = true;
           addMembers(tx, result.data, id);
         }
         continue;
@@ -460,7 +563,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
         continue;
       }
       const fileCommunity = result.data.community.id ?? null;
-      const rejection = checkFile(row.uploadedBy, result.data, community, admin);
+      const rejection = checkFile(row.uploadedBy, result.data, community, admin, adminUploaded);
       if (rejection !== undefined) {
         counts.rejected++;
         tx.update(uploads)
@@ -479,6 +582,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       }
       counts.ok++;
       if (fileCommunity !== null && sameBattleTag(row.uploadedBy, admin)) community = fileCommunity;
+      if (sameBattleTag(row.uploadedBy, admin)) adminUploaded = true;
       const after = state === undefined ? result.data : merge(state.data, result.data);
       // The game's answers aren't applied again; the report keeps their count (WEB-43).
       const runAnswers = runAnswersOf(tx as unknown as Db, id);
@@ -508,6 +612,22 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     if (state !== undefined) writeState(tx, state.data, state);
     return counts;
   });
+}
+
+/**
+ * WEB-84: before it, the admin's file without a community (`settings.clubId`) was taken while none was set, so a
+ * database may hold accepted uploads of no community (after the launch cut-off) and their Doomsday goals. A rebuild
+ * applies today's rule to them. Runs at start; true when it rebuilt. Once rebuilt nothing matches, so it runs once.
+ */
+export function rebuildUploadsWithoutCommunity(db: Db, admin = adminBattleTag()): boolean {
+  const stale = db
+    .select({ id: uploads.id })
+    .from(uploads)
+    .where(and(eq(uploads.status, "ok"), isNull(uploads.community), gte(uploads.uploadedAt, cutoffAt(db))))
+    .get();
+  if (stale === undefined) return false;
+  rebuild(db, admin);
+  return true;
 }
 
 // --- derived state -------------------------------------------------------------------------------------------

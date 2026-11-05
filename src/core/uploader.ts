@@ -225,6 +225,8 @@ export function uploaderUploadResponse(u: UploaderUploadInput, siteUrl: string):
       schemaVersion: u.unreadable === "newer-format" ? (u.schemaVersion ?? null) : null,
       summaryLine: rejectionLine({
         rejection: u.rejection?.code,
+        next: u.rejection?.code === "no-community-yet" ? u.rejection.next : undefined,
+        none: u.rejection?.code === "other-community" ? u.rejection.none : undefined,
         unreadable: u.unreadable,
         schemaVersion: u.schemaVersion,
       }),

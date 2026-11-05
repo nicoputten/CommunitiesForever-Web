@@ -92,9 +92,16 @@ export function mayBlock(battleTag: string, list: AccessList): boolean {
   return !isOwner(battleTag, list) && !isAppointedAdmin(battleTag, list);
 }
 
-/** Why a readable file is not taken. The upload screen (WEB-19) shows each. */
+/**
+ * Why a readable file is not taken. The upload screen (WEB-19) shows each. "No community yet" with `next`: the admin
+ * has uploaded before (a community switch or a fresh start since), so friends wait for the admin's next upload (WEB-83).
+ * "Other community" with `none`: the file has no community at all (no `settings.clubId`: none picked in the addon, as
+ * at launch when no community could be made), the admin's file too (WEB-84).
+ */
 export type FileRejection =
-  { code: "not-your-file"; owner?: string } | { code: "other-community" } | { code: "no-community-yet" };
+  | { code: "not-your-file"; owner?: string }
+  | { code: "other-community"; none?: true }
+  | { code: "no-community-yet"; next?: true };
 
 /** The BattleTag a file belongs to: its `self.battleTag`. */
 export function fileOwner(data: Dataset): string | undefined {
@@ -106,19 +113,29 @@ export function fileOwner(data: Dataset): string | undefined {
  * It must be their own file (`self.battleTag`) and of the site's community (`settings.clubId`). `community` is that of
  * the admin's uploads since the launch cut-off; undefined before the admin's first one, when only the admin can upload
  * and the admin's file sets it. After that the admin is held to it too (WEB-74): one file from another community (a
- * retail test) must not move the site or make its people members. Moving to a new community is "Start fresh", then
- * the admin's upload.
+ * retail test) must not move the site or make its people members. Moving to a new community is "Switch community"
+ * (WEB-83, keeps everything) or "Start fresh" (WEB-62, hides what came before), then the admin's upload.
+ * `adminUploaded`: the admin has an accepted upload before this one, so a file waiting for the community waits for
+ * the admin's next upload, not the first (WEB-83).
+ * A file without a community (`settings.clubId`) is never taken, the admin's neither (WEB-84): its characters stay off
+ * the site and out of Doomsday until the addon has a community or guild picked. The addon keeps tracking meanwhile, so
+ * the first file with the community brings that day's progress along.
  */
 export function checkFile(
   uploader: string,
   data: Dataset,
   community: string | undefined,
   admin: string | undefined,
+  adminUploaded = false,
 ): FileRejection | undefined {
   const owner = fileOwner(data);
   if (!sameBattleTag(owner, uploader))
     return owner !== undefined ? { code: "not-your-file", owner } : { code: "not-your-file" };
-  if (community === undefined) return sameBattleTag(uploader, admin) ? undefined : { code: "no-community-yet" };
+  if (data.community.id === undefined) return { code: "other-community", none: true };
+  if (community === undefined) {
+    if (sameBattleTag(uploader, admin)) return undefined;
+    return adminUploaded ? { code: "no-community-yet", next: true } : { code: "no-community-yet" };
+  }
   if (data.community.id !== community) return { code: "other-community" };
   return undefined;
 }
@@ -130,9 +147,13 @@ export function rejectionText(r: FileRejection): string {
         ? `Not your file: it belongs to ${r.owner}. Sign in as ${r.owner} to upload it.`
         : "Not your file: it names no BattleTag.";
     case "other-community":
-      return "This file is for another community.";
+      return r.none === true
+        ? "This file has no community: pick the community or guild in the addon, then upload again."
+        : "This file is for another community.";
     case "no-community-yet":
-      return "The admin has not uploaded yet; until then only the admin can upload.";
+      return r.next === true
+        ? "The admin has not uploaded from the new community yet; upload again after that."
+        : "The admin has not uploaded yet; until then only the admin can upload.";
   }
 }
 

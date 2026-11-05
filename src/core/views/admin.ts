@@ -24,6 +24,9 @@ export type LogAction =
   | "testPost"
   | "cutoff"
   | "cutoffUndone"
+  // WEB-83: Switch community.
+  | "communitySwitched"
+  | "communitySwitchUndone"
   | "botToken"
   | "deviceRevoked"
   // WEB-78: the Mission pool.
@@ -41,6 +44,8 @@ const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
   "adminRemoved",
   "cutoff",
   "cutoffUndone",
+  "communitySwitched",
+  "communitySwitchUndone",
   "botToken",
   "deviceRevoked",
   "missionOff",
@@ -205,6 +210,10 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
       return [t("started fresh from launch")];
     case "cutoffUndone":
       return [t("undid the fresh start")];
+    case "communitySwitched":
+      return [t("switched the community: the next upload sets it")];
+    case "communitySwitchUndone":
+      return [t("undid the community switch")];
     case "deviceRevoked":
       return [
         t("revoked uploader "),
