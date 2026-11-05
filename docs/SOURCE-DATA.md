@@ -48,7 +48,8 @@ Times are Unix seconds. Any field can be missing in older releases.
 
 ## Internal shape
 `normalize` turns a file into a `Dataset` (`src/core/model.ts`); `merge` combines two of them into the same shape, so the state after many uploads is a `Dataset` too and WEB-05 can diff two per GUID.
-- `people[key]`: key is the BattleTag, or `aid:<accountId>` for someone known only through the community. `displayName` is resolved; `hasRecord: false` for friends seen only in `presence`; `removed[guid] = time`.
+- `people[key]`: key is the BattleTag, or `aid:<accountId>` for someone known only through the community. `displayName` is resolved: own display name > BattleTag name part > (no BattleTag) the name of their first character by name, as the addon's Linker does > "Unknown player"; `hasRecord: false` for friends seen only in `presence`; `removed[guid] = time`.
+- WEB-86: an `aid:<accountId>` person is merged into the BattleTag whose person carries the same account ID (`self.battleTag` with `self.accountId`, or a `people[battleTag]` record with `aid`), in any upload, as the addon's `Merge.absorb`: characters move over, the newer record's fields win, removals are kept. Feed days, feats and Doomsday goals stored under the `aid:` key move to the BattleTag too.
 - `characters[guid]`: the `Char` fields, all optional, plus `owner` (person key, undefined when unknown) and `hasRecord` (false for a stub). `professions` and `quests` are keyed by ID strings, `talents` is a list (also when the file has `{}`), `mainTree` the 1-based index into it with `mainTreeName` resolved.
 - `locations[guid] = { zone, seenAt }`, `presence[guid] = { battleTag, lastSeen }`.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
