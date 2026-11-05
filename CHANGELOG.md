@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.0 (2026-11-05)
 - Upload: a file without a community or guild picked in the addon is refused, the owner's too, so its characters stay off the site and out of Doomsday and the Discord boards. Once the community or guild is picked, the next upload counts, that day's progress included. Uploads of no community taken by an earlier version are refused again when the site starts.
 - Admin: the owner can move the site to another in-game community (Admin › Community › Switch community…), for example from the guild to a real community once the game allows one. Nothing is hidden: characters, Doomsday, feats, activity and recaps stay. The owner's next upload sets the new community; until then friends' uploads are refused and taken when sent again. Undo until that upload.
 
