@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.2 (2026-11-05)
 - Guild members who run the addon but aren't anyone's Battle.net friend now show by their first character's name instead of "Unknown player", everywhere a name shows. Once a file shows their BattleTag (their own upload, or a friend's with the addon version that shares BattleTags over the guild), they become one person with their BattleTag, keep their characters, activity and Doomsday, and can sign in when they have a character in the guild.
 
 ## v0.9.1 (2026-11-05)
