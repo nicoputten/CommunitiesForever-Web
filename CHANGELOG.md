@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Admin: the owner can move the site to another in-game community (Admin › Community › Switch community…), for example from the guild to a real community once the game allows one. Nothing is hidden: characters, Doomsday, feats, activity and recaps stay. The owner's next upload sets the new community; until then friends' uploads are refused and taken when sent again. Undo until that upload.
 
 ## v0.8.1 (2026-11-04)
 - Admin: the owner can download the launch-probe results that friends' uploads carry (Admin › Probe results), one entry per friend. Nobody else sees them.

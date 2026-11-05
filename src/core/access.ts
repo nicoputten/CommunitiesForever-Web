@@ -106,8 +106,8 @@ export function fileOwner(data: Dataset): string | undefined {
  * It must be their own file (`self.battleTag`) and of the site's community (`settings.clubId`). `community` is that of
  * the admin's uploads since the launch cut-off; undefined before the admin's first one, when only the admin can upload
  * and the admin's file sets it. After that the admin is held to it too (WEB-74): one file from another community (a
- * retail test) must not move the site or make its people members. Moving to a new community is "Start fresh", then
- * the admin's upload.
+ * retail test) must not move the site or make its people members. Moving to a new community is "Switch community"
+ * (WEB-83, keeps everything) or "Start fresh" (WEB-62, hides what came before), then the admin's upload.
  */
 export function checkFile(
   uploader: string,

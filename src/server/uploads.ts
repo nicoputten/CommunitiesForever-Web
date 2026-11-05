@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { and, asc, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, sql } from "drizzle-orm";
 import {
   battleTagKey,
   battleTagsOf,
@@ -22,6 +22,7 @@ import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
 import { dict, normalize, NormalizeError, type Unreadable } from "@/core/normalize";
 import { adminBattleTag, loadAccessList } from "./access";
+import { logChange, requireOwner } from "./admins";
 import { notifyBotEvents, recordMilestones } from "./bot";
 import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
@@ -29,6 +30,14 @@ import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings } from "./history";
 import { cutoffAt } from "./cutoff";
+import {
+  latestSwitch,
+  listSwitches,
+  removeSwitch,
+  storeSwitch,
+  switchedAfter,
+  type CommunitySwitch,
+} from "./communitySwitch";
 import { characters, locations, members, meta, people, presence, uploaderTokens, uploads } from "./db/schema";
 
 // The upload service (docs/ARCHITECTURE.md "Data flow"): raw uploads are stored first and are the source of truth;
@@ -268,18 +277,75 @@ function retry(earlier: UploadResult): boolean {
 }
 
 /**
- * The community of the admin's newest accepted upload since the launch cut-off that names one; undefined before that
- * (WEB-74: "Start fresh" lets the admin's next upload set the community again).
+ * The community of the admin's newest accepted upload since the launch cut-off and since the last community switch
+ * that names one; undefined before that (WEB-74: "Start fresh" lets the admin's next upload set the community again;
+ * WEB-83: so does "Switch community", without hiding anything).
  */
 function adminCommunity(db: Db | Tx, admin: string | undefined): string | undefined {
   if (admin === undefined) return undefined;
   const rows = db
     .select({ uploadedBy: uploads.uploadedBy, community: uploads.community })
     .from(uploads)
-    .where(and(eq(uploads.status, "ok"), isNotNull(uploads.community), gte(uploads.uploadedAt, cutoffAt(db))))
+    .where(
+      and(
+        eq(uploads.status, "ok"),
+        isNotNull(uploads.community),
+        gte(uploads.uploadedAt, cutoffAt(db)),
+        gt(uploads.id, switchedAfter(db)),
+      ),
+    )
     .orderBy(desc(uploads.id))
     .all();
   return rows.find((r) => sameBattleTag(r.uploadedBy, admin))?.community ?? undefined;
+}
+
+/** The site's community for the admin page (WEB-83): its id when set, and the switch still waiting for the owner. */
+export interface CommunityState {
+  /** The `settings.clubId` uploads are held to; undefined while not set. */
+  id?: string;
+  /** Its name (`settings.clubName`) from the merged data, when that is the same community. */
+  name?: string;
+  /** The newest switch, while the owner hasn't uploaded since (Undo is offered only then). */
+  pending?: CommunitySwitch;
+}
+
+export function communityState(db: Db | Tx, admin = adminBattleTag()): CommunityState {
+  const id = adminCommunity(db, admin);
+  if (id !== undefined) {
+    const merged = db.select({ data: meta.data }).from(meta).where(eq(meta.id, 1)).get()?.data.community;
+    return merged?.id === id && merged.name !== undefined ? { id, name: merged.name } : { id };
+  }
+  const last = latestSwitch(db);
+  return last !== undefined ? { pending: last } : {};
+}
+
+/**
+ * "Switch community" (WEB-83): from now on the community is not set, and the owner's next accepted upload sets it.
+ * Nothing is rebuilt or hidden. The owner only (OwnerOnlyError for anyone else); logged in Admin changes. False when the
+ * community is already not set (a stale button): nothing changes.
+ */
+export function switchCommunity(db: Db, by: string, now: number, admin = adminBattleTag()): boolean {
+  return db.transaction((tx) => {
+    requireOwner(tx, by, admin);
+    if (adminCommunity(tx, admin) === undefined) return false;
+    storeSwitch(tx, by, now);
+    logChange(tx, by, "communitySwitched", now);
+    return true;
+  });
+}
+
+/**
+ * Undo of a switch while the owner hasn't uploaded since (the owner only): the row goes and a rebuild reads the files
+ * sent meanwhile as if it never happened (a friend's file refused as "no community yet" counts again). False when
+ * there is nothing to undo.
+ */
+export function undoSwitchCommunity(db: Db, by: string, now: number, admin = adminBattleTag()): boolean {
+  requireOwner(db, by, admin);
+  const { pending } = communityState(db, admin);
+  if (pending === undefined || !removeSwitch(db, pending.id)) return false;
+  rebuild(db, admin);
+  logChange(db, by, "communitySwitchUndone", now);
+  return true;
 }
 
 /** Every BattleTag of an accepted file becomes a member; the first upload that named it is kept. */
@@ -407,7 +473,8 @@ export interface RebuildResult {
  * Recomputes the derived tables and members, and each upload's status, reason and summary, from all stored uploads
  * in upload order. Rejected uploads are read again too: after a site update a file with a newer schema may now be ok,
  * when it is the uploader's own and of the community. Whether the uploader may upload was checked when the file was
- * stored and is not asked again. Blocks and the guest list are not derived and stay as they are.
+ * stored and is not asked again. Blocks and the guest list are not derived and stay as they are. A community switch
+ * (WEB-83) only makes the community "not set" for the uploads after it: the uploads before it count as they did.
  */
 export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
   return db.transaction((tx) => {
@@ -421,7 +488,14 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     // WEB-62: uploads from before the launch cut-off count only for who may sign in (members); the rest are read
     // without what dates from before it. Their rows (status, summary) stay as they were.
     const cutoff = cutoffAt(tx);
+    // WEB-83: each community switch starts the community anew for the uploads after it; nothing before it changes.
+    const switches = listSwitches(tx);
+    let nextSwitch = 0;
     for (const { id } of ids) {
+      while ((switches[nextSwitch]?.afterUpload ?? Infinity) < id) {
+        community = undefined;
+        nextSwitch++;
+      }
       const row = tx
         .select({ raw: uploads.raw, uploadedBy: uploads.uploadedBy, uploadedAt: uploads.uploadedAt })
         .from(uploads)

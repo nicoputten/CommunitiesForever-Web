@@ -570,6 +570,22 @@ export const launchCutoff = sqliteTable("launch_cutoff", {
   setAt: integer("set_at").notNull(),
 });
 
+/**
+ * Community switches (WEB-83): the owner moved the site to another in-game community (another `settings.clubId`, for
+ * example from the guild to a real community). Each row makes the community "not set" for every upload after
+ * `afterUpload` (the newest upload id when it was pressed); the owner's next accepted upload sets it again. Nothing is
+ * hidden: uploads from before keep counting. Not derived: the rebuild reads these rows. Undo (only while the owner
+ * hasn't uploaded since) removes the row.
+ */
+export const communitySwitches = sqliteTable("community_switches", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** The newest upload id when it was pressed (0 before any upload): uploads after it start without a community. */
+  afterUpload: integer("after_upload").notNull(),
+  /** The owner's BattleTag, and when (Unix seconds, UTC). */
+  setBy: text("set_by").notNull(),
+  setAt: integer("set_at").notNull(),
+});
+
 /** One row (id 1): when the site started keeping recaps; the first recap is the first moment after it. */
 export const recapStart = sqliteTable("recap_start", {
   id: integer("id").primaryKey(),
