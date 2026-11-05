@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import type { Recap } from "@/core/recap/types";
 import { listMembers, putGuest } from "@/server/access";
 import { clearCutoff, storeCutoff } from "@/server/cutoff";
@@ -50,7 +51,7 @@ let db: Db;
 
 beforeEach(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cf-web-"));
-  db = openDatabase(path.join(dir, "test.sqlite"));
+  db = beforeRosters(openDatabase(path.join(dir, "test.sqlite")));
 });
 
 afterEach(() => {

@@ -40,6 +40,14 @@ export const uploads = sqliteTable(
     unreadable: text("unreadable", { enum: ["not-ledger", "damaged", "newer-format"] }),
     /** The uploader token (device) that sent it (WEB-33); null for uploads from the upload page. */
     deviceId: integer("device_id"),
+    /**
+     * The file's roster (WEB-85, addon CF-89 `global.members`): the community's members' GUIDs as the uploader saw them;
+     * null when the file has none (addon v1.2.1 and older), could not be read, or holds none of the uploader's own
+     * characters. Proof of who is a member (src/core/members.ts, src/server/uploads.ts `memberProof`).
+     */
+    roster: text("roster", { mode: "json" }).$type<string[]>(),
+    /** The newest `seenAt` in the roster: how fresh it is, so a friend's older list never outweighs the owner's. */
+    rosterSeenAt: integer("roster_seen_at"),
   },
   // The same file from the same uploader is a no-op (WEB-06: per uploader, so a file rejected as someone else's
   // does not block its owner from uploading it).
@@ -89,7 +97,7 @@ export const meta = sqliteTable("meta", {
 // Access (WEB-06, docs/ARCHITECTURE.md "Access"). Keys are battleTagKey() (src/core/access.ts); `battle_tag` keeps the
 // BattleTag as written.
 
-/** Members: every BattleTag in an accepted upload. Derived: rebuilt with the uploads. */
+/** Members: the BattleTags accepted uploads make members (WEB-85, src/core/members.ts). Rebuilt with the uploads. */
 export const members = sqliteTable("members", {
   key: text("key").primaryKey(),
   battleTag: text("battle_tag").notNull(),
@@ -97,6 +105,16 @@ export const members = sqliteTable("members", {
   firstUpload: integer("first_upload")
     .notNull()
     .references(() => uploads.id),
+});
+
+/**
+ * One row (id 1, WEB-85): the newest upload from before WEB-85, written by its migration. Without a roster, uploads up
+ * to it made every BattleTag they named a member (the old rule, kept until the first roster); later ones only their
+ * uploader. 0 on a site that had no uploads then.
+ */
+export const membersBefore = sqliteTable("members_before", {
+  id: integer("id").primaryKey(),
+  lastUpload: integer("last_upload").notNull(),
 });
 
 /** Blocked BattleTags (admin page). Kept apart from members, so a rebuild never lifts a block. */

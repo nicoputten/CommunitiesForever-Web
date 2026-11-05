@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, type Page, test, type TestInfo } from "@playwright/test";
 import { E2E } from "../../playwright.config";
 import { expectTouchTargets, isPhone } from "../design/checks";
+import { E2E_MEMBERS } from "./members";
 import { signInAs } from "./session";
 
 // WEB-19: the upload page against the real server, at desktop and phone size. The e2e database lives on between
@@ -14,25 +15,32 @@ const zone = (page: Page) => page.locator("[data-state]");
 /** The zone's visible text, without the status region that reads the same words out. */
 const shown = (page: Page) => zone(page).locator(":scope > p:not([role=status])");
 
-const MEMBERS: Record<string, string> = { desktop: "Desktop#4101", phone: "Phone#4102" };
-const memberOf = (info: TestInfo) => MEMBERS[info.project.name] ?? "Desktop#4101";
+const member = (info: TestInfo) => E2E_MEMBERS[info.project.name] ?? E2E_MEMBERS.desktop!;
+const memberOf = (info: TestInfo) => member(info).battleTag;
+/** The character that makes them a member (WEB-85): on the seed's roster, in every file of theirs. */
+const memberChar = (guid: string) =>
+  `["${guid}"] = { name = "E2E Member", level = 10, classFile = "WARRIOR", updatedAt = 1 }`;
 
-/** The admin's file that names the members, in the sample's community (WEB-74: the admin is held to it; the same
- * bytes every run: a no-op again). */
+/** The admin's file that names the members with their character, in the sample's community (WEB-74: the admin is
+ * held to it; the same bytes every run: a no-op again). */
 const ADMIN_FILE = Buffer.from(`CommunitiesForeverDB = { global = { schemaVersion = 1,
   settings = { clubId = "40000001", clubName = "Doombringers" },
   self = { battleTag = "${E2E.admin}", version = 1000, chars = {} },
-  people = { ["Desktop#4101"] = { version = 1 }, ["Phone#4102"] = { version = 1 } } } }`);
+  people = { ${Object.values(E2E_MEMBERS)
+    .map((m) => `["${m.battleTag}"] = { version = 1, chars = { ${memberChar(m.guid)} } }`)
+    .join(", ")} } } }`);
 
 let version = Date.now();
 
 /** A member's own file with one new character, so the upload changes something. Versions only go up. */
-function ownFile(battleTag: string): Buffer {
+function ownFile(info: TestInfo): Buffer {
+  const { battleTag, guid } = member(info);
   version = Math.max(version + 1, Date.now());
   const id = `${version}${Math.floor(Math.random() * 1e6)}`;
   return Buffer.from(`CommunitiesForeverDB = { global = { schemaVersion = 1,
     settings = { clubId = "40000001", clubName = "Doombringers" },
     self = { battleTag = "${battleTag}", version = ${version}, chars = {
+      ${memberChar(guid)},
       ["Player-1-${id}"] = { name = "E2E Character", level = 12, classFile = "MAGE", updatedAt = ${version} } } } } }`);
 }
 
@@ -61,7 +69,7 @@ test.describe("upload page, as a member", () => {
     await expect(page.getByText("WTF › Account › [ACCOUNT] › SavedVariables")).toBeVisible();
     await expect(page.getByText(/type \/reload\. Upload after that/)).toBeVisible();
 
-    await choose(page, LEDGER, ownFile(memberOf(info)));
+    await choose(page, LEDGER, ownFile(info));
     await expect(page).toHaveURL(/\/upload\/\d+$/);
     const id = page.url().split("/").pop();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Session report");
@@ -105,7 +113,7 @@ test.describe("upload page, as a member", () => {
   });
 
   test("nothing new: the same file again says when it came before", async ({ page }, info) => {
-    const file = ownFile(memberOf(info));
+    const file = ownFile(info);
     await page.goto("/upload");
     await choose(page, LEDGER, file);
     await expect(page).toHaveURL(/\/upload\/\d+$/);

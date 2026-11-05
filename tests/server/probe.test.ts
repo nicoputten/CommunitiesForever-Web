@@ -4,6 +4,7 @@ import path from "node:path";
 import { encode } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeRosters } from "./beforeRosters";
 import { GET as probeRoute } from "@/app/api/admin/probe/route";
 import { putGuest, touchLastSeen } from "@/server/access";
 import { appointAdmin } from "@/server/admins";
@@ -36,7 +37,7 @@ beforeAll(() => {
   process.env.DATA_DIR = dir;
   process.env.AUTH_SECRET = SECRET;
   process.env.ADMIN_BATTLETAG = OWNER;
-  const db = getDb();
+  const db = beforeRosters(getDb());
   putGuest(db, "Gwen#4004", true, OWNER);
   touchLastSeen(db, "Gwen#4004", 10);
   appointAdmin(db, "Gwen#4004", OWNER, 10);

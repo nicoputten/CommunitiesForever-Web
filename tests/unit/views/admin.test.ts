@@ -99,6 +99,9 @@ describe("co-admins (WEB-64)", () => {
     // WEB-83.
     expect(text({ ...entry, action: "communitySwitched" })).toBe("switched the community: the next upload sets it");
     expect(text({ ...entry, action: "communitySwitchUndone" })).toBe("undid the community switch");
+    expect(text({ ...entry, action: "memberRemoved", target: "Eve#5005" })).toBe(
+      "removed member [Eve#5005]: no character in the community",
+    );
     expect(text({ ...entry, action: "deviceRevoked", target: "BOB-PC", detail: "Bob#2002" })).toBe(
       "revoked uploader [BOB-PC] of Bob",
     );

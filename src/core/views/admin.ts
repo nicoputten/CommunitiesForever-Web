@@ -29,6 +29,8 @@ export type LogAction =
   | "communitySwitchUndone"
   | "botToken"
   | "deviceRevoked"
+  // WEB-85: a member with no character in the community, removed when the owner's upload brought the roster.
+  | "memberRemoved"
   // WEB-78: the Mission pool.
   | "missionOff"
   | "missionOn"
@@ -214,6 +216,8 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
       return [t("switched the community: the next upload sets it")];
     case "communitySwitchUndone":
       return [t("undid the community switch")];
+    case "memberRemoved":
+      return [t("removed member "), b(target), t(": no character in the community")];
     case "deviceRevoked":
       return [
         t("revoked uploader "),
