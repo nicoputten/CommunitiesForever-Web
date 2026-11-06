@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
+    "import:items": "node --import ./scripts/ts-hooks.mjs scripts/import-items.ts",
     "test:design": "vitest run tests/design && playwright test -c playwright.design.config.ts"
   },
   "dependencies": {

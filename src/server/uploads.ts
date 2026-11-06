@@ -36,6 +36,7 @@ import { logChange, requireOwner } from "./admins";
 import { notifyBotEvents, recordMilestones } from "./bot";
 import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
+import { clearRecipes, recordRecipes } from "./recipes";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings, relinkHistory } from "./history";
@@ -248,6 +249,8 @@ export function upload(
     // everything is new.
     const reached = recordFeats(tx, { id, uploadedAt: now }, before?.data, after, summary, result.feeds);
     events = recordMilestones(tx, { id, uploadedAt: now }, reached, before === undefined);
+    // WEB-90: who knows which recipe; new rare finds wait for the bot (Part D).
+    recordRecipes(tx, { id, uploadedAt: now }, after, true);
     const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
@@ -689,6 +692,7 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
     const legacyUntil = lastUploadBefore(tx);
     tx.delete(members).run();
     clearHistory(tx);
+    clearRecipes(tx);
     // WEB-62: uploads from before the launch cut-off count only for who may sign in (members); the rest are read
     // without what dates from before it. Their rows (status, summary) stay as they were.
     const cutoff = cutoffAt(tx);
@@ -770,6 +774,8 @@ export function rebuild(db: Db, admin = adminBattleTag()): RebuildResult {
       recordHistory(tx, result, after, kept, id);
       // The same feats again, never their events (WEB-56).
       recordFeats(tx, { id, uploadedAt: row.uploadedAt }, previous, after, diff(previous, after), result.feeds);
+      // The same recipes again, never their rare finds (WEB-90).
+      recordRecipes(tx, { id, uploadedAt: row.uploadedAt }, after, false);
       tx.update(uploads)
         .set({
           status: "ok",

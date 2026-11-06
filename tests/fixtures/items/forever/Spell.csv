@@ -1,0 +1,4 @@
+ID,NameSubtext_lang,Description_lang,AuraDescription_lang
+9201,,"Increases your test skill by $s1.",
+9202,,"Restores ${$s1}.1 mana and $s2 health.",
+9203,,"Lasts $d.",

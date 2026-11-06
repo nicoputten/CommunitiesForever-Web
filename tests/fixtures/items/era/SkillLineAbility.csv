@@ -1,0 +1,10 @@
+AbilityVerb_lang,AbilityAllVerb_lang,ID,SkillLine,Spell,MinSkillLineRank,AcquireMethod,TrivialSkillLineRankHigh,TrivialSkillLineRankLow
+,,1,197,9001,1,0,80,60
+,,2,197,9002,1,1,40,20
+,,3,197,9003,1,0,100,80
+,,4,197,9004,1,0,120,100
+,,5,197,9005,1,0,90,70
+,,6,197,9006,1,0,70,50
+,,7,197,9007,1,0,110,95
+,,8,197,9008,1,0,60,45
+,,10,333,9009,1,0,130,110

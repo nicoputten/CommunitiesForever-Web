@@ -268,3 +268,14 @@ Nico (2026-11-06) chose pool version 3: 83 missions the addon now tracks (60 dai
 - **Labels and texts** come from the pool (already in the catalogue since WEB-80); no text is typed twice.
 - **Compatibility (rule 4):** an addon on pool version 2 (v1.3.2) keeps drawing and recording version 2 (`pool = 2` on its days and weeks); the site shows and scores those as version 2. Where the site draws itself (the Mission pool page, today before a friend's file recorded it), it uses version 3. A steered day of the Mission pool reaches an old addon only when all its ids are in version 2; otherwise that addon keeps its normal draw (its own rule, CF-68). The bot (v0.5.2) gets ids, texts and labels from the site, all already in the catalogue, so nothing changes for it.
 - Done when: the golden cases pass unchanged; unit tests updated for the new pool sizes; the Mission pool page and the design sample follow; screenshot baselines change only after Nico's OK.
+
+## E15 Recipes (2026-11-06)
+Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
+
+### WEB-90 Item database, import and learned recipes (Part B)
+- **Import (B1):** `npm run import:items`, by hand once per patch, idempotent. The Forever client's DB2 tables from wago.tools (product `wowf`, build 1.60.1.70790), Classic Era's for what is Forever's own and what cmangos' spells teach, cmangos classic-db (GPL-3.0, attributed in `docs/SOURCE-DATA.md`) for where recipes are learned. Never Wowhead. Downloads stay outside the repo; the tests use invented fixtures. Removed and unobtainable recipes count nowhere.
+- **Tables (B2):** `items`, `recipes` (four thresholds, green = (yellow + grey) / 2), `recipe_reagents`, `recipe_sources` (`is_rare` for drop and rep), `character_professions`, `character_recipes` (`first_seen_at`); Forever's own recipes and items are stored from the uploaded pairs.
+- **Icon cache (B3):** fetched once from the CDN (config `ICON_CDN_URL`, Blizzard's render CDN by default), kept and served by the site, 56 px, the game's question mark when missing.
+- **Upload processing (B4):** per character, new recipes inserted with `first_seen_at`, vanished ones removed, skill, link and `scanned_at` updated; the first scan of a character or profession is the baseline; new rare finds per character per upload collected in `recipe_finds` for Part D. Nothing is posted.
+- **Compatibility (rule 4):** every released addon sends no recipes: nothing changes for them.
+- Done when: unit tests for the import parsing (fixtures), the threshold maths, the diff and baseline rule, rare finds and Forever's own pairs; lint, tests and build pass.
