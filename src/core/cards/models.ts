@@ -488,8 +488,8 @@ export function boardHeight(spec: BoardCardSpec): number {
 /**
  * The board images of a `doomsdayBoard` or `doomsdayBoardUpdate` event as it was at `at` (its creation), in realm
  * time (WEB-87): a row for every friend who has done a goal today, in the board's order, 8 to a page, at most 10
- * pages. Friends with Doomsday data who did nothing are one line on the last page; friends without data are left out
- * (the news line counts them). Always at least one page.
+ * pages. Friends with Doomsday data who did nothing are one line on the last page; while nobody has done anything,
+ * everyone with data is a row. Friends without data are left out (the news line counts them). Always one page or more.
  */
 export function boardCards(
   data: BoardData & { final?: boolean; summary?: ReturnType<typeof boardSummary> },
@@ -513,7 +513,9 @@ export function boardCards(
       : fresh
         ? `resets ${resetAt}`
         : `resets in ${duration(data.end - at)}`;
-  const playing = data.friends.filter((f) => (f.doneCount ?? 0) > 0);
+  // Nico (2026-11-06): until anyone has a goal done (the reset), everyone with data is a row at 0.
+  const started = data.friends.filter((f) => (f.doneCount ?? 0) > 0);
+  const playing = started.length > 0 ? started : data.friends;
   const idle = data.friends.length - playing.length;
   const shown = playing.slice(0, BOARD_ROWS * BOARD_PAGES);
   const more = playing.length - shown.length;

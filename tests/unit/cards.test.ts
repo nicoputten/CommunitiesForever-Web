@@ -164,9 +164,14 @@ describe("the board images (WEB-87)", () => {
     expect(cardSize(only!)).toEqual({ width: 800, height: 560 });
   });
 
-  it("leaves the line out when everyone played, and shows the line alone when nobody did", () => {
+  it("leaves the line out when everyone played, and rows everyone at 0 while nobody did", () => {
     expect(cards(board(2, 0))[0]!.rest).toBeUndefined();
-    expect(cards(board(0, 5))).toMatchObject([{ rows: [], rest: "+5 haven't started" }]);
+    const reset = cards(board(0, 10));
+    expect(reset.map((p) => [p.page, p.rows.length, p.rest])).toEqual([
+      ["1/2", 8, undefined],
+      ["2/2", 2, undefined],
+    ]);
+    expect(reset[0]!.rows[0]).toMatchObject({ name: "Idle 1", today: { pve: 0, pvp: 0 } });
     expect(cards(board(0, 0))).toMatchObject([{ rows: [] }]);
     expect(cards(board(0, 0))[0]!.rest).toBeUndefined();
   });
