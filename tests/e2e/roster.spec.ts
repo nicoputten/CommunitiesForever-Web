@@ -51,8 +51,12 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
     await expect(band).toHaveAttribute("aria-label", new RegExp(label));
     await expect(band).toHaveAttribute("aria-label", new RegExp(name));
   }
-  // Full names everywhere, never cut (WEB-65).
-  await expect(bands.locator('button[data-band="rfc"]')).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
+  // The full text where it fits; a band too narrow for it on the level scale shows the name (WEB-88), not on a phone.
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveText(
+    isPhone(page) ? "Ragefire Chasm 13–18 · 2" : "Ragefire Chasm",
+    { useInnerText: true },
+  );
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);

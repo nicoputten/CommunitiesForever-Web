@@ -174,17 +174,19 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: dungeon bands on the level scale, one per row, lowest first, never cut (WEB-65, WEB-88)", async ({
+test("roster: dungeon bands on the level scale, one per row, lowest first, cut text on hover (WEB-65, WEB-88)", async ({
   page,
 }) => {
   test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
   const band = (id: string) => bands.locator(`button[data-band="${id}"]`);
-  await expect(band("rfc")).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
-  await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral 35–45 · 3 · 1 run", {
-    useInnerText: true,
-  });
+  // A narrow band shows the name alone, everything in its accessible name and on hover.
+  await expect(band("rfc")).toHaveText("Ragefire Chasm", { useInnerText: true });
+  await expect(band("rfc")).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
+  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18 · 2");
+  await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral", { useInnerText: true });
+  await expect(band("sm-cathedral")).toHaveAttribute("aria-label", "Scarlet Monastery: Cathedral 35–45 · 3 · 1 run");
   await expectStyles(band("rfc").locator("[data-bar]"), {
     "border-radius": "var(--r-btn)",
     "background-color": "var(--surface-row)",
@@ -205,23 +207,31 @@ test("roster: dungeon bands on the level scale, one per row, lowest first, never
         top: r.top,
         // The band from its min to its max level, on the track's scale.
         placed: Math.abs(r.left - at(min!)) < 1 && Math.abs(r.right - at(max!)) < 1,
-        // The text is whole: inside the band, or beside it within the row.
-        whole:
-          t.left >= box.left - 0.5 &&
-          t.right <= box.right + 0.5 &&
-          (!bar.contains(label) || (bar.scrollWidth <= bar.clientWidth && t.right <= r.right)),
-        inside: bar.contains(label),
+        // The text stays inside its band; a narrow band shows the name alone, the full text on hover.
+        inside: t.left >= r.left && t.right <= r.right,
+        fit: label.dataset.fit,
+        shown: label.textContent,
+        cut: label.scrollWidth > label.clientWidth,
+        title: li.querySelector("button")!.title,
+        full: li.querySelector("button")!.getAttribute("aria-label"),
       };
     });
     return rows;
   });
   expect(layout.filter((r) => !r.placed).map((r) => r.id)).toEqual([]);
-  expect(layout.filter((r) => !r.whole).map((r) => r.id)).toEqual([]);
+  expect(layout.filter((r) => !r.inside).map((r) => r.id)).toEqual([]);
+  for (const r of layout) {
+    expect(r.title).toBe(r.fit === "full" ? "" : r.full);
+    // The full text only where it fits; the name never gives way to the range or count.
+    if (r.fit === "full") expect(r.cut).toBe(false);
+    else expect(r.shown).not.toMatch(/\d/);
+  }
   expect(layout.every((r, i) => i === 0 || r.top > layout[i - 1]!.top)).toBe(true);
   const mins = layout.map((r) => r.min);
   expect(mins).toEqual([...mins].sort((a, b) => a - b));
-  // Both: text inside a wide band, beside a narrow one.
-  expect(new Set(layout.map((r) => r.inside))).toEqual(new Set([true, false]));
+  // Both: the whole text in a wide band, the name alone in a narrow one (Ragefire Chasm, 13–18).
+  expect(layout.find((r) => r.id === "rfc")).toMatchObject({ fit: "name", shown: "Ragefire Chasm" });
+  expect(layout.some((r) => r.fit === "full")).toBe(true);
   await expectAccessible(page);
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
   await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot("roster-bands.png");

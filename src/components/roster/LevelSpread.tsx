@@ -93,6 +93,7 @@ export function LevelSpread({
       return {
         id: b.dungeon.id,
         name: b.dungeon.name,
+        short: b.dungeon.shortName,
         range: `${min}–${max}`,
         fits: b.fits.length,
         ...(b.missing.length === 0 ? {} : { missing: `no ${joinNames([...b.missing])} in range` }),

@@ -171,7 +171,7 @@
 
 /* The dungeons that fit, one per row under the track, lowest level first (WEB-88, Nico 2026-11-06; before: chips side
    by side, WEB-65): each band from its min to its max level on the track's scale (`--from`, `--to`: 0–1 of the row's
-   width), the full name, range, count and runs inside, or beside it when it is too narrow, never cut. */
+   width), the name, range, count and runs inside, cut with "…" when it is too narrow (the full text on hover). */
 .bands {
   display: flex;
   flex-direction: column;
@@ -188,7 +188,6 @@
 
 .band {
   display: flex;
-  gap: var(--s-1-5);
   width: fit-content;
   margin-left: calc(var(--from) * 100cqw);
   padding: 0;
@@ -203,13 +202,6 @@
   cursor: pointer;
 }
 
-/* Text left of the band: the band ends at its max level. */
-.bandItem[data-side="left"] .band {
-  flex-direction: row-reverse;
-  margin-left: auto;
-  margin-right: calc((1 - var(--to)) * 100cqw);
-}
-
 .bar {
   display: flex;
   align-items: center;
@@ -222,14 +214,18 @@
   transition: border-color var(--dur-fast) var(--ease-out);
 }
 
-/* Beside the band, as tall as the text inside one. */
 .bandLabel {
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.band > .bandLabel {
-  padding: var(--s-1) 0;
-  border-block: var(--border) solid transparent;
+/* A hidden copy of a band's text, to measure what fits (DungeonBands). */
+.probe {
+  position: absolute;
+  visibility: hidden;
+  overflow: visible;
 }
 
 .band:hover,
@@ -446,14 +442,9 @@
     position: static;
   }
 
-  .band,
-  .bandItem[data-side="left"] .band {
-    flex-direction: row;
-    margin: 0;
-  }
-
   .band {
     align-items: center;
+    margin: 0;
     width: 100%;
     min-height: var(--size-touch);
     padding: var(--s-1) var(--s-2);
@@ -476,9 +467,8 @@
     display: contents;
   }
 
-  .band > .bandLabel {
-    padding: 0;
-    border: 0;
+  .bandLabel {
+    white-space: normal;
   }
 
   .bandsFoot {
