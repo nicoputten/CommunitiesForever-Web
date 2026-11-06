@@ -84,8 +84,9 @@ test("admin: reduced motion", async ({ page }) => {
 });
 
 test("admin: screenshot", async ({ page }) => {
-  await openScreen(page, "/admin");
-  await expectScreenshot(page, "admin");
+  const open = () => openScreen(page, "/admin");
+  await open();
+  await expectScreenshot(page, "admin", [], open);
 });
 
 test("admin: add-guest error", async ({ page }) => {
