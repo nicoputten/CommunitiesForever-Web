@@ -295,3 +295,10 @@ Boards RC01–RC06 (`design/boards/recipes-character`, `recipes-search`, `recipe
 - **States (C6):** Nobody has; one character (Known means "this character knows it", "as of" when stale); no results with Clear filters; "No recipes scanned yet" with "186 recipes to learn" and "See all recipes"; skeleton rows while loading.
 - **Counting:** every character counts; only obtainable recipes count in "N of M" and Nobody has; Forever's own recipes (no name yet: "Item 279972", neutral icon) count in the totals but never as Nobody has while their source is unknown. Difficulty dots compare each character's skill with the four thresholds. Never gold, BattleTags or copy longer than the boards'.
 - Done when: the handoff's C7 checklist; unit tests of the view models, e2e of the main flow (desktop and phone), design checks with baselines Nico approved; lint, tests and build pass.
+
+### WEB-93 The bot's recipes: rare-find posts and /craft (Part D, site side; pairs with the bot's BOT-25)
+Nico (2026-11-07) gave Part D to the WEB-90 worker. Board RC08; contract `docs/BOT-API.md` "Recipes".
+- **Rare finds:** a `recipeFinds` bot event per character per accepted upload with new rare finds (WEB-90's `recipe_finds`: every source a drop or rep, never a first scan, never a trainer, vendor or quest recipe), in the upload's transaction, never on a rebuild; under the feats switch and in the feats channel. Acknowledging it marks the finds posted.
+- **/craft:** `lookup/craftable` (autocomplete over what recipes make) and `lookup/craft` (the item and its quality colour, the profession and skill, every crafter with a difficulty colour, the reagents with counts, the recipe's drawer URL, where it is learned, the public icon path). 404 when no recipe makes it.
+- Names only, never BattleTags or gold. WEB-92 owns the professions pages and the item tooltip: nothing of them changes here.
+- Done when: tests that a first scan and a trainer recipe make no event, a drop recipe makes one that is never made again, and the three `/craft` answers; lint, tests and build pass.

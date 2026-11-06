@@ -13,6 +13,7 @@ import { featCardScore, type FeatFields } from "@/core/doomsday/feats";
 import type { Db } from "./db";
 import { botEvents, botTokens } from "./db/schema";
 import { getBotSettings } from "./discord";
+import { markFindsPosted } from "./recipeBot";
 import { hashToken } from "./uploader";
 
 // The Discord bot's token and event feed (WEB-38, docs/BOT-API.md). One token, made and revoked by the admin, shown
@@ -146,6 +147,8 @@ export function acknowledge(db: Db, id: number, messageId: string, now: number):
     if (row.postedAt !== null) return row.messageId === messageId ? "ok" : "conflict";
     if (row.createdAt < now - EVENT_TTL_SECONDS) return "expired";
     tx.update(botEvents).set({ postedAt: now, messageId }).where(eq(botEvents.id, id)).run();
+    // WEB-93: a rare-find post's finds are posted.
+    if (row.type === "recipeFinds") markFindsPosted(tx, row.data, now);
     return "ok";
   });
 }

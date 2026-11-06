@@ -37,6 +37,7 @@ import { notifyBotEvents, recordMilestones } from "./bot";
 import { updateDoomsdayBoard } from "./doomsdayPosts";
 import { recordFeats } from "./feats";
 import { clearRecipes, recordRecipes } from "./recipes";
+import { recordRecipeFinds } from "./recipeBot";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
 import { clearHistory, recordFeeds, recordGoals, recordSightings, relinkHistory } from "./history";
@@ -250,7 +251,9 @@ export function upload(
     const reached = recordFeats(tx, { id, uploadedAt: now }, before?.data, after, summary, result.feeds);
     events = recordMilestones(tx, { id, uploadedAt: now }, reached, before === undefined);
     // WEB-90: who knows which recipe; new rare finds wait for the bot (Part D).
-    recordRecipes(tx, { id, uploadedAt: now }, after, true);
+    const recipeChanges = recordRecipes(tx, { id, uploadedAt: now }, after, true);
+    // WEB-93: the bot's rare-find posts, one per character (Part D).
+    if (recordRecipeFinds(tx, { id, uploadedAt: now }, recipeChanges.rare, after)) events = true;
     const ok: UploadResult = { ...base, status: "ok", summary, counts };
     if (previous !== undefined) ok.previousUploadAt = previous.uploadedAt;
     return ok;
