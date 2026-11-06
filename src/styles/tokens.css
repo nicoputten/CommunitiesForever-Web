@@ -497,11 +497,8 @@
   --gap-badge: rgba(224, 138, 74, 0.18); /* professions: "Gap" status badge */
   --gap-card-line: rgba(224, 138, 74, 0.45); /* professions: card of a gap */
   --gap-card-bg: linear-gradient(180deg, rgba(224, 138, 74, 0.07), var(--surface) 60%); /* professions */
-  --line-recipe: rgba(212, 175, 106, 0.35); /* professions: dashed recipe search frame */
   --input-bg: #0b1220; /* professions: recipe search field */
   --line-input: rgba(174, 182, 195, 0.2); /* professions: recipe search field */
-  --size-recipe: 42px; /* professions: recipe search field height */
-  --size-recipe-min: 280px; /* professions: recipe search field min width */
   --size-skill-name: 140px; /* professions: name column of a skill bar (board 96 px, full names: DESIGN.md §11) */
   --size-skill-value: 62px; /* professions: "160 / 225" column */
   --size-skill-bar: 7px; /* professions: skill bar height */
@@ -951,4 +948,83 @@
   --size-done-bar: 70px; /* mission-pool: the Done bar */
   --size-done-bar-h: 6px;
   --size-pick: 400px; /* mission-pool-steering: the Pick… list */
+  /* Recipes (WEB-92, boards recipes-character, recipes-search, recipes-page, recipes-drawer, recipes-phone,
+     recipes-states). Item quality: the game's colours (warcraft.wiki.gg "Quality", src/core/gamedata/items.ts) for
+     icon borders; rare and epic names use the boards' lighter text colours on dark. */
+  --quality-poor: #9d9d9d;
+  --quality-common: #ffffff;
+  --quality-uncommon: #1eff00;
+  --quality-rare: #0070dd;
+  --quality-epic: #a335ee;
+  --quality-legendary: #ff8000;
+  --quality-artifact: #e6cc80;
+  --quality-heirloom: #00ccff;
+  --quality-rare-text: #4da3ff; /* recipes-page: Mooncloth Robe */
+  --quality-epic-text: #c26bff; /* recipes-page: Robe of the Archmage */
+  /* Recipe difficulty: the game's trade skill colours (recipes-page skill numbers and dots) */
+  --skill-orange: #ff8040;
+  --skill-yellow: #ffff00;
+  --skill-green: #40bf40;
+  --skill-grey: #808080;
+  --skill-sep: #4a5468; /* the "·" between the four numbers */
+  --size-skill-dot: 8px;
+  --ring-skill-dot: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  /* The item tooltip in the game's look (recipes-drawer: "the one place the site copies the game look") */
+  --surface-game: linear-gradient(180deg, rgba(9, 13, 26, 0.98), rgba(4, 7, 16, 0.98));
+  --line-game: #5e6a80;
+  --shadow-game: 0 10px 26px rgba(0, 0, 0, 0.6);
+  --r-game: 5px;
+  --fs-game: 13px;
+  --fs-game-title: 15px;
+  --lh-game: 1.42;
+  --game-text: #ffffff;
+  --game-green: #1eff00;
+  --game-yellow: #ffd100;
+  --game-muted: #b8b8b8;
+  --size-game-tooltip: 300px;
+  --size-game-tooltip-sm: 240px; /* a reagent's */
+  --s-2-25: 9px; /* the tooltip's padding */
+  --s-2-75: 11px;
+  /* Item icons (border = quality) */
+  --icon-bg: linear-gradient(145deg, #3a3226, #121212);
+  --size-item-icon: 30px; /* a table row, Learn from */
+  --size-item-icon-reagent: 34px;
+  --size-item-icon-result: 36px; /* a search result, a phone row */
+  --size-item-icon-drawer: 48px;
+  /* The live search on the Professions page (recipes-search) */
+  --size-search-lg: 48px;
+  --line-search: rgba(212, 175, 106, 0.45);
+  --surface-search: #0b111c;
+  --shadow-results: 0 20px 50px rgba(0, 0, 0, 0.55);
+  --tint-result: rgba(212, 175, 106, 0.12);
+  --size-result: 52px;
+  --size-results-top: 54px;
+  --size-recipe-line: 28px; /* a card's "112 of 185 recipes ›" */
+  --size-recipe-sub: 32px; /* the character page's "86 recipes ›" */
+  --size-prof-label: 120px; /* recipes-character: the professions box's name column */
+  /* The profession page (recipes-page) */
+  --size-crafters: 520px;
+  --size-filter: 40px;
+  --size-filter-search: 240px;
+  --surface-filter: #0e1626;
+  --tint-tab: rgba(212, 175, 106, 0.18);
+  --line-group: rgba(212, 175, 106, 0.2);
+  --tint-row-open: rgba(212, 175, 106, 0.1);
+  --size-recipe-row: 45px;
+  --size-col-icon: 46px;
+  --size-col-skill: 150px;
+  --size-col-known: 220px;
+  --size-col-source: 230px;
+  /* The recipe drawer (recipes-drawer) and its phone sheet (recipes-phone) */
+  --size-drawer: 440px;
+  --surface-drawer: #0a101b;
+  --line-drawer: rgba(212, 175, 106, 0.3);
+  --size-drawer-close: 36px;
+  --size-drawer-row: 40px;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow-sheet-lg: 0 -20px 50px rgba(0, 0, 0, 0.6);
+  --size-sheet-top: 120px; /* recipes-phone: the drawer sheet's top edge */
+  --size-grab: 40px;
+  --size-grab-h: 4px;
+  --grab: #4a5468;
 }

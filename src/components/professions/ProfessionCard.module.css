@@ -113,3 +113,29 @@
     min-height: var(--size-touch);
   }
 }
+
+/* "112 of 185 recipes ›" at the bottom of a crafting card (WEB-92, board recipes-search). */
+.recipes {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-recipe-line);
+  font-size: var(--fs-meta);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.recipes b {
+  font-weight: var(--fw-semibold);
+  color: var(--gold-bright);
+}
+
+.recipes:hover {
+  color: var(--gold-bright);
+}
+
+@media (max-width: 767px) {
+  .recipes {
+    min-height: var(--size-touch);
+  }
+}

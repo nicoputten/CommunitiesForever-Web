@@ -1,0 +1,195 @@
+/* The profession page's recipe table (WEB-92, board recipes-page; phone rows: recipes-phone; skeleton rows:
+   recipes-states "Loading"). */
+
+.table {
+  width: 100%;
+  font-size: var(--fs-body);
+  color: var(--text-chip);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    var(--size-col-icon) minmax(0, 1.4fr) var(--size-col-skill) minmax(var(--size-col-known), 1fr)
+    var(--size-col-source);
+  align-items: center;
+}
+
+.head .grid {
+  border-bottom: var(--border) solid var(--line-control);
+}
+
+.th {
+  padding: var(--s-2) var(--s-2-5);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-faint);
+}
+
+.body {
+  position: relative;
+}
+
+.space {
+  position: relative;
+  width: 100%;
+}
+
+.space > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.group {
+  box-sizing: border-box;
+  padding: var(--s-3-5) var(--s-2-5) var(--s-1-5);
+  border-bottom: var(--border) solid var(--line-group);
+  font-family: var(--font-display);
+  font-size: var(--fs-cta);
+  color: var(--gold-bright);
+}
+
+.row {
+  box-sizing: border-box;
+  min-height: var(--size-recipe-row);
+  border-bottom: var(--border) solid var(--line-row);
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--tint-row);
+}
+
+.row[data-open] {
+  background: var(--tint-row-open);
+}
+
+.row[data-missing] {
+  color: var(--text-dim);
+}
+
+.td {
+  min-width: 0;
+  padding: var(--s-1-75) var(--s-2-5);
+}
+
+.name {
+  text-decoration: none;
+}
+
+.name:hover {
+  text-decoration: underline;
+}
+
+.iconHover {
+  display: inline-flex;
+}
+
+.phoneMeta {
+  display: none;
+}
+
+/* Skeleton rows (recipes-states "Loading"). */
+.skeleton {
+  min-height: var(--size-touch);
+  gap: 0;
+}
+
+.skIcon,
+.skLine {
+  display: block;
+  margin: 0 var(--s-2-5);
+  background: var(--skeleton-base);
+}
+
+.skIcon {
+  width: var(--size-item-icon);
+  height: var(--size-item-icon);
+  border-radius: var(--r-badge);
+}
+
+.skLine {
+  height: var(--s-2-5);
+  border-radius: var(--r-badge);
+}
+
+.skLine[data-w="60"] {
+  width: 60%;
+}
+
+.skLine[data-w="70"] {
+  width: 70%;
+}
+
+.skLine[data-w="80"] {
+  width: 80%;
+}
+
+/* Phone (board recipes-phone): two lines per row, no header; the icon tap opens its tooltip sheet. */
+@media (max-width: 767px) {
+  .head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .row.grid {
+    grid-template-columns: var(--size-touch) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: var(--s-2);
+    padding: var(--s-1) 0;
+    border-bottom-color: var(--line-row);
+  }
+
+  .row .td[data-col="icon"] {
+    --icon-size: var(--size-item-icon-result);
+    grid-row: 1 / span 2;
+    padding: 0;
+  }
+
+  .row .td[data-col="recipe"] {
+    padding: var(--s-0-5) 0 0;
+    font-size: var(--fs-cta);
+  }
+
+  .row .td[data-col="recipe"] .name {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+
+  .row .td[data-col="skill"],
+  .row .td[data-col="known"],
+  .row .td[data-col="source"] {
+    display: none;
+  }
+
+  .phoneMeta {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2-5);
+    padding-bottom: var(--s-1-5);
+  }
+
+  .skeleton.grid {
+    grid-template-columns: var(--size-item-icon-result) minmax(0, 1fr);
+  }
+
+  .skeleton .skLine:nth-child(n + 4) {
+    display: none;
+  }
+
+  .group {
+    padding-left: 0;
+  }
+}

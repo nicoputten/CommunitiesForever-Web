@@ -1,0 +1,123 @@
+/* The item tooltip in the game's look (WEB-92, handoff C1, board recipes-drawer): dark blue-black, a 1 px grey-blue
+   border, 13 px text, 300 px wide (240 for reagents). The one place the site copies the game look on purpose. */
+
+.card {
+  box-sizing: border-box;
+  width: var(--size-game-tooltip);
+  max-width: calc(100vw - var(--s-4));
+  padding: var(--s-2-25) var(--s-2-75) var(--s-2-5);
+  border-radius: var(--r-game);
+  border: var(--border) solid var(--line-game);
+  background: var(--surface-game);
+  box-shadow: var(--shadow-game);
+  font-family: var(--font-ui);
+  font-size: var(--fs-game);
+  line-height: var(--lh-game);
+  color: var(--game-text);
+  overflow-wrap: anywhere;
+}
+
+.card[data-width="reagent"] {
+  width: var(--size-game-tooltip-sm);
+}
+
+.card[data-width="full"] {
+  width: 100%;
+  max-width: none;
+}
+
+.title {
+  font-size: var(--fs-game-title);
+  font-weight: var(--fw-semibold);
+  color: var(--quality-text, var(--game-text));
+}
+
+.line[data-tone="muted"] {
+  color: var(--game-muted);
+}
+
+.line[data-tone="green"] {
+  color: var(--game-green);
+}
+
+.line[data-tone="yellow"] {
+  color: var(--game-yellow);
+}
+
+.split {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2-5);
+}
+
+/* The hover card: Radix positions it (Floating UI); a short fade, none without motion. */
+.floating {
+  z-index: 40;
+  animation: fade var(--dur-card) var(--ease-out);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating {
+    animation: none;
+  }
+}
+
+:global(html[data-motion="off"]) .floating {
+  animation: none;
+}
+
+/* The phone sheet (board recipes-phone "Icon tapped"): the tooltip and "Open recipe". */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--s-3) var(--s-4) var(--s-6);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  border-top: var(--border) solid var(--line-strong);
+  background: var(--surface-drawer);
+  box-shadow: var(--shadow-sheet-lg);
+}
+
+.grab {
+  align-self: center;
+  width: var(--size-grab);
+  height: var(--size-grab-h);
+  border-radius: var(--r-badge);
+  background: var(--grab);
+}
+
+.trigger {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* A 44 px target around a smaller icon on a phone. */
+.trigger[data-touch] {
+  min-width: var(--size-touch);
+  min-height: var(--size-touch);
+  align-items: center;
+  justify-content: center;
+}

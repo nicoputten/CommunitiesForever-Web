@@ -99,3 +99,42 @@
 .link:hover {
   color: var(--gold-bright);
 }
+
+/* A profession's recipe line under its bar (WEB-92, board recipes-character): "86 recipes ›", "as of 21 Oct",
+   "Recipes not scanned ⓘ". */
+.recipes {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+  margin-top: calc(-1 * var(--s-1-5));
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.recipeLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-recipe-sub);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.recipeLink:hover {
+  color: var(--gold-bright);
+}
+
+.spec {
+  padding: var(--s-0-5) var(--s-1-75);
+  border-radius: var(--r-pill-sm);
+  background: var(--surface-pill);
+  font-size: var(--fs-meta-sm);
+  color: var(--text-chip);
+}
+
+@media (max-width: 767px) {
+  .recipeLink {
+    min-height: var(--size-touch);
+  }
+}

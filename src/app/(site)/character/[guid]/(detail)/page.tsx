@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { nowSeconds } from "@/app/clock";
 import { getDataset } from "@/app/dataset";
 import { characterPage, hereToo, miniMap } from "@/core/views";
+import { characterRecipeLines } from "@/core/views/recipes";
+import { getDb } from "@/server/db";
+import { characterRecipeRows } from "@/server/recipeViews";
 import { CharacterHero } from "@/components/character/CharacterHero";
 import { AtAGlance, OtherCharacters, ProfessionList } from "@/components/character/CharacterPanels";
 import { MiniMap } from "@/components/character/MiniMap";
@@ -27,6 +30,8 @@ export default async function CharacterDetail(props: Props) {
   const { data, page, now, guid } = await load(props);
   if (data === undefined || page === undefined) notFound();
   const c = page.character;
+  const recipeRows = characterRecipeRows(getDb(), c.guid);
+  const recipes = characterRecipeLines(c, recipeRows.professions, recipeRows.counts, now);
   return (
     <div className={styles.page}>
       <Link href="/roster" className={styles.back}>
@@ -44,7 +49,7 @@ export default async function CharacterDetail(props: Props) {
         </div>
         <div className={styles.column}>
           <div className={styles.professions}>
-            <ProfessionList professions={c.professions} />
+            <ProfessionList professions={c.professions} guid={c.guid} recipes={recipes} />
           </div>
           <div className={styles.quests}>
             <QuestLog quests={c.quests} recordedAt={c.updatedAt} now={now} />

@@ -46,10 +46,11 @@ test("shows the panels of the board", async ({ page }) => {
   await expect(talents.getByText("30 of 30 points spent (level − 9)")).toBeVisible();
   await expect(talents.getByRole("listitem")).toHaveText(["Affliction10", "Demonology0", "Destruction (main tree)20"]);
   const professions = region(page, "Professions");
+  // With the recipe line under each crafting profession (WEB-92): Ves's Tailoring and Cooking scans are 19 days old.
   await expect(professions.getByRole("listitem")).toHaveText([
-    "Tailoring187 / 225",
-    "Enchanting160 / 225",
-    "Cooking75 / 150",
+    /^Tailoring187 \/ 2253 recipes ›as of \d+ \w+$/,
+    "Enchanting160 / 225Recipes not scannediOpen Enchanting in game once.",
+    /^Cooking75 \/ 1501 recipe ›as of \d+ \w+$/,
   ]);
   await expect(professions.getByRole("link", { name: "Compare with the group →" })).toHaveAttribute(
     "href",
