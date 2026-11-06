@@ -11,10 +11,11 @@ import { SAMPLE_ICONS, SAMPLE_ITEM_DATABASE } from "./sampleItems";
 
 const COLOURS = ["#6b4c9a", "#2f5f8f", "#3d7a3d", "#8a6d3b", "#7a3d3d", "#3d6f7a", "#5a5a6e"];
 
-export async function seedItems(page: Page, dataDir: string): Promise<void> {
+/** `importedAt`: Unix seconds, the import's time the admin page's Item data box shows. */
+export async function seedItems(page: Page, dataDir: string, importedAt: number): Promise<void> {
   const db = openDatabase(path.join(dataDir, DB_FILE));
   try {
-    writeItemDatabase(db, SAMPLE_ITEM_DATABASE, { build: "sample", era: "sample", cmangos: "sample" }, 0);
+    writeItemDatabase(db, SAMPLE_ITEM_DATABASE, { build: "sample", era: "sample", cmangos: "sample" }, importedAt);
   } finally {
     db.$client.close();
   }

@@ -7,7 +7,7 @@ import { signInAs } from "./session";
 
 // The item database and icons the recipe screens show (WEB-92), before the upload names its recipes.
 test("write the sample item database", async ({ page }) => {
-  await seedItems(page, process.env.E2E_DATA_DIR!);
+  await seedItems(page, process.env.E2E_DATA_DIR!, Math.floor(Date.now() / 1000) - 24 * 3600);
 });
 
 // Uploads the design sample (the invented friends) as the e2e admin through the real upload route, with times
