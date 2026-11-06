@@ -17,7 +17,9 @@ test("shows the group, the level spread and the quick answers", async ({ page })
   await page.goto("/roster");
   await expect(page.getByText("6 friends · 10 characters · Sanne has no addon yet")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Who is around which level" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Dungeon bands" })).toContainText("32–42 · 4");
+  await expect(
+    page.getByRole("list", { name: "Dungeon bands" }).getByRole("button", { name: /32–42 · 4/ }),
+  ).toBeVisible();
   // No run planned yet: no Next run card (WEB-45).
   await expect(page.getByRole("region", { name: "Next run" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Healers" }).locator("..")).toContainText(
