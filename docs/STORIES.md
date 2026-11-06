@@ -243,7 +243,7 @@ Live v0.9.1 (Nico, 2026-11-05): a guild member who runs the addon but isn't the 
 - **Members (WEB-85 unchanged):** an `aid:` person gets no access. Once linked, the BattleTag with a character on the roster becomes a member by the existing rule.
 - Done when: unit tests (the name, linking in one file, across uploads in either order, by the own upload, the newer fields and removals, not new in the report); a server test (shown by character name, linked by a later file with history moved, a member, an older file and a rebuild changing nothing); every released addon fixture (`tests/compat`); no migration; no screenshot baseline changes.
 
-### WEB-88 Level spread: dots of at most 3 levels, dungeons one per line (live)
+### WEB-88 Level spread: dots of at most 3 levels, dungeons one per row on the level line (live)
 Live (Nico, 2026-11-06): on a roster with characters at nearly every level from 1 to 16, they all merged into one dot "23", because a dot kept growing while each next character was within 2 levels of the one before. And the three dungeon chips that fit (Ragefire Chasm 13–18, Hall of Thanes 13–20, Ruins of Lordaeron 15–22) stood side by side in a wrapping row.
 - **Dots:** characters within 2 levels still merge, but one dot covers at most 3 levels (lowest to highest ≤ 2 apart, e.g. 7–9). Levels 1,1,1,3,4,5,7,7,7,8,8,8,8,9,9,9,10,10,12,12,14,15,16 make 5 dots: 1–3, 4–5, 7–9, 10–12, 14–16.
 - **Phone:** characters within 4 levels merge and one dot covers at most 5 levels; dot middles stay at least 5 levels apart (24 px on the 375 px track, WCAG 2.5.8, WEB-32). A dot that would sit closer joins the dot before, even past 5 levels: the spacing wins over the cap.
