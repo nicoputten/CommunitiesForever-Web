@@ -158,6 +158,10 @@
   top: 0;
   transform: translateY(-50%);
   translate: 0 var(--pop-shift, 0);
+  /* Placed by measuring (DungeonEntrance.tsx), never moved: no transition. With motion off the site gives everything
+   * --dur-instant, so `top` and `transform` would still be easing from the middle when the shift is measured, which
+   * then pushed the popover too far down, and a screenshot caught it either before or after the ease. */
+  transition-property: none;
   width: var(--size-card-map);
   display: flex;
   flex-direction: column;
