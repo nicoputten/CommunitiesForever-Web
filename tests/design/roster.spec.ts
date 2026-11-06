@@ -70,6 +70,11 @@ test("roster: design values", async ({ page }) => {
     "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-meta)",
     color: "var(--gold-pale)",
   });
+  // The best band's gold: the band itself on a phone, its bar on the level scale (WEB-88).
+  await expectStyles(isPhone(page) ? armory : armory.locator("[data-bar]"), {
+    "background-color": "var(--tint-selected)",
+    "border-color": "var(--gold)",
+  });
   await armory.click();
   const pop = page.getByRole("dialog", { name: "Scarlet Monastery: Armory" });
   await expectStyles(pop, {
@@ -169,7 +174,9 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: dungeons one per line, lowest level first, full names (WEB-65, WEB-88)", async ({ page }) => {
+test("roster: dungeon bands on the level scale, one per row, lowest first, never cut (WEB-65, WEB-88)", async ({
+  page,
+}) => {
   test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
@@ -178,20 +185,43 @@ test("roster: dungeons one per line, lowest level first, full names (WEB-65, WEB
   await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral 35–45 · 3 · 1 run", {
     useInnerText: true,
   });
-  await expectStyles(band("rfc"), { "border-radius": "var(--r-btn)", "font-size": "var(--fs-meta)" });
-  // Never cut: every line shows all of its text; one dungeon per line, lowest level first.
-  const layout = await bands.evaluate((ul) => {
-    const buttons = [...ul.querySelectorAll<HTMLElement>("button[data-band]")];
-    const tops = buttons.map((b) => b.getBoundingClientRect().top);
-    return {
-      cut: buttons.filter((b) => b.scrollWidth > b.clientWidth).map((b) => b.dataset.band),
-      oneLine: tops.every((t, i) => i === 0 || t > tops[i - 1]!),
-      mins: buttons.map((b) => Number(/(\d+)–\d+/.exec(b.getAttribute("aria-label") ?? "")?.[1])),
-    };
+  await expectStyles(band("rfc").locator("[data-bar]"), {
+    "border-radius": "var(--r-btn)",
+    "background-color": "var(--surface-row)",
   });
-  expect(layout.cut).toEqual([]);
-  expect(layout.oneLine).toBe(true);
-  expect(layout.mins).toEqual([...layout.mins].sort((a, b) => a - b));
+  await expectStyles(band("rfc"), { "font-size": "var(--fs-meta)" });
+  const layout = await bands.evaluate((ul) => {
+    const box = ul.getBoundingClientRect();
+    const at = (level: number) => box.left + ((level - 1) / 59) * box.width;
+    const rows = [...ul.querySelectorAll<HTMLElement>("li[data-row]")].map((li) => {
+      const bar = li.querySelector<HTMLElement>("[data-bar]")!;
+      const label = li.querySelector<HTMLElement>("[data-label]")!;
+      const [min, max] = /(\d+)–(\d+)/.exec(li.querySelector("button")!.getAttribute("aria-label")!)!.slice(1).map(Number);
+      const r = bar.getBoundingClientRect();
+      const t = label.getBoundingClientRect();
+      return {
+        id: li.dataset.row,
+        min: min!,
+        top: r.top,
+        // The band from its min to its max level, on the track's scale.
+        placed: Math.abs(r.left - at(min!)) < 1 && Math.abs(r.right - at(max!)) < 1,
+        // The text is whole: inside the band, or beside it within the row.
+        whole:
+          t.left >= box.left - 0.5 &&
+          t.right <= box.right + 0.5 &&
+          (!bar.contains(label) || (bar.scrollWidth <= bar.clientWidth && t.right <= r.right)),
+        inside: bar.contains(label),
+      };
+    });
+    return rows;
+  });
+  expect(layout.filter((r) => !r.placed).map((r) => r.id)).toEqual([]);
+  expect(layout.filter((r) => !r.whole).map((r) => r.id)).toEqual([]);
+  expect(layout.every((r, i) => i === 0 || r.top > layout[i - 1]!.top)).toBe(true);
+  const mins = layout.map((r) => r.min);
+  expect(mins).toEqual([...mins].sort((a, b) => a - b));
+  // Both: text inside a wide band, beside a narrow one.
+  expect(new Set(layout.map((r) => r.inside))).toEqual(new Set([true, false]));
   await expectAccessible(page);
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
   await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot("roster-bands.png");

@@ -169,43 +169,77 @@
   right: 0;
 }
 
-/* The dungeons that fit, one per line, lowest level first (WEB-88, Nico 2026-11-06; before: chips side by side,
-   WEB-65): the full name, range, count and runs, never cut. */
+/* The dungeons that fit, one per row under the track, lowest level first (WEB-88, Nico 2026-11-06; before: chips side
+   by side, WEB-65): each band from its min to its max level on the track's scale (`--from`, `--to`: 0–1 of the row's
+   width), the full name, range, count and runs inside, or beside it when it is too narrow, never cut. */
 .bands {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--s-1-5);
   margin: var(--s-3) var(--s-2-5) 0;
   padding: 0;
   list-style: none;
+  container-type: inline-size;
 }
 
 .bandItem {
   position: relative;
-  max-width: 100%;
 }
 
 .band {
-  display: block;
-  max-width: 100%;
-  padding: var(--s-1) var(--s-2);
+  display: flex;
+  gap: var(--s-1-5);
+  width: fit-content;
+  margin-left: calc(var(--from) * 100cqw);
+  padding: 0;
+  border: 0;
   border-radius: var(--r-btn);
-  background: var(--surface-row);
-  border: var(--border) solid var(--line-neutral);
+  background: none;
   color: var(--text-muted);
   font: inherit;
   font-size: var(--fs-meta);
   line-height: var(--lh-body);
   text-align: left;
   cursor: pointer;
+}
+
+/* Text left of the band: the band ends at its max level. */
+.bandItem[data-side="left"] .band {
+  flex-direction: row-reverse;
+  margin-left: auto;
+  margin-right: calc((1 - var(--to)) * 100cqw);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: calc((var(--to) - var(--from)) * 100cqw);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-btn);
+  background: var(--surface-row);
+  border: var(--border) solid var(--line-neutral);
   transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+/* Beside the band, as tall as the text inside one. */
+.bandLabel {
+  white-space: nowrap;
+}
+
+.band > .bandLabel {
+  padding: var(--s-1) 0;
+  border-block: var(--border) solid transparent;
 }
 
 .band:hover,
 .band[aria-expanded="true"] {
-  border-color: var(--gold);
   color: var(--gold-pale);
+}
+
+.band:hover .bar,
+.band[aria-expanded="true"] .bar {
+  border-color: var(--gold);
 }
 
 .band:focus-visible {
@@ -214,9 +248,12 @@
 }
 
 .band[data-best] {
+  color: var(--gold-pale);
+}
+
+.band[data-best] .bar {
   background: var(--tint-selected);
   border-color: var(--gold);
-  color: var(--gold-pale);
 }
 
 .bandRange {
@@ -243,6 +280,16 @@
 
 .bandItem:has(.pop) {
   z-index: 3;
+}
+
+/* Under its band: from the band's start, or ending at its end in the track's right half. */
+.bandItem .pop {
+  left: calc(var(--from) * 100cqw);
+}
+
+.bandItem[data-right] .pop {
+  left: auto;
+  right: calc((1 - var(--to)) * 100cqw);
 }
 
 .popHead {
@@ -390,19 +437,48 @@
     display: block;
   }
 
+  /* A list: each band a full-width line with its text inside (no scale at 375 px). */
   .bands {
     margin: var(--s-3) 0 0;
-    align-items: stretch;
   }
 
   .bandItem {
     position: static;
   }
 
+  .band,
+  .bandItem[data-side="left"] .band {
+    flex-direction: row;
+    margin: 0;
+  }
+
   .band {
+    align-items: center;
     width: 100%;
     min-height: var(--size-touch);
+    padding: var(--s-1) var(--s-2);
+    background: var(--surface-row);
+    border: var(--border) solid var(--line-neutral);
     font-size: var(--fs-meta-sm);
+  }
+
+  .band:hover,
+  .band[aria-expanded="true"] {
+    border-color: var(--gold);
+  }
+
+  .band[data-best] {
+    background: var(--tint-selected);
+    border-color: var(--gold);
+  }
+
+  .bar {
+    display: contents;
+  }
+
+  .band > .bandLabel {
+    padding: 0;
+    border: 0;
   }
 
   .bandsFoot {

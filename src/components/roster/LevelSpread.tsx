@@ -82,7 +82,7 @@ export function LevelSpread({
   const limited = bandLayout(spread, BAND_ROWS);
   const all = bandLayout(spread);
   const rowIn = (layout: BandLayout, band: DungeonBand) => layout.shown.find((p) => p.band === band)?.row;
-  // One per line, lowest level first (WEB-88); the best band keeps its gold, not its place.
+  // One per row on the track's scale, lowest level first (WEB-88); the best band keeps its gold, not its place.
   const bands: BandView[] = [...all.shown]
     .sort((a, b) => bandsByLevel(a.band, b.band))
     .map((placed) => {
@@ -100,6 +100,8 @@ export function LevelSpread({
         moreRuns: planned.more,
         best: placed.best,
         extra: row === undefined,
+        from: placed.from,
+        to: placed.to,
       };
     });
 
