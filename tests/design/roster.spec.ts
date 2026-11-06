@@ -38,7 +38,7 @@ test("roster: design values", async ({ page }) => {
   // The level spread (WEB-32, board roster-cards-runs): a merged dot with its count, the gold ring, the tooltip.
   const spread = page.getByRole("region", { name: "Who is around which level" });
   const group = spread.getByRole("button", {
-    name: isPhone(page) ? "4 characters around level 37" : "3 characters around level 39",
+    name: isPhone(page) ? "2 characters around level 40" : "2 characters around level 38",
   });
   await expectStyles(group.locator("span").first(), {
     width: "var(--size-dot-group)",
@@ -56,7 +56,7 @@ test("roster: design values", async ({ page }) => {
     "box-shadow": "var(--ring-dot)",
   });
   await group.click();
-  await expectStyles(spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" }), {
+  await expectStyles(spread.getByRole("tooltip").filter({ hasText: "Ves Doombringer" }), {
     "font-size": "var(--fs-meta)",
     "border-radius": "var(--r-btn)",
     "background-color": "var(--surface-tooltip)",
@@ -169,7 +169,7 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: band chips with full names, wrapping (WEB-65)", async ({ page }) => {
+test("roster: dungeons one per line, lowest level first, full names (WEB-65, WEB-87)", async ({ page }) => {
   test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
@@ -179,16 +179,19 @@ test("roster: band chips with full names, wrapping (WEB-65)", async ({ page }) =
     useInnerText: true,
   });
   await expectStyles(band("rfc"), { "border-radius": "var(--r-btn)", "font-size": "var(--fs-meta)" });
-  // Never cut: every chip shows all of its text, and the chips wrap onto more than one row.
+  // Never cut: every line shows all of its text; one dungeon per line, lowest level first.
   const layout = await bands.evaluate((ul) => {
     const buttons = [...ul.querySelectorAll<HTMLElement>("button[data-band]")];
+    const tops = buttons.map((b) => b.getBoundingClientRect().top);
     return {
       cut: buttons.filter((b) => b.scrollWidth > b.clientWidth).map((b) => b.dataset.band),
-      rows: new Set(buttons.map((b) => Math.round(b.getBoundingClientRect().top))).size,
+      oneLine: tops.every((t, i) => i === 0 || t > tops[i - 1]!),
+      mins: buttons.map((b) => Number(/(\d+)–\d+/.exec(b.getAttribute("aria-label") ?? "")?.[1])),
     };
   });
   expect(layout.cut).toEqual([]);
-  expect(layout.rows).toBeGreaterThan(1);
+  expect(layout.oneLine).toBe(true);
+  expect(layout.mins).toEqual([...layout.mins].sort((a, b) => a - b));
   await expectAccessible(page);
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
   await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot("roster-bands.png");

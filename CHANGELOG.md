@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Roster, "Who is around which level": a dot now covers at most 3 levels (5 on a phone), so a group of low characters no longer turns into one big dot. The dungeons that fit are listed one per line, lowest level first.
+
 ## v0.9.2 (2026-11-05)
 - Guild members who run the addon but aren't anyone's Battle.net friend now show by their first character's name instead of "Unknown player", everywhere a name shows. Once a file shows their BattleTag (their own upload, or a friend's with the addon version that shares BattleTags over the guild), they become one person with their BattleTag, keep their characters, activity and Doomsday, and can sign in when they have a character in the guild.
 

@@ -56,14 +56,15 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
-  // Lia 37, Ves 39 and Bob 41 share one dot; Ves is the viewer's. A phone merges within 4 levels: Tok 33 too.
+  // Lia 37 and Ves 39 share one dot, Bob 41 has his own: a dot covers at most 3 levels (WEB-87); Ves is the viewer's.
+  // A phone merges within 4 levels, at most 5 a dot, middles 5 levels apart: Tok 33 with Lia, Ves with Bob.
   const phone = isPhone(page);
-  await expect(spread.locator("[aria-describedby^=spread-tip]:visible")).toHaveCount(phone ? 4 : 8);
+  await expect(spread.locator("[aria-describedby^=spread-tip]:visible")).toHaveCount(phone ? 5 : 9);
   const group = spread.getByRole("button", {
-    name: phone ? "4 characters around level 37" : "3 characters around level 39",
+    name: phone ? "2 characters around level 40" : "2 characters around level 38",
   });
-  const tip = spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" });
-  await expect(group).toHaveText(phone ? "4" : "3");
+  const tip = spread.getByRole("tooltip").filter({ hasText: "Ves Doombringer" });
+  await expect(group).toHaveText("2");
   await expect(group).toHaveAttribute("data-own", "true");
   await expect(spread.getByRole("button", { name: "Mira Sunstrider 60" })).not.toHaveAttribute("data-own");
   await expect(tip).toBeHidden();
@@ -81,8 +82,8 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   await group.click();
   await expect(tip).toHaveText(
     phone
-      ? /Tok Ironhide 33 · Bob\s*Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/
-      : /Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/,
+      ? /^Ves Doombringer 39 · you\s*Bob Example 41 · Bob$/
+      : /^Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you$/,
   );
   await expect(group).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Escape");

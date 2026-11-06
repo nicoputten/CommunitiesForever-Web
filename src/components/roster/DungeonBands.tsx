@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dungeonHref, planHref } from "@/core/views/dungeon";
 import styles from "./LevelSpread.module.css";
 
@@ -18,20 +18,16 @@ export interface BandView {
   best: boolean;
   /** Not within the 4 rows: shown after "Show all". */
   extra: boolean;
-  /** By level, the best band first: the chips' order. */
-  order: number;
-  /** In the track's right half: the popover opens towards the left. */
-  right: boolean;
 }
 
 /** Below this width the bands are a list, and the popover is a bottom sheet (LevelSpread.module.css). */
 const PHONE_QUERY = "(max-width: 767px)";
 
 /**
- * The dungeon bands (WEB-45, popover from board `roster-cards-runs`): chips by level with the full name, range and
- * count, wrapping onto more rows, never cut (WEB-65, board live-test-site-fixes; Nico 2026-10-29: chips instead of
- * the level track); the bands past the track's 4 rows after "Show all N". A click opens the popover (who fits,
- * missing roles, planned runs, Plan a run, View run, Dungeon page), on a phone as a bottom sheet.
+ * The dungeon bands (WEB-45, popover from board `roster-cards-runs`): one dungeon per line, lowest level first, with
+ * the full name, range, count and runs, never cut (WEB-87, Nico 2026-11-06; before: chips side by side, WEB-65); the
+ * bands past the 4 rows of `bandLayout` after "Show all N". A click opens the popover (who fits, missing roles,
+ * planned runs, Plan a run, View run, Dungeon page), on a phone as a bottom sheet.
  */
 export function DungeonBands({ bands }: { bands: BandView[] }) {
   const [all, setAll] = useState(false);
@@ -119,12 +115,7 @@ export function DungeonBands({ bands }: { bands: BandView[] }) {
     <>
       <ul ref={list} className={styles.bands} aria-label="Dungeon bands">
         {shown.map((b) => (
-          <li
-            key={b.id}
-            className={styles.bandItem}
-            data-right={b.right || undefined}
-            style={{ "--order": b.order } as CSSProperties}
-          >
+          <li key={b.id} className={styles.bandItem}>
             <button
               type="button"
               className={styles.band}
