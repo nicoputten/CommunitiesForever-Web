@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Recipes: the Professions page's search now works. Type two letters of an item or recipe and see who can craft it (with a dot for how easy it is for them) or, when nobody can yet, where it's learned. Every crafting card links to its recipes ("112 of 185 recipes"). Each profession has its own page with every recipe, who knows it and where to learn it, tabs for All, Known and Nobody has, filters by character, type and skill, and a panel with the item's tooltip, reagents and crafters. Any view can be shared as a link. The character page shows how many recipes each crafting profession knows. Needs the addon version that scans recipes and an item data import.
+- Admin: the owner can import the game's item and recipe data from the admin page (Admin › Item data › Import item data), after a game patch too. The box shows what the import is doing, then the build and how many recipes and items it brought, or why it failed. One import at a time.
 
 ## v0.10.0 (2026-11-06)
 - Doomsday: 83 more missions join the draw (pool version 3): 60 dailies, 22 weeklies and the Skirmish "Defend home: a kill in friendly territory". The 4 PvP rank missions leave it, because Forever has no PvP rank the addon can read. Days and weeks already played keep their missions and points. Friends need the new addon version; an older addon keeps drawing pool version 2 until it is updated.

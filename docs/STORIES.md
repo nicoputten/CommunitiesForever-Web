@@ -280,6 +280,11 @@ Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" 
 - **Compatibility (rule 4):** every released addon sends no recipes: nothing changes for them.
 - Done when: unit tests for the import parsing (fixtures), the threshold maths, the diff and baseline rule, rare finds and Forever's own pairs; lint, tests and build pass.
 
+### WEB-91 Item data from the admin page, public item icons (Nico, 2026-11-07)
+Nico answered WEB-90's two questions: "Yes, both".
+- **Import item data:** an owner-only box on the admin page runs the import of `npm run import:items` on the server (the image has no `scripts/`), in the background and one at a time: what it is doing while it runs, then the build, recipes and items, or a clear error. Owner only, like the other server settings (WEB-64). The newest Forever and Classic Era builds by default; the command line keeps working. A run that wrote new data is a line in Admin changes.
+- **Public item icons:** `/api/item-icons/<name>` without a session, so Discord can load them for DoomBot; strict names, long cache headers; nothing else under `/api` loses its check. Also CLAUDE.md rule 6's list of open routes.
+- Done when: tests for the import run (a fake wago.tools with a cut-off download, one at a time, the error); the open icon route with tests next to the closed ones; lint, tests and build pass; the admin page's screenshot baseline changes only after Nico's OK.
 ### WEB-92 Recipe pages (Part C, boards `recipes-*`)
 Boards RC01–RC06 (`design/boards/recipes-character`, `recipes-search`, `recipes-page`, `recipes-drawer`, `recipes-phone`, `recipes-states`); the handoff's Part C (C1–C7) with its amendments. Builds on WEB-90's tables. Libraries (handoff): Radix UI Dialog, HoverCard, Tabs; Floating UI; TanStack Table and Virtual; MiniSearch; nuqs; exact versions.
 - **Item tooltip (C1):** one shared `ItemTooltip` on every item icon and name: the game's look, our own item data, no sell price; 150 ms hover delay, flips at the screen's edges; on a phone a tap on the icon opens it as a sheet with "Open recipe". Icons from the icon cache (`/api/item-icons`), the question mark without one.
