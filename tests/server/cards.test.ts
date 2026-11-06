@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET as cardRoute } from "@/app/api/bot/v1/cards/[file]/route";
-import { createBotToken } from "@/server/bot";
+import { createBotToken, enqueueBotEvent } from "@/server/bot";
 import { getDb } from "@/server/db";
 import { botEvents } from "@/server/db/schema";
 import { runDueRecap } from "@/server/recap";
@@ -11,6 +11,7 @@ import { upload } from "@/server/uploads";
 import type { Milestone } from "@/core/bot";
 import {
   boardCard,
+  boardCards,
   type CardSpec,
   cardSize,
   featCard,
@@ -143,6 +144,20 @@ const BOARD: BoardData = {
 
 const char = (classFile: string, name: string) => ({ guid: "G", name, classFile, level: 60, ownerName: "Mira" });
 
+/** WEB-87: 12 friends who played (made-up names) and the board's idle one: page 1 of 2 and page 2 with the line. */
+const MANY: BoardData = {
+  ...BOARD,
+  friends: [
+    ...BOARD.friends.filter((f) => f.doneCount > 0),
+    ...["Femke", "Grosh", "Hana", "Ivo", "Jun", "Kai", "Lena", "Moss"].map((name, i) => ({
+      ...BOARD.friends[3]!,
+      name,
+      streak: i,
+    })),
+    ...BOARD.friends.filter((f) => f.doneCount === 0),
+  ],
+};
+
 const SPECS: Record<string, CardSpec> = {
   "level-60": milestoneCard(
     { kind: "maxLevel", character: char("MAGE", "Mira Sunstrider"), level: 60, from: 59 },
@@ -186,13 +201,15 @@ const SPECS: Record<string, CardSpec> = {
   "board-start": boardCard(
     {
       ...BOARD,
-      friends: BOARD.friends.map((f) => ({ ...f, goals: [], today: { pve: 0, pvp: 0 } })),
+      friends: BOARD.friends.map((f) => ({ ...f, goals: [], doneCount: 0, today: { pve: 0, pvp: 0 } })),
       crown: null,
     },
     BOARD.start + 60,
     "Europe/Paris",
     HOST,
   ),
+  // WEB-87: a full page of 8 with its marker, and the last page with the line.
+  ...boardPages(),
   "board-final": boardCard(
     { ...BOARD, final: true, summary: { goalsDone: 14, hunt: null, longestStreak: { name: "Tok", days: 7 } } },
     BOARD.end - 60,
@@ -212,6 +229,11 @@ const SPECS: Record<string, CardSpec> = {
     HOST,
   )!,
 };
+
+function boardPages(): Record<string, CardSpec> {
+  const [first, last] = boardCards(MANY, BOARD.start + 18 * H + 10 * 60, "Europe/Paris", HOST);
+  return { "board-page-1": first!, "board-page-2": last! };
+}
 
 function stripSpecs(): Record<string, CardSpec> {
   const strip = (name: string, m: object, who: { name: string; classFile: string }) =>
@@ -350,7 +372,14 @@ describe("GET cards/<id>.png", () => {
       .find((e) => e.type === "milestones")!;
     expect((await get(`milestone-${event.id}-0.png`)).status).toBe(200);
     expect((await get("whereis-G-V.png")).status).toBe(200);
+    // WEB-87: a board in two pages, each by its id; no third.
+    enqueueBotEvent(getDb(), "doomsdayBoard", { ...MANY, image: "doomsday-20754-abcdef" }, BOARD.start + 18 * H);
+    expect((await get("doomsday-20754-abcdef.png")).status).toBe(200);
+    expect((await get("doomsday-20754-abcdef-2.png")).status).toBe(200);
     for (const missing of [
+      "doomsday-20754-abcdef-3.png",
+      "doomsday-20754-abcdef-1.png",
+      "doomsday-20754-abcdef-11.png",
       "recap-1-zone.png",
       "recap-9-header.png",
       "whereis-nobody.png",
