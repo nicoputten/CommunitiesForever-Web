@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Milestone, MilestonesEvent } from "@/core/bot";
 import {
-  boardCard,
+  boardCards,
   type CardSpec,
   type CharacterFacts,
   featCard,
@@ -27,6 +27,7 @@ import { loadState } from "../uploads";
 // - `recap-<week>-zone`: the Zone of the week card's map, when the recap has that card
 // - `milestone-<event>-<n>`: the n-th milestone of a `milestones` event, when it is worth an image (feats: WEB-56)
 // - `whereis-<guid>`: where a character was last seen (for /whereis)
+// - `doomsday-<day>-<hash>`, `doomsday-<day>-<hash>-<page>`: the day's board image, page 1 or page 2 to 10 (WEB-66, WEB-87)
 // Undefined for anything else, so the route answers 404.
 
 /** The site's host for the cards' footer ("wow.vestras.nl"), from AUTH_URL. */
@@ -134,10 +135,10 @@ function whereis(db: Db, guid: string, now: number, host: string): CardSpec | un
 }
 
 /**
- * A board image (WEB-66): the `doomsdayBoard` or `doomsdayBoardUpdate` event that carried this id, drawn as it was then,
- * in the realm's time zone.
+ * A board image (WEB-66): the `doomsdayBoard` or `doomsdayBoardUpdate` event that carried this id (page 1, `image`),
+ * drawn as it was then, in the realm's time zone. WEB-87: page n (2 and up) is `<image>-<n>`.
  */
-function board(db: Db, id: string, day: number, host: string): CardSpec | undefined {
+function board(db: Db, image: string, day: number, page: number, host: string): CardSpec | undefined {
   const event = db
     .select()
     .from(botEvents)
@@ -146,15 +147,15 @@ function board(db: Db, id: string, day: number, host: string): CardSpec | undefi
     .all()
     .find((e) => {
       const d = e.data as { day?: number; image?: string };
-      return d.day === day && d.image === id;
+      return d.day === day && d.image === image;
     });
   if (event === undefined) return undefined;
-  return boardCard(
-    event.data as Parameters<typeof boardCard>[0],
+  return boardCards(
+    event.data as Parameters<typeof boardCards>[0],
     event.createdAt,
     getBotSettings(db).realmTimeZone,
     host,
-  );
+  )[page - 1];
 }
 
 /** The card an id names, or undefined. */
@@ -162,8 +163,8 @@ export function cardFor(db: Db, id: string, now: number, host = cardHost()): Car
   // WEB-68: the test posts' images, fixed made-up samples.
   const sample = /^sample-([a-z-]{1,32})$/.exec(id);
   if (sample !== null) return sampleCard(sample[1]!, host);
-  const b = /^doomsday-(\d{1,6})-[0-9a-f]{6}$/.exec(id);
-  if (b !== null) return board(db, id, Number(b[1]), host);
+  const b = /^(doomsday-(\d{1,6})-[0-9a-f]{6})(?:-([2-9]|10))?$/.exec(id);
+  if (b !== null) return board(db, b[1]!, Number(b[2]), Number(b[3] ?? 1), host);
   let m = /^recap-(\d{1,5})-(header|zone)$/.exec(id);
   if (m !== null) return recapCard(db, Number(m[1]), m[2]!, host);
   m = /^milestone-(\d{1,15})-(\d{1,3})$/.exec(id);

@@ -34,28 +34,37 @@ export function DungeonEntrance({
   /** Opened from the keyboard (Enter or Space): focus moves into the popover; a click leaves it on the entrance. */
   const [byKeyboard, setByKeyboard] = useState(false);
   // Away from the map frame's edges it is near, as the hover card (MapStage placeCard): the map may be zoomed and
-  // panned, so measured.
+  // panned, so measured. Again whenever the anchor is mounted anew (past 1024 px and back, `inSheet`, it is a new
+  // element without the placement) and when the frame changes size: MapStage's own ResizeObserver, made before this
+  // one, has then already moved the map back to its view, so this one measures where the entrance is now.
   useLayoutEffect(() => {
     const a = anchor.current;
     const frame = a?.closest<HTMLElement>("[data-map-frame]");
     if (!open || a == null || frame == null) return;
-    const at = a.getBoundingClientRect();
-    const f = frame.getBoundingClientRect();
-    const fx = (at.left - f.left) / f.width;
-    const fy = (at.top - f.top) / f.height;
-    a.dataset.side = fx > 0.62 ? "left" : "right";
-    a.dataset.v = fy > 0.7 ? "up" : fy < 0.25 ? "down" : "mid";
-    // Then whatever still sticks out (under the top bar, which lies over the map) is moved back in.
-    const pop = a.firstElementChild;
-    if (pop === null) return;
-    a.style.setProperty("--pop-shift", "0px");
-    const r = pop.getBoundingClientRect();
-    const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
-    const top = Math.max(f.top, bar) + EDGE;
-    const bottom = Math.min(f.bottom, window.innerHeight) - EDGE;
-    const shift = r.top < top ? top - r.top : r.bottom > bottom ? Math.max(bottom - r.bottom, top - r.top) : 0;
-    a.style.setProperty("--pop-shift", `${shift}px`);
-  }, [open]);
+    const place = () => {
+      const at = a.getBoundingClientRect();
+      const f = frame.getBoundingClientRect();
+      if (f.width === 0 || f.height === 0) return;
+      const fx = (at.left - f.left) / f.width;
+      const fy = (at.top - f.top) / f.height;
+      a.dataset.side = fx > 0.62 ? "left" : "right";
+      a.dataset.v = fy > 0.7 ? "up" : fy < 0.25 ? "down" : "mid";
+      // Then whatever still sticks out (under the top bar, which lies over the map) is moved back in.
+      const pop = a.firstElementChild;
+      if (pop === null) return;
+      a.style.setProperty("--pop-shift", "0px");
+      const r = pop.getBoundingClientRect();
+      const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+      const top = Math.max(f.top, bar) + EDGE;
+      const bottom = Math.min(f.bottom, window.innerHeight) - EDGE;
+      const shift = r.top < top ? top - r.top : r.bottom > bottom ? Math.max(bottom - r.bottom, top - r.top) : 0;
+      a.style.setProperty("--pop-shift", `${shift}px`);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [open, inSheet]);
   const icon = (
     <span className={styles.icon}>
       <DungeonIcon className={styles.svg} />

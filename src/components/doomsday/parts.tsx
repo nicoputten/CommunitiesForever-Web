@@ -199,9 +199,7 @@ export function Board({ view }: { view: BoardView }) {
                     <span className={styles.avatar} aria-hidden="true">
                       {r.initials}
                     </span>
-                    <span className={styles.friendName} data-crossed={r.crossedOut}>
-                      {r.name}
-                    </span>
+                    <span className={styles.friendName}>{r.name}</span>
                     {r.crossedOut && <span className="visually-hidden">(all PvE dailies done)</span>}
                     {r.you && <span className={styles.meta}>(you)</span>}
                     {r.crown !== undefined && (
@@ -256,9 +254,7 @@ function BoardCards({ view }: { view: BoardView }) {
             <span className={styles.avatar} aria-hidden="true">
               {r.initials}
             </span>
-            <span className={styles.friendName} data-crossed={r.crossedOut}>
-              {r.name}
-            </span>
+            <span className={styles.friendName}>{r.name}</span>
             {r.crossedOut && <span className="visually-hidden">(all PvE dailies done)</span>}
             {/* The first tag sits on the right (margin-left: auto); a PvP Virgin can wear the crown too. */}
             {r.crown !== undefined && (

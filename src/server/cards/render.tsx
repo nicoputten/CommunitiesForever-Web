@@ -608,8 +608,8 @@ const CROWN = "M2 12h12l1-8-4 3-3-5-3 5-4-3z";
 const FLAME = "M8 1c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-5 0-7z";
 
 /**
- * The daily Doomsday board (WEB-66, board `bot-visual-daily`, 800 × 560), readable at 300 px on a phone: one row per
- * friend, 44 px boxes (PvE done green, PvP done red, open as an outline), "PvP Virgin" across the PvP columns.
+ * The daily Doomsday board (WEB-66, board `bot-visual-daily`, 800 × 560 and taller), readable at 300 px on a phone: one
+ * row per friend who played today (WEB-87: 8 to a page, the page top right, who isn't a row in a last line), 44 px boxes (PvE done green, PvP done red, open as an outline), "PvP Virgin" across the PvP columns.
  */
 function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number; height: number }) {
   const box = px("--size-card-board-box");
@@ -658,6 +658,18 @@ function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number
               {spec.title}
             </div>
           </div>
+          {spec.page !== undefined ? (
+            <div
+              style={{
+                display: "flex",
+                marginLeft: "auto",
+                fontSize: px("--fs-card-feat-line"),
+                color: tok("--text-dim"),
+              }}
+            >
+              {spec.page}
+            </div>
+          ) : null}
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", marginTop: 10, paddingBottom: 6 }}>
           <div style={{ display: "flex", width: nameW }} />
@@ -705,8 +717,7 @@ function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number
                   display: "flex",
                   fontFamily: NAME,
                   fontSize: px("--fs-card-board-name"),
-                  color: r.struck ? tok("--text-dim") : tok("--text-strong"),
-                  textDecoration: r.struck ? "line-through" : "none",
+                  color: tok("--text-strong"),
                 }}
               >
                 {r.name}
@@ -800,6 +811,20 @@ function BoardCard({ spec, width, height }: { spec: BoardCardSpec; width: number
             </div>
           </div>
         ))}
+        {spec.rest !== undefined ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              height: rowH,
+              borderTop: `1px solid ${tok("--line-box")}`,
+              fontSize: px("--fs-card-feat-line"),
+              color: tok("--text-dim"),
+            }}
+          >
+            {spec.rest}
+          </div>
+        ) : null}
       </div>
       <Footer host={spec.host} right={spec.footer} />
     </Frame>

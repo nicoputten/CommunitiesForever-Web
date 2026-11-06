@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Doomsday on Discord: the board image shows everyone who has done a goal today, 8 to an image, in several images in the same post (at most 10), each marked "1/3" when there are more. Friends who haven't started yet are one line, "+5 haven't started", instead of rows. Needs the bot version that posts every image; an older bot shows the first one.
+- Doomsday: a friend who finished all PvE dailies no longer has the name struck through, on the site's board and in the Discord image. The crown and "finished all dailies first" stay.
 - Roster, "Who is around which level": a dot now covers at most 3 levels (5 on a phone), so a group of low characters no longer turns into one big dot. The dungeons that fit each get their own row under the level line, as a band from their lowest to their highest level, lowest dungeon first (a list on a phone).
 
 ## v0.9.2 (2026-11-05)
