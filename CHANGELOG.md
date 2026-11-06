@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.10.0 (2026-11-06)
 - Doomsday: 83 more missions join the draw (pool version 3): 60 dailies, 22 weeklies and the Skirmish "Defend home: a kill in friendly territory". The 4 PvP rank missions leave it, because Forever has no PvP rank the addon can read. Days and weeks already played keep their missions and points. Friends need the new addon version; an older addon keeps drawing pool version 2 until it is updated.
 
 ## v0.9.3 (2026-11-06)
