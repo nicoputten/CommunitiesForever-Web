@@ -6,8 +6,8 @@ import { sessionBattleTag } from "@/server/session";
 
 // Every page and API route needs a session (CLAUDE.md rule 6, WEB-06), except sign-in, Auth.js's own routes (the
 // callback among them), the "not on the list" page a refused sign-in lands on, the health check (WEB-07, which
-// tells only ok and the version) and the uploader and bot APIs, which check their own tokens instead (WEB-33,
-// WEB-38). The role is read from the database on every request, so a block takes effect at once. Upload and admin
+// tells only ok and the version), the item icons (WEB-91: Blizzard's public icons, by names the item database holds)
+// and the uploader and bot APIs, which check their own tokens instead (WEB-33, WEB-38). The role is read from the database on every request, so a block takes effect at once. Upload and admin
 // routes check their permission again (src/server/session.ts guard).
 
 const PUBLIC = ["/signin", "/not-on-list", "/api/health"];
@@ -25,6 +25,12 @@ export const ICONS = [
   "/icon-maskable-512.png",
 ];
 
+/**
+ * Item icons (WEB-91, Nico 2026-11-07): Blizzard's public game icons, open so Discord can load them for the bot's
+ * posts. Only names the item database holds are served (src/server/itemIcons.ts); nothing else of the data.
+ */
+export const ITEM_ICONS = "/api/item-icons/";
+
 /** The uploader API checks its own Bearer token (WEB-33, src/server/session.ts tokenGuard); pairing is open. */
 export const UPLOADER_API = "/api/uploader/v1/";
 
@@ -36,6 +42,7 @@ export function isPublic(pathname: string): boolean {
     PUBLIC.includes(pathname) ||
     ICONS.includes(pathname) ||
     pathname.startsWith("/api/auth/") ||
+    pathname.startsWith(ITEM_ICONS) ||
     pathname.startsWith(UPLOADER_API) ||
     pathname.startsWith(BOT_API)
   );
