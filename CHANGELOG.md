@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Doomsday on Discord: the board image shows everyone who has done a goal today, 8 to an image, in several images in the same post (at most 10), each marked "1/3" when there are more. Friends who haven't started yet are one line, "+5 haven't started", instead of rows. Needs the bot version that posts every image; an older bot shows the first one.
+- Doomsday: a friend who finished all PvE dailies no longer has the name struck through, on the site's board and in the Discord image. The crown and "finished all dailies first" stay.
+
 ## v0.9.2 (2026-11-05)
 - Guild members who run the addon but aren't anyone's Battle.net friend now show by their first character's name instead of "Unknown player", everywhere a name shows. Once a file shows their BattleTag (their own upload, or a friend's with the addon version that shares BattleTags over the guild), they become one person with their BattleTag, keep their characters, activity and Doomsday, and can sign in when they have a character in the guild.
 

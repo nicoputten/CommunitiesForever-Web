@@ -128,7 +128,7 @@ export interface BoardRow {
   name: string;
   initials: string;
   you: boolean;
-  /** All 3 PvE dailies done: the name is struck through. */
+  /** All 3 PvE dailies done (WEB-87: no longer struck through; screen readers hear it). */
   crossedOut: boolean;
   /** The crown's time ("19:30"). */
   crown?: string;

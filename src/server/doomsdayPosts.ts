@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { doomsdaySnapshot } from "@/core/doomsday/engine";
 import { createHash } from "node:crypto";
-import { boardCard } from "@/core/cards/models";
+import { boardCards } from "@/core/cards/models";
 import { type BoardData, boardData, boardNews, boardSummary, ladderData } from "@/core/doomsday/posts";
 import { EPOCH, weekOf, weekStart } from "@/core/doomsday/rules";
 import { canonical } from "@/core/merge";
@@ -53,6 +53,7 @@ function supersede(db: Db, day: number, now: number): void {
 /**
  * WEB-66 (docs/BOT-API.md "Visual posts"): the board's news line and its image id. The id is the day and a hash of the
  * picture as it is drawn now, so it changes only when the picture does (the bot re-attaches only on a new id).
+ * WEB-87: `images`, every page's id in order (page n is `<image>-<n>`); the hash covers all pages, `image` is page 1.
  */
 function visual(
   data: BoardData,
@@ -60,15 +61,20 @@ function visual(
   timeZone: string,
   now: number,
   summary?: ReturnType<typeof boardSummary>,
-): { news: string; image: string } {
-  const spec = boardCard(
+): { news: string; image: string; images: string[] } {
+  const pages = boardCards(
     { ...data, final: kind === "final", ...(summary !== undefined ? { summary } : {}) },
     now,
     timeZone,
     cardHost(),
   );
-  const hash = createHash("sha256").update(canonical(spec)).digest("hex").slice(0, 6);
-  return { news: boardNews(data, kind, timeZone, summary), image: `doomsday-${data.day}-${hash}` };
+  const hash = createHash("sha256").update(canonical(pages)).digest("hex").slice(0, 6);
+  const image = `doomsday-${data.day}-${hash}`;
+  return {
+    news: boardNews(data, kind, timeZone, summary),
+    image,
+    images: pages.map((_, i) => (i === 0 ? image : `${image}-${i + 1}`)),
+  };
 }
 
 /** The minute check: the final update of yesterday's board, today's board, and last week's ladder when due. */

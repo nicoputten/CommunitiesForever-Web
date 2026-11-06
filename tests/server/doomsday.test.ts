@@ -206,6 +206,10 @@ describe("Doomsday's bot events", () => {
     expect((board!.data.goals as { shortLabel: string }[]).every((g) => g.shortLabel.length <= 10)).toBe(true);
     const spec = cardFor(db, String(board!.data.image), T + 120, "wow.example.test");
     expect(spec).toMatchObject({ kind: "board", title: "Tue evening · just started", footer: "resets Wed 19:00" });
+    // WEB-87: nobody has done a goal yet: no rows, one line; one page, so `images` is just `image`.
+    expect(spec).toMatchObject({ rows: [], rest: "+2 haven't started" });
+    expect(board!.data.images).toEqual([board!.data.image]);
+    expect(cardFor(db, `${String(board!.data.image)}-2`, T + 120)).toBeUndefined();
     expect(cardFor(db, `doomsday-${DAY}-000000`, T + 120)).toBeUndefined();
 
     // Two uploads before the bot polls: only the newest update is handed out.
