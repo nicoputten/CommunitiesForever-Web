@@ -55,6 +55,39 @@ export async function openScreen(page: Page, url: string, { motion = false } = {
   await page.goto(url);
   await pageStreamed(page);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await mapSettled(page);
+}
+
+/**
+ * On a map page: waits until the map has stopped moving. After load it can still jump (the continent framed, the
+ * ResizeObserver re-centring once the page's scrollbar appears, MapStage's settle 120 ms after the last transform), and
+ * a check that clicks before that (a dungeon entrance's popover, placed by measuring) sees a map that moves on after
+ * it. Settled: the stage's box unchanged for 400 ms. Other pages return at once.
+ */
+export async function mapSettled(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const stage = document.querySelector("[data-map-frame] [data-level]");
+        if (stage === null) return resolve();
+        const QUIET_MS = 400;
+        const started = performance.now();
+        let last = "";
+        let since = started;
+        const tick = (now: number) => {
+          const r = stage.getBoundingClientRect();
+          const box = `${r.x},${r.y},${r.width},${r.height}`;
+          if (box !== last) {
+            last = box;
+            since = now;
+          }
+          if (now - since >= QUIET_MS) resolve();
+          else if (now - started > 10_000) reject(new Error(`the map kept moving: ${box}`));
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
 }
 
 /**
@@ -169,8 +202,43 @@ export async function expectNoMotion(page: Page): Promise<void> {
  * The screen matches its screenshot baseline. Baselines are made on Linux in the Playwright image (CI), since fonts
  * render differently on other systems; elsewhere this check is skipped. Open the screen with `openScreen` first.
  */
-/** `mask`: parts that differ per run (a random pairing code, WEB-34; the pinned card's raster at 4×, map-zone). */
-export async function expectScreenshot(page: Page, name: string, mask: Locator[] = []): Promise<void> {
+/**
+ * `mask`: parts that differ per run (a random pairing code, WEB-34; the pinned card's raster at 4×, map-zone).
+ * `reopen`: opens the screen again as the test did (`openScreen`), for a screen whose text the capture can disturb
+ * (see `warmUpCapture`).
+ */
+export async function expectScreenshot(
+  page: Page,
+  name: string,
+  mask: Locator[] = [],
+  reopen?: () => Promise<void>,
+): Promise<void> {
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
+  if (reopen !== undefined) await warmUpCapture(page, reopen);
   await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, mask });
+}
+
+/**
+ * Chromium captures a page taller than the viewport by enlarging the view for the capture (`captureBeyondViewport`,
+ * every full-page screenshot), and now and then the page sees a resize to 1 × 1 and back while it does. Mostly on a
+ * page's first capture, and a glyph can then stay rasterized differently: the "m" of the admin page's "Admins" heading
+ * (126 px, the flaky admin-desktop baseline), until the page is loaded again. So a throwaway capture first, and when it
+ * saw that resize the screen is opened anew (at most three times). CI runs with `--update-snapshots=changed`, which
+ * writes a differing screenshot instead of failing, so this has to happen before `toHaveScreenshot`, not as a retry.
+ */
+async function warmUpCapture(page: Page, reopen: () => Promise<void>): Promise<void> {
+  type Watched = { __cfTinyResize?: boolean };
+  for (let i = 0; i < 3; i++) {
+    await page.evaluate(() => {
+      const w = window as unknown as Watched;
+      if (w.__cfTinyResize !== undefined) return void (w.__cfTinyResize = false);
+      w.__cfTinyResize = false;
+      addEventListener("resize", () => {
+        if (innerWidth < 100 || innerHeight < 100) w.__cfTinyResize = true;
+      });
+    });
+    await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide", scale: "device" });
+    if (!(await page.evaluate(() => (window as unknown as Watched).__cfTinyResize))) return;
+    await reopen();
+  }
 }
