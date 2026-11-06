@@ -279,3 +279,9 @@ Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" 
 - **Upload processing (B4):** per character, new recipes inserted with `first_seen_at`, vanished ones removed, skill, link and `scanned_at` updated; the first scan of a character or profession is the baseline; new rare finds per character per upload collected in `recipe_finds` for Part D. Nothing is posted.
 - **Compatibility (rule 4):** every released addon sends no recipes: nothing changes for them.
 - Done when: unit tests for the import parsing (fixtures), the threshold maths, the diff and baseline rule, rare finds and Forever's own pairs; lint, tests and build pass.
+
+### WEB-91 Item data from the admin page, public item icons (Nico, 2026-11-07)
+Nico answered WEB-90's two questions: "Yes, both".
+- **Import item data:** an owner-only box on the admin page runs the import of `npm run import:items` on the server (the image has no `scripts/`), in the background and one at a time: what it is doing while it runs, then the build, recipes and items, or a clear error. Owner only, like the other server settings (WEB-64). The newest Forever and Classic Era builds by default; the command line keeps working. A run that wrote new data is a line in Admin changes.
+- **Public item icons:** `/api/item-icons/<name>` without a session, so Discord can load them for DoomBot; strict names, long cache headers; nothing else under `/api` loses its check. Also CLAUDE.md rule 6's list of open routes. Not in this PR: opening a route without a login waits for Nico's own go-ahead in the session doing it.
+- Done when: tests for the import run (a fake wago.tools with a cut-off download, one at a time, the error); the open icon route with tests next to the closed ones; lint, tests and build pass; the admin page's screenshot baseline changes only after Nico's OK.

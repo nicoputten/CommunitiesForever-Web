@@ -72,7 +72,7 @@ The run log (CF-23, in the feed: `feed[day][guid].runs`) decides "Ran it" (WEB-4
 
 ## Item database (WEB-90)
 Not from uploads: the items and recipes the site shows come from the game client's own data and cmangos, imported by
-hand once per game patch (`npm run import:items`, `scripts/import-items.ts`; built by `src/core/recipes/build.ts`,
+hand once per game patch (the owner's "Import item data" on the admin page, WEB-91, or `npm run import:items`; both use the newest builds wago.tools lists unless given others; built by `src/core/recipes/build.ts`,
 written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads stay in a cache folder outside the repo
 (default `DATA_DIR/import-cache`) and are never committed; the tests use invented fixtures (`tests/fixtures/items/`).
 
