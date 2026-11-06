@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Doomsday: 83 more missions join the draw (pool version 3): 60 dailies, 22 weeklies and the Skirmish "Defend home: a kill in friendly territory". The 4 PvP rank missions leave it, because Forever has no PvP rank the addon can read. Days and weeks already played keep their missions and points. Friends need the new addon version; an older addon keeps drawing pool version 2 until it is updated.
+
 ## v0.9.3 (2026-11-06)
 - Doomsday on Discord: the board image shows everyone who has done a goal today, 8 to an image, in several images in the same post (at most 10), each marked "1/3" when there are more. Friends who haven't started yet are one line, "+5 haven't started", instead of rows; before anyone has done a goal (just after the reset), everyone is a row at 0. Needs the bot version that posts every image; an older bot shows the first one.
 - Doomsday: a friend who finished all PvE dailies no longer has the name struck through, on the site's board and in the Discord image. The crown and "finished all dailies first" stay.
