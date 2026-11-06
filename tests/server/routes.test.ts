@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DELETE as unblockRoute, GET as blocksRoute, PUT as blockRoute } from "@/app/api/admin/blocks/route";
 import { GET as guestsRoute, PUT as putGuestRoute } from "@/app/api/admin/guests/route";
 import { GET as healthRoute } from "@/app/api/health/route";
+import { GET as itemIconRoute } from "@/app/api/item-icons/[name]/route";
 import { POST as uploadRoute } from "@/app/api/uploads/route";
 import { MAX_UPLOAD_BYTES } from "@/core/views/upload";
 import { config, isPublic, proxy } from "@/proxy";
@@ -122,6 +123,12 @@ describe("proxy", () => {
   it("answers API routes without a session with 401", async () => {
     expect((await proxy(await request("/api/uploads", undefined, { method: "POST" }))).status).toBe(401);
     expect((await proxy(await request("/api/anything"))).status).toBe(401);
+    // WEB-90: item icons too, at the proxy and in the handler.
+    expect((await proxy(await request("/api/item-icons/inv_misc_questionmark"))).status).toBe(401);
+    const icon = await itemIconRoute(await request("/api/item-icons/inv_misc_questionmark"), {
+      params: Promise.resolve({ name: "inv_misc_questionmark" }),
+    });
+    expect(icon.status).toBe(401);
   });
 
   it("sends someone not on the list to the not-on-the-list page, or 403 for the API", async () => {

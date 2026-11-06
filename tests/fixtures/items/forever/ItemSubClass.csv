@@ -1,0 +1,7 @@
+DisplayName_lang,VerboseName_lang,ID,ClassID,SubClassID
+Bag,,1,1,0
+Cloth,Cloth,2,4,1
+Cloth,,3,7,5
+Other,,4,7,11
+Other,,5,0,8
+Recipe,,6,9,2

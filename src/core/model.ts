@@ -29,6 +29,14 @@ export interface Profession {
   name?: string;
   rank?: number;
   max?: number;
+  /** Addon CF-38 (WEB-90): the profession link, as text only (rule 2 strips its escape sequences). */
+  link?: string;
+  /** CF-38: "short" (a live pointer) or "long" (a link with the recipes inside). */
+  linkType?: "short" | "long";
+  /** CF-38: the specialisation, when the game API gives one. */
+  spec?: string;
+  /** CF-38: server time (Unix seconds) the addon last scanned this profession's window. */
+  scannedAt?: number;
 }
 
 export interface TalentTree {
@@ -87,6 +95,15 @@ export interface Character {
   pvp?: Pvp;
   /** CF-53: the riding skill rank (0, 75 or 150). */
   riding?: number;
+  /**
+   * Addon CF-38 (WEB-90): the learned recipes of every profession, recipe (spell) ID -> the item it makes (0: none).
+   * Complete on each scan. Undefined from addons that don't send it (nothing known, never "none learned").
+   */
+  recipes?: Record<string, number>;
+  /** CF-38: server time of the last recipe scan. */
+  recipesAt?: number;
+  /** CF-38, where the game API allows it: recipe ID -> skill line ID. The item database wins where both exist. */
+  recipeLines?: Record<string, number>;
   updatedAt?: number;
   lastPlayed?: number;
 }

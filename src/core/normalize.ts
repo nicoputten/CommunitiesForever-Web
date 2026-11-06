@@ -207,7 +207,19 @@ function readChar(guid: string, owner: string, c: Table): Character {
   const professions = dict<Profession>();
   for (const [id, value] of entries(table(field(c, "professions")))) {
     const p = table(value);
-    if (p !== undefined) professions[id] = compact({ name: str(p, "name"), rank: num(p, "rank"), max: num(p, "max") });
+    if (p === undefined) continue;
+    const linkType = str(p, "linkType");
+    const spec = field(p, "spec");
+    professions[id] = compact({
+      name: str(p, "name"),
+      rank: num(p, "rank"),
+      max: num(p, "max"),
+      // CF-38 (WEB-90), all optional.
+      link: str(p, "link")?.slice(0, MAX_LINK),
+      linkType: linkType === "short" || linkType === "long" ? linkType : undefined,
+      spec: typeof spec === "number" && Number.isFinite(spec) ? String(spec) : str(p, "spec")?.slice(0, 40),
+      scannedAt: num(p, "scannedAt"),
+    });
   }
   const quests = dict<Quest>();
   for (const [id, value] of entries(table(field(c, "quests")))) {
@@ -252,6 +264,9 @@ function readChar(guid: string, owner: string, c: Table): Character {
     quests,
     pvp: readPvp(table(field(c, "pvp"))),
     riding: count(c, "riding"),
+    recipes: readRecipes(table(field(c, "recipes"))),
+    recipesAt: num(c, "recipesAt"),
+    recipeLines: readRecipeLines(table(field(c, "recipeLines"))),
     updatedAt: num(c, "updatedAt"),
     lastPlayed: num(c, "lastPlayed"),
   });
@@ -261,6 +276,49 @@ function readChar(guid: string, owner: string, c: Table): Character {
 function count(t: Table | undefined, key: string): number | undefined {
   const v = num(t, key);
   return v !== undefined && v >= 0 ? v : undefined;
+}
+
+/** CF-38 (WEB-90): at most this many recipes per character are read (every profession has a few hundred). */
+export const MAX_RECIPES = 5000;
+/** A profession link's text is kept to this length. */
+const MAX_LINK = 200;
+/** Recipe, item and skill line IDs are positive whole numbers below this (spell IDs pass 1,000,000 on Forever). */
+const MAX_ID = 100_000_000;
+
+function id(v: unknown): number | undefined {
+  const n = typeof v === "string" && /^\d+$/.test(v) ? Number(v) : v;
+  return typeof n === "number" && Number.isInteger(n) && n > 0 && n < MAX_ID ? n : undefined;
+}
+
+/** `chars.*.recipes` (CF-38): recipe ID -> item ID (0 for none). Anything else is left out. */
+function readRecipes(t: Table | undefined): Record<string, number> | undefined {
+  if (t === undefined) return undefined;
+  const out = dict<number>();
+  let read = 0;
+  for (const [key, value] of entries(t)) {
+    const recipe = id(key);
+    if (recipe === undefined || typeof value !== "number") continue;
+    const item = value === 0 ? 0 : id(value);
+    if (item === undefined) continue;
+    out[String(recipe)] = item;
+    if (++read >= MAX_RECIPES) break;
+  }
+  return out;
+}
+
+/** `chars.*.recipeLines` (CF-38, optional): recipe ID -> skill line ID. */
+function readRecipeLines(t: Table | undefined): Record<string, number> | undefined {
+  if (t === undefined) return undefined;
+  const out = dict<number>();
+  let read = 0;
+  for (const [key, value] of entries(t)) {
+    const recipe = id(key);
+    const line = id(value);
+    if (recipe === undefined || line === undefined) continue;
+    out[String(recipe)] = line;
+    if (++read >= MAX_RECIPES) break;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** Highest PvP rank (DOOMSDAY.md "PvP rank titles"). */
