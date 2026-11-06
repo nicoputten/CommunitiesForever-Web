@@ -17,7 +17,9 @@ test("shows the group, the level spread and the quick answers", async ({ page })
   await page.goto("/roster");
   await expect(page.getByText("6 friends · 10 characters · Sanne has no addon yet")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Who is around which level" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Dungeon bands" })).toContainText("32–42 · 4");
+  await expect(
+    page.getByRole("list", { name: "Dungeon bands" }).getByRole("button", { name: /32–42 · 4/ }),
+  ).toBeVisible();
   // No run planned yet: no Next run card (WEB-45).
   await expect(page.getByRole("region", { name: "Next run" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Healers" }).locator("..")).toContainText(
@@ -51,19 +53,24 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
     await expect(band).toHaveAttribute("aria-label", new RegExp(label));
     await expect(band).toHaveAttribute("aria-label", new RegExp(name));
   }
-  // Full names everywhere, never cut (WEB-65).
-  await expect(bands.locator('button[data-band="rfc"]')).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
+  // The full text where it fits; a band too narrow for it on the level scale shows the name (WEB-88), not on a phone.
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveText(
+    isPhone(page) ? "Ragefire Chasm 13–18 · 2" : "Ragefire Chasm",
+    { useInnerText: true },
+  );
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
-  // Lia 37, Ves 39 and Bob 41 share one dot; Ves is the viewer's. A phone merges within 4 levels: Tok 33 too.
+  // Lia 37 and Ves 39 share one dot, Bob 41 has his own: a dot covers at most 3 levels (WEB-88); Ves is the viewer's.
+  // A phone merges within 4 levels, at most 5 a dot, middles 5 levels apart: Tok 33 with Lia, Ves with Bob.
   const phone = isPhone(page);
-  await expect(spread.locator("[aria-describedby^=spread-tip]:visible")).toHaveCount(phone ? 4 : 8);
+  await expect(spread.locator("[aria-describedby^=spread-tip]:visible")).toHaveCount(phone ? 5 : 9);
   const group = spread.getByRole("button", {
-    name: phone ? "4 characters around level 37" : "3 characters around level 39",
+    name: phone ? "2 characters around level 40" : "2 characters around level 38",
   });
-  const tip = spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" });
-  await expect(group).toHaveText(phone ? "4" : "3");
+  const tip = spread.getByRole("tooltip").filter({ hasText: "Ves Doombringer" });
+  await expect(group).toHaveText("2");
   await expect(group).toHaveAttribute("data-own", "true");
   await expect(spread.getByRole("button", { name: "Mira Sunstrider 60" })).not.toHaveAttribute("data-own");
   await expect(tip).toBeHidden();
@@ -81,8 +88,8 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   await group.click();
   await expect(tip).toHaveText(
     phone
-      ? /Tok Ironhide 33 · Bob\s*Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/
-      : /Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you\s*Bob Example 41 · Bob/,
+      ? /^Ves Doombringer 39 · you\s*Bob Example 41 · Bob$/
+      : /^Lia Thornwhisper 37 · Femke\s*Ves Doombringer 39 · you$/,
   );
   await expect(group).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Escape");

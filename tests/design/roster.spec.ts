@@ -38,7 +38,7 @@ test("roster: design values", async ({ page }) => {
   // The level spread (WEB-32, board roster-cards-runs): a merged dot with its count, the gold ring, the tooltip.
   const spread = page.getByRole("region", { name: "Who is around which level" });
   const group = spread.getByRole("button", {
-    name: isPhone(page) ? "4 characters around level 37" : "3 characters around level 39",
+    name: isPhone(page) ? "2 characters around level 40" : "2 characters around level 38",
   });
   await expectStyles(group.locator("span").first(), {
     width: "var(--size-dot-group)",
@@ -56,7 +56,7 @@ test("roster: design values", async ({ page }) => {
     "box-shadow": "var(--ring-dot)",
   });
   await group.click();
-  await expectStyles(spread.getByRole("tooltip").filter({ hasText: "Lia Thornwhisper" }), {
+  await expectStyles(spread.getByRole("tooltip").filter({ hasText: "Ves Doombringer" }), {
     "font-size": "var(--fs-meta)",
     "border-radius": "var(--r-btn)",
     "background-color": "var(--surface-tooltip)",
@@ -69,6 +69,11 @@ test("roster: design values", async ({ page }) => {
   await expectStyles(armory, {
     "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-meta)",
     color: "var(--gold-pale)",
+  });
+  // The best band's gold: the band itself on a phone, its bar on the level scale (WEB-88).
+  await expectStyles(isPhone(page) ? armory : armory.locator("[data-bar]"), {
+    "background-color": "var(--tint-selected)",
+    "border-color": "var(--gold)",
   });
   await armory.click();
   const pop = page.getByRole("dialog", { name: "Scarlet Monastery: Armory" });
@@ -169,26 +174,64 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: band chips with full names, wrapping (WEB-65)", async ({ page }) => {
+test("roster: dungeon bands on the level scale, one per row, lowest first, cut text on hover (WEB-65, WEB-88)", async ({
+  page,
+}) => {
   test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });
   const band = (id: string) => bands.locator(`button[data-band="${id}"]`);
-  await expect(band("rfc")).toHaveText("Ragefire Chasm 13–18 · 2", { useInnerText: true });
-  await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral 35–45 · 3 · 1 run", {
-    useInnerText: true,
+  // A narrow band shows the name alone, everything in its accessible name and on hover.
+  await expect(band("rfc")).toHaveText("Ragefire Chasm", { useInnerText: true });
+  await expect(band("rfc")).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
+  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18 · 2");
+  await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral", { useInnerText: true });
+  await expect(band("sm-cathedral")).toHaveAttribute("aria-label", "Scarlet Monastery: Cathedral 35–45 · 3 · 1 run");
+  await expectStyles(band("rfc").locator("[data-bar]"), {
+    "border-radius": "var(--r-btn)",
+    "background-color": "var(--surface-row)",
   });
-  await expectStyles(band("rfc"), { "border-radius": "var(--r-btn)", "font-size": "var(--fs-meta)" });
-  // Never cut: every chip shows all of its text, and the chips wrap onto more than one row.
+  await expectStyles(band("rfc"), { "font-size": "var(--fs-meta)" });
   const layout = await bands.evaluate((ul) => {
-    const buttons = [...ul.querySelectorAll<HTMLElement>("button[data-band]")];
-    return {
-      cut: buttons.filter((b) => b.scrollWidth > b.clientWidth).map((b) => b.dataset.band),
-      rows: new Set(buttons.map((b) => Math.round(b.getBoundingClientRect().top))).size,
-    };
+    const box = ul.getBoundingClientRect();
+    const at = (level: number) => box.left + ((level - 1) / 59) * box.width;
+    const rows = [...ul.querySelectorAll<HTMLElement>("li[data-row]")].map((li) => {
+      const bar = li.querySelector<HTMLElement>("[data-bar]")!;
+      const label = li.querySelector<HTMLElement>("[data-label]")!;
+      const [min, max] = /(\d+)–(\d+)/.exec(li.querySelector("button")!.getAttribute("aria-label")!)!.slice(1).map(Number);
+      const r = bar.getBoundingClientRect();
+      const t = label.getBoundingClientRect();
+      return {
+        id: li.dataset.row,
+        min: min!,
+        top: r.top,
+        // The band from its min to its max level, on the track's scale.
+        placed: Math.abs(r.left - at(min!)) < 1 && Math.abs(r.right - at(max!)) < 1,
+        // The text stays inside its band; a narrow band shows the name alone, the full text on hover.
+        inside: t.left >= r.left && t.right <= r.right,
+        fit: label.dataset.fit,
+        shown: label.textContent,
+        cut: label.scrollWidth > label.clientWidth,
+        title: li.querySelector("button")!.title,
+        full: li.querySelector("button")!.getAttribute("aria-label"),
+      };
+    });
+    return rows;
   });
-  expect(layout.cut).toEqual([]);
-  expect(layout.rows).toBeGreaterThan(1);
+  expect(layout.filter((r) => !r.placed).map((r) => r.id)).toEqual([]);
+  expect(layout.filter((r) => !r.inside).map((r) => r.id)).toEqual([]);
+  for (const r of layout) {
+    expect(r.title).toBe(r.fit === "full" ? "" : r.full);
+    // The full text only where it fits; the name never gives way to the range or count.
+    if (r.fit === "full") expect(r.cut).toBe(false);
+    else expect(r.shown).not.toMatch(/\d/);
+  }
+  expect(layout.every((r, i) => i === 0 || r.top > layout[i - 1]!.top)).toBe(true);
+  const mins = layout.map((r) => r.min);
+  expect(mins).toEqual([...mins].sort((a, b) => a - b));
+  // Both: the whole text in a wide band, the name alone in a narrow one (Ragefire Chasm, 13–18).
+  expect(layout.find((r) => r.id === "rfc")).toMatchObject({ fit: "name", shown: "Ragefire Chasm" });
+  expect(layout.some((r) => r.fit === "full")).toBe(true);
   await expectAccessible(page);
   test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
   await expect(page.getByRole("region", { name: "Who is around which level" })).toHaveScreenshot("roster-bands.png");

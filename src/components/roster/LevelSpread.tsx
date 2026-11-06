@@ -8,11 +8,13 @@ import { joinNames } from "@/core/views/text";
 import {
   BAND_ROWS,
   bandLayout,
+  bandsByLevel,
   levelPosition,
-  MERGE_LEVELS,
-  MERGE_LEVELS_PHONE,
+  DOT_RULE,
+  DOT_RULE_PHONE,
   spreadDots,
   type BandLayout,
+  type DotRule,
 } from "@/core/views/spreadLayout";
 import styles from "./LevelSpread.module.css";
 import { DungeonBands, type BandView } from "./DungeonBands";
@@ -36,9 +38,9 @@ function slices(characters: readonly CharacterView[]): string {
 
 /**
  * "Who is around which level" (board `roster-cards-runs`, without its run parts): every character as a dot on a 1–60
- * track, names in a tooltip; characters within two levels (four on a phone) merge into a dot with a count (WEB-32).
- * Then the dungeon
- * bands, which count who fits and never name them. `own`: the viewer's person key (the gold ring).
+ * track, names in a tooltip; characters within two levels (four on a phone) merge into a dot with a count (WEB-32),
+ * one dot covering at most 3 levels (5 on a phone, WEB-88). Then the dungeons that fit, one per line, lowest level
+ * first, which count who fits and never name them. `own`: the viewer's person key (the gold ring).
  */
 export function LevelSpread({
   spread,
@@ -50,8 +52,8 @@ export function LevelSpread({
   /** WEB-45: each dungeon's upcoming runs, for its band. */
   runs?: RosterRuns["byDungeon"];
 }) {
-  const dots = (merge: number): TrackDot[] =>
-    spreadDots(spread.characters, own, merge).map((d) => {
+  const dots = (rule: DotRule): TrackDot[] =>
+    spreadDots(spread.characters, own, rule).map((d) => {
       const one = d.characters.length === 1 ? d.characters[0] : undefined;
       const dot: TrackDot = {
         key: d.characters[0]!.guid,
@@ -80,25 +82,29 @@ export function LevelSpread({
   const limited = bandLayout(spread, BAND_ROWS);
   const all = bandLayout(spread);
   const rowIn = (layout: BandLayout, band: DungeonBand) => layout.shown.find((p) => p.band === band)?.row;
-  const bands: BandView[] = all.shown.map((placed) => {
-    const b = placed.band;
-    const { min, max } = b.dungeon.typicalLevels;
-    const planned = runs[b.dungeon.id] ?? { runs: [], more: 0 };
-    const row = rowIn(limited, b);
-    return {
-      id: b.dungeon.id,
-      name: b.dungeon.name,
-      range: `${min}–${max}`,
-      fits: b.fits.length,
-      ...(b.missing.length === 0 ? {} : { missing: `no ${joinNames([...b.missing])} in range` }),
-      runs: planned.runs,
-      moreRuns: planned.more,
-      best: placed.best,
-      extra: row === undefined,
-      order: b === spread.best ? -1 : spread.bands.indexOf(b),
-      right: placed.from > 0.5,
-    };
-  });
+  // One per row on the track's scale, lowest level first (WEB-88); the best band keeps its gold, not its place.
+  const bands: BandView[] = [...all.shown]
+    .sort((a, b) => bandsByLevel(a.band, b.band))
+    .map((placed) => {
+      const b = placed.band;
+      const { min, max } = b.dungeon.typicalLevels;
+      const planned = runs[b.dungeon.id] ?? { runs: [], more: 0 };
+      const row = rowIn(limited, b);
+      return {
+        id: b.dungeon.id,
+        name: b.dungeon.name,
+        short: b.dungeon.shortName,
+        range: `${min}–${max}`,
+        fits: b.fits.length,
+        ...(b.missing.length === 0 ? {} : { missing: `no ${joinNames([...b.missing])} in range` }),
+        runs: planned.runs,
+        moreRuns: planned.more,
+        best: placed.best,
+        extra: row === undefined,
+        from: placed.from,
+        to: placed.to,
+      };
+    });
 
   return (
     <section className={styles.spread} aria-labelledby="level-spread">
@@ -111,9 +117,9 @@ export function LevelSpread({
         </InfoTip>
       </div>
 
-      {/* One track per layout: a phone merges more (MERGE_LEVELS_PHONE); CSS shows one. */}
-      <SpreadTrack dots={dots(MERGE_LEVELS)} layout="wide" />
-      <SpreadTrack dots={dots(MERGE_LEVELS_PHONE)} layout="phone" />
+      {/* One track per layout: a phone merges more (DOT_RULE_PHONE); CSS shows one. */}
+      <SpreadTrack dots={dots(DOT_RULE)} layout="wide" />
+      <SpreadTrack dots={dots(DOT_RULE_PHONE)} layout="phone" />
 
       <div aria-hidden="true" className={styles.ticks}>
         {TICKS.map((t) => (

@@ -79,6 +79,8 @@ const SETTLE_MS = 120;
 const EDGE_GIVE = 0.35;
 /** Pixels an arrow key pans. */
 const PAN_STEP = 80;
+/** Below this width or height (px) the map frame is no view (MapStage layout). */
+const MIN_FRAME = 32;
 
 /** Writes URL parameters without a server round trip, keeping the others; `push` adds a history entry (Back undoes). */
 function writeParams(params: Record<string, string | undefined>, push = false) {
@@ -273,6 +275,9 @@ export function MapStage({
       top += el.offsetTop;
     }
     const f = frame.getBoundingClientRect();
+    // A frame too small to show a map is no view to fit, settle or spring back to: Chromium's full-page screenshot
+    // resizes the page to 1 × 1 for a moment now and then, and a view worked out there was kept (the design checks).
+    if (f.width < MIN_FRAME || f.height < MIN_FRAME || stage.offsetWidth === 0) return undefined;
     // The phone's bottom sheet (WEB-28) covers the map's lower part: the centre is in the part above it.
     const bottom = sheetOn.current
       ? Math.min(f.bottom, window.innerHeight - sheetHeights()[snapNow.current])

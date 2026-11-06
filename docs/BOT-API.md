@@ -402,7 +402,7 @@ At each reset, with the Board switch on: the new day's board. The bot posts it i
 
 - `goals`: the day's draw, in slot order.
 - `friends`: every friend with Doomsday data, most goals done first, then by name. A row's `goals` lists only the slots that differ from the day's goal or are done (`slot`, `id`, `done`, `at`, `swappedFrom`, `progress`); a slot not listed is the day's goal, not done.
-- `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (struck through). `today`, `week`: points per track (a PvP Virgin's PvP points too, WEB-80; `null` before WEB-80). `streak`, `best`: days.
+- `doneCount`: goals done today (the Duel slot is not a goal). `crossedOut`: all 3 PvE dailies done (no longer struck through since WEB-87). `today`, `week`: points per track (a PvP Virgin's PvP points too, WEB-80; `null` before WEB-80). `streak`, `best`: days.
 - `withoutData`: friends on the site without Doomsday data (no row).
 - `crown`: `{ "name", "at" }`, the first friend to finish the 3 PvE dailies, or `null`. No points.
 - `yesterdayCrown`: `{ "name" }`, the crown of the previous Doomsday day, or `null` when nobody took it (bot BOT-15, Nico 2026-10-28: "Yesterday's crown: Tok."). Optional: the bot shows the line only when it is sent.
@@ -543,7 +543,8 @@ The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot
 
 | id | Size | What |
 |---|---|---|
-| `doomsday-<day>-<hash>` | 800 × 560 | the day's board picture. `hash` (6 hex characters) changes only when the picture changes |
+| `doomsday-<day>-<hash>` | 800 × 560 and taller | the day's board picture (page 1). `hash` (6 hex characters) changes only when the picture changes |
+| `doomsday-<day>-<hash>-<n>` | 800 × 560 and taller | WEB-87: page `n` (2 to 10) of the same board, when `images` names it |
 | `milestone-<event>-<n>` | 800 × 400 or 800 × 240 | now **every** feat except `newCharacter`: big or strip (the site chooses) |
 | `recap-<week>-header` | 1200 × 400 | the award header with the winner's class disc (as before; without an award: the busiest zone, else the headline) |
 | `recap-<week>-zone` | 800 × 450 (was 800 × 400) | the zone crop with "Map: Syrio, CC BY-SA 4.0", for a recap with Zone of the week (`S1`) or Bloodbath zone (`S13`) |
@@ -554,6 +555,7 @@ The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot
 | Field | |
 |---|---|
 | `image` | the board picture's id. It is new only when the picture changed, so the bot re-attaches only on a new id (at most every 5 minutes; `final` is never held back). Left out when the picture couldn't be drawn: the bot falls back to the text table, without the legend line |
+| `images` | WEB-87, optional within v1: the ids of every page of the picture, in order, 1 to 10; the first is `image`, page n is `<image>-<n>`. Sent whenever `image` is. The bot attaches them all to the one message, in this order (Discord allows 10), and swaps them together (a new `image` means new pages). A bot that knows only `image` shows page 1 |
 | `news` | one finished sentence; the bot shows it as is. At the reset: the goals in full and "5 points each". During the day: "Mira finished all dailies first (23:13). Ada and Tok are 1 away." With `final`: "Day over: 14 goals done. Mira first at 23:13, longest streak Tok with 7. New board at 19:00." Plus "2 friends without addon data" when `withoutData` has any |
 | `label` | now the day by its reset: the weekday plus the part of the day of the reset hour, 05–11 "morning", 12–16 "afternoon", 17–22 "evening", 23–04 "night" ("Wed evening") |
 | `span` | "Wed 19:00 → Thu 19:00", realm time |
@@ -566,7 +568,7 @@ The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot
 - The embed: title "Doomsday · <label>" (" · final" with `final`), `news` as description, the picture, and the buttons "Open the board ↗" (`doomsday.url`) and "My goals" (the bot's `doomsday` look-up, for whoever clicks).
 - The look-up `doomsday` gains `span`, and its `label` changes the same way.
 - Clock times in `news` are realm time.
-- The picture: "DOOMSDAY", "<label> · <state>" (just started, the time of the last change, or final), one column per goal with its short label under PvE or PvP, one row per friend with Doomsday data (at most 6, the most goals done first): the name struck through when all PvE dailies are done and the crown after the first to finish, 44 px boxes, "PvP Virgin" across the PvP columns, Today as PvE · PvP and the streak. The footer says when it resets, or at the end who finished first and the goals done.
+- The picture: "DOOMSDAY", "<label> · <state>" (just started, the time of the last change, or final), one column per goal with its short label under PvE or PvP, one row per friend who has done a goal today (`doneCount` > 0; WEB-87, before: every friend with Doomsday data, at most 6), the most goals done first, 8 to a page, at most 10 pages, "1/3" top right with several; while nobody has done a goal, every friend with Doomsday data is a row at 0; the last page ends with "+N haven't started" (friends with Doomsday data and nothing done; "+N more · " before it beyond 80 rows); the crown after the first to finish (no strike-through since WEB-87), 44 px boxes, "PvP Virgin" across the PvP columns, Today as PvE · PvP and the streak. The footer, on every page, says when it resets, or at the end who finished first and the goals done. An image is 800 × 560 up to 5 rows and 64 px taller for each row (or the last line) beyond: at most 816 px.
 
 ### Feats (the `milestones` event)
 

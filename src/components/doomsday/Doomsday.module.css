@@ -462,13 +462,6 @@ tr[data-dim="true"] .avatar {
   color: var(--text-strong);
 }
 
-.friendName[data-crossed="true"] {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--strike-done);
-  text-decoration-thickness: var(--s-0-5);
-}
-
 .cell {
   display: flex;
   flex-direction: column;

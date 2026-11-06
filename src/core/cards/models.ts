@@ -166,7 +166,7 @@ export function cardSize(spec: CardSpec): { width: number; height: number } {
   if (spec.kind === "award" || spec.kind === "zoneHeader" || spec.kind === "headline")
     return { width: 1200, height: 400 };
   if (spec.kind === "strip") return { width: 800, height: 240 };
-  if (spec.kind === "board") return { width: 800, height: 560 };
+  if (spec.kind === "board") return { width: 800, height: boardHeight(spec) };
   // WEB-66: the recap's zone crop is 800 × 450.
   if (spec.kind === "zone") return { width: 800, height: 450 };
   return { width: 800, height: 400 };
@@ -447,7 +447,7 @@ export function stripCard(m: Milestone, c: CharacterFacts): StripCardSpec | unde
   return spec;
 }
 
-/** The daily Doomsday board image (WEB-66, board `bot-visual-daily`, 800 × 560). */
+/** The daily Doomsday board image (WEB-66, board `bot-visual-daily`, 800 × 560 and taller; WEB-87: in pages). */
 export interface BoardCardSpec {
   kind: "board";
   /** "Wed evening · just started", "Wed evening · Thu 13:10", "Wed evening · final". */
@@ -455,32 +455,48 @@ export interface BoardCardSpec {
   columns: { track: "pve" | "pvp"; label: string }[];
   rows: {
     name: string;
-    /** All PvE dailies done. */
-    struck: boolean;
     crown: boolean;
     done: boolean[];
     virgin: boolean;
     today: { pve: number; pvp: number | null };
     streak: number;
   }[];
+  /** WEB-87: "2/3" with more than one page. */
+  page?: string;
+  /** WEB-87, the last page only: "+3 more · +5 haven't started" (who isn't a row). */
+  rest?: string;
   /** "resets Thu 19:00", "resets in 5 h 50 m", "Mira first at 23:13 · 14 goals done". */
   footer: string;
   host: string;
 }
 
-/** At most this many friends on the board image; it is read at 300 px on a phone (the most goals done first). */
-export const BOARD_ROWS = 6;
+/** WEB-87: friends per board image (read at 300 px on a phone). */
+export const BOARD_ROWS = 8;
+/** WEB-87: at most this many images, Discord's limit per message. */
+export const BOARD_PAGES = 10;
+/** The board image's height up to 5 rows, and what each row (or the "haven't started" line) beyond adds. */
+const BOARD_HEIGHT = 560;
+/** A row as the renderer draws it: the 44 px box, 14 px around it and the 6 px gap between rows. */
+export const BOARD_ROW_HEIGHT = 64;
+
+/** The board image's height: 560 up to 5 rows, a row's height more for each row (and the extra line) beyond. */
+export function boardHeight(spec: BoardCardSpec): number {
+  const lines = spec.rows.length + (spec.rest !== undefined ? 1 : 0);
+  return BOARD_HEIGHT + Math.max(0, lines - 5) * BOARD_ROW_HEIGHT;
+}
 
 /**
- * The board image of a `doomsdayBoard` or `doomsdayBoardUpdate` event as it was at `at` (its creation), in realm time.
- * Friends without Doomsday data are left out (the news line counts them).
+ * The board images of a `doomsdayBoard` or `doomsdayBoardUpdate` event as it was at `at` (its creation), in realm
+ * time (WEB-87): a row for every friend who has done a goal today, in the board's order, 8 to a page, at most 10
+ * pages. Friends with Doomsday data who did nothing are one line on the last page; while nobody has done anything,
+ * everyone with data is a row. Friends without data are left out (the news line counts them). Always one page or more.
  */
-export function boardCard(
+export function boardCards(
   data: BoardData & { final?: boolean; summary?: ReturnType<typeof boardSummary> },
   at: number,
   timeZone: string,
   host: string,
-): BoardCardSpec {
+): BoardCardSpec[] {
   const clock = (t: number) => clockAt(t, data.start, timeZone);
   const fresh = !data.final && at - data.start < 10 * 60;
   const state = data.final === true ? "final" : fresh ? "just started" : clock(at);
@@ -497,20 +513,44 @@ export function boardCard(
       : fresh
         ? `resets ${resetAt}`
         : `resets in ${duration(data.end - at)}`;
-  return {
-    kind: "board",
-    title: `${data.label} · ${state}`,
-    columns: data.goals.map((g) => ({ track: g.track, label: g.shortLabel })),
-    rows: data.friends.slice(0, BOARD_ROWS).map((f) => ({
-      name: f.name,
-      struck: f.crossedOut,
-      crown: data.crown?.name === f.name,
-      done: data.goals.map((g) => f.goals.some((x) => x.slot === g.slot && x.done)),
-      virgin: f.pvpVirgin,
-      today: f.today,
-      streak: f.streak,
-    })),
-    footer,
-    host,
-  };
+  // Nico (2026-11-06): until anyone has a goal done (the reset), everyone with data is a row at 0.
+  const started = data.friends.filter((f) => (f.doneCount ?? 0) > 0);
+  const playing = started.length > 0 ? started : data.friends;
+  const idle = data.friends.length - playing.length;
+  const shown = playing.slice(0, BOARD_ROWS * BOARD_PAGES);
+  const more = playing.length - shown.length;
+  const rest = [more > 0 ? `+${more} more` : undefined, idle > 0 ? `+${idle} haven't started` : undefined]
+    .filter((x) => x !== undefined)
+    .join(" · ");
+  const pages = Math.max(1, Math.ceil(shown.length / BOARD_ROWS));
+  return Array.from({ length: pages }, (_, i) => {
+    const spec: BoardCardSpec = {
+      kind: "board",
+      title: `${data.label} · ${state}`,
+      columns: data.goals.map((g) => ({ track: g.track, label: g.shortLabel })),
+      rows: shown.slice(i * BOARD_ROWS, (i + 1) * BOARD_ROWS).map((f) => ({
+        name: f.name,
+        crown: data.crown?.name === f.name,
+        done: data.goals.map((g) => f.goals.some((x) => x.slot === g.slot && x.done)),
+        virgin: f.pvpVirgin,
+        today: f.today,
+        streak: f.streak,
+      })),
+      footer,
+      host,
+    };
+    if (pages > 1) spec.page = `${i + 1}/${pages}`;
+    if (i === pages - 1 && rest !== "") spec.rest = rest;
+    return spec;
+  });
+}
+
+/** Page 1 of the board images (WEB-66): what a bot that knows only `image` posts. */
+export function boardCard(
+  data: BoardData & { final?: boolean; summary?: ReturnType<typeof boardSummary> },
+  at: number,
+  timeZone: string,
+  host: string,
+): BoardCardSpec {
+  return boardCards(data, at, timeZone, host)[0]!;
 }
