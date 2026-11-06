@@ -15,6 +15,7 @@ import { lookupData } from "@/core/doomsday/posts";
 import { doomsdayFor } from "@/server/doomsdayEngine";
 import { botFriend } from "@/server/botRuns";
 import { personKeyOf, weekOf } from "@/server/lookup";
+import { craftableList, craftAnswer, findCraft } from "@/server/recipeBot";
 import { apiError, botGuard } from "@/server/session";
 import { loadState } from "@/server/uploads";
 
@@ -127,6 +128,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ what: st
       const answer = lookupData(snap, key);
       if (answer === undefined) return apiError(404, "not_found", "No such friend.");
       return json(answer);
+    }
+    // WEB-93 (recipes Part D): `/craft`'s autocomplete and answer.
+    case "craftable":
+      return json({ names: craftableList(db, d, text("q")) });
+    case "craft": {
+      if (text("item") === "") return apiError(400, "invalid_request", "Send item.");
+      const recipe = findCraft(db, d, text("item"));
+      const answer = recipe !== undefined ? craftAnswer(db, d, recipe) : undefined;
+      if (answer === undefined) return apiError(404, "not_found", "No recipe makes that.");
+      return json({ ...answer });
     }
     default:
       return apiError(404, "not_found", "No such look-up.");

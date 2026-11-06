@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- DoomBot (with the bot's next version): a post in the feats channel when a friend learns a rare recipe (a world or boss drop, or a reputation vendor), one per character per upload, never for the first scan; and `/craft <item>`, who can make it with the reagents, or where to learn it. Needs the feats posts switched on.
 - Admin: the owner can import the game's item and recipe data from the admin page (Admin › Item data › Import item data), after a game patch too. The box shows what the import is doing, then the build and how many recipes and items it brought, or why it failed. One import at a time.
 
 ## v0.10.0 (2026-11-06)

@@ -2,7 +2,7 @@
 
 The contract between this site and the Discord bot ([CommunitiesForever-Discord](https://github.com/nicoputten/CommunitiesForever-Discord)). This repo owns it, as `docs/UPLOADER-API.md` is for the uploader. The site is the bot's only data source: it decides what is worth posting (milestones, runs, the recap) and who is linked; the bot formats and posts.
 
-Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51); feats on `milestones` (WEB-56); Doomsday: the board and ladder events, the `doomsday` look-up, the recap's `doomsday` and the settings (WEB-58).
+Status: **v1** (WEB-38, 2026-10-27). Built: the token, `settings`, the event feed and acknowledging, `milestones` events, run events and run actions (WEB-40), and `runEnded`, `askNow` and `ping` from uploads (WEB-43); asks stored on the site, `/ask` and answering asks (WEB-51); feats on `milestones` (WEB-56); Doomsday: the board and ladder events, the `doomsday` look-up, the recap's `doomsday` and the settings (WEB-58); recipes: the `recipeFinds` event and the `craftable` and `craft` look-ups (WEB-93).
 
 **Versioning.** Within v1 changes are additive only: new optional fields, new event types, new endpoints, new error codes. The bot ignores fields and event types it doesn't know and acts on `error` codes it knows. A breaking change gets `/v2/`.
 
@@ -535,6 +535,64 @@ New kinds, sorted after the existing ones (then by name):
 `professionCap` at 300 gains `title` for Cooking ("Head Chef"), First Aid ("Field Medic") and Fishing ("Fish Whisperer").
 
 Card images (`cards/milestone-<event>-<n>.png`, 800 × 400) also for `honorKills` 10,000, `pvpRank` 6 to 14 (14 its own image), `firstEpic`, `epicMount`, `jackOfAllTrades` and every `notableItem`.
+
+## Recipes (WEB-93)
+The contract for the bot's recipes (BOT-25; recipes handoff Part D, `docs/RECIPES-HANDOFF.md`, board RC08). Optional within v1: an older site has none of it; a bot that doesn't know `recipeFinds` acknowledges it without posting, and an older site answers the look-ups `404 not_found`. Names only, never a BattleTag; never gold.
+
+Shared shapes:
+- **Item:** `{ id, name, quality, qualityColor, iconPath? }`. `quality` is the game's 0 (poor) to 6, `qualityColor` its colour as `#rrggbb` (the client's item quality colours). For an enchant (a recipe that makes no item) `id` is 0 and `name` is the recipe's. `iconPath` is the item's icon on the site, `/api/item-icons/<name>.jpg`: open without a token (WEB-91), so Discord can load it from `<site URL><iconPath>` (a thumbnail by URL, no attachment).
+- **Source:** `{ kind, place?, npc?, quest?, faction?, rank? }`. `kind` is `trainer`, `vendor`, `vendor_limited`, `drop`, `rep` or `quest`; `place` the dungeon or raid of a drop; `npc` the creature, object or vendor when there are only a few; `faction` and `rank` ("Honored") for rep. The bot words them (RC08: "Drop · Blackrock Spire", "Rep · Thorium Brotherhood · Honored", "Vendor · Limited").
+- **Recipe link:** `url`, a path on the site: the recipe's drawer on its profession page (`/professions/tailoring?recipe=18457`). Left out when the recipe's profession isn't known.
+
+### Event `recipeFinds`
+One per character per accepted upload that brought new rare finds: recipes the character newly learned whose every source is a drop or rep (handoff "Rare find"). Never for a character's or a profession's first scan (the baseline), never for a recipe a trainer, a vendor or a quest also teaches, never on a rebuild. Made only while the feats switch (`posts.milestones`) is on, and posted in the feats channel (`channels.feats`, else the posts channel).
+
+```json
+{
+  "id": 31,
+  "type": "recipeFinds",
+  "createdAt": 1793112000,
+  "data": {
+    "uploadId": 40,
+    "uploadedAt": 1793112000,
+    "character": { "guid": "Player-1-MIRA", "name": "Mira Sunstrider", "classFile": "MAGE", "level": 60, "ownerName": "Mira" },
+    "color": "#a335ee",
+    "finds": [
+      {
+        "recipeId": 18457,
+        "item": { "id": 14152, "name": "Robe of the Archmage", "quality": 4, "qualityColor": "#a335ee", "iconPath": "/api/item-icons/inv_chest_cloth_38.jpg" },
+        "profession": { "skillLine": 197, "name": "Tailoring", "skill": 300 },
+        "sources": [{ "kind": "drop", "place": "Blackrock Spire", "npc": "Firebrand Pyromancer" }],
+        "url": "/professions/tailoring?recipe=18457"
+      }
+    ]
+  }
+}
+```
+
+- `finds`: best quality first; `color` is the best one's (the embed's colour bar). `profession.skill` is the character's skill in it after the upload (RC08's "Tailoring 300").
+- Acknowledge it like any event; the site then marks those finds posted.
+
+### Look-ups `craftable` and `craft`
+- `GET lookup/craftable?q=<text>` → `{ names: [{ name, value }] }`, at most 25, for `/craft`'s autocomplete: what recipes make (items by name, enchants by the recipe's name) containing `q`, names starting with it first, then what someone can make. `value` is the recipe id.
+- `GET lookup/craft?item=<value or name>` → `200`:
+
+```json
+{
+  "recipe": { "id": 18457, "name": "Robe of the Archmage", "skillLine": 197, "profession": "Tailoring", "skill": 300 },
+  "item": { "id": 14152, "name": "Robe of the Archmage", "quality": 4, "qualityColor": "#a335ee", "iconPath": "/api/item-icons/inv_chest_cloth_38.jpg" },
+  "crafters": [{ "guid": "Player-1-MIRA", "name": "Mira Sunstrider", "classFile": "MAGE", "ownerName": "Mira", "skill": 300, "difficulty": "orange" }],
+  "reagents": [{ "id": 14048, "name": "Bolt of Runecloth", "count": 12, "quality": 1, "qualityColor": "#ffffff" }],
+  "sources": [{ "kind": "drop", "place": "Blackrock Spire", "npc": "Firebrand Pyromancer" }],
+  "url": "/professions/tailoring?recipe=18457"
+}
+```
+
+- `item`: the autocomplete's `value` (a recipe id), else a name matched exactly (no case).
+- `recipe.skill`: the skill to learn it (orange; RC08's "Tailoring 300").
+- `crafters`: everyone who knows it, highest skill first, all of them (the bot shows 5 and "+N more"). `difficulty` (`orange`, `yellow`, `green`, `grey`) is what crafting it gives that character (RC08's 🟠🟡🟢⚪); left out without a skill.
+- `crafters` empty: nobody knows it; `sources` says where it is learned ("Nobody can make it yet.").
+- `404 not_found` ("No recipe makes that."): no recipe makes it. `400 invalid_request` without `item`.
 
 ## Visual posts (WEB-66)
 The contract for the bot's visual posts (BOT-20; boards `bot-visual-recap`, `bot-visual-daily`, `bot-visual-feats`; Nico's brief `docs/DESIGN-BRIEF-LIVE-TEST.md` part 5), agreed with the bot before the site builds it (2026-10-29). Everything is optional within v1. An older site leaves the fields out, and the bot then posts as before (text, without images). Images come from `GET cards/<id>.png` (see "Card images") with the bot token; ids are `[a-z0-9-]` only. The bot attaches them as files (`attachment://`). Images and texts carry no legends or notes. The recap's icons and their colours are the bot's own (the 128 px PNGs live in the bot repo).
