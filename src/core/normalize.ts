@@ -215,7 +215,7 @@ function readChar(guid: string, owner: string, c: Table): Character {
       rank: num(p, "rank"),
       max: num(p, "max"),
       // CF-38 (WEB-90), all optional.
-      link: str(p, "link")?.slice(0, MAX_LINK),
+      link: link(str(p, "link")),
       linkType: linkType === "short" || linkType === "long" ? linkType : undefined,
       spec: typeof spec === "number" && Number.isFinite(spec) ? String(spec) : str(p, "spec")?.slice(0, 40),
       scannedAt: num(p, "scannedAt"),
@@ -280,14 +280,21 @@ function count(t: Table | undefined, key: string): number | undefined {
 
 /** CF-38 (WEB-90): at most this many recipes per character are read (every profession has a few hundred). */
 export const MAX_RECIPES = 5000;
-/** A profession link's text is kept to this length. */
-const MAX_LINK = 200;
+/**
+ * A profession link (CF-38: the bare `trade:...` payload, no escape sequences) is kept to this length; a long link
+ * carries the recipes inside, so it can be long. A longer one is dropped rather than cut (a cut link doesn't open).
+ */
+const MAX_LINK = 4096;
 /** Recipe, item and skill line IDs are positive whole numbers below this (spell IDs pass 1,000,000 on Forever). */
 const MAX_ID = 100_000_000;
 
 function id(v: unknown): number | undefined {
   const n = typeof v === "string" && /^\d+$/.test(v) ? Number(v) : v;
   return typeof n === "number" && Number.isInteger(n) && n > 0 && n < MAX_ID ? n : undefined;
+}
+
+function link(v: string | undefined): string | undefined {
+  return v !== undefined && v !== "" && v.length <= MAX_LINK ? v : undefined;
 }
 
 /** `chars.*.recipes` (CF-38): recipe ID -> item ID (0 for none). Anything else is left out. */

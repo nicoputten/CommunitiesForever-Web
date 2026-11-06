@@ -62,7 +62,7 @@ const file = (version: number, ves: string) =>
     settings = { clubId = 1, clubName = "Friends" },
   `);
 const tailoring = (scannedAt: number) =>
-  `professions = { [197] = { name = "Tailoring", rank = 120, max = 150, link = "[Tailoring]", linkType = "short", scannedAt = ${scannedAt} } }`;
+  `professions = { [197] = { name = "Tailoring", rank = 120, max = 150, link = "trade:Player-1-0A:3273:197", linkType = "short", scannedAt = ${scannedAt} } }`;
 
 let dir: string;
 let db: Db;
@@ -132,7 +132,7 @@ describe("learned recipes", () => {
         skill: 120,
         max: 150,
         spec: null,
-        link: "[Tailoring]",
+        link: "trade:Player-1-0A:3273:197",
         linkType: "short",
         scannedAt: 90,
       },
@@ -202,7 +202,7 @@ describe("learned recipes", () => {
     const professions = db.select().from(characterProfessions).all();
     expect(professions.find((p) => p.skillLineId === 197)).toMatchObject({
       skill: 125,
-      link: "[Tailoring]",
+      link: "trade:Player-1-0A:3273:197",
       scannedAt: 190,
     });
     expect(professions.find((p) => p.skillLineId === 185)).toMatchObject({ skill: 1, scannedAt: null });

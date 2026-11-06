@@ -753,7 +753,7 @@ export const characterProfessions = sqliteTable(
     skill: integer("skill"),
     max: integer("max"),
     spec: text("spec"),
-    /** As text only (rule 2). */
+    /** The bare `trade:...` payload (CF-38), no escape sequences. */
     link: text("link"),
     linkType: text("link_type").$type<"short" | "long">(),
     /** When the addon last scanned this profession's window; null: never (C's "not scanned"). */

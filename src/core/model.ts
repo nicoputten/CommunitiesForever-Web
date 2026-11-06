@@ -29,7 +29,7 @@ export interface Profession {
   name?: string;
   rank?: number;
   max?: number;
-  /** Addon CF-38 (WEB-90): the profession link, as text only (rule 2 strips its escape sequences). */
+  /** Addon CF-38 (WEB-90): the profession link's bare `trade:...` payload (no escape sequences), for the game only. */
   link?: string;
   /** CF-38: "short" (a live pointer) or "long" (a link with the recipes inside). */
   linkType?: "short" | "long";
@@ -97,12 +97,14 @@ export interface Character {
   riding?: number;
   /**
    * Addon CF-38 (WEB-90): the learned recipes of every profession, recipe (spell) ID -> the item it makes (0: none).
-   * Complete on each scan. Undefined from addons that don't send it (nothing known, never "none learned").
+   * Complete on each scan. Undefined from addons that don't send it (nothing known, never "none learned"). Friends'
+   * copies carry it too once synced; merge takes the copy with the newest `recipesAt`. The addon's `recipeOrder` and
+   * `recipesBase` are not read.
    */
   recipes?: Record<string, number>;
   /** CF-38: server time of the last recipe scan. */
   recipesAt?: number;
-  /** CF-38, where the game API allows it: recipe ID -> skill line ID. The item database wins where both exist. */
+  /** CF-38, own characters only, where the game API answers: recipe ID -> skill line ID. The database wins. */
   recipeLines?: Record<string, number>;
   updatedAt?: number;
   lastPlayed?: number;
