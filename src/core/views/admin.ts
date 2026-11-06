@@ -38,7 +38,9 @@ export type LogAction =
   | "missionPinned"
   | "missionRerolled"
   | "missionDayRerolled"
-  | "missionDayNormal";
+  | "missionDayNormal"
+  // WEB-91: Import item data (detail: the Forever build).
+  | "itemImport";
 
 /** The changes only the owner can make: their log lines carry the crown. */
 const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
@@ -57,6 +59,7 @@ const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
   "missionRerolled",
   "missionDayRerolled",
   "missionDayNormal",
+  "itemImport",
 ]);
 
 export interface LogInput {
@@ -238,6 +241,8 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
       return [t("rerolled "), b(missionPlace(entry.detail))];
     case "missionDayNormal":
       return [t("set "), b(missionPlace(entry.detail)), t(" back to the normal draw")];
+    case "itemImport":
+      return [t("imported item data"), ...(entry.detail !== undefined ? [t(" of build "), b(entry.detail)] : [])];
     case "discordSetting":
     case "botToken":
       return [t(entry.detail ?? "changed a Discord setting")];

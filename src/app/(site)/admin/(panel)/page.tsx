@@ -7,6 +7,7 @@ import { AdminConfirm } from "@/components/admin/AdminConfirm";
 import { AdminLog } from "@/components/admin/AdminLog";
 import { GuestBadge, OnlineBadge, OwnerBar, RankBadge, RefusedLine, WhoTag } from "@/components/admin/CoAdmins";
 import { CommunitySwitch } from "@/components/admin/CommunitySwitch";
+import { ItemImport } from "@/components/admin/ItemImport";
 import { DangerZone } from "@/components/admin/DangerZone";
 import { AdminPanel, PanelEmpty, RowBadge, RowButton } from "@/components/admin/AdminPanel";
 import rows from "@/components/admin/Admin.module.css";
@@ -22,6 +23,7 @@ import { getDb } from "@/server/db";
 import {
   addGuestAction,
   blockAction,
+  importItemDataAction,
   makeAdminAction,
   removeAdminAction,
   removeGuestAction,
@@ -40,6 +42,7 @@ import { missionPool } from "@/server/missionPool";
 import { probeFriendsText } from "@/core/probe";
 import { loadProbeSummary } from "@/server/probe";
 import { communityState } from "@/server/uploads";
+import { importRunState, lastImport } from "@/server/itemImportRun";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -66,6 +69,7 @@ export default async function AdminPage({
     owner && viewer !== undefined ? missionPoolBox(missionPool(getDb(), viewer.battleTag, nowSeconds())) : undefined;
   const probe = owner ? loadProbeSummary(getDb()) : undefined;
   const community = owner ? communityState(getDb()) : undefined;
+  const items = owner ? { run: importRunState(), last: lastImport(getDb()) } : undefined;
   const refused = refusedText(one(params.refused), one(params.who));
   const ownerName = view.ownerName ?? "the owner";
   return (
@@ -342,6 +346,33 @@ export default async function AdminPage({
                   </a>
                 </div>
               )}
+            </AdminPanel>
+          )}
+          {items !== undefined && (
+            <AdminPanel
+              id="admin-items"
+              title="Item data"
+              aside={<WhoTag owner />}
+              sub="Items and recipes from the game's data. Import again after a game patch."
+            >
+              <ItemImport
+                running={items.run.running}
+                action={importItemDataAction}
+                {...(items.run.last !== undefined && "error" in items.run.last ? { error: items.run.last.error } : {})}
+                line={
+                  items.run.running ? (
+                    `Importing: ${items.run.step ?? "starting"}…`
+                  ) : items.last !== undefined ? (
+                    <>
+                      Build {items.last.build} · {items.last.recipes.toLocaleString("en-US")} recipes ·{" "}
+                      {items.last.items.toLocaleString("en-US")} items · imported{" "}
+                      <LocalTime at={items.last.importedAt} day="time" />
+                    </>
+                  ) : (
+                    "No item data yet."
+                  )
+                }
+              />
             </AdminPanel>
           )}
           {community !== undefined && (

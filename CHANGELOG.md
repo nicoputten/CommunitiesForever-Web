@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Admin: the owner can import the game's item and recipe data from the admin page (Admin › Item data › Import item data), after a game patch too. The box shows what the import is doing, then the build and how many recipes and items it brought, or why it failed. One import at a time.
+
 ## v0.10.0 (2026-11-06)
 - Doomsday: 83 more missions join the draw (pool version 3): 60 dailies, 22 weeklies and the Skirmish "Defend home: a kill in friendly territory". The 4 PvP rank missions leave it, because Forever has no PvP rank the addon can read. Days and weeks already played keep their missions and points. Friends need the new addon version; an older addon keeps drawing pool version 2 until it is updated.
 
