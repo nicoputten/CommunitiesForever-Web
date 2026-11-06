@@ -169,7 +169,7 @@ test("roster: screenshot", async ({ page }) => {
   await expectScreenshot(page, "roster");
 });
 
-test("roster: dungeons one per line, lowest level first, full names (WEB-65, WEB-87)", async ({ page }) => {
+test("roster: dungeons one per line, lowest level first, full names (WEB-65, WEB-88)", async ({ page }) => {
   test.skip(isPhone(page), "the phone list has a band per row");
   await openScreen(page, "/roster");
   const bands = page.getByRole("list", { name: "Dungeon bands" });

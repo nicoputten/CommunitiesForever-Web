@@ -169,7 +169,7 @@
   right: 0;
 }
 
-/* The dungeons that fit, one per line, lowest level first (WEB-87, Nico 2026-11-06; before: chips side by side,
+/* The dungeons that fit, one per line, lowest level first (WEB-88, Nico 2026-11-06; before: chips side by side,
    WEB-65): the full name, range, count and runs, never cut. */
 .bands {
   display: flex;

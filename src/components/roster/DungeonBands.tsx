@@ -25,7 +25,7 @@ const PHONE_QUERY = "(max-width: 767px)";
 
 /**
  * The dungeon bands (WEB-45, popover from board `roster-cards-runs`): one dungeon per line, lowest level first, with
- * the full name, range, count and runs, never cut (WEB-87, Nico 2026-11-06; before: chips side by side, WEB-65); the
+ * the full name, range, count and runs, never cut (WEB-88, Nico 2026-11-06; before: chips side by side, WEB-65); the
  * bands past the 4 rows of `bandLayout` after "Show all N". A click opens the popover (who fits, missing roles,
  * planned runs, Plan a run, View run, Dungeon page), on a phone as a bottom sheet.
  */

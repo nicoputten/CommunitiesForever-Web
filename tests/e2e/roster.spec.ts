@@ -56,7 +56,7 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   // The Armory has the most fits.
   await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
-  // Lia 37 and Ves 39 share one dot, Bob 41 has his own: a dot covers at most 3 levels (WEB-87); Ves is the viewer's.
+  // Lia 37 and Ves 39 share one dot, Bob 41 has his own: a dot covers at most 3 levels (WEB-88); Ves is the viewer's.
   // A phone merges within 4 levels, at most 5 a dot, middles 5 levels apart: Tok 33 with Lia, Ves with Bob.
   const phone = isPhone(page);
   await expect(spread.locator("[aria-describedby^=spread-tip]:visible")).toHaveCount(phone ? 5 : 9);

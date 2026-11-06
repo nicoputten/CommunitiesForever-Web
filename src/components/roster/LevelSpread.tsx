@@ -39,7 +39,7 @@ function slices(characters: readonly CharacterView[]): string {
 /**
  * "Who is around which level" (board `roster-cards-runs`, without its run parts): every character as a dot on a 1–60
  * track, names in a tooltip; characters within two levels (four on a phone) merge into a dot with a count (WEB-32),
- * one dot covering at most 3 levels (5 on a phone, WEB-87). Then the dungeons that fit, one per line, lowest level
+ * one dot covering at most 3 levels (5 on a phone, WEB-88). Then the dungeons that fit, one per line, lowest level
  * first, which count who fits and never name them. `own`: the viewer's person key (the gold ring).
  */
 export function LevelSpread({
@@ -82,7 +82,7 @@ export function LevelSpread({
   const limited = bandLayout(spread, BAND_ROWS);
   const all = bandLayout(spread);
   const rowIn = (layout: BandLayout, band: DungeonBand) => layout.shown.find((p) => p.band === band)?.row;
-  // One per line, lowest level first (WEB-87); the best band keeps its gold, not its place.
+  // One per line, lowest level first (WEB-88); the best band keeps its gold, not its place.
   const bands: BandView[] = [...all.shown]
     .sort((a, b) => bandsByLevel(a.band, b.band))
     .map((placed) => {

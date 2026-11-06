@@ -3,8 +3,8 @@ import type { CharacterView } from "./characters";
 import type { DungeonBand, LevelSpread } from "./roster";
 
 // Where things sit on the level spread's 1–60 track (roster-cards board), computed on the server so the track needs
-// no script and does not shift: the dots, where characters close together merge (WEB-32, capped in WEB-87), and which
-// dungeon bands show before "Show all" (the 4 rows of WEB-45; the list itself is by level, WEB-87).
+// no script and does not shift: the dots, where characters close together merge (WEB-32, capped in WEB-88), and which
+// dungeon bands show before "Show all" (the 4 rows of WEB-45; the list itself is by level, WEB-88).
 
 /** 0 at level 1, 1 at level 60. */
 export function levelPosition(level: number): number {
@@ -12,7 +12,7 @@ export function levelPosition(level: number): number {
 }
 
 /**
- * How characters merge into dots on the track (WEB-32, capped in WEB-87). A character joins the dot before it while it
+ * How characters merge into dots on the track (WEB-32, capped in WEB-88). A character joins the dot before it while it
  * is at most `merge` levels above the dot's highest level and at most `span` levels above its lowest. With `gap`, a dot
  * whose middle would sit less than `gap` levels from the dot before joins that dot instead (then `span` gives way), so
  * neighbouring touch targets keep their distance.
@@ -25,13 +25,13 @@ export interface DotRule {
 
 /**
  * Desktop (board `roster-cards-runs`, WEB-32): characters within 2 levels merge; one dot covers at most 3 levels
- * (Nico, 2026-11-06, WEB-87: 7–9, never 1–16).
+ * (Nico, 2026-11-06, WEB-88: 7–9, never 1–16).
  */
 export const DOT_RULE: DotRule = { merge: 2, span: 2 };
 /**
  * On a phone (no board): 5 levels are 24 px on the 375 px layout's track, the least space between two touch targets
  * (WCAG 2.5.8, axe `target-size`; decided with Nico, 2026-10-27). So characters within 4 levels merge, one dot covers
- * at most 5 levels (WEB-87), and dots keep 5 levels between their middles.
+ * at most 5 levels (WEB-88), and dots keep 5 levels between their middles.
  */
 export const DOT_RULE_PHONE: DotRule = { merge: 4, span: 4, gap: 5 };
 
@@ -49,7 +49,7 @@ export interface SpreadDot {
 const middle = (group: readonly CharacterView[]) => (group[0]!.level! + group.at(-1)!.level!) / 2;
 
 /**
- * The dots on the track (WEB-32, WEB-87): characters close together merge into one dot (37, 39 and 41 make two dots on
+ * The dots on the track (WEB-32, WEB-88): characters close together merge into one dot (37, 39 and 41 make two dots on
  * desktop, 37–39 and 41; one dot "around level 39" on a phone). `own` is the viewer's person key. Characters come
  * lowest level first.
  */
@@ -99,7 +99,7 @@ export interface BandLayout {
   hidden: number;
 }
 
-/** The dungeon list's order (WEB-87, Nico 2026-11-06): lowest level first, by min, then max, then name. */
+/** The dungeon list's order (WEB-88, Nico 2026-11-06): lowest level first, by min, then max, then name. */
 export function bandsByLevel(a: DungeonBand, b: DungeonBand): number {
   const [x, y] = [a.dungeon.typicalLevels, b.dungeon.typicalLevels];
   return x.min - y.min || x.max - y.max || a.dungeon.name.localeCompare(b.dungeon.name, "en");
