@@ -781,6 +781,9 @@ export const bossDrops = sqliteTable(
     questId: integer("quest_id"),
     /** The recipe (spell ID) a recipe item teaches. */
     recipeId: integer("recipe_id"),
+    /** A recipe drop: the skill to learn it and the profession's skill line. */
+    skill: integer("skill"),
+    line: integer("line"),
   },
   (t) => [primaryKey({ columns: [t.bossId, t.itemId] })],
 );
