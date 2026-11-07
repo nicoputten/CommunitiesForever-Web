@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.12.1 (2026-11-07)
 ### Fixed
 - Recipes: a recipe link (a boss's recipe drop, DoomBot) opens the recipe also on a profession nobody opened in game yet, instead of "No recipes scanned yet". A recipe's tooltip now shows the item it makes and its reagents under it, as in game.
 
