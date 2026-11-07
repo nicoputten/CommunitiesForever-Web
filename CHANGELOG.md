@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.11.2 (2026-11-07)
 ### Fixed
 - Potions, elixirs, food, bandages and other items show what they do again: their Use, Equip and Chance on hit lines ("Increases armor by 50 for 1 hour.", "Restores 1050 to 1750 health.") now appear in item tooltips and recipe details. Needs "Import item data" once after the release.
 
