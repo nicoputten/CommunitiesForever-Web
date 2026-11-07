@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "import:items": "node --import ./scripts/ts-hooks.mjs scripts/import-items.ts",
+    "export:addon-loot": "node --import ./scripts/ts-hooks.mjs scripts/export-addon-loot.ts",
     "test:design": "vitest run tests/design && playwright test -c playwright.design.config.ts"
   },
   "dependencies": {

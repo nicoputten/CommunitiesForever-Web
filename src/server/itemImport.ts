@@ -64,6 +64,9 @@ export interface ImportSummary {
   foreverOnly: number;
   unobtainable: number;
   sources: number;
+  /** WEB-96: dungeon bosses and their drops. */
+  bosses: number;
+  bossDrops: number;
   /** False when the data was the same as the last import's. */
   changed: boolean;
   /** True when wago.tools' build list didn't answer and the last known builds were used (WEB-94). */
@@ -262,6 +265,8 @@ export function summaryOf(build: string, era: string, data: ItemDatabase, change
     foreverOnly: data.recipes.filter((r) => r.foreverOnly).length,
     unobtainable: data.recipes.filter((r) => !r.obtainable).length,
     sources: data.sources.length,
+    bosses: data.bosses.length,
+    bossDrops: data.bossDrops.length,
     changed,
   };
 }

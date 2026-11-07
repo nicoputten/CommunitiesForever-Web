@@ -149,3 +149,17 @@ describe("items", () => {
     });
   });
 });
+
+describe("bosses (WEB-96)", () => {
+  it("our dungeons' encounters, the boss's own drops; their items join the items", () => {
+    // "Deadmines" is ours; "Test Spire" isn't; another season's encounter is left out. The hand-made final (Edwin
+    // VanCleef) isn't listed, so the last boss ends it.
+    expect(data.bosses).toEqual([
+      { id: 8001, name: "Test Deadmines Boss", dungeonId: "dm", position: 1, final: true, optional: false },
+    ]);
+    // 25 % kept, 0.5 % left out.
+    expect(data.bossDrops).toEqual([
+      { bossId: 8001, itemId: 5003, position: 1, chance: 25, classId: 4, subclassId: 1 },
+    ]);
+  });
+});

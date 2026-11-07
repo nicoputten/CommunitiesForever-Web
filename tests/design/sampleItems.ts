@@ -354,6 +354,9 @@ const RECIPES: SampleRecipe[] = [
 ];
 
 export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
+  // WEB-96: the dungeon page's boss list comes with WEB-102.
+  bosses: [],
+  bossDrops: [],
   items: ITEMS,
   recipes: RECIPES.map((r): RecipeRecord => {
     const rec: RecipeRecord = {

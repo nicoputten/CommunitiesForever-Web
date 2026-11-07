@@ -348,25 +348,50 @@ loot tables (`JournalEncounter`, `JournalEncounterItem`, `JournalInstance` answe
 **Every story here needs a design first:** the designer makes its board(s) before a worker builds it; until then the
 story waits. Each lists what the board has to show.
 
-### WEB-96 Boss loot on dungeon pages and planned runs (needs a design)
-- **Import:** bosses per dungeon from the Forever client's `DungeonEncounter` (name, `MapID`, `OrderIndex`; its `ID`
-  is the `encounterID` the addon logs), matched to cmangos `creature_template` by name; each boss's drops from
-  `creature_loot_template` and `reference_loot_template` (chance, quest-only drops apart). Dungeons from
-  `src/core/gamedata/dungeons.ts`; raids too, but only once they are in that list.
-- **Dungeon page:** the bosses in order, each with its drops (icon, name, quality, chance), item tooltips (WEB-92's
-  `ItemTooltip`), drops that teach a recipe link to the recipe's drawer; marked as Classic data.
-- **Planned run:** what the run's dungeon drops, compact, linking to the dungeon page.
-- Drops cmangos lists that the Forever client has no item for are left out; a boss without a cmangos match shows
-  its name without loot.
-- **Design needed:** the boss list with loot on the dungeon page (desktop and phone), the compact loot on a planned
-  run, the "Classic data" mark, a boss without loot.
-- Done when: import tests with invented fixtures (name matching, reference loot, quest-only drops, missing items);
-  view-model tests; design checks with baselines Nico approved; lint, tests and build pass.
+### WEB-96 Bosses and boss loot in the item import (data; the page is WEB-102)
+Built (2026-11-07), docs/SOURCE-DATA.md "Dungeon bosses and their loot":
+- **Import:** the Forever client's `DungeonEncounter` (base difficulties 0 and 1), its `MapID` matched to our
+  dungeons by the client's map name; `ID` = `ENCOUNTER_END`'s `encounterID` (checked: `3353, Witherfang` in Ruins of
+  Lordaeron). Bosses matched to cmangos `creature_template` by name per map (a summoned boss: the one spawned
+  nowhere); loot from the boss's own `creature_loot_template` rows only, no reference tables; >= 1 % plus quest items
+  and recipes at any chance, highest first, with item class/subclass, AllowableClass, the quest of a quest drop and
+  the recipe a recipe item teaches. Forever's own dungeons: bosses without loot.
+- **Hand-made** (`src/core/gamedata/bosses.ts`, cited from warcraft.wiki.gg): the final boss and the optional bosses
+  per dungeon or wing, the wing of each Scarlet Monastery, Blackrock Spire, Stratholme and Dire Maul boss, encounters fought together (Mograine with
+  Whitemane, The Lost Dwarves) and the few names the client and cmangos spell differently.
+- **Tables:** `dungeon_bosses`, `boss_drops` (migration `0030_boss_loot`), written with the item import in one
+  transaction. Read by `src/server/bossViews.ts`: `dungeonBossViews(db, dungeonId, wingId?)` (bosses in order with
+  final and optional, each with its drops and the item's name, quality, icon and tooltip record) and
+  `addonLootFile(db)`.
+- **The addon's loot file:** `npm run export:addon-loot -- <out>` writes `Data\Loot.lua` (GPL-3.0, cmangos
+  attribution, the build, generated notice), byte-identical for the same data. Sample: `tests/fixtures/addon-loot/`.
+- Compatibility: no upload changes. The item data stays valid; one "Import item data" adds the bosses.
+- Stratholme and Dire Maul are split into wings (Nico, 2026-11-07): `strat` live/undead (stratlive, final Balnazzar;
+  stratud, Baron Rivendare), `dme` east/west/north (dmeast, Alzzin the Wildshaper; dmwest, Prince Tortheldrin;
+  dmnorth, King Gordok), in `src/core/gamedata/dungeons.ts` as wings with their addon ids (Group Finder 816/1603 and
+  813/814/815). They are not dungeons of their own on the site yet (no `wingsAreDungeons`): the dungeon pages story
+  makes them so. The optional list holds only bosses the wiki calls optional, rare, summoned or a bonus boss.
+
+### WEB-102 Dungeon page: bosses & loot (DL04)
+- On the dungeon page (board DL04), between Who fits and Quests: **Bosses & loot**, every boss in the client's order
+  (`dungeonBossViews`, WEB-96), number + name, optional bosses marked "optional"; the boss's drops at most 6, then
+  "Show N more ▾"; loot in two columns: icon with quality border, name in quality colour, type, drop % (highest
+  first). Tags: "Quest" (a quest-only drop) and "Nobody knows it" (a recipe nobody in the group has); a recipe drop
+  opens its recipe drawer; item tooltips (WEB-92's `ItemTooltip`).
+- "Usable by [character ▾]" (defaults to your most recently played character, remembered): dims what that character
+  can't use, the switch hides it; "N more" counts after it. Usable = the class can ever use it (AllowableClass, the
+  armor types the class reaches by 60, shields, weapon types it can learn; shared golden cases
+  `loot-usable-cases.json` from the addon's CF-106).
+- One "Classic data ⓘ" per section ("Drops and chances come from Classic 1.12 and may differ on Forever").
+- A **Bosses** jump list at the top of the right column (sticky; the boss in view is bold). Each Scarlet Monastery
+  wing is a dungeon page of its own with its own bosses.
+- Done when: view-model tests (order, optional, usable, "N more"); Playwright for the main flow; design checks with
+  baselines Nico approved; lint, tests and build pass.
 
 ### WEB-97 Which bosses a run killed (needs a design; pairs with the addon's CF-103)
 - An upload's runs may carry `bossIds` (CF-103: the `encounterID`s killed, optional). Stored per run; older uploads
   and runs without it keep only the count, as now.
-- The character page's and the dungeon page's run history show the bosses by name (WEB-96's import), each linking
+- The character page's and the dungeon page's run history show the bosses by name (WEB-96's `dungeon_bosses`), each linking
   to its loot; without `bossIds` the count as now.
 - Compatibility (rule 4): every released addon sends only `bosses` (a count): nothing changes for them.
 - **Design needed:** a run's killed bosses in the run history (desktop and phone), the count-only fallback.

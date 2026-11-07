@@ -33,7 +33,7 @@ export interface LevelRange {
 export interface Wing {
   /** Unique among the instance's wings, lower case ("armory"). */
   id: string;
-  /** The addon's id when the wing is a dungeon of its own ("smarm"). */
+  /** The addon's id when the wing is a dungeon of its own there ("smarm", "ubrs"; WEB-96: the loot file's key). */
   addonId?: string;
   name: string;
   typicalLevels: LevelRange;
@@ -217,8 +217,8 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zone: "burning",
     typicalLevels: typical(55, 60),
     wings: [
-      { id: "lower", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
-      { id: "upper", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "lower", addonId: "lbrs", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "upper", addonId: "ubrs", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
     ],
     zoneTexts: ["Blackrock Spire", "Lower Blackrock Spire", "Upper Blackrock Spire"],
   },
@@ -229,6 +229,14 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     kind: "dungeon",
     zone: "feralas",
     typicalLevels: typical(55, 60),
+    // WEB-96: the wings (Nico, 2026-11-07). Levels: warcraft.wiki.gg "Dire Maul East", "Dire Maul West", "Dire Maul
+    // North" ("Classic lvl" 55-60 each). Group Finder activities 813, 814, 815 ("Dire Maul (East)", "(West)",
+    // "(North)" in the client's GroupFinderActivity). Not dungeons of their own here yet (the site pages story).
+    wings: [
+      { id: "east", addonId: "dmeast", name: "Warpwood Quarter", typicalLevels: typical(55, 60) },
+      { id: "west", addonId: "dmwest", name: "Capital Gardens", typicalLevels: typical(55, 60) },
+      { id: "north", addonId: "dmnorth", name: "Gordok Commons", typicalLevels: typical(55, 60) },
+    ],
     zoneTexts: ["Dire Maul"],
   },
   {
@@ -247,6 +255,14 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     kind: "dungeon",
     zone: "epl",
     typicalLevels: typical(58, 60),
+    // WEB-96: the two sides (Nico, 2026-11-07): warcraft.wiki.gg "Stratholme (Classic)" (Main Gate, Service
+    // Entrance; it gives no range per side, so the instance's). Group Finder activities 816 "Stratholme (Main Gate)"
+    // and 1603 "Stratholme (Service Gate)" (the client's GroupFinderActivity, both 58-60). Not dungeons of their own
+    // here yet (the site pages story).
+    wings: [
+      { id: "live", addonId: "stratlive", name: "Main Gate", typicalLevels: typical(58, 60) },
+      { id: "undead", addonId: "stratud", name: "Service Entrance", typicalLevels: typical(58, 60) },
+    ],
     zoneTexts: ["Stratholme"],
   },
   {
