@@ -367,6 +367,9 @@ export default async function AdminPage({
                       Build {items.last.build} · {items.last.recipes.toLocaleString("en-US")} recipes ·{" "}
                       {items.last.items.toLocaleString("en-US")} items · imported{" "}
                       <LocalTime at={items.last.importedAt} day="time" />
+                      {items.run.last !== undefined && "summary" in items.run.last && items.run.last.summary.fallback
+                        ? " · build list unavailable, used the last known build"
+                        : null}
                     </>
                   ) : (
                     "No item data yet."

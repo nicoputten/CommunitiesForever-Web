@@ -11,6 +11,7 @@ import {
 import { int, parseCsv } from "@/core/recipes/csv";
 import { readColumns, readRows } from "@/core/recipes/sqlDump";
 import { dataDir, type Db } from "./db";
+import { itemImport } from "./db/schema";
 import { writeItemDatabase } from "./itemDb";
 
 // The item and recipe import (WEB-90; WEB-91: also run by the server for the owner's "Import item data"), shared by
@@ -23,6 +24,12 @@ import { writeItemDatabase } from "./itemDb";
 /** wago.tools' product of the Forever client (WOW_PROJECT_ID 18), and of Classic Era. */
 const FOREVER_PRODUCT = "wowf";
 const ERA_PRODUCT = "wow_classic_era";
+/**
+ * WEB-94: the builds to use when wago.tools' build list (`/api/builds`) doesn't answer while its table exports still
+ * do (it answered 503 on 2026-11-07): the last import's builds, else these (the ones WEB-90 imported).
+ */
+export const KNOWN_BUILD = "1.60.1.70790";
+export const KNOWN_ERA = "1.15.9.70576";
 /** cmangos classic-db's full dump, pinned to a commit (GPL-3.0, https://github.com/cmangos/classic-db). */
 export const CMANGOS_COMMIT = "28ef6259c782928b08a8dc9cacf6bc02e64f2b29";
 const CMANGOS_FILE = "Full_DB/ClassicDB_1_12_1_z2815.sql.gz";
@@ -36,6 +43,8 @@ export interface ImportOptions {
   build?: string;
   /** The Classic Era build; default the newest. */
   era?: string;
+  /** The builds of the last import, used when the build list doesn't answer (default KNOWN_BUILD, KNOWN_ERA). */
+  lastKnown?: { build: string; era: string };
   cache?: string;
   /** Use only what the cache holds. */
   offline?: boolean;
@@ -57,6 +66,8 @@ export interface ImportSummary {
   sources: number;
   /** False when the data was the same as the last import's. */
   changed: boolean;
+  /** True when wago.tools' build list didn't answer and the last known builds were used (WEB-94). */
+  fallback?: boolean;
 }
 
 /** A failure the admin page can show as it is. */
@@ -184,13 +195,23 @@ async function cmangos(options: ImportOptions & { cache: string }): Promise<stri
 /** Downloads (or reads from the cache) and builds the database without writing it. */
 export async function buildFromSources(
   options: ImportOptions,
-): Promise<{ build: string; era: string; data?: ItemDatabase }> {
+): Promise<{ build: string; era: string; data?: ItemDatabase; fallback?: boolean }> {
   const o = { ...options, cache: options.cache ?? defaultCache() };
   let { build, era } = options;
+  let fallback = false;
   if (build === undefined || era === undefined) {
     if (o.offline) throw new ImportError("Offline: name the builds.");
     o.onStep?.("Asking wago.tools for the newest builds");
-    const latest = await latestBuilds(o.fetch ?? fetch);
+    let latest: { build: string; era: string };
+    try {
+      latest = await latestBuilds(o.fetch ?? fetch);
+    } catch (e) {
+      if (!(e instanceof ImportError)) throw e;
+      // WEB-94: the build list can be down while the table exports work; take the last known builds.
+      latest = o.lastKnown ?? { build: KNOWN_BUILD, era: KNOWN_ERA };
+      fallback = true;
+      o.onStep?.(`wago.tools' build list didn't answer; using build ${build ?? latest.build}`);
+    }
     build ??= latest.build;
     era ??= latest.era;
   }
@@ -201,7 +222,7 @@ export async function buildFromSources(
     // Era's learn-spell effects only (Effect 36): what cmangos' trainer and recipe-item spells teach.
     learn: await db2(o, "SpellEffect", era, "filter%5BEffect%5D=exact:36", "SpellEffect-learn"),
   };
-  if (o.downloadOnly) return { build, era };
+  if (o.downloadOnly) return { build, era, ...(fallback ? { fallback } : {}) };
   const sql = await cmangos(o);
   o.onStep?.("Building the item database");
   const columns = readColumns(sql, CMANGOS_TABLES);
@@ -213,12 +234,14 @@ export async function buildFromSources(
   }
   const data = buildItemDatabase({ db2: db2Tables, era: eraTables, cmangos: sqlTables });
   if (data.recipes.length === 0) throw new ImportError(`Build ${build} gave no recipes; nothing was changed.`);
-  return { build, era, data };
+  return { build, era, data, ...(fallback ? { fallback } : {}) };
 }
 
 /** The whole import: download, build, write. */
 export async function importItems(db: Db, options: ImportOptions = {}): Promise<ImportSummary> {
-  const { build, era, data } = await buildFromSources(options);
+  const last = db.select().from(itemImport).get();
+  const lastKnown = options.lastKnown ?? (last !== undefined ? { build: last.build, era: last.eraBuild } : undefined);
+  const { build, era, data, fallback } = await buildFromSources({ ...options, ...(lastKnown ? { lastKnown } : {}) });
   if (data === undefined) throw new ImportError("Nothing was built.");
   options.onStep?.("Writing the item database");
   const { changed } = writeItemDatabase(
@@ -227,7 +250,7 @@ export async function importItems(db: Db, options: ImportOptions = {}): Promise<
     { build, era, cmangos: CMANGOS_COMMIT },
     options.now ?? Math.floor(Date.now() / 1000),
   );
-  return summaryOf(build, era, data, changed);
+  return { ...summaryOf(build, era, data, changed), ...(fallback ? { fallback } : {}) };
 }
 
 export function summaryOf(build: string, era: string, data: ItemDatabase, changed: boolean): ImportSummary {

@@ -45,6 +45,14 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 ## E9 Live test fixes (2026-10-29)
 Nico tested the live site read-only on 29 Oct 2026. The brief is `docs/DESIGN-BRIEF-LIVE-TEST.md`, with the boards `live-test-findings`, `live-test-site-fixes` and `live-test-phone` (the bot's are `bot-visual-*`). Where `docs/DOOMSDAY.md` disagrees on the PvP Virgin rule or the day label, the brief is newer and wins. Bugs 1, 2, 4 and 5 are data rules: the engine worker builds them, and WEB-65 shows the results. Nothing here changes live settings or data.
 
+### WEB-94 Item import: fall back to the last known build
+On 2026-11-07 the live "Import item data" failed with "wago.tools answered 503.": wago.tools' build list
+(`/api/builds`) was down while its table exports still answered. Now, when the build list fails, the import uses the
+last import's builds (`item_import`), else the pinned `KNOWN_BUILD` 1.60.1.70790 / `KNOWN_ERA` 1.15.9.70576, says so in
+its step and marks the summary `fallback`; the admin line adds "build list unavailable, used the last known build".
+A failing table download still fails the import. Tests: build list down (pinned builds), a newer last import's build
+wins, no fallback mark when the list answers.
+
 ### WEB-65 Live-test site fixes
 Boards `live-test-site-fixes` (desktop) and `live-test-phone` (375 px). Decided with Nico, 2026-10-29: the answers below.
 - **Part 1: leaked notes and the tooltip.**
