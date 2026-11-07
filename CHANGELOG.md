@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.11.1 (2026-11-07)
 - Admin: "Import item data" now works while wago.tools' build list is down (it answered 503): the import then uses the last known game build and says so after the result ("build list unavailable, used the last known build").
 
 ## v0.11.0 (2026-11-07)
