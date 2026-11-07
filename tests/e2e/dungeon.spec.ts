@@ -129,6 +129,12 @@ test("the dungeon page's bosses and loot", async ({ page }) => {
   // The recipe nobody knows: its drawer.
   const cookie = loot.getByRole("region", { name: /Cookie/ });
   await expect(cookie.getByText("Nobody knows it")).toBeVisible();
+  // WEB-104: its tooltip shows the item it makes, as in game.
+  if (!phone) {
+    await cookie.getByRole("link", { name: "Recipe: Roast Raptor" }).hover();
+    await expect(page.getByText("Roast Raptor", { exact: true })).toBeVisible();
+    await page.mouse.move(0, 0);
+  }
   if (phone) {
     await cookie.getByRole("button", { name: "Recipe: Roast Raptor, item details" }).click();
     await page.getByRole("link", { name: "Open recipe" }).click();

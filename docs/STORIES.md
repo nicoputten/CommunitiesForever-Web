@@ -465,3 +465,23 @@ has nothing. We don't gather drops with our own addon.
   (https://everloot.app), CC BY-SA 4.0." in the file and next to the data on the site. No Everloot logo.
 - **Outcome:** don't replace cmangos. Fill in later as a "Forever data" layer once Everloot covers a quarter of our
   bosses or any new Forever dungeon. The report sketches that story and its cost.
+
+### WEB-104 Recipe drops: the link opens the recipe, the tooltip shows what it makes (fixes on WEB-102)
+Nico tested v0.12.0 (2026-11-07) on a boss's pattern nobody knows ("Pattern: Dark Leather Tunic"):
+- **The recipe link opens its drawer.** `/professions/<slug>?recipe=<spell>` (a boss's recipe drop, the bot's
+  `/craft` and rare-find links, the Professions search) opens that recipe's drawer also when nobody opened the
+  profession in game yet ("No recipes scanned yet"), over all recipes; recipes nobody knows are found too. Closing the
+  drawer stays on all recipes (`?tab=all`), not the empty state. A link to a recipe the page doesn't list shows the
+  page as before.
+- **A recipe item's tooltip shows what it makes**, as in game: under the pattern's own lines, after an empty line,
+  the created item's tooltip (name in its quality colour, its lines) and "Requires Heavy Leather (12), Fine Thread
+  (2)" with the reagents, then the site's own footer ("Nobody knows it", "Can learn"). On every item tooltip of a
+  recipe item (the dungeon page's loot, `/api/items/<id>`), desktop and phone sheet. A recipe that makes no item (an
+  enchant) shows only its own lines.
+- **Data:** which recipe a recipe item teaches comes from what the item import already stores (`boss_drops.recipe_id`,
+  WEB-96), the created item and reagents from `recipes` and `recipe_reagents`. No new import, no migration; uploads,
+  stored data and the bot API don't change.
+- Done when: view-model and server tests (reagents line, created item from a boss drop or a known recipe, none for
+  other items); e2e: a recipe link on an unscanned profession opens and closes its drawer, a recipe drop's hover
+  tooltip names the created item; lint, tests, build and design checks pass (the recipe-drop tooltip's screenshot
+  baseline changes: new baseline after Nico's OK).

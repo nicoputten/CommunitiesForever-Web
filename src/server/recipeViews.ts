@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { RECIPE_CLASS } from "@/core/loot";
 import type { Dataset } from "@/core/model";
 import { LIVE_UNTIL } from "@/core/views/age";
 import {
@@ -9,10 +10,19 @@ import {
   type ReagentData,
   type RecipeData,
   type SourceData,
+  type TooltipCreated,
   type TooltipItem,
 } from "@/core/views/recipes";
 import type { Db } from "./db";
-import { characterProfessions, characterRecipes, items, recipeReagents, recipes, recipeSources } from "./db/schema";
+import {
+  bossDrops,
+  characterProfessions,
+  characterRecipes,
+  items,
+  recipeReagents,
+  recipes,
+  recipeSources,
+} from "./db/schema";
 
 // WEB-92: what the recipe pages read from the item database and the derived recipe tables (WEB-90). The view models
 // are pure (src/core/views/recipes.ts); this only reads rows.
@@ -138,8 +148,7 @@ export function characterRecipeRows(
   return { professions, counts };
 }
 
-/** Items with their tooltip data, by ID (no gold: the item data has no sell price). */
-export function tooltipItems(db: Db, ids: readonly number[]): TooltipItem[] {
+function itemRows(db: Db, ids: readonly number[]): TooltipItem[] {
   return chunked([...new Set(ids)], (slice) => db.select().from(items).where(inArray(items.id, slice)).all()).map(
     (i) => {
       const t: TooltipItem = { id: i.id, data: i.data };
@@ -149,6 +158,70 @@ export function tooltipItems(db: Db, ids: readonly number[]): TooltipItem[] {
       return t;
     },
   );
+}
+
+/**
+ * Items with their tooltip data, by ID (no gold: the item data has no sell price). A recipe item gets the item its
+ * recipe makes (WEB-104, `withCreated`).
+ */
+export function tooltipItems(db: Db, ids: readonly number[]): TooltipItem[] {
+  return withCreated(db, itemRows(db, ids));
+}
+
+/**
+ * WEB-104: a recipe item's tooltip shows the item it makes and the reagents under its own, as in game. Which recipe
+ * an item teaches: `recipeOf` (the caller knows it), else a boss drop's (the item import's only record of it, WEB-96).
+ * A recipe that makes no item (an enchant) adds nothing.
+ */
+export function withCreated(
+  db: Db,
+  list: TooltipItem[],
+  recipeOf: ReadonlyMap<number, number> = new Map(),
+): TooltipItem[] {
+  const recipeItems = list.filter((i) => i.data.classId === RECIPE_CLASS || recipeOf.has(i.id));
+  if (recipeItems.length === 0) return list;
+  const taught = new Map(recipeOf);
+  const unknown = recipeItems.map((i) => i.id).filter((id) => !taught.has(id));
+  for (const r of chunked(unknown, (slice) =>
+    db
+      .selectDistinct({ itemId: bossDrops.itemId, recipeId: bossDrops.recipeId })
+      .from(bossDrops)
+      .where(and(inArray(bossDrops.itemId, slice), isNotNull(bossDrops.recipeId)))
+      .all(),
+  )) {
+    if (!taught.has(r.itemId)) taught.set(r.itemId, r.recipeId!);
+  }
+  const recipeIds = [...new Set(recipeItems.flatMap((i) => (taught.has(i.id) ? [taught.get(i.id)!] : [])))];
+  if (recipeIds.length === 0) return list;
+  const made = new Map(
+    chunked(recipeIds, (slice) =>
+      db
+        .select({ id: recipes.id, createdItemId: recipes.createdItemId })
+        .from(recipes)
+        .where(and(inArray(recipes.id, slice), isNotNull(recipes.createdItemId)))
+        .all(),
+    ).map((r) => [r.id, r.createdItemId!]),
+  );
+  if (made.size === 0) return list;
+  const reagentRows = chunked([...made.keys()], (slice) =>
+    db.select().from(recipeReagents).where(inArray(recipeReagents.recipeId, slice)).all(),
+  ).sort((a, b) => b.count - a.count || a.itemId - b.itemId);
+  const looks = new Map(itemRows(db, [...made.values(), ...reagentRows.map((r) => r.itemId)]).map((i) => [i.id, i]));
+  return list.map((i) => {
+    const recipe = taught.get(i.id);
+    const created = recipe === undefined ? undefined : made.get(recipe);
+    if (created === undefined) return i;
+    const creates: TooltipCreated = {
+      item: looks.get(created) ?? { id: created, data: { id: created } },
+      reagents: reagentRows
+        .filter((r) => r.recipeId === recipe)
+        .map((r) => {
+          const name = looks.get(r.itemId)?.name;
+          return name === undefined ? { id: r.itemId, count: r.count } : { id: r.itemId, name, count: r.count };
+        }),
+    };
+    return { ...i, creates };
+  });
 }
 
 /** Characters seen in game within the "new" window of the data age scale (DESIGN.md §4): "· online" in the drawer. */

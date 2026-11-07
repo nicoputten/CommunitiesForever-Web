@@ -118,6 +118,11 @@ test("dungeon bosses & loot: the recipe drop's tooltip", async ({ page }) => {
   const card = page.getByText("Can learn:").locator("..");
   await expect(card).toContainText("Lia Thornwhisper · Cooking 150");
   await expect(page.getByText("Click to open the recipe ›")).toBeVisible();
+  // WEB-104: the item the recipe makes, under the recipe's own lines, in its quality colour.
+  await expectStyles(page.getByText("Roast Raptor", { exact: true }), {
+    color: "var(--quality-common)",
+    "font-size": "var(--fs-game)",
+  });
   await expectScreenshot(page, "dungeon-bosses-recipe");
 });
 

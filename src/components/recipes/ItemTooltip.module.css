@@ -44,6 +44,15 @@
   color: var(--game-yellow);
 }
 
+/* WEB-104: a recipe item's created item under the recipe's own lines, after an empty line, as the game shows it. */
+.created {
+  margin-top: calc(var(--fs-game) * var(--lh-game));
+}
+
+.createdName {
+  color: var(--quality-text, var(--game-text));
+}
+
 /* WEB-102: lines under the game's, set off by a rule (board DL04: a recipe drop's "Nobody knows it"). */
 .footer {
   display: flex;

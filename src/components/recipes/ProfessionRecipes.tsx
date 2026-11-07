@@ -102,10 +102,14 @@ export function ProfessionRecipes({
   const filtered = query.trim() !== "" || type !== undefined || skill !== undefined || char !== undefined;
 
   const hrefFor = (recipe: number) => recipeHref({ ...params, recipe });
+  // A link to a recipe of a profession nobody scanned (WEB-104: a boss's recipe drop, the bot) opens it over all
+  // recipes; closing it stays on them rather than going back to "No recipes scanned yet".
   const openRecipe = (recipe: number | null) =>
-    void setParams({ recipe }, { history: recipe === null ? "replace" : "push" });
+    void setParams(recipe === null && view.notScanned && params.tab === null ? { recipe, tab: "all" } : { recipe }, {
+      history: recipe === null ? "replace" : "push",
+    });
 
-  if (view.notScanned && params.tab === null) {
+  if (view.notScanned && params.tab === null && open === undefined) {
     const who = view.crafters[0]?.name;
     return (
       <>
