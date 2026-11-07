@@ -239,6 +239,15 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+/** A boss down (run-boss-progress, WEB-97): the ✓ in its green disc. */
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 12 12" strokeWidth={2} {...props}>
+      <path d="M2 6.5l2.5 2.5L10 3.5" />
+    </Icon>
+  );
+}
+
 /** Compass rose over "The map is still empty" (empty-site board); colour from currentColor. */
 export function CompassIcon(props: IconProps) {
   return (

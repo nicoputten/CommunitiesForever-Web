@@ -32,6 +32,8 @@ const r = (id: number, skillLineId: number, over: Partial<RecipeRecord> = {}): R
 
 /** 1 trainer, 2 boss drop (epic), 3 rep (rare), 4 drop nobody knows; reagents 900 and 901. */
 const DATABASE: ItemDatabase = {
+  bosses: [],
+  bossDrops: [],
   items: [
     { id: 101, name: "Test Bolt", quality: 1, iconName: "inv_test_bolt" },
     { id: 102, name: "Test Robe", quality: 4, iconName: "inv_test_robe" },

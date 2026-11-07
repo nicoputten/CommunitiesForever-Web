@@ -44,10 +44,11 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   await spread.getByRole("button", { name: /^Show all \d+$/ }).click();
   await expect(spread.getByRole("button", { name: "Show fewer" })).toBeVisible();
   // Scarlet Monastery's wings are separate bands; each one's accessible name has what it shows and the full name.
+  // WEB-102: a dungeon fits from 2 levels below its range.
   for (const [id, name, label] of [
-    ["sm-graveyard", "Scarlet Monastery: Graveyard", "26–36 · 2"],
-    ["sm-library", "Scarlet Monastery: Library", "29–39 · 3"],
-    ["sm-cathedral", "Scarlet Monastery: Cathedral", "35–45 · 3"],
+    ["sm-graveyard", "Scarlet Monastery: Graveyard", "26–36 · 3"],
+    ["sm-library", "Scarlet Monastery: Library", "29–39 · 4"],
+    ["sm-cathedral", "Scarlet Monastery: Cathedral", "35–45 · 4"],
   ] as const) {
     const band = bands.locator(`button[data-band="${id}"]`);
     await expect(band).toHaveAttribute("aria-label", new RegExp(label));
@@ -55,12 +56,12 @@ test("the level spread: dots with names in a tooltip, bands without names (WEB-3
   }
   // The full text where it fits; a band too narrow for it on the level scale shows the name (WEB-88), not on a phone.
   await expect(bands.locator('button[data-band="rfc"]')).toHaveText(
-    isPhone(page) ? "Ragefire Chasm 13–18 · 2" : "Ragefire Chasm",
+    isPhone(page) ? "Ragefire Chasm 13–18 · 3" : "Ragefire Chasm",
     { useInnerText: true },
   );
-  await expect(bands.locator('button[data-band="rfc"]')).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
-  // The Armory has the most fits.
-  await expect(bands.locator('button[data-band="sm-armory"]')).toHaveAttribute("data-best", "true");
+  await expect(bands.locator('button[data-band="rfc"]')).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 3");
+  // The Library ties the Armory with the most fits and comes first.
+  await expect(bands.locator('button[data-band="sm-library"]')).toHaveAttribute("data-best", "true");
   await expect(bands).not.toContainText(/Ves|Lia|Bob|Tok|Ruk/);
   // Lia 37 and Ves 39 share one dot, Bob 41 has his own: a dot covers at most 3 levels (WEB-88); Ves is the viewer's.
   // A phone merges within 4 levels, at most 5 a dot, middles 5 levels apart: Tok 33 with Lia, Ves with Bob.

@@ -33,7 +33,7 @@ export interface LevelRange {
 export interface Wing {
   /** Unique among the instance's wings, lower case ("armory"). */
   id: string;
-  /** The addon's id when the wing is a dungeon of its own ("smarm"). */
+  /** The addon's id when the wing is a dungeon of its own there ("smarm", "ubrs"; WEB-96: the loot file's key). */
   addonId?: string;
   name: string;
   typicalLevels: LevelRange;
@@ -49,7 +49,7 @@ export interface DungeonInfo {
   typicalLevels: LevelRange;
   wings?: readonly Wing[];
   /**
-   * Each wing is a dungeon of its own, run on its own with its own level range (Scarlet Monastery, WEB-32). Blackrock
+   * Each wing is a dungeon of its own, run on its own with its own level range (Scarlet Monastery, WEB-32; Stratholme and Dire Maul, WEB-102). Blackrock
    * Spire's wings share one range and stay one dungeon for who fits.
    */
   wingsAreDungeons?: true;
@@ -217,18 +217,29 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zone: "burning",
     typicalLevels: typical(55, 60),
     wings: [
-      { id: "lower", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
-      { id: "upper", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "lower", addonId: "lbrs", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "upper", addonId: "ubrs", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
     ],
     zoneTexts: ["Blackrock Spire", "Lower Blackrock Spire", "Upper Blackrock Spire"],
   },
   {
     id: "dme",
+    // The whole instance: the id older runs and addons used (CF-106: it stays readable, LEGACY_DUNGEONS).
     addonId: "dme",
     name: "Dire Maul",
     kind: "dungeon",
     zone: "feralas",
-    typicalLevels: typical(55, 60),
+    shortName: "DM",
+    typicalLevels: typical(54, 60),
+    // WEB-96, WEB-102: the wings, dungeons of their own (Nico, 2026-11-07), like Scarlet Monastery's. Names and levels:
+    // the client's GroupFinderActivity, "Dire Maul (East)" 813 54-60, "(West)" 814 56-60, "(North)" 815 56-60
+    // (docs/WOW-FOREVER.md "Dungeons"); the wiki's pages "Dire Maul East", "Dire Maul West", "Dire Maul North".
+    wings: [
+      { id: "east", addonId: "dmeast", name: "East", typicalLevels: typical(54, 60) },
+      { id: "west", addonId: "dmwest", name: "West", typicalLevels: typical(56, 60) },
+      { id: "north", addonId: "dmnorth", name: "North", typicalLevels: typical(56, 60) },
+    ],
+    wingsAreDungeons: true,
     zoneTexts: ["Dire Maul"],
   },
   {
@@ -242,11 +253,21 @@ export const DUNGEONS: readonly DungeonInfo[] = [
   },
   {
     id: "strat",
+    // The whole instance: the id older runs and addons used (CF-106: it stays readable, LEGACY_DUNGEONS).
     addonId: "strat",
     name: "Stratholme",
     kind: "dungeon",
     zone: "epl",
+    shortName: "Strat",
     typicalLevels: typical(58, 60),
+    // WEB-96, WEB-102: the two sides, dungeons of their own (Nico, 2026-11-07). Names and levels: the client's
+    // GroupFinderActivity, "Stratholme (Main Gate)" 816 and "Stratholme (Service Gate)" 1603, both 58-60
+    // (docs/WOW-FOREVER.md "Dungeons"); warcraft.wiki.gg "Stratholme (Classic)" (Main Gate, Service Entrance).
+    wings: [
+      { id: "live", addonId: "stratlive", name: "Main Gate", typicalLevels: typical(58, 60) },
+      { id: "undead", addonId: "stratud", name: "Service Gate", typicalLevels: typical(58, 60) },
+    ],
+    wingsAreDungeons: true,
     zoneTexts: ["Stratholme"],
   },
   {
@@ -380,12 +401,21 @@ export interface RunnableDungeon {
   forever: boolean;
   /** The instance's name when this is one of its wings ("Scarlet Monastery"). */
   wingOf?: string;
+  /** The wing's id within the instance ("armory"; the boss tables' wing, WEB-96). */
+  wingId?: string;
+  /**
+   * The whole instance of wings that are dungeons, from before they were (Stratholme and Dire Maul until WEB-102):
+   * stored runs and older addons' plans keep it; it lists every wing's bosses and is cleared when any wing's final
+   * boss dies. Never offered for a new run.
+   */
+  whole?: true;
 }
 
 export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d) => d.kind === "dungeon").flatMap(
   (d): RunnableDungeon[] =>
     d.wingsAreDungeons === true && d.wings !== undefined
       ? d.wings.map((w) => ({
+          wingId: w.id,
           id: `${d.id}-${w.id}`,
           name: `${d.name}: ${w.name}`,
           shortName: `${d.shortName ?? d.name} ${w.name}`,
@@ -407,6 +437,23 @@ export const RUNNABLE_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter((d)
           },
         ],
 );
+
+/**
+ * Stratholme and Dire Maul as one dungeon (WEB-102): the ids runs had before their wings were dungeons of their own.
+ * `runDungeon` still finds them; the dungeon lists (Plan, roster, who fits) don't offer them.
+ */
+export const LEGACY_DUNGEONS: readonly RunnableDungeon[] = DUNGEONS.filter(
+  (d) => d.kind === "dungeon" && d.wingsAreDungeons === true && (d.id === "strat" || d.id === "dme"),
+).map((d) => ({
+  id: d.id,
+  name: d.name,
+  shortName: d.name,
+  instanceId: d.id,
+  typicalLevels: d.typicalLevels,
+  forever: false,
+  whole: true,
+  ...(d.addonId === undefined ? {} : { addonId: d.addonId }),
+}));
 
 export interface MapPoint {
   x: number;

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 import type { ItemDatabase } from "@/core/recipes/build";
 import type { Db } from "./db";
-import { itemImport, items, recipeReagents, recipes, recipeSources } from "./db/schema";
+import { bossDrops, dungeonBosses, itemImport, items, recipeReagents, recipes, recipeSources } from "./db/schema";
 
 // WEB-90 (run by scripts/import-items.ts, so it imports nothing that Node's type stripping can't load): writes the item and recipe database the import script built (src/core/recipes/build.ts). One transaction;
 // the same data again changes nothing. Rows of Forever's own that only uploads brought (origin "upload") stay until
@@ -29,6 +29,8 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
     tx.delete(recipes).where(eq(recipes.origin, "import")).run();
     tx.delete(recipeReagents).run();
     tx.delete(recipeSources).run();
+    tx.delete(dungeonBosses).run();
+    tx.delete(bossDrops).run();
     replaceUploaded(
       tx,
       data.items.map((i) => i.id),
@@ -91,6 +93,43 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
             faction: s.faction ?? null,
             rank: s.rank ?? null,
             isRare: s.isRare,
+          })),
+        )
+        .run(),
+    );
+    // WEB-96: bosses and their own loot.
+    insertAll(data.bosses, (slice) =>
+      tx
+        .insert(dungeonBosses)
+        .values(
+          slice.map((b) => ({
+            id: b.id,
+            dungeonId: b.dungeonId,
+            wingId: b.wingId ?? null,
+            position: b.position,
+            name: b.name,
+            final: b.final,
+            optional: b.optional,
+          })),
+        )
+        .run(),
+    );
+    insertAll(data.bossDrops, (slice) =>
+      tx
+        .insert(bossDrops)
+        .values(
+          slice.map((d) => ({
+            bossId: d.bossId,
+            itemId: d.itemId,
+            position: d.position,
+            chance: d.chance,
+            classId: d.classId ?? null,
+            subclassId: d.subclassId ?? null,
+            classes: d.classes ?? null,
+            questId: d.questId ?? null,
+            recipeId: d.recipeId ?? null,
+            skill: d.skill ?? null,
+            line: d.line ?? null,
           })),
         )
         .run(),

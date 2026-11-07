@@ -13,6 +13,8 @@ import { upload } from "@/server/uploads";
 
 const ADMIN = "Nico#1000";
 const DATABASE: ItemDatabase = {
+  bosses: [],
+  bossDrops: [],
   items: [
     { id: 101, name: "Test Robe", quality: 4, iconName: "inv_test", armor: 50 },
     { id: 102, name: "Test Bolt", quality: 1, classId: 7, maxStack: 20 },

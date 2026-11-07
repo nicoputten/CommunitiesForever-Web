@@ -2,8 +2,9 @@ import { and, eq } from "drizzle-orm";
 import type { GoalRecord, PersonGoals } from "@/core/doomsday/record";
 import type { PersonFeed } from "@/core/feed";
 import type { Sighting } from "@/core/model";
+import type { BossKill } from "@/core/runProgress";
 import type { Db } from "./db";
-import { doomsdayGoals, doomsdayStatus, feats, feedDays, sightings } from "./db/schema";
+import { bossKills, doomsdayGoals, doomsdayStatus, feats, feedDays, sightings } from "./db/schema";
 
 // History for the weekly recap (WEB-41) and Doomsday (WEB-55): the addon's activity feed per realm day per character,
 // every sighting, and each friend's Doomsday goals. Written with every accepted upload (src/server/uploads.ts), in upload order, so a rebuild writes
@@ -98,9 +99,19 @@ export function recordSightings(tx: Tx, locations: Readonly<Record<string, Sight
   }
 }
 
+/** WEB-97: every boss kill once (character, boss, time); the first upload that showed it stays its source. */
+export function recordBossKills(tx: Tx, kills: readonly BossKill[], uploadId: number): void {
+  for (const k of kills)
+    tx.insert(bossKills)
+      .values({ guid: k.guid, encounterId: k.encounterId, at: k.at, sourceUpload: uploadId })
+      .onConflictDoNothing()
+      .run();
+}
+
 /** Before a rebuild writes the history again. */
 export function clearHistory(tx: Tx): void {
   tx.delete(feedDays).run();
+  tx.delete(bossKills).run();
   tx.delete(doomsdayGoals).run();
   tx.delete(doomsdayStatus).run();
   tx.delete(feats).run();

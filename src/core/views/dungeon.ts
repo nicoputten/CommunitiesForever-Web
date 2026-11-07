@@ -10,7 +10,8 @@ import {
   type LevelRange,
   type RunnableDungeon,
 } from "../gamedata";
-import { levelFit } from "../levelFit";
+import { FIT_BELOW, levelFit } from "../levelFit";
+import type { BossKill } from "../runProgress";
 import {
   counts,
   isUpcoming,
@@ -22,6 +23,7 @@ import {
   type SlotRole,
 } from "../runs";
 import { dayLabel, localTime, runWhen } from "../runTime";
+import { lastCleared, plannedBosses, type LastCleared, type ProgressBossInfo } from "./bossProgress";
 import { byLevel, compareText, type CharacterView } from "./characters";
 import type { Continent } from "./mapMarkers";
 import { joinNames } from "./text";
@@ -77,7 +79,7 @@ export interface PlannedRunView {
   by: string;
   /** The character the organiser leads as. */
   lead?: { name: string; colorToken?: string };
-  /** "3 in · 1 maybe · tank open". */
+  /** "3 in · 1 maybe · tank open"; once the run has a boss kill "5 in · 3 of 6 bosses" (WEB-97). */
   summary: string;
   /** The five slots in order (tank, healer, damage × 3): filled or not. */
   slots: { role: SlotRole; filled: boolean }[];
@@ -128,6 +130,8 @@ export interface DungeonPage {
   /** "Cathedral on Wed 4 Nov 20:00 (Femke)": upcoming runs in the other wings. */
   otherWings: { text: string; href: string }[];
   ran: RanRunView[];
+  /** WEB-97: when the final boss last died in someone's kill log, and who was there; Ran here then shows only it. */
+  lastCleared?: LastCleared;
   /** Quests friends have for this dungeon (WEB-76): most holders first. Scarlet Monastery's are on every wing. */
   quests: DungeonQuest[];
 }
@@ -203,10 +207,11 @@ export function whoFits(characters: readonly CharacterView[], r: LevelRange): Fi
       }),
     };
     if (fitting.length === 0) {
+      const from = r.min - FIT_BELOW;
       const closest = sorted.find(
-        (c) => c.level !== undefined && c.level < r.min && rolesFor(c.classFile).includes(role),
+        (c) => c.level !== undefined && c.level < from && rolesFor(c.classFile).includes(role),
       );
-      if (closest !== undefined) v.short = { ...fitCharacter(closest), levels: r.min - closest.level! };
+      if (closest !== undefined) v.short = { ...fitCharacter(closest), levels: from - closest.level! };
     }
     return v;
   });
@@ -235,14 +240,27 @@ function slotBars(run: RunRecord): PlannedRunView["slots"] {
   return out;
 }
 
-function plannedView(input: RunsInput, n: Names, run: RunRecord): PlannedRunView {
+/** WEB-97, WEB-102: the dungeon's bosses and their kills, for boss progress and Last cleared. */
+export interface DungeonProgressInput {
+  bosses: readonly ProgressBossInfo[];
+  /** Kills of these bosses (any window: each run takes its own). */
+  kills: readonly BossKill[];
+  /** The first daily reset after a moment. */
+  resetAfter: (at: number) => number;
+}
+
+function plannedView(input: RunsInput, n: Names, run: RunRecord, progress?: DungeonProgressInput): PlannedRunView {
   const tz = input.viewer.timeZone;
+  const bosses =
+    progress === undefined
+      ? undefined
+      : plannedBosses(run, progress.bosses, progress.kills, input.now, progress.resetAfter(run.startsAt));
   const v: PlannedRunView = {
     href: `/runs/${run.id}`,
     day: dayLabel(run.startsAt, tz, input.now),
     time: localTime(run.startsAt, tz),
     by: n.friend(run.organiser),
-    summary: plannedSummary(run),
+    summary: bosses === undefined ? plannedSummary(run) : `${counts(run.answers).in} in · ${bosses}`,
     slots: slotBars(run),
   };
   const lead = run.answers.find((a) => sameBattleTag(a.battleTag, run.organiser) && a.answer === "in");
@@ -279,7 +297,7 @@ export function dungeonQuests(characters: readonly CharacterView[], instanceId: 
     .sort((a, b) => b.holders.length - a.holders.length || compareText(a.title, b.title) || compareText(a.id, b.id));
 }
 
-export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefined {
+export function dungeonPage(input: RunsInput, id: string, progress?: DungeonProgressInput): DungeonPage | undefined {
   const dungeon = runDungeon(id);
   const instance = DUNGEONS.find((d) => d.id === dungeon?.instanceId);
   if (dungeon === undefined || instance === undefined) return undefined;
@@ -305,7 +323,7 @@ export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefin
     planHref: planHref(id),
     whoFits: whoFits(input.characters, dungeon.typicalLevels),
     noCharacters: input.characters.length === 0,
-    planned: upcomingIn(input.runs, id, now).map((r) => plannedView(input, n, r)),
+    planned: upcomingIn(input.runs, id, now).map((r) => plannedView(input, n, r, progress)),
     otherWings: [],
     ran: input.runs
       .filter((r) => r.dungeonId === id && !isUpcoming(r, now) && r.outcome?.kind === "done")
@@ -320,6 +338,16 @@ export function dungeonPage(input: RunsInput, id: string): DungeonPage | undefin
       })),
     quests: dungeonQuests(input.characters, instance.id),
   };
+  if (progress !== undefined) {
+    const last = lastCleared(progress.bosses, progress.kills, {
+      characters: input.characters,
+      people: input.people,
+      viewer: input.viewer.battleTag,
+      timeZone: tz,
+      now,
+    });
+    if (last !== undefined) page.lastCleared = last;
+  }
   const position = dungeonPosition(instance);
   if (position !== undefined) page.entrance = { zone: instance.zone, ...position };
 

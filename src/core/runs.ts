@@ -1,5 +1,12 @@
 import { battleTagKey } from "./access";
-import { RUNNABLE_DUNGEONS, rolesFor, type GroupRole, type LevelRange, type RunnableDungeon } from "./gamedata";
+import {
+  LEGACY_DUNGEONS,
+  RUNNABLE_DUNGEONS,
+  rolesFor,
+  type GroupRole,
+  type LevelRange,
+  type RunnableDungeon,
+} from "./gamedata";
 import { levelFit } from "./levelFit";
 import type { Role } from "./views/characters";
 
@@ -40,12 +47,15 @@ export function inRange(level: number | undefined, range: LevelRange): boolean {
  */
 export function runDungeonByAddonId(addonId: string): RunnableDungeon | undefined {
   const id = addonId === "ubrs" ? "lbrs" : addonId;
-  return RUNNABLE_DUNGEONS.find((d) => d.addonId === id);
+  return RUNNABLE_DUNGEONS.find((d) => d.addonId === id) ?? LEGACY_DUNGEONS.find((d) => d.addonId === id);
 }
 
-/** A dungeon (or Scarlet Monastery wing) a run can be planned for, by id. */
+/**
+ * A dungeon (or wing) a run can be planned for, by id; also Stratholme's and Dire Maul's old whole-instance ids
+ * (`whole`, WEB-102), which stored runs keep.
+ */
 export function runDungeon(id: string): RunnableDungeon | undefined {
-  return RUNNABLE_DUNGEONS.find((d) => d.id === id);
+  return RUNNABLE_DUNGEONS.find((d) => d.id === id) ?? LEGACY_DUNGEONS.find((d) => d.id === id);
 }
 
 export interface RunAnswer {

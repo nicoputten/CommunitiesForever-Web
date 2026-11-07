@@ -276,7 +276,9 @@ describe("Plan a run", () => {
       best: { text: "Ves 39 fits", tone: "good" },
       wingOf: "Scarlet Monastery",
     });
-    expect(d("strat").best).toEqual({ text: "no fit" });
+    expect(d("strat-live").best).toEqual({ text: "no fit" });
+    // WEB-102: the old whole Stratholme is never offered for a new run.
+    expect(p.dungeons.some((x) => x.id === "strat")).toBe(false);
     expect(d("thanes").forever).toBe(true);
     expect(d("rfc").forever).toBe(false);
     // Ves 39 is the best for Zul'Farrak (44–54): 5 below, the most it may be and still join.

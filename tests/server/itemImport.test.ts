@@ -99,11 +99,13 @@ describe("importItems", () => {
     expect(summary).toEqual({
       build: FOREVER,
       era: ERA,
-      items: 10,
+      items: 11,
       recipes: 10,
       foreverOnly: 1,
       unobtainable: 1,
-      sources: 10,
+      sources: 11,
+      bosses: 1,
+      bossDrops: 2,
       changed: true,
     });
     // ItemSparse came in two parts: from the start, then after the last whole row (ID 5003).

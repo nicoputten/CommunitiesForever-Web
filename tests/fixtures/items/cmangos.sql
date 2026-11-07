@@ -5,7 +5,7 @@ CREATE TABLE `creature` (
   `map` smallint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature` VALUES (1,7001,229),(2,7101,0),(3,7102,0),(4,7103,0),(5,7104,0),(6,7002,0);
+INSERT INTO `creature` VALUES (1,7001,229),(2,7101,0),(3,7102,0),(4,7103,0),(5,7104,0),(6,7002,0),(7,7201,36);
 CREATE TABLE `creature_loot_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `item` mediumint unsigned NOT NULL DEFAULT '0',
@@ -17,7 +17,7 @@ CREATE TABLE `creature_loot_template` (
   `comments` varchar(300) DEFAULT '',
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,'');
+INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,''),(7201,5003,25,0,1,1,0,'Test Shirt Item'),(7201,5004,0.5,0,1,1,0,'Test Robe Item'),(7201,6005,0.5,0,1,1,0,'Pattern: Test Bag');
 CREATE TABLE `creature_template` (
   `Entry` mediumint unsigned NOT NULL DEFAULT '0',
   `Name` char(100) NOT NULL DEFAULT '',
@@ -25,7 +25,7 @@ CREATE TABLE `creature_template` (
   `VendorTemplateId` mediumint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Entry`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature_template` VALUES (7001,'Test Boss',7001,0),(7002,'Test Quartermaster',0,0),(7003,'Test Merchant',0,0),(7004,'Test Peddler',0,40),(7101,'Test Wolf',7101,0),(7102,'Test Wolf Pup',7102,0),(7103,'Test Wolf Elder',7103,0),(7104,'Test Wolf\'s Mother',7104,0);
+INSERT INTO `creature_template` VALUES (7001,'Test Boss',7001,0),(7002,'Test Quartermaster',0,0),(7003,'Test Merchant',0,0),(7004,'Test Peddler',0,40),(7101,'Test Wolf',7101,0),(7102,'Test Wolf Pup',7102,0),(7103,'Test Wolf Elder',7103,0),(7104,'Test Wolf\'s Mother',7104,0),(7201,'Test Deadmines Boss',7201,0);
 CREATE TABLE `gameobject` (
   `guid` int unsigned NOT NULL AUTO_INCREMENT,
   `id` mediumint unsigned NOT NULL DEFAULT '0',

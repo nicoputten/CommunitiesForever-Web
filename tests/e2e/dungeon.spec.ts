@@ -85,3 +85,56 @@ test("Scarlet Monastery goes to its first wing; a raid or an unknown dungeon has
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dungeon not found");
   }
 });
+
+// WEB-102 (board DL04): The Deadmines' bosses and loot from the sample item database (tests/design/sampleItems.ts),
+// "Usable by" with the admin's most recently played character (Ves, a warlock), remembered; Show more; a recipe drop
+// opens its recipe. WEB-97: Ran here says when VanCleef last died (the sample's kills).
+test("the dungeon page's bosses and loot", async ({ page }) => {
+  const phone = isPhone(page);
+  await page.goto("/dungeons/dm");
+  const loot = page.getByRole("region", { name: "Bosses & loot" });
+  await expect(loot.getByRole("heading", { level: 3 })).toHaveText([
+    /1\s*Rhahk’Zor/,
+    /2\s*Sneed/,
+    /3\s*Gilnid/,
+    /4\s*Mr\. Smite/,
+    /5\s*Captain Greenskin/,
+    /6\s*Edwin VanCleef/,
+    /7\s*Cookie\s*optional/,
+  ]);
+  await expect(page.getByRole("region", { name: "Ran here" }).getByText(/^Last cleared /)).toBeVisible();
+
+  const vancleef = loot.getByRole("region", { name: /Edwin VanCleef/ });
+  await expect(vancleef.getByRole("listitem")).toHaveCount(6);
+  await vancleef.getByRole("button", { name: "Show 2 more ▾" }).click();
+  await expect(vancleef.getByRole("listitem")).toHaveCount(8);
+
+  const hide = loot.getByRole("switch", { name: "Hide what Ves Doombringer can't use" });
+  await hide.click();
+  await expect(vancleef.getByRole("listitem")).toHaveCount(3);
+  // Another character: Grom the warrior can use all eight of VanCleef's (Show more stays open).
+  await loot.getByRole("combobox", { name: "Usable by" }).click();
+  await page.getByRole("option", { name: "Grom Ashfeller" }).click();
+  await expect(loot.getByRole("switch", { name: "Hide what Grom Ashfeller can't use" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(vancleef.getByRole("listitem")).toHaveCount(8);
+  await page.reload();
+  await expect(loot.getByRole("switch", { name: "Hide what Grom Ashfeller can't use" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+
+  // The recipe nobody knows: its drawer.
+  const cookie = loot.getByRole("region", { name: /Cookie/ });
+  await expect(cookie.getByText("Nobody knows it")).toBeVisible();
+  if (phone) {
+    await cookie.getByRole("button", { name: "Recipe: Roast Raptor, item details" }).click();
+    await page.getByRole("link", { name: "Open recipe" }).click();
+  } else {
+    await cookie.getByRole("link", { name: "Recipe: Roast Raptor" }).click();
+  }
+  await expect(page).toHaveURL(/\/professions\/cooking\?recipe=93002/);
+  await expect(page.getByRole("dialog", { name: "Roast Raptor" })).toBeVisible();
+});

@@ -211,6 +211,27 @@
       "when": 1794004830110,
       "tag": "0029_item_database",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1794047644595,
+      "tag": "0030_boss_loot",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1794049845181,
+      "tag": "0031_boss_drop_skill",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1794050787129,
+      "tag": "0032_boss_kills",
+      "breakpoints": true
     }
   ]
 }

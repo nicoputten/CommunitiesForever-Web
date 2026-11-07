@@ -110,7 +110,8 @@ describe("roster", () => {
     for (const band of spread.bands) {
       const { min, max } = band.dungeon.typicalLevels;
       expect(band.fits.length).toBeGreaterThanOrEqual(2);
-      expect(band.fits.every((c) => c.level! >= min && c.level! <= max)).toBe(true);
+      // WEB-102: one fit rule with the addon, from 2 below the minimum.
+      expect(band.fits.every((c) => c.level! >= min - 2 && c.level! <= max)).toBe(true);
       expect(DUNGEONS.find((d) => d.id === band.dungeon.instanceId)?.kind).toBe("dungeon");
     }
     const mins = spread.bands.map((b) => b.dungeon.typicalLevels.min);
@@ -118,14 +119,19 @@ describe("roster", () => {
     expect(spread.bands.some((b) => b.dungeon.name === "Zul'Farrak")).toBe(false);
   });
 
-  it("names the band with the most fits (board: SM Armory 32–42 · 4 fit)", () => {
+  it("names the band with the most fits (board: SM Armory 32–42 · 4 fit; since WEB-102's fit rule the Library ties it first)", () => {
     expect(r.spread.best?.dungeon).toMatchObject({
-      id: "sm-armory",
-      name: "Scarlet Monastery: Armory",
-      shortName: "SM Armory",
-      typicalLevels: { min: 32, max: 42 },
+      id: "sm-library",
+      name: "Scarlet Monastery: Library",
+      shortName: "SM Library",
+      typicalLevels: { min: 29, max: 39 },
     });
-    expect(names(r.spread.best!.fits)).toEqual(["Bob Example", "Ves Doombringer", "Lia Thornwhisper", "Tok Ironhide"]);
+    expect(names(r.spread.best!.fits)).toEqual([
+      "Ves Doombringer",
+      "Lia Thornwhisper",
+      "Tok Ironhide",
+      "Ruk Bloodhoof",
+    ]);
   });
 
   it("bands the Scarlet Monastery wings apart, never the whole monastery (WEB-32)", () => {
@@ -133,7 +139,7 @@ describe("roster", () => {
     expect(ids).not.toContain("sm");
     expect(ids).toEqual(expect.arrayContaining(["sm-graveyard", "sm-library", "sm-armory", "sm-cathedral"]));
     const count = (id: string) => r.spread.bands.find((b) => b.dungeon.id === id)?.fits.length;
-    expect(["sm-graveyard", "sm-library", "sm-armory", "sm-cathedral"].map(count)).toEqual([2, 3, 4, 3]);
+    expect(["sm-graveyard", "sm-library", "sm-armory", "sm-cathedral"].map(count)).toEqual([3, 4, 4, 4]);
   });
 
   it("answers the quick questions", () => {

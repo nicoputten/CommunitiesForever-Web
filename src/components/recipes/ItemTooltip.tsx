@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as HoverCard from "@radix-ui/react-hover-card";
 import Link from "next/link";
-import { useContext, useEffect, useId, useState, useSyncExternalStore, type ReactElement } from "react";
+import { useContext, useEffect, useId, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import type { TooltipItem } from "@/core/views/recipes";
 import { ItemTooltipCard } from "./ItemTooltipCard";
 import { ItemsContextValue } from "./itemsContext";
@@ -70,6 +70,8 @@ export interface ItemTooltipProps {
   recipeHref?: string;
   /** The tapped icon's accessible name on a phone ("Robe of the Archmage, item details"). */
   label?: string;
+  /** Lines under the game's tooltip (ItemTooltipCard `footer`). */
+  footer?: ReactNode;
 }
 
 export function ItemTooltip({
@@ -79,6 +81,7 @@ export function ItemTooltip({
   hoverOnly = false,
   recipeHref,
   label,
+  footer,
 }: ItemTooltipProps) {
   const noHover = useNoHover();
   const [open, setOpen] = useState(false);
@@ -105,7 +108,7 @@ export function ItemTooltip({
           <Dialog.Content className={styles.sheet} aria-labelledby={titleId} aria-describedby={undefined}>
             <span className={styles.grab} aria-hidden="true" />
             <Dialog.Title className="visually-hidden">Item</Dialog.Title>
-            <ItemTooltipCard id={itemId} item={item} width="full" titleId={titleId} />
+            <ItemTooltipCard id={itemId} item={item} width="full" titleId={titleId} footer={footer} />
             {recipeHref !== undefined && (
               <Link href={recipeHref} className={buttons.secondary} onClick={() => setOpen(false)}>
                 Open recipe
@@ -129,7 +132,7 @@ export function ItemTooltip({
           collisionPadding={8}
           avoidCollisions
         >
-          <ItemTooltipCard id={itemId} item={item} width={width} />
+          <ItemTooltipCard id={itemId} item={item} width={width} footer={footer} />
         </HoverCard.Content>
       </HoverCard.Portal>
     </HoverCard.Root>

@@ -12,8 +12,9 @@ Source of truth: the addon repo, `docs/ARCHITECTURE.md` "Data model". This file 
 | v0.3 | 1 | `tests/fixtures/addon/v0.3/savedvariables.lua` |
 | v0.4 | 1 | `tests/fixtures/addon/v0.4/savedvariables.lua` |
 | unreleased (CF-47, CF-48) | 2 | `tests/fixtures/addon-unreleased/pending.lua` (the `pending` list only, the addon's own sample) |
+| unreleased (CF-103) | 3 | none yet: the addon's golden fixture joins `tests/fixtures/addon/` with its release |
 
-Schema 2 adds only `global.pending`; the site reads schemas 1 and 2 with the same reader (`SUPPORTED_SCHEMA` = 2) and the pending items apart (`src/core/gameItems.ts`, WEB-43). A newer schema is stored as rejected ("newer format").
+Schema 2 adds only `global.pending`; the site reads schemas 1 and 2 with the same reader (`SUPPORTED_SCHEMA` = 2) and the pending items apart (`src/core/gameItems.ts`, WEB-43). Schema 3 (addon CF-103, WEB-97) changes only `runs[guid].bosses` (kill times instead of `true`) and adds `liveKills`; the same reader takes it (`SUPPORTED_SCHEMA` = 3). A newer schema is stored as rejected ("newer format").
 
 The addon fixtures hold `global` only (as `return { ... }`), captured from invented players.
 
@@ -39,7 +40,9 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
 | `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`. Since CF-52: `kills[zone]`, `deaths = { { t, zone, cause } }` (cause `fall`, `fire`, `lava`, `drown`, `fatigue`, `player`, `creature` or `other`; anything else is read as `other`), `duels = { { t, won, vs } }` (`vs` the opponent's full name). CF-53: `loot = { rare, epic = { { id, name, slot, level } } }` (`slot` an `INVTYPE_*` token), `notable[itemID]`, `gold = { gained, spent }` (copper, never shown as an amount), `sessions = { { from, to } }`, `groups[guid] = true`. CF-55: `pvpKills = { { t, zone, name, lvl, myLvl, class, race, rank, solo, bg } }` (`lvl` -1 is a skull; each victim field only when readable). Capped as the addon caps them (50 deaths, duels, epics and sessions, 40 groups, 100 kills per day and character). `false` from addons that had "Share my activity" (gone, Nico 2026-10-28): read as nothing sent. The last 7 realm days only | weekly recap history (WEB-41), Doomsday (E8) |
 | `self.goals`, `people[bt].goals` | Doomsday goals (CF-56): `days[n]` and `weeks[w]` each `{ set, swapped[id] = originalId, done[id] = time, at }`, plus `streak`, `best`, `pool` (the pool version), `reset` (seconds after midnight realm time). Ids at most 24 characters, at most 5 per day and 4 per week; numbers 0 or more. `false` is read as nothing sent. The last 7 days and 2 weeks only | Doomsday (WEB-55, WEB-58) |
-| `runs` | Nico's runs in progress | later (backlog) |
+| `runs` | the uploader's runs in progress per character (CF-23): only `bosses = { [encounterID] = at }` is read (CF-103, schema 3; schema 2's `true` has no time and is left out) | boss kills (WEB-97, `src/core/bossKills.ts`) |
+| `liveKills` | friends' boss kills shared live (CF-103): `[guid] = { [encounterID] = at }`, kept 2 days by the addon | boss kills (WEB-97) |
+| `feed.*.*.runs.*.bossKills` | CF-103, optional: `{ [encounterID] = at }`, the bosses a finished run killed (encounterID = DungeonEncounter.ID, `at` server time), next to the unchanged `bosses` count; missing on older addons (a count only) | boss kills (WEB-97): `boss_kills`, each (character, boss, time) once; a planned run's progress and the dungeon page's "Last cleared" |
 | `probe` | the addon's hidden launch probe: per client flavour, per item `{ status, detail, at, build, ... }`, at most ~30 KB | the owner's download only (WEB-82): never normalized, stored or shown; read from the raw upload |
 | `members` | the selected community's members (addon CF-89, the first release after v1.2.1): `[guid] = { name, seenAt }`, as the uploader's client last saw them, replaced whole on every update. Missing in v1.2.1 and older. Only the GUID keys and the newest `seenAt` are read | who is a member (WEB-85, `src/core/members.ts`) |
 | `settings` | `clubName` only | page title / group name |
@@ -55,7 +58,7 @@ Times are Unix seconds. Any field can be missing in older releases.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
 - `uploader` (person key of `self`) and `version` (`self.version`).
 - The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state. So are the Doomsday goals (`readAllGoals`, `src/core/doomsday/record.ts`, WEB-55).
-- Not read yet: `runs`, `invite`, other `settings`.
+- Not read yet: `invite`, other `settings`; of `runs` only the kills.
 
 ## The game's items (`pending`, WEB-43)
 Schema 2 (addon CF-47, CF-48): what the player did in game that has to reach the site, until the site's runs list
@@ -79,9 +82,9 @@ written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads st
 Data used for the first import (2026-11-06):
 | Source | What | Version |
 |---|---|---|
-| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
+| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map, DungeonEncounter (the bosses, WEB-96) | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
 | The Classic Era client, same export | SkillLineAbility (recipes Forever has that Era lacks are Forever's own), SpellEffect with Effect 36 (what cmangos' trainer and recipe-item spells teach: Forever's client no longer has those spells) | `wow_classic_era` 1.15.9.70576 |
-| [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
+| [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), the bosses' own loot (`creature_loot_template`, WEB-96), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
 
 wago.tools cuts long CSV exports off after a few seconds; the script asks for rows in ID order (`sort[ID]=asc`) and
 continues after the last whole row (`filter[ID]=>last`) until a download ends cleanly.
@@ -116,3 +119,41 @@ on); 2,693 items (what recipes make and use; 335 of Forever's items have no name
   (`/api/item-icons/<name>`, docs/ARCHITECTURE.md).
 - **Uploads fill the gaps** (amendment 2): a recipe or item the database doesn't have is stored from the uploaded
   recipe -> item pair (origin `upload`, without a name), until an import has it.
+
+### Dungeon bosses and their loot (WEB-96)
+Built by `src/core/recipes/bosses.ts` in the same import, written in the same transaction (an import with the same
+data changes nothing; a new one replaces every row). The item data of an import before WEB-96 stays valid; it gets the
+bosses with the next "Import item data".
+- **`dungeon_bosses`** (id = `DungeonEncounter.ID`, dungeon_id, wing_id, position, name, final, optional): the Forever
+  client's `DungeonEncounter` rows of the base difficulties (`DifficultyID` 0 and 1; the others are Season of
+  Discovery's), in `OrderIndex` order per dungeon. The instance's `MapID` is matched to our dungeons
+  (`src/core/gamedata/dungeons.ts`, dungeons only, no raids) by the client's map name, a leading "The" ignored. The
+  `ID` is the `encounterID` of the game's `ENCOUNTER_END` (the addon's docs/API-FINDINGS.md V35 logged `3353,
+  Witherfang` in Ruins of Lordaeron; build 70862 has exactly that row), so it is the key the addon's kill times
+  (CF-103 `bossKills`) use. Hand-made in `src/core/gamedata/bosses.ts` (cited from warcraft.wiki.gg): the final boss
+  per dungeon ("Cleared" = it died), the optional bosses (not counted in "N of M"), the wing of each Scarlet
+  Monastery, Blackrock Spire, Stratholme and Dire Maul boss (the client has one map for each; each wing has its own
+  final). Without a hand-made final (Forever's own
+  dungeons), or when the client renamed it, the last boss the client lists is the final. 241 bosses on build 70862.
+- **`boss_drops`** (boss_id, item_id, position, chance, class_id, subclass_id, classes, quest_id, recipe_id, skill,
+  line): the boss's
+  own rows in cmangos `creature_loot_template` (its `creature_template` by name, spawned on the instance's map, else
+  one spawned nowhere: a summoned boss; plus the creatures of an encounter fought together, e.g. Mograine with
+  Whitemane). Reference tables (shared world drops) are left out. Chance in percent, one decimal: cmangos'
+  `ChanceOrQuestChance`, negative for a quest drop; a 0 in a loot group shares what the group's other rows leave of
+  100 %. Kept: 1 % or more, plus quest items and recipes at any chance (at least 0.1). Sorted highest chance first.
+  `classes` = AllowableClass (the client's ItemSparse, else cmangos), null for every class. `quest_id` = the quest that
+  asks for a quest drop (`ReqItemId1..4`, lowest ID). `recipe_id` = the recipe a recipe item teaches (as WEB-90); for a recipe drop also `skill` (to learn it: the recipe item's
+  RequiredSkillRank, else the recipe's orange, as the recipe drawer shows) and `line` (the profession's skill line),
+  for "Can learn" (migration `0031_boss_drop_skill`).
+  The dropped items join `items` (names, icons, tooltips). Forever's own dungeons aren't in cmangos: no loot. A few
+  encounters have no creature (Blackrock Depths' Ring of Law, The Vault, The Seven): no loot. 1,940 drops on build
+  70862.
+- **The addon's loot file** (`npm run export:addon-loot -- <out>`, `scripts/export-addon-loot.ts`,
+  `src/core/recipes/addonLoot.ts`): `Data\Loot.lua` for the addon (the shared dungeons contract), keyed by the addon's
+  dungeon ids (a wing's own id: smgy, smlib, smarm, smcath, lbrs, ubrs, stratlive, stratud, dmeast, dmwest, dmnorth;
+  never the whole-instance `strat` or `dme`; Forever's dungeons "lfg" + activity; dungeons
+  the addon has no id for are left out). Deterministic, Lua 5.1 strings. **It is GPL-3.0:** its loot comes from
+  cmangos classic-db, so its header carries the GPL-3.0 notice, the cmangos attribution (URL and commit), the Forever
+  build and a "generated, don't edit" line. It is generated at release and committed to the addon only; this repo
+  commits no generated loot (the sample in `tests/fixtures/addon-loot/` is invented data).

@@ -64,17 +64,19 @@ test("roster: design values", async ({ page }) => {
     "box-shadow": "var(--shadow-tooltip)",
   });
   await page.keyboard.press("Escape");
-  // The bands (WEB-45): the best band in gold; a click opens its popover (board roster-cards-runs).
-  const armory = spread.locator('button[data-band="sm-armory"]');
-  await expectStyles(armory, {
+  // The bands (WEB-45): the best band in gold; a click opens its popover (board roster-cards-runs). The board's best
+  // is SM Armory; since WEB-102's fit rule (from 2 below the range) the Library ties it with 4 and comes first.
+  const library = spread.locator('button[data-band="sm-library"]');
+  await expectStyles(library, {
     "font-size": isPhone(page) ? "var(--fs-meta-sm)" : "var(--fs-meta)",
     color: "var(--gold-pale)",
   });
   // The best band's gold: the band itself on a phone, its bar on the level scale (WEB-88).
-  await expectStyles(isPhone(page) ? armory : armory.locator("[data-bar]"), {
+  await expectStyles(isPhone(page) ? library : library.locator("[data-bar]"), {
     "background-color": "var(--tint-selected)",
     "border-color": "var(--gold)",
   });
+  const armory = spread.locator('button[data-band="sm-armory"]');
   await armory.click();
   const pop = page.getByRole("dialog", { name: "Scarlet Monastery: Armory" });
   await expectStyles(pop, {
@@ -183,10 +185,10 @@ test("roster: dungeon bands on the level scale, one per row, lowest first, cut t
   const band = (id: string) => bands.locator(`button[data-band="${id}"]`);
   // A narrow band shows the name alone, everything in its accessible name and on hover.
   await expect(band("rfc")).toHaveText("Ragefire Chasm", { useInnerText: true });
-  await expect(band("rfc")).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 2");
-  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18 · 2");
+  await expect(band("rfc")).toHaveAttribute("aria-label", "Ragefire Chasm 13–18 · 3");
+  await expect(band("rfc")).toHaveAttribute("title", "Ragefire Chasm 13–18 · 3");
   await expect(band("sm-cathedral")).toHaveText("Scarlet Monastery: Cathedral", { useInnerText: true });
-  await expect(band("sm-cathedral")).toHaveAttribute("aria-label", "Scarlet Monastery: Cathedral 35–45 · 3 · 1 run");
+  await expect(band("sm-cathedral")).toHaveAttribute("aria-label", "Scarlet Monastery: Cathedral 35–45 · 4 · 1 run");
   await expectStyles(band("rfc").locator("[data-bar]"), {
     "border-radius": "var(--r-btn)",
     "background-color": "var(--surface-row)",

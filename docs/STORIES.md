@@ -288,8 +288,26 @@ Nico (2026-11-06) chose pool version 3: 83 missions the addon now tracks (60 dai
 - **Compatibility (rule 4):** an addon on pool version 2 (v1.3.2) keeps drawing and recording version 2 (`pool = 2` on its days and weeks); the site shows and scores those as version 2. Where the site draws itself (the Mission pool page, today before a friend's file recorded it), it uses version 3. A steered day of the Mission pool reaches an old addon only when all its ids are in version 2; otherwise that addon keeps its normal draw (its own rule, CF-68). The bot (v0.5.2) gets ids, texts and labels from the site, all already in the catalogue, so nothing changes for it.
 - Done when: the golden cases pass unchanged; unit tests updated for the new pool sizes; the Mission pool page and the design sample follow; screenshot baselines change only after Nico's OK.
 
+### WEB-101 The site's copy of pool version 4 (pairs with the addon's CF-104; released only on Nico's go)
+Nico (2026-11-07): retire "Defend home" and add the flag missions, but hold the release. **Not on develop until Nico
+says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) keeps pool 3.
+- **The pool:** `POOL_VERSION = 4`; `retired = 4` on `p.homeGuard`; `since = 4` on `p.flagUp`, `p.flagHour`,
+  `b.flagged3h`, and on `d.reward`, `d.fishFriend`, `d.feedFriend` only if the addon's CF-104 adds them.
+- **Golden cases:** `doomsday-cases.json` copied byte for byte from the addon's CF-104 commit.
+- **Labels and texts** from the pool; nothing typed twice.
+- **Compatibility (rule 4):** an addon on pool 3 keeps drawing and recording pool 3; the site shows and scores those
+  days as pool 3.
+- Done when: the golden cases pass unchanged; unit tests for the new pool sizes; the Mission pool page and the
+  design sample follow; screenshot baselines change only after Nico's OK.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
+Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe
+source text (`GetRecipeSourceText` missing), no "can make now" count and no cooldown, so "Learn from" and
+`recipe_sources` stay on cmangos only, and a can-make count or cooldown is out of scope here and in `/craft`. The
+addon's `recipeLines` (the recipe's profession, e.g. Cooking 185) is confirmed reliable: it stays the fallback for
+recipes the item database lacks (`src/core/recipes/learned.ts`). The addon sends no skill-up colour: the difficulty
+dots stay computed from the thresholds and the character's skill.
 
 ### WEB-90 Item database, import and learned recipes (Part B)
 - **Import (B1):** `npm run import:items`, by hand once per patch, idempotent. The Forever client's DB2 tables from wago.tools (product `wowf`, build 1.60.1.70790), Classic Era's for what is Forever's own and what cmangos' spells teach, cmangos classic-db (GPL-3.0, attributed in `docs/SOURCE-DATA.md`) for where recipes are learned. Never Wowhead. Downloads stay outside the repo; the tests use invented fixtures. Removed and unobtainable recipes count nowhere.
@@ -330,29 +348,82 @@ loot tables (`JournalEncounter`, `JournalEncounterItem`, `JournalInstance` answe
 **Every story here needs a design first:** the designer makes its board(s) before a worker builds it; until then the
 story waits. Each lists what the board has to show.
 
-### WEB-96 Boss loot on dungeon pages and planned runs (needs a design)
-- **Import:** bosses per dungeon from the Forever client's `DungeonEncounter` (name, `MapID`, `OrderIndex`; its `ID`
-  is the `encounterID` the addon logs), matched to cmangos `creature_template` by name; each boss's drops from
-  `creature_loot_template` and `reference_loot_template` (chance, quest-only drops apart). Dungeons from
-  `src/core/gamedata/dungeons.ts`; raids too, but only once they are in that list.
-- **Dungeon page:** the bosses in order, each with its drops (icon, name, quality, chance), item tooltips (WEB-92's
-  `ItemTooltip`), drops that teach a recipe link to the recipe's drawer; marked as Classic data.
-- **Planned run:** what the run's dungeon drops, compact, linking to the dungeon page.
-- Drops cmangos lists that the Forever client has no item for are left out; a boss without a cmangos match shows
-  its name without loot.
-- **Design needed:** the boss list with loot on the dungeon page (desktop and phone), the compact loot on a planned
-  run, the "Classic data" mark, a boss without loot.
-- Done when: import tests with invented fixtures (name matching, reference loot, quest-only drops, missing items);
-  view-model tests; design checks with baselines Nico approved; lint, tests and build pass.
+### WEB-96 Bosses and boss loot in the item import (data; the page is WEB-102)
+Built (2026-11-07), docs/SOURCE-DATA.md "Dungeon bosses and their loot":
+- **Import:** the Forever client's `DungeonEncounter` (base difficulties 0 and 1), its `MapID` matched to our
+  dungeons by the client's map name; `ID` = `ENCOUNTER_END`'s `encounterID` (checked: `3353, Witherfang` in Ruins of
+  Lordaeron). Bosses matched to cmangos `creature_template` by name per map (a summoned boss: the one spawned
+  nowhere); loot from the boss's own `creature_loot_template` rows only, no reference tables; >= 1 % plus quest items
+  and recipes at any chance, highest first, with item class/subclass, AllowableClass, the quest of a quest drop and
+  the recipe a recipe item teaches. Forever's own dungeons: bosses without loot.
+- **Hand-made** (`src/core/gamedata/bosses.ts`, cited from warcraft.wiki.gg): the final boss and the optional bosses
+  per dungeon or wing, the wing of each Scarlet Monastery, Blackrock Spire, Stratholme and Dire Maul boss, encounters fought together (Mograine with
+  Whitemane, The Lost Dwarves) and the few names the client and cmangos spell differently.
+- **Tables:** `dungeon_bosses`, `boss_drops` (migration `0030_boss_loot`), written with the item import in one
+  transaction. Read by `src/server/bossViews.ts`: `dungeonBossViews(db, dungeonId, wingId?)` (bosses in order with
+  final and optional, each with its drops and the item's name, quality, icon and tooltip record) and
+  `addonLootFile(db)`.
+- **The addon's loot file:** `npm run export:addon-loot -- <out>` writes `Data\Loot.lua` (GPL-3.0, cmangos
+  attribution, the build, generated notice), byte-identical for the same data. Sample: `tests/fixtures/addon-loot/`.
+- Compatibility: no upload changes. The item data stays valid; one "Import item data" adds the bosses.
+- Stratholme and Dire Maul are split into wings (Nico, 2026-11-07): `strat` live/undead (stratlive, final Balnazzar;
+  stratud, Baron Rivendare), `dme` east/west/north (dmeast, Alzzin the Wildshaper; dmwest, Prince Tortheldrin;
+  dmnorth, King Gordok), in `src/core/gamedata/dungeons.ts` as wings with their addon ids (Group Finder 816/1603 and
+  813/814/815). They are not dungeons of their own on the site yet (no `wingsAreDungeons`): the dungeon pages story
+  makes them so. The optional list holds only bosses the wiki calls optional, rare, summoned or a bonus boss.
 
-### WEB-97 Which bosses a run killed (needs a design; pairs with the addon's CF-103)
-- An upload's runs may carry `bossIds` (CF-103: the `encounterID`s killed, optional). Stored per run; older uploads
-  and runs without it keep only the count, as now.
-- The character page's and the dungeon page's run history show the bosses by name (WEB-96's import), each linking
-  to its loot; without `bossIds` the count as now.
-- Compatibility (rule 4): every released addon sends only `bosses` (a count): nothing changes for them.
-- **Design needed:** a run's killed bosses in the run history (desktop and phone), the count-only fallback.
-- Done when: upload tests with and without `bossIds`; view-model tests; design checks; lint, tests and build pass.
+### WEB-102 Dungeon page: bosses & loot (DL04)
+Built (2026-11-07), board `design/boards/dungeon-bosses-loot` (DL04):
+- **Bosses & loot** between Who fits and Quests (`src/components/dungeon/BossesLoot.tsx`, view model
+  `src/core/views/dungeonLoot.ts` `bossesLoot`): every boss in the client's order, number + name, "optional" in grey;
+  its drops (WEB-96's `boss_drops`) in two columns (one on a phone): icon with quality border, name in quality colour,
+  type line ("Two-Hand · Mace", "Leather · Legs", "Quest item", "Recipe · Cooking", as the addon's
+  `DungeonLoot.typeText`), drop % (highest first). At most 6, then "Show N more ▾" (`LOOT_SHOWN`), counted after the
+  Usable switch. Tags "Quest" and "Nobody knows it"; a recipe drop's name links to its recipe drawer
+  (`/professions/<slug>?recipe=<spell>`), its tooltip adds "Nobody knows it", who has the profession ("Can learn:
+  Lia Thornwhisper · Cooking 150") and "Click to open the recipe ›" (`ItemTooltip`'s new `footer`). Every item has
+  WEB-92's tooltip (phone: the sheet, with "Open recipe").
+- **Usable by [character ▾]** with a switch: your characters, the most recently played first (the default); the
+  pick and the switch are remembered in this browser (`localStorage` `cf.usableBy`). Off dims what the class can
+  never use (icon at `--opacity-unusable`, text `--text-faint`), on hides it. The rule: `src/core/loot.ts` `usable`,
+  checked against the addon's `loot-usable-cases.json`. One "Classic data ⓘ".
+- **Bosses** jump list at the top of the side column (`BossJump.tsx`): sticky, the boss in view bold; left out under
+  1024 px. The box and the list only show once an item import has bosses for the dungeon.
+- **One fit rule** (Nico, 2026-11-07): `levelFit` fits from `min - 2` (`FIT_BELOW`; `dungeonFit` against the addon's
+  `dungeon-fit-cases.json`): Who fits, Plan's suggestions, could fill, the roster's bands and the bot's run data.
+- **Stratholme and Dire Maul wings are dungeons of their own** (`wingsAreDungeons`): `strat-live` (Main Gate, addon
+  `stratlive`), `strat-undead` (Service Gate, `stratud`), `dme-east`, `dme-west`, `dme-north` (`dmeast`, `dmwest`,
+  `dmnorth`), ranges from the client's Group Finder (813 East 54–60, 814 West 56–60, 815 North 56–60, 816 and 1603
+  58–60). The old `strat` and `dme` (`LEGACY_DUNGEONS`, `whole`) stay readable: stored runs and older addons' plans
+  keep them, `/dungeons/strat` goes to the first wing, they are never offered for a new run, and their run page lists
+  every wing's bosses under the wing's name, cleared when any wing's final boss dies.
+- Golden cases copied byte for byte to `tests/fixtures/addon-golden/` from the addon's `develop` after CF-106 (see its
+  README), wing ranges included. Checked by `tests/unit/dungeonGolden.test.ts`.
+- A recipe drop's tooltip says "Requires Cooking (75)" and "Can learn" lists only friends with the profession at that
+  skill or higher (the drop's `skill` and `line`, WEB-96's follow-up).
+- Deviations (approved by Nico, 2026-11-07, `docs/DESIGN.md` "Deviations"): the dimmed rows' faint text instead of
+  45 % opacity (contrast), the dropdown's name not in its class colour, a phone's recipe name as text.
+
+### WEB-97 Which bosses a run killed (DL05; pairs with the addon's CF-103)
+Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
+- **Uploads:** `src/core/bossKills.ts` reads every kill of a file: the records' `runs.*.bossKills = { [encounterID] =
+  at }`, the uploader's runs in progress (`runs[guid].bosses`, schema 3; schema 2's `true` has no time and is left
+  out) and friends' `liveKills`. Each (character, boss, time) once in `boss_kills` (migration `0032_boss_kills`),
+  written with the history (rebuilt by a rebuild). The site now reads schema 3 (`SUPPORTED_SCHEMA`). Older addons send
+  a count only: no kills, nothing changes for them (rule 4).
+- **Progress** (`src/core/runProgress.ts`, the addon's `run-progress-cases.json`): kills of the dungeon's bosses by
+  any character of the run's group (I'm in, Maybe, the organiser's lead) from 1 h before the start until the first
+  daily reset after it (the Doomsday day boundary, as the addon's Runs tab); optional bosses don't count; cleared =
+  the final boss died; an optional boss not killed on a cleared run is skipped.
+- **Run page** (`src/core/views/bossProgress.ts` `runBosses`): a Bosses box at the top of the side column once the
+  run has started: ✓ and the kill time per boss (hover: "Killed 20:31 · from Grom’s log"), "3 of 6" and a bar,
+  "optional", "– skipped" once cleared, "Cleared · 21:24"; while going "as of 20:45 · Grom’s upload" (the newest
+  upload of someone in the group). "cleared" next to the time once cleared. "Dungeon page ›" under the title, "Loot
+  on the dungeon page ›" under the bosses. The bot doesn't change.
+- **Dungeon page:** Planned here says "5 in · 3 of 6 bosses" once a run has a kill; Ran here says "Last cleared Tue"
+  and the characters who killed the final boss then (kills of it within 10 minutes), when a kill log shows one.
+- Deviation (approved by Nico, 2026-11-07): the board's "started 20:04" next to the time: the site doesn't know when
+  a group entered (the feed has no start time), so the page keeps its "started N min ago".
 
 ### WEB-98 Where to get a recipe's reagents (needs a design)
 - From the data already imported (cmangos `npc_vendor`, the loot tables, gathering nodes in

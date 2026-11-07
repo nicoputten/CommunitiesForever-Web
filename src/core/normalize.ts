@@ -6,8 +6,8 @@ import { cleanName, stripEscapes } from "./sanitize";
 // missing or of the wrong type: such a field is left out, never guessed. Every string loses WoW escapes.
 // Tables the addon writes as arrays may come out of the parser as {} when empty, so lists accept both.
 
-/** Highest addon schemaVersion this site reads. */
-export const SUPPORTED_SCHEMA = 2;
+/** Highest addon schemaVersion this site reads (3: addon CF-103, kill times in runs in progress and liveKills, WEB-97). */
+export const SUPPORTED_SCHEMA = 3;
 
 /**
  * Why a file can't be read (the upload screen shows each, WEB-19): not a CommunitiesForever file at all, one that is

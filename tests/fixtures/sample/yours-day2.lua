@@ -5582,7 +5582,7 @@ CommunitiesForeverDB = {
         ["lastSeen"] = 1792785600,
       },
     },
-    ["schemaVersion"] = 2,
+    ["schemaVersion"] = 3,
     ["self"] = {
       ["battleTag"] = "YourName#1234",
       ["chars"] = {
