@@ -401,8 +401,8 @@ Built (2026-11-07), board `design/boards/dungeon-bosses-loot` (DL04):
   README), wing ranges included. Checked by `tests/unit/dungeonGolden.test.ts`.
 - A recipe drop's tooltip says "Requires Cooking (75)" and "Can learn" lists only friends with the profession at that
   skill or higher (the drop's `skill` and `line`, WEB-96's follow-up).
-- Open (for Nico): the dimmed rows' faint text instead of 45 % opacity (contrast), the dropdown's name not in its
-  class colour, both in `docs/DESIGN.md` "Deviations" as asked.
+- Deviations (approved by Nico, 2026-11-07, `docs/DESIGN.md` "Deviations"): the dimmed rows' faint text instead of
+  45 % opacity (contrast), the dropdown's name not in its class colour, a phone's recipe name as text.
 
 ### WEB-97 Which bosses a run killed (DL05; pairs with the addon's CF-103)
 Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
@@ -422,8 +422,8 @@ Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
   on the dungeon page ›" under the bosses. The bot doesn't change.
 - **Dungeon page:** Planned here says "5 in · 3 of 6 bosses" once a run has a kill; Ran here says "Last cleared Tue"
   and the characters who killed the final boss then (kills of it within 10 minutes), when a kill log shows one.
-- Open (for Nico): the board's "started 20:04" next to the time: the site doesn't know when a group entered (the
-  feed has no start time), so the page keeps its "started N min ago".
+- Deviation (approved by Nico, 2026-11-07): the board's "started 20:04" next to the time: the site doesn't know when
+  a group entered (the feed has no start time), so the page keeps its "started N min ago".
 
 ### WEB-98 Where to get a recipe's reagents (needs a design)
 - From the data already imported (cmangos `npc_vendor`, the loot tables, gathering nodes in
