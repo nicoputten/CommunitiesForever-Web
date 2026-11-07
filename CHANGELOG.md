@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.11.1 (2026-11-07)
+- Admin: "Import item data" now works while wago.tools' build list is down (it answered 503): the import then uses the last known game build and says so after the result ("build list unavailable, used the last known build").
+
 ## v0.11.0 (2026-11-07)
 - Recipes: the Professions page's search now works. Type two letters of an item or recipe and see who can craft it (with a dot for how easy it is for them) or, when nobody can yet, where it's learned. Every crafting card links to its recipes ("112 of 185 recipes"). Each profession has its own page with every recipe, who knows it and where to learn it, tabs for All, Known and Nobody has, filters by character, type and skill, and a panel with the item's tooltip, reagents and crafters. Any view can be shared as a link. The character page shows how many recipes each crafting profession knows. Needs the addon version that scans recipes and an item data import.
 - DoomBot (with the bot's next version): a post in the feats channel when a friend learns a rare recipe (a world or boss drop, or a reputation vendor), one per character per upload, never for the first scan; and `/craft <item>`, who can make it with the reagents, or where to learn it. Needs the feats posts switched on.
