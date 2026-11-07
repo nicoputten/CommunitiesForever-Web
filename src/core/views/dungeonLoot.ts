@@ -20,6 +20,9 @@ export interface DropInput extends LootDrop {
   itemId: number;
   chance: number;
   recipeId?: number;
+  /** A recipe drop: the skill to learn it and its profession's skill line (WEB-96's follow-up). */
+  skill?: number;
+  line?: number;
   name: string | null;
   quality: number | null;
   iconName: string | null;
@@ -57,8 +60,11 @@ export interface LootRow {
   drop: LootDrop;
   /** A quest-only drop: the Quest tag. */
   quest: boolean;
-  /** A recipe drop: its drawer, and the "Nobody knows it" tag with who could learn it. */
-  recipe?: { href?: string; known: boolean; canLearn: RecipeLearner[] };
+  /**
+   * A recipe drop: its drawer, "Requires Cooking (75)", and the "Nobody knows it" tag with who could learn it (has the
+   * profession at the skill it needs, or any skill when the data doesn't say).
+   */
+  recipe?: { href?: string; requires?: string; known: boolean; canLearn: RecipeLearner[] };
 }
 
 export interface BossSection {
@@ -105,12 +111,15 @@ export interface BossesLootInput {
   professions: readonly CharacterSkill[];
 }
 
+const recipeLine = (drop: DropInput) => drop.line ?? RECIPE_LINES[drop.subclassId ?? -1];
+
 function learners(drop: DropInput, input: BossesLootInput, byGuid: Map<string, CharacterView>): RecipeLearner[] {
-  const line = RECIPE_LINES[drop.subclassId ?? -1];
+  const line = recipeLine(drop);
   if (line === undefined) return [];
   const profession = PROFESSIONS[line]?.name ?? "";
   return input.professions
     .filter((p) => p.skillLineId === line && byGuid.has(p.guid))
+    .filter((p) => drop.skill === undefined || (p.skill ?? 0) >= drop.skill)
     .map((p) => {
       const c = byGuid.get(p.guid)!;
       const l: RecipeLearner = {
@@ -143,10 +152,13 @@ function lootRow(drop: DropInput, input: BossesLootInput, byGuid: Map<string, Ch
   };
   if (drop.iconName !== null) row.icon = drop.iconName;
   if (drop.classId === RECIPE_CLASS || drop.recipeId !== undefined) {
-    const line = RECIPE_LINES[drop.subclassId ?? -1];
+    const line = recipeLine(drop);
     const known =
       drop.recipeId !== undefined && input.known.some((k) => k.recipeId === drop.recipeId && byGuid.has(k.guid));
     row.recipe = { known, canLearn: known ? [] : learners(drop, input, byGuid) };
+    const profession = line === undefined ? undefined : PROFESSIONS[line]?.name;
+    if (profession !== undefined && drop.skill !== undefined)
+      row.recipe.requires = `Requires ${profession} (${drop.skill})`;
     if (line !== undefined && drop.recipeId !== undefined)
       row.recipe.href = `/professions/${encodeURIComponent(professionSlug(String(line)))}?recipe=${drop.recipeId}`;
   }

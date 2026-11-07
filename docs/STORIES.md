@@ -395,10 +395,12 @@ Built (2026-11-07), board `design/boards/dungeon-bosses-loot` (DL04):
   `stratlive`), `strat-undead` (Service Gate, `stratud`), `dme-east`, `dme-west`, `dme-north` (`dmeast`, `dmwest`,
   `dmnorth`), ranges from the client's Group Finder (813 East 54–60, 814 West 56–60, 815 North 56–60, 816 and 1603
   58–60). The old `strat` and `dme` (`LEGACY_DUNGEONS`, `whole`) stay readable: stored runs and older addons' plans
-  keep them, `/dungeons/strat` goes to the first wing, they are never offered for a new run, and their progress
-  counts the wings they have kills in, cleared when any wing's final boss dies.
-- Golden cases copied byte for byte to `tests/fixtures/addon-golden/` from the addon's CF-106 branch (see its README;
-  copy again from `develop` once CF-106 merges). Checked by `tests/unit/dungeonGolden.test.ts`.
+  keep them, `/dungeons/strat` goes to the first wing, they are never offered for a new run, and their run page lists
+  every wing's bosses under the wing's name, cleared when any wing's final boss dies.
+- Golden cases copied byte for byte to `tests/fixtures/addon-golden/` from the addon's `develop` after CF-106 (see its
+  README), wing ranges included. Checked by `tests/unit/dungeonGolden.test.ts`.
+- A recipe drop's tooltip says "Requires Cooking (75)" and "Can learn" lists only friends with the profession at that
+  skill or higher (the drop's `skill` and `line`, WEB-96's follow-up).
 - Open (for Nico): the dimmed rows' faint text instead of 45 % opacity (contrast), the dropdown's name not in its
   class colour, both in `docs/DESIGN.md` "Deviations" as asked.
 
@@ -406,7 +408,7 @@ Built (2026-11-07), board `design/boards/dungeon-bosses-loot` (DL04):
 Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
 - **Uploads:** `src/core/bossKills.ts` reads every kill of a file: the records' `runs.*.bossKills = { [encounterID] =
   at }`, the uploader's runs in progress (`runs[guid].bosses`, schema 3; schema 2's `true` has no time and is left
-  out) and friends' `liveKills`. Each (character, boss, time) once in `boss_kills` (migration `0031_boss_kills`),
+  out) and friends' `liveKills`. Each (character, boss, time) once in `boss_kills` (migration `0032_boss_kills`),
   written with the history (rebuilt by a rebuild). The site now reads schema 3 (`SUPPORTED_SCHEMA`). Older addons send
   a count only: no kills, nothing changes for them (rule 4).
 - **Progress** (`src/core/runProgress.ts`, the addon's `run-progress-cases.json`): kills of the dungeon's bosses by

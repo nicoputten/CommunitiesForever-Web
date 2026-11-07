@@ -352,7 +352,12 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
               </div>
               {boss.asOf !== undefined && <p className={styles.small}>{boss.asOf}</p>}
               <ul className={styles.bossList}>
-                {boss.rows.map((b) => (
+                {boss.rows.map((b) => [
+                  b.wing !== undefined && (
+                    <li key={`wing-${b.id}`} className={styles.bossWing}>
+                      {b.wing}
+                    </li>
+                  ),
                   <li key={b.id} className={styles.bossRow} data-state={b.state} title={b.tip}>
                     {b.state === "killed" ? (
                       <span className={styles.bossCheck}>
@@ -374,8 +379,8 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
                     ) : b.state !== "open" ? (
                       <span className={styles.bossTime}>{b.state}</span>
                     ) : null}
-                  </li>
-                ))}
+                  </li>,
+                ])}
               </ul>
               {dungeonPage !== undefined && (
                 <Link href={`${dungeonPage}#bosses-loot`} className={styles.inlineLink}>

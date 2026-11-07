@@ -77,10 +77,13 @@ function RecipeFooter({ row }: { row: LootRow }) {
   const r = row.recipe!;
   return (
     <>
-      <span className={tooltip.line} data-tone="green">
-        Nobody knows it
-      </span>
-      {r.canLearn.length > 0 && (
+      {r.requires !== undefined && <span className={tooltip.line}>{r.requires}</span>}
+      {!r.known && (
+        <span className={tooltip.line} data-tone="green">
+          Nobody knows it
+        </span>
+      )}
+      {!r.known && r.canLearn.length > 0 && (
         <span className={tooltip.line}>
           Can learn:{" "}
           {r.canLearn.map((l, i) => (
@@ -91,7 +94,7 @@ function RecipeFooter({ row }: { row: LootRow }) {
           ))}
         </span>
       )}
-      {r.href !== undefined && (
+      {!r.known && r.href !== undefined && (
         <span className={tooltip.line} data-tone="yellow">
           Click to open the recipe ›
         </span>
@@ -102,7 +105,7 @@ function RecipeFooter({ row }: { row: LootRow }) {
 
 function Row({ row, ok }: { row: LootRow; ok: boolean }) {
   const unknownRecipe = row.recipe !== undefined && !row.recipe.known;
-  const footer = unknownRecipe ? <RecipeFooter row={row} /> : undefined;
+  const footer = unknownRecipe || row.recipe?.requires !== undefined ? <RecipeFooter row={row} /> : undefined;
   // On a phone the icon's sheet has "Open recipe" (a 44 px button); the name stays text.
   const noHover = useNoHover();
   const name =

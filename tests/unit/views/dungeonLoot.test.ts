@@ -36,7 +36,15 @@ const BOSSES: BossInput[] = [
     optional: true,
     drops: [
       drop(5197, 41, { classId: 2, subclassId: 4, inventoryType: 13 }),
-      drop(728, 12, { classId: 9, subclassId: 5, recipeId: 2795, name: "Recipe: Westfall Stew", quality: 1 }),
+      drop(728, 12, {
+        classId: 9,
+        subclassId: 5,
+        recipeId: 2795,
+        skill: 75,
+        line: 185,
+        name: "Recipe: Westfall Stew",
+        quality: 1,
+      }),
       drop(5056, 100, { classId: 12, subclassId: 0, questId: 214, name: null, iconName: null, quality: null }),
     ],
   },
@@ -77,6 +85,8 @@ describe("Bosses & loot", () => {
     const professions = [
       { guid: "Player-1-VES", skillLineId: 185, skill: 75 },
       { guid: "Player-1-LIA", skillLineId: 185, skill: 150 },
+      // Under the 75 the recipe needs: can't learn it yet.
+      { guid: "Player-1-KEL", skillLineId: 185, skill: 40 },
       { guid: "Player-1-BOB", skillLineId: 164, skill: 200 },
     ];
     const recipe = bossesLoot({ bosses: BOSSES, characters, viewer: NICO, known: [], professions }).bosses[1]!.rows[1]!;
@@ -84,6 +94,7 @@ describe("Bosses & loot", () => {
     expect(recipe.recipe).toEqual({
       known: false,
       href: "/professions/cooking?recipe=2795",
+      requires: "Requires Cooking (75)",
       canLearn: [
         { guid: "Player-1-LIA", name: "Lia Thornwhisper", skill: "Cooking 150", colorToken: "--priest" },
         { guid: "Player-1-VES", name: "Ves Doombringer", skill: "Cooking 75", colorToken: "--warlock-text" },

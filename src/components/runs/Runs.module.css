@@ -1166,3 +1166,12 @@
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* A whole Stratholme or Dire Maul run (from before the wings): each wing's name over its bosses. */
+.bossWing {
+  padding-top: var(--s-2);
+  font-size: var(--fs-overline);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-overline);
+  color: var(--text-faint);
+}

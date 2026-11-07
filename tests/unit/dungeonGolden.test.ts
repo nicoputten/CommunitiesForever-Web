@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CLASS_IDS, ARMOR_BY_CLASS, WEAPONS_BY_CLASS, usable } from "@/core/loot";
+import { RUNNABLE_DUNGEONS } from "@/core/gamedata";
 import { FIT_BELOW, dungeonFit } from "@/core/levelFit";
 import { BEFORE_START, NO_BOSS_FOR, runGroup, runProgress } from "@/core/runProgress";
 
@@ -16,7 +17,14 @@ describe("dungeon-fit-cases.json", () => {
   const file = golden("dungeon-fit-cases.json");
   it("has the same margin", () => expect(file.fitBelow).toBe(FIT_BELOW));
   for (const c of file.cases)
-    it(`level ${c.level} in ${c.min}-${c.max}: ${c.fit}`, () => expect(dungeonFit(c.level, c.min, c.max)).toBe(c.fit));
+    it(`level ${c.level} in ${c.dungeon ?? ""} ${c.min}-${c.max}: ${c.fit}`, () => {
+      // A case with a dungeon is that wing's range: the site's must be the same (the client's Group Finder).
+      if (c.dungeon !== undefined) {
+        const d = RUNNABLE_DUNGEONS.find((x) => x.addonId === c.dungeon)!;
+        expect(d.typicalLevels).toEqual({ min: c.min, max: c.max });
+      }
+      expect(dungeonFit(c.level, c.min, c.max)).toBe(c.fit);
+    });
 });
 
 describe("loot-usable-cases.json", () => {
@@ -52,7 +60,7 @@ describe("run-progress-cases.json", () => {
           cancelled: c.run.state === "cancelled",
           group: runGroup(c.run.answers, c.run.organiser?.guid),
         },
-        file.bosses,
+        c.bosses ?? file.bosses,
         c.kills.map((k: any) => ({ guid: k.guid, encounterId: k.encounterID, at: k.at })),
         c.now,
         c.resetAt,

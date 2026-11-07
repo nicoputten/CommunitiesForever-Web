@@ -1,5 +1,5 @@
 import { sameBattleTag } from "../access";
-import { classInfo } from "../gamedata";
+import { classInfo, dungeonById } from "../gamedata";
 import { runDungeon, type RunRecord } from "../runs";
 import { runGroup, runProgress, type BossKill, type ProgressBoss, type RunProgress } from "../runProgress";
 import { dayLabel, localTime } from "../runTime";
@@ -27,6 +27,8 @@ export interface BossRow {
   time?: string;
   /** "Killed 20:31 · from Grom's log". */
   tip?: string;
+  /** A whole Stratholme or Dire Maul (`whole`): the wing's name on its first boss ("Main Gate"). */
+  wing?: string;
 }
 
 export interface RunBossesView {
@@ -68,8 +70,8 @@ export function groupOf(run: RunRecord): Set<string> {
 }
 
 /**
- * A run's bosses for its progress: a whole Stratholme or Dire Maul from before the wings (`whole`, WEB-102) counts
- * the wings it has kills in (every wing before the first kill); it is cleared when any wing's final boss dies.
+ * A run's progress over its bosses. A whole Stratholme or Dire Maul from before the wings (`whole`, WEB-102) has every
+ * wing's bosses, each wing with its final: cleared when any wing's final boss dies (the addon's golden cases).
  */
 export function progressOf(
   run: RunRecord,
@@ -79,11 +81,7 @@ export function progressOf(
   resetAt: number,
 ): { progress: RunProgress; bosses: readonly ProgressBossInfo[] } {
   const r = { startsAt: run.startsAt, cancelled: run.cancelledAt !== undefined, group: groupOf(run) };
-  const all = runProgress(r, bosses, kills, now, resetAt);
-  if (runDungeon(run.dungeonId)?.whole !== true || all.killed.size === 0) return { progress: all, bosses };
-  const wings = new Set(bosses.filter((b) => all.killed.has(b.id)).map((b) => b.wingId));
-  const touched = bosses.filter((b) => wings.has(b.wingId));
-  return { progress: runProgress(r, touched, kills, now, resetAt), bosses: touched };
+  return { progress: runProgress(r, bosses, kills, now, resetAt), bosses };
 }
 
 /** The run page's Bosses box; undefined before the start (and before the first kill), or without bosses. */
@@ -104,13 +102,25 @@ export function runBosses(
     if (owner === undefined) return byGuid.get(guid)?.name ?? UNKNOWN_CHARACTER;
     return sameBattleTag(owner, ctx.viewer) ? "your" : `${friendName(ctx, owner)}’s`;
   };
-  const rows = shown.map((b): BossRow => {
+  const dungeon = runDungeon(run.dungeonId);
+  const wingNames = new Map(
+    dungeon?.whole === true ? (dungeonById(dungeon.instanceId)?.wings ?? []).map((w) => [w.id, w.name]) : [],
+  );
+  const rows = shown.map((b, i): BossRow => {
     const kill = p.killed.get(b.id);
-    if (kill !== undefined) {
-      const time = localTime(kill.at, ctx.timeZone);
-      return { id: b.id, name: b.name, state: "killed", time, tip: `Killed ${time} · from ${whose(kill.guid)} log` };
-    }
-    return { id: b.id, name: b.name, state: b.optional ? (p.skipped.has(b.id) ? "skipped" : "optional") : "open" };
+    const row: BossRow =
+      kill !== undefined
+        ? {
+            id: b.id,
+            name: b.name,
+            state: "killed",
+            time: localTime(kill.at, ctx.timeZone),
+            tip: `Killed ${localTime(kill.at, ctx.timeZone)} · from ${whose(kill.guid)} log`,
+          }
+        : { id: b.id, name: b.name, state: b.optional ? (p.skipped.has(b.id) ? "skipped" : "optional") : "open" };
+    const wing = b.wingId === undefined ? undefined : wingNames.get(b.wingId);
+    if (wing !== undefined && shown[i - 1]?.wingId !== b.wingId) row.wing = wing;
+    return row;
   });
   const finalKill = shown.filter((b) => b.final && p.killed.has(b.id)).map((b) => p.killed.get(b.id)!.at);
   const view: RunBossesView = {

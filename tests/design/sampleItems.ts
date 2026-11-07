@@ -426,7 +426,7 @@ const DM_BOSSES: { id: number; name: string; final?: true; optional?: true; drop
     final: true,
     drops: [[90110, 36], [90111, 29], [90112, 26], [90113, 18], [90114, 15], [90115, 12], [90116, 9], [90117, 7]],
   },
-  { id: 9307, name: "Cookie", optional: true, drops: [[90118, 41], [90119, 12, { recipeId: 93002 }]] },
+  { id: 9307, name: "Cookie", optional: true, drops: [[90118, 41], [90119, 12, { recipeId: 93002, skill: 150, line: 185 }]] },
 ]; // prettier-ignore
 
 const byItem = new Map(DEADMINES.map((d) => [d.id, d]));

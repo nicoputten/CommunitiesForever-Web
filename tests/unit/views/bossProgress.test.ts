@@ -127,7 +127,7 @@ describe("the run page's Bosses box", () => {
     expect(runBosses(RUN, [], [], RESET, undefined, ctx)).toBeUndefined();
   });
 
-  it("counts a whole Stratholme from before the wings by the wing it has kills in, cleared by its final", () => {
+  it("lists every wing of a whole Stratholme from before the wings under its name, cleared by any wing's final", () => {
     const strat: ProgressBossInfo[] = [
       { id: 11, name: "Timmy the Cruel", final: false, optional: false, wingId: "live" },
       { id: 12, name: "Balnazzar", final: true, optional: false, wingId: "live" },
@@ -135,9 +135,15 @@ describe("the run page's Bosses box", () => {
       { id: 22, name: "Baron Rivendare", final: true, optional: false, wingId: "undead" },
     ];
     const old = { ...RUN, dungeonId: "strat" };
-    expect(runBosses(old, strat, [], RESET, undefined, ctx)!.count).toBe("0 of 4");
+    const box = runBosses(old, strat, [], RESET, undefined, ctx)!;
+    expect(box.count).toBe("0 of 4");
+    expect(box.rows.map((r) => r.wing)).toEqual(["Main Gate", undefined, "Service Gate", undefined]);
     const going = runBosses(old, strat, [kill("Player-1-VES", 21, START + MIN)], RESET, undefined, ctx)!;
-    expect([going.count, going.rows.map((r) => r.name)]).toEqual(["1 of 2", ["Baroness Anastari", "Baron Rivendare"]]);
+    expect(going.count).toBe("1 of 4");
+    // A wing's own run has no wing names.
+    expect(
+      runBosses({ ...old, dungeonId: "strat-undead" }, strat.slice(2), [], RESET, undefined, ctx)!.rows[0]!.wing,
+    ).toBeUndefined();
     const done = runBosses(old, strat, [kill("Player-1-VES", 22, START + 9 * MIN)], RESET, undefined, ctx)!;
     expect(done.cleared).toBe(true);
   });
