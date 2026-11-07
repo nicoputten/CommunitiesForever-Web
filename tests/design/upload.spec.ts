@@ -65,7 +65,7 @@ const STATES: { name: string; state: string; show: (page: Page) => Promise<void>
     name: "newer-format",
     state: "newer-format",
     show: async (page) => {
-      await answer(page, rejected({ unreadable: "newer-format", schemaVersion: 3 }));
+      await answer(page, rejected({ unreadable: "newer-format", schemaVersion: 4 }));
       await choose(page);
     },
   },
