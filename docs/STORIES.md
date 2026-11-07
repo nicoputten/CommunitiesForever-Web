@@ -45,6 +45,17 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 ## E9 Live test fixes (2026-10-29)
 Nico tested the live site read-only on 29 Oct 2026. The brief is `docs/DESIGN-BRIEF-LIVE-TEST.md`, with the boards `live-test-findings`, `live-test-site-fixes` and `live-test-phone` (the bot's are `bot-visual-*`). Where `docs/DOOMSDAY.md` disagrees on the PvP Virgin rule or the day label, the brief is newer and wins. Bugs 1, 2, 4 and 5 are data rules: the engine worker builds them, and WEB-65 shows the results. Nothing here changes live settings or data.
 
+### WEB-95 Item tooltips: Use texts with durations and totals
+Nico (2026-11-07): Elixir of Minor Defense and Minor Arcane Elixir show only their name and "Max Stack: 20", on hover
+and in the recipe drawer. The import dropped every Use/Equip line with a token it couldn't fill, and almost every
+consumable has `$d` (duration). Now the import also reads SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions and
+SpellTargetRestrictions and fills `$d`, `$o`, `$t`, `$a`, `$h`, `$n`, `$u`, `$i`, `$q`, `$x`, `$s` ranges, `$M`,
+`${...}` arithmetic, `$/N;`, other spells' tokens and descriptions (`$12345s1`, `$@spelldesc12345`), `$l`/`$g` and
+`$?` conditions (`src/core/recipes/spellText.ts`); a token still unfilled is dropped and the line kept. The stored item
+shape is unchanged (only more `use`/`equip`/`chanceOnHit` lines); the owner re-runs "Import item data" after the
+release. Done when: unit tests for an elixir, a healing potion's range, food and a bandage, a weapon proc and the
+leftovers; lint, tests and build pass.
+
 ### WEB-94 Item import: fall back to the last known build
 On 2026-11-07 the live "Import item data" failed with "wago.tools answered 503.": wago.tools' build list
 (`/api/builds`) was down while its table exports still answered. Now, when the build list fails, the import uses the

@@ -2,14 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseCsv } from "@/core/recipes/csv";
-import {
-  buildItemDatabase,
-  CMANGOS_TABLES,
-  DB2_TABLES,
-  type ImportInput,
-  orangeOf,
-  spellText,
-} from "@/core/recipes/build";
+import { buildItemDatabase, CMANGOS_TABLES, DB2_TABLES, type ImportInput, orangeOf } from "@/core/recipes/build";
 import { readColumns, readRows } from "@/core/recipes/sqlDump";
 
 // WEB-90: the item import, from invented fixtures in the real formats (tests/fixtures/items/README.md).
@@ -140,7 +133,8 @@ describe("items", () => {
       resistances: { fire: 5 },
     });
     expect(item(5002)!.description).toBe("Made up for tests.");
-    expect(item(5008)!.equip).toBeUndefined(); // "$d" can't be filled
+    // WEB-95: the duration through SpellMisc and SpellDuration.
+    expect(item(5008)!.equip).toEqual(["Lasts 30 min."]);
   });
 
   it("icons through the item's default appearance; Forever's own items without a name", () => {
@@ -153,15 +147,5 @@ describe("items", () => {
       typeName: "Other",
       iconName: "inv_banner_test",
     });
-  });
-});
-
-describe("spellText", () => {
-  it("fills effect points and plain expressions; leaves out what it can't fill", () => {
-    expect(spellText("Heals $s1 damage.", [-10])).toBe("Heals 10 damage.");
-    expect(spellText("Increases hit by ${$s1}.1%.", [1])).toBe("Increases hit by 1.0%.");
-    expect(spellText("Lasts $d.", [1])).toBeUndefined();
-    expect(spellText("Uses $s2.", [1])).toBeUndefined();
-    expect(spellText(undefined, [])).toBeUndefined();
   });
 });

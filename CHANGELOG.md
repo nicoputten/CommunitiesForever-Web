@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Fixed
+- Potions, elixirs, food, bandages and other items show what they do again: their Use, Equip and Chance on hit lines ("Increases armor by 50 for 1 hour.", "Restores 1050 to 1750 health.") now appear in item tooltips and recipe details. Needs "Import item data" once after the release.
+
 ## v0.11.1 (2026-11-07)
 - Admin: "Import item data" now works while wago.tools' build list is down (it answered 503): the import then uses the last known game build and says so after the result ("build list unavailable, used the last known build").
 
