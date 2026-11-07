@@ -288,6 +288,18 @@ Nico (2026-11-06) chose pool version 3: 83 missions the addon now tracks (60 dai
 - **Compatibility (rule 4):** an addon on pool version 2 (v1.3.2) keeps drawing and recording version 2 (`pool = 2` on its days and weeks); the site shows and scores those as version 2. Where the site draws itself (the Mission pool page, today before a friend's file recorded it), it uses version 3. A steered day of the Mission pool reaches an old addon only when all its ids are in version 2; otherwise that addon keeps its normal draw (its own rule, CF-68). The bot (v0.5.2) gets ids, texts and labels from the site, all already in the catalogue, so nothing changes for it.
 - Done when: the golden cases pass unchanged; unit tests updated for the new pool sizes; the Mission pool page and the design sample follow; screenshot baselines change only after Nico's OK.
 
+### WEB-101 The site's copy of pool version 4 (pairs with the addon's CF-104; released only on Nico's go)
+Nico (2026-11-07): retire "Defend home" and add the flag missions, but hold the release. **Not on develop until Nico
+says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) keeps pool 3.
+- **The pool:** `POOL_VERSION = 4`; `retired = 4` on `p.homeGuard`; `since = 4` on `p.flagUp`, `p.flagHour`,
+  `b.flagged3h`, and on `d.reward`, `d.fishFriend`, `d.feedFriend` only if the addon's CF-104 adds them.
+- **Golden cases:** `doomsday-cases.json` copied byte for byte from the addon's CF-104 commit.
+- **Labels and texts** from the pool; nothing typed twice.
+- **Compatibility (rule 4):** an addon on pool 3 keeps drawing and recording pool 3; the site shows and scores those
+  days as pool 3.
+- Done when: the golden cases pass unchanged; unit tests for the new pool sizes; the Mission pool page and the
+  design sample follow; screenshot baselines change only after Nico's OK.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 
