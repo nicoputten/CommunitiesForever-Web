@@ -1,5 +1,6 @@
 // The hand-made part of the dungeon boss list (WEB-96): which boss ends each dungeon (final), which bosses don't count
-// towards "N of M" (optional), which Scarlet Monastery or Blackrock Spire wing each boss is in, and encounters whose
+// towards "N of M" (optional), which wing of Scarlet Monastery, Blackrock Spire, Stratholme or Dire Maul each boss is
+// in (the client has one map for each), and encounters whose
 // loot comes from other creatures than the one named like it. Everything else (the bosses, their order, their IDs)
 // comes from the Forever client's DungeonEncounter table (src/core/recipes/bosses.ts). Names are the client's
 // encounter names (DungeonEncounter.Name_lang, English client).
@@ -11,16 +12,20 @@
 //   "Razorfen Downs", "Uldaman", "Zul'Farrak", "Maraudon", "Sunken Temple", "Blackrock Depths" (Upper City "ending with
 //   Emperor Thaurissan"), "Lower Blackrock Spire", "Scholomance (Classic)". The Stockade and Gnomeregan: the last
 //   boss the client lists (no Classic page; the current pages describe the remade dungeons).
-// - Stratholme ("Stratholme (Classic)": Balnazzar for Main Gate, Baron Rivendare for Service Entrance) and Dire Maul
-//   ("Dire Maul": one end boss per wing) have more than one end boss, but site and addon have one dungeon each. The
-//   final here is the Service Entrance's and Gordok Commons' (to be confirmed by Nico).
+// - Stratholme and Dire Maul are split into wings (Nico, 2026-11-07), each with its own end boss: "Stratholme
+//   (Classic)" ("End boss: Balnazzar (Main Gate), Baron Rivendare (Service Entrance)"), "Dire Maul East" (Alzzin the
+//   Wildshaper), "Dire Maul West" (Prince Tortheldrin), "Dire Maul North" (King Gordok).
 // - optional: only bosses the wiki calls optional, a bonus boss, rare, summoned or triggered: Wailing Caverns (Kresh
 //   "not necessary to complete the instance", Skum "optional", "Killing Verdan is optional"), Deadmines ("The other
 //   boss is optional": Cookie; Miner Johnson "Rare"), Maraudon (Rotgrip "the bonus boss"), Sunken Temple (Avatar of
 //   Hakkar "an optional boss"), Stratholme (Classic) (Skul, Hearthsinger Forresten and Stonespine rare; Postmaster
-//   Malown, Ezra Grimm and Black Guard Swordsmith summoned; Crimson Hammersmith triggered).
+//   Malown, Ezra Grimm and Black Guard Swordsmith summoned; Crimson Hammersmith triggered), Dire Maul West (Tsu'zee
+//   rare), "Lord Hel'nurath" (warlocks "had to summon one of his dreadsteeds in Dire Maul West").
 // - wings: "Scarlet Monastery Library" (Classic bosses per wing), "Lower Blackrock Spire" (its bosses); Upper
-//   Blackrock Spire: the client's bosses after Overlord Wyrmthalak.
+//   Blackrock Spire: the client's bosses after Overlord Wyrmthalak. "Stratholme (Classic)" (the infobox's Main Gate and
+//   Service Entrance boss lists; Ezra Grimm and Crimson Hammersmith triggered on the Scarlet side, Black Guard
+//   Swordsmith on the Undead side), "Dire Maul East", "Dire Maul West", "Dire Maul North" (each page's boss list) and
+//   "Lord Hel'nurath" (Dire Maul West).
 // - together: "Scarlet Monastery Cathedral": Mograine and Whitemane "are fought at the same time"; "Uldaman": The
 //   Lost Dwarves are Baelog, Eric and Olaf (cmangos' names). Blackrock Depths' Ring of Law (a random challenger), The
 //   Vault and The Seven (their loot is a chest) get no loot, nor does Stratholme's Ezra Grimm (not in cmangos).
@@ -83,10 +88,59 @@ export const BOSS_NOTES: Readonly<Record<string, DungeonBossNotes>> = {
     },
     finals: { lower: "Overlord Wyrmthalak", upper: "General Drakkisath" },
   },
-  dme: { final: "King Gordok" },
+  dme: {
+    wings: {
+      east: ["Zevrim Thornhoof", "Hydrospawn", "Lethtendris", "Pusillin", "Alzzin the Wildshaper"],
+      west: [
+        "Tendris Warpwood",
+        "Illyanna Ravenoak",
+        "Magister Kalendris",
+        "Immol'thar",
+        "Prince Tortheldrin",
+        "Lord Hel'nurath",
+        "Tsu'zee",
+      ],
+      north: [
+        "Guard Mol'dar",
+        "Stomper Kreeg",
+        "Guard Fengus",
+        "Guard Slip'kik",
+        "Captain Kromcrush",
+        "Cho'Rush the Observer",
+        "King Gordok",
+      ],
+    },
+    finals: { east: "Alzzin the Wildshaper", west: "Prince Tortheldrin", north: "King Gordok" },
+    optional: ["Lord Hel'nurath", "Tsu'zee"],
+  },
   scholo: { final: "Darkmaster Gandling" },
   strat: {
-    final: "Baron Rivendare",
+    wings: {
+      live: [
+        "Hearthsinger Forresten",
+        "Timmy the Cruel",
+        "Malor the Zealous",
+        "Cannon Master Willey",
+        "Archivist Galford",
+        "Balnazzar",
+        "The Unforgiven",
+        "Skul",
+        "Postmaster Malown",
+        "Crimson Hammersmith",
+        "Ezra Grimm",
+      ],
+      undead: [
+        "Baroness Anastari",
+        "Nerub'enkan",
+        "Maleki the Pallid",
+        "Magistrate Barthilas",
+        "Ramstein the Gorger",
+        "Baron Rivendare",
+        "Black Guard Swordsmith",
+        "Stonespine",
+      ],
+    },
+    finals: { live: "Balnazzar", undead: "Baron Rivendare" },
     optional: [
       "Skul",
       "Hearthsinger Forresten",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { DungeonBossNotes } from "@/core/gamedata/bosses";
+import { BOSS_NOTES, type DungeonBossNotes } from "@/core/gamedata/bosses";
+import { dungeonById } from "@/core/gamedata/dungeons";
 import { type BossInput, buildBosses, ownDrops } from "@/core/recipes/bosses";
 import type { SqlRow } from "@/core/recipes/sqlDump";
 
@@ -206,5 +207,32 @@ describe("boss loot", () => {
       { item: 7, chance: 30, quest: false },
       { item: 8, chance: 70, quest: false },
     ]);
+  });
+});
+
+describe("the hand-made boss list", () => {
+  it("names our dungeons, every wing of a dungeon with wings, and each wing's final among its bosses", () => {
+    for (const [id, note] of Object.entries(BOSS_NOTES)) {
+      const dungeon = dungeonById(id);
+      expect(dungeon?.kind, id).toBe("dungeon");
+      if (note.wings === undefined) continue;
+      expect(Object.keys(note.wings), id).toEqual(dungeon!.wings!.map((w) => w.id));
+      for (const [wing, names] of Object.entries(note.wings)) {
+        expect(names, `${id} ${wing}`).toContain(note.finals?.[wing]);
+        expect(dungeon!.wings!.find((w) => w.id === wing)!.addonId, `${id} ${wing}`).toBeDefined();
+      }
+      const all = Object.values(note.wings).flat();
+      expect(new Set(all).size, id).toBe(all.length);
+      for (const name of note.optional ?? []) expect(all, id).toContain(name);
+    }
+  });
+
+  it("Stratholme and Dire Maul are wings, each with its own final (Nico, 2026-11-07)", () => {
+    expect(BOSS_NOTES.strat!.finals).toEqual({ live: "Balnazzar", undead: "Baron Rivendare" });
+    expect(BOSS_NOTES.dme!.finals).toEqual({
+      east: "Alzzin the Wildshaper",
+      west: "Prince Tortheldrin",
+      north: "King Gordok",
+    });
   });
 });

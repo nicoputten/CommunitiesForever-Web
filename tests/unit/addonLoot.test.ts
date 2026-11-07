@@ -89,6 +89,10 @@ describe("Data\\Loot.lua", () => {
     expect(addonLootKey("sm", "cathedral")).toBe("smcath");
     expect(addonLootKey("brs", "lower")).toBe("lbrs");
     expect(addonLootKey("brs", "upper")).toBe("ubrs");
+    // Stratholme's and Dire Maul's wings (Nico, 2026-11-07).
+    expect(addonLootKey("strat", "live")).toBe("stratlive");
+    expect(addonLootKey("strat", "undead")).toBe("stratud");
+    expect(["east", "west", "north"].map((w) => addonLootKey("dme", w))).toEqual(["dmeast", "dmwest", "dmnorth"]);
     expect(addonLootKey("thanes")).toBe("lfg1984");
     expect(addonLootKey("drowned")).toBeUndefined();
     expect(addonLootKey("nowhere")).toBeUndefined();

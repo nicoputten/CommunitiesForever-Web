@@ -357,7 +357,7 @@ Built (2026-11-07), docs/SOURCE-DATA.md "Dungeon bosses and their loot":
   and recipes at any chance, highest first, with item class/subclass, AllowableClass, the quest of a quest drop and
   the recipe a recipe item teaches. Forever's own dungeons: bosses without loot.
 - **Hand-made** (`src/core/gamedata/bosses.ts`, cited from warcraft.wiki.gg): the final boss and the optional bosses
-  per dungeon, the wing of each Scarlet Monastery and Blackrock Spire boss, encounters fought together (Mograine with
+  per dungeon or wing, the wing of each Scarlet Monastery, Blackrock Spire, Stratholme and Dire Maul boss, encounters fought together (Mograine with
   Whitemane, The Lost Dwarves) and the few names the client and cmangos spell differently.
 - **Tables:** `dungeon_bosses`, `boss_drops` (migration `0030_boss_loot`), written with the item import in one
   transaction. Read by `src/server/bossViews.ts`: `dungeonBossViews(db, dungeonId, wingId?)` (bosses in order with
@@ -366,9 +366,11 @@ Built (2026-11-07), docs/SOURCE-DATA.md "Dungeon bosses and their loot":
 - **The addon's loot file:** `npm run export:addon-loot -- <out>` writes `Data\Loot.lua` (GPL-3.0, cmangos
   attribution, the build, generated notice), byte-identical for the same data. Sample: `tests/fixtures/addon-loot/`.
 - Compatibility: no upload changes. The item data stays valid; one "Import item data" adds the bosses.
-- Open for Nico: Stratholme and Dire Maul have more than one end boss (per side or wing) but one dungeon each here;
-  the final is Baron Rivendare and King Gordok until he decides otherwise. The optional list holds only bosses the
-  wiki calls optional, rare, summoned or a bonus boss.
+- Stratholme and Dire Maul are split into wings (Nico, 2026-11-07): `strat` live/undead (stratlive, final Balnazzar;
+  stratud, Baron Rivendare), `dme` east/west/north (dmeast, Alzzin the Wildshaper; dmwest, Prince Tortheldrin;
+  dmnorth, King Gordok), in `src/core/gamedata/dungeons.ts` as wings with their addon ids (Group Finder 816/1603 and
+  813/814/815). They are not dungeons of their own on the site yet (no `wingsAreDungeons`): the dungeon pages story
+  makes them so. The optional list holds only bosses the wiki calls optional, rare, summoned or a bonus boss.
 
 ### WEB-102 Dungeon page: bosses & loot (DL04)
 - On the dungeon page (board DL04), between Who fits and Quests: **Bosses & loot**, every boss in the client's order

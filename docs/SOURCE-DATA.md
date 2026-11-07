@@ -129,7 +129,8 @@ bosses with the next "Import item data".
   Witherfang` in Ruins of Lordaeron; build 70862 has exactly that row), so it is the key the addon's kill times
   (CF-103 `bossKills`) use. Hand-made in `src/core/gamedata/bosses.ts` (cited from warcraft.wiki.gg): the final boss
   per dungeon ("Cleared" = it died), the optional bosses (not counted in "N of M"), the wing of each Scarlet
-  Monastery and Blackrock Spire boss (the client has one map for each). Without a hand-made final (Forever's own
+  Monastery, Blackrock Spire, Stratholme and Dire Maul boss (the client has one map for each; each wing has its own
+  final). Without a hand-made final (Forever's own
   dungeons), or when the client renamed it, the last boss the client lists is the final. 241 bosses on build 70862.
 - **`boss_drops`** (boss_id, item_id, position, chance, class_id, subclass_id, classes, quest_id, recipe_id): the boss's
   own rows in cmangos `creature_loot_template` (its `creature_template` by name, spawned on the instance's map, else
@@ -144,7 +145,8 @@ bosses with the next "Import item data".
   70862.
 - **The addon's loot file** (`npm run export:addon-loot -- <out>`, `scripts/export-addon-loot.ts`,
   `src/core/recipes/addonLoot.ts`): `Data\Loot.lua` for the addon (the shared dungeons contract), keyed by the addon's
-  dungeon ids (a wing's own id: smgy, smlib, smarm, smcath, lbrs, ubrs; Forever's dungeons "lfg" + activity; dungeons
+  dungeon ids (a wing's own id: smgy, smlib, smarm, smcath, lbrs, ubrs, stratlive, stratud, dmeast, dmwest, dmnorth;
+  never the whole-instance `strat` or `dme`; Forever's dungeons "lfg" + activity; dungeons
   the addon has no id for are left out). Deterministic, Lua 5.1 strings. **It is GPL-3.0:** its loot comes from
   cmangos classic-db, so its header carries the GPL-3.0 notice, the cmangos attribution (URL and commit), the Forever
   build and a "generated, don't edit" line. It is generated at release and committed to the addon only; this repo
