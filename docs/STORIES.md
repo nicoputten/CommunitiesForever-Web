@@ -302,6 +302,12 @@ says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) k
 
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
+Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe
+source text (`GetRecipeSourceText` missing), no "can make now" count and no cooldown, so "Learn from" and
+`recipe_sources` stay on cmangos only, and a can-make count or cooldown is out of scope here and in `/craft`. The
+addon's `recipeLines` (the recipe's profession, e.g. Cooking 185) is confirmed reliable: it stays the fallback for
+recipes the item database lacks (`src/core/recipes/learned.ts`). The addon sends no skill-up colour: the difficulty
+dots stay computed from the thresholds and the character's skill.
 
 ### WEB-90 Item database, import and learned recipes (Part B)
 - **Import (B1):** `npm run import:items`, by hand once per patch, idempotent. The Forever client's DB2 tables from wago.tools (product `wowf`, build 1.60.1.70790), Classic Era's for what is Forever's own and what cmangos' spells teach, cmangos classic-db (GPL-3.0, attributed in `docs/SOURCE-DATA.md`) for where recipes are learned. Never Wowhead. Downloads stay outside the repo; the tests use invented fixtures. Removed and unobtainable recipes count nowhere.
