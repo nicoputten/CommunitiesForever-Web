@@ -12,6 +12,7 @@ import { dungeonBossViews, type BossView } from "./bossViews";
 import type { Db } from "./db";
 import { bossKills, characterProfessions, characterRecipes, uploads } from "./db/schema";
 import { doomsdayResetSetting, getBotSettings } from "./discord";
+import { withCreated } from "./recipeViews";
 
 // WEB-97, WEB-102: what the run page and the dungeon page read for boss progress: a dungeon's bosses (the item import,
 // WEB-96), the stored kills (src/server/history.ts recordBossKills), the newest upload of a run's group and the daily
@@ -103,14 +104,23 @@ export function dungeonLootData(db: Db, dungeon: RunnableDungeon) {
       db,
       bosses.map((b) => b.id),
     ),
-    items: bosses.flatMap((b) =>
-      b.drops.map((d) => {
-        const t: TooltipItem = { id: d.itemId, data: d.item ?? { id: d.itemId } };
-        if (d.name !== null) t.name = d.name;
-        if (d.quality !== null) t.quality = d.quality;
-        if (d.iconName !== null) t.icon = d.iconName;
-        return t;
-      }),
+    // A recipe drop's tooltip shows the item it makes (WEB-104).
+    items: withCreated(
+      db,
+      bosses.flatMap((b) =>
+        b.drops.map((d) => {
+          const t: TooltipItem = { id: d.itemId, data: d.item ?? { id: d.itemId } };
+          if (d.name !== null) t.name = d.name;
+          if (d.quality !== null) t.quality = d.quality;
+          if (d.iconName !== null) t.icon = d.iconName;
+          return t;
+        }),
+      ),
+      new Map(
+        bosses.flatMap((b) =>
+          b.drops.flatMap((d): [number, number][] => (d.recipeId === undefined ? [] : [[d.itemId, d.recipeId]])),
+        ),
+      ),
     ),
   };
 }

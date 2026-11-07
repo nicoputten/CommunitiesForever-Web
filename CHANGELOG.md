@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Fixed
+- Recipes: a recipe link (a boss's recipe drop, DoomBot) opens the recipe also on a profession nobody opened in game yet, instead of "No recipes scanned yet". A recipe's tooltip now shows the item it makes and its reagents under it, as in game.
+
 ## v0.12.0 (2026-11-07)
 - Dungeon pages: a Bosses & loot box lists every boss with the loot it drops, its drop chance, quest items and recipes nobody in the group knows yet (with who could learn them). "Usable by" picks one of your characters and dims or hides what its class can never use; it remembers your choice. A Bosses list on the side jumps to each boss. Needs an "Import item data" after the release.
 - Runs: once a planned run has started, its page shows which bosses are down, when, and from whose log, "3 of 6" with a bar, and "Cleared" when the last boss dies. The dungeon page shows a started run's bosses under Planned here and when the dungeon was last cleared, and by whom, under Ran here. Needs the addon version that records boss kills.

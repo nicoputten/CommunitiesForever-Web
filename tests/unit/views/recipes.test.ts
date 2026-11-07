@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recordCharacters } from "@/core/views";
-import { itemFallbackName, itemTooltip } from "@/core/views/itemTooltip";
+import { itemFallbackName, itemTooltip, reagentsLine } from "@/core/views/itemTooltip";
 import {
   characterRecipeLines,
   defaultTab,
@@ -182,6 +182,8 @@ describe("profession page (recipes-page)", () => {
     });
     expect(engineering).toMatchObject({ notScanned: true, total: 1, name: "Engineering" });
     expect(v.notScanned).toBe(false);
+    // WEB-104: a link to a recipe nobody knows (?recipe=9) finds its row to open, scanned or not.
+    expect(engineering.rows.find((r) => r.id === 9)).toMatchObject({ id: 9, knownBy: [], nobody: true });
   });
 
   it("finds a profession page by its slug", () => {
@@ -327,6 +329,18 @@ describe("item tooltip (recipes-drawer)", () => {
       named: false,
       lines: [],
     });
+  });
+
+  it("lists a recipe's reagents under its created item, as the game does (WEB-104)", () => {
+    expect(
+      reagentsLine([
+        { id: 1, name: "Heavy Leather", count: 12 },
+        { id: 2, name: "Fine Thread", count: 2 },
+        { id: 3, name: "Gray Dye", count: 1 },
+        { id: 279972, count: 3 },
+      ]),
+    ).toBe("Requires Heavy Leather (12), Fine Thread (2), Gray Dye, Item 279972 (3)");
+    expect(reagentsLine([])).toBeUndefined();
   });
 
   it("names sources", () => {

@@ -42,6 +42,19 @@ export function recipeFallbackName(id: number): string {
   return `Recipe ${id}`;
 }
 
+/**
+ * "Requires Heavy Leather (12), Fine Thread (2)": the reagents line under a recipe's created item, as the game shows
+ * it (WEB-104); undefined without reagents.
+ */
+export function reagentsLine(reagents: readonly { id: number; name?: string; count: number }[]): string | undefined {
+  if (reagents.length === 0) return undefined;
+  const list = reagents.map((r) => {
+    const name = r.name === undefined || r.name === "" ? itemFallbackName(r.id) : r.name;
+    return r.count > 1 ? `${name} (${r.count})` : name;
+  });
+  return `Requires ${list.join(", ")}`;
+}
+
 const signed = (n: number) => (n < 0 ? `-${-n}` : `+${n}`);
 
 export function itemTooltip(item: ItemRecord): ItemTooltipView {

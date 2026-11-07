@@ -6,19 +6,29 @@ import { beforeRosters } from "./beforeRosters";
 import type { ItemDatabase } from "@/core/recipes/build";
 import { openDatabase, type Db } from "@/server/db";
 import { writeItemDatabase } from "@/server/itemDb";
-import { characterRecipeRows, recipeRows, recipeTotalRows, tooltipItems } from "@/server/recipeViews";
+import { characterRecipeRows, recipeRows, recipeTotalRows, tooltipItems, withCreated } from "@/server/recipeViews";
 import { upload } from "@/server/uploads";
 
 // WEB-92: what the recipe pages read (src/server/recipeViews.ts), on invented data.
 
 const ADMIN = "Nico#1000";
 const DATABASE: ItemDatabase = {
-  bosses: [],
-  bossDrops: [],
+  bosses: [{ id: 9001, name: "Test Boss", dungeonId: "dm", position: 1, final: true, optional: false }],
+  // WEB-104: the item import's only record of which recipe a recipe item teaches.
+  bossDrops: [{ bossId: 9001, itemId: 201, position: 1, chance: 5, classId: 9, subclassId: 2, recipeId: 1 }],
   items: [
     { id: 101, name: "Test Robe", quality: 4, iconName: "inv_test", armor: 50 },
     { id: 102, name: "Test Bolt", quality: 1, classId: 7, maxStack: 20 },
     { id: 103, name: "Test Stew", quality: 1 },
+    {
+      id: 201,
+      name: "Pattern: Test Robe",
+      quality: 2,
+      classId: 9,
+      subclassId: 2,
+      use: ["Teaches you how to sew a Test Robe."],
+    },
+    { id: 202, name: "Pattern: Test Bolt", quality: 1, classId: 9, subclassId: 2 },
   ],
   recipes: [
     {
@@ -124,5 +134,26 @@ describe("recipe views", () => {
       { id: 101, name: "Test Robe", quality: 4, icon: "inv_test", data: DATABASE.items[0] },
       { id: 279972, data: { id: 279972 } },
     ]);
+  });
+
+  it("gives a recipe item the item its recipe makes and the reagents (WEB-104)", () => {
+    const robe = { id: 101, name: "Test Robe", quality: 4, icon: "inv_test", data: DATABASE.items[0] };
+    // Which recipe it teaches from its boss drop.
+    expect(tooltipItems(db, [201])[0]).toEqual({
+      id: 201,
+      name: "Pattern: Test Robe",
+      quality: 2,
+      data: DATABASE.items[3],
+      creates: { item: robe, reagents: [{ id: 102, name: "Test Bolt", count: 12 }] },
+    });
+    // A recipe item no boss drops: nothing to add, unless the caller knows its recipe.
+    expect(tooltipItems(db, [202])[0]!.creates).toBeUndefined();
+    const [bolt] = withCreated(db, tooltipItems(db, [202]), new Map([[202, 2]]));
+    expect(bolt!.creates).toEqual({
+      item: { id: 102, name: "Test Bolt", quality: 1, data: DATABASE.items[1] },
+      reagents: [],
+    });
+    // Any other item stays as it is.
+    expect(withCreated(db, tooltipItems(db, [101]))[0]!.creates).toBeUndefined();
   });
 });

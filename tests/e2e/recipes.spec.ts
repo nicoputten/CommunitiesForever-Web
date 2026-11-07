@@ -96,6 +96,19 @@ test("a profession nobody opened in game says so and still lists its recipes", a
   await expect(page.getByRole("table", { name: "Recipes" }).getByRole("link", { name: "Big Iron Bomb" })).toBeVisible();
 });
 
+// WEB-104: a link to a recipe (a boss's recipe drop, the bot) opens its drawer before anyone scanned the profession;
+// closing it stays on all recipes.
+test("a recipe link opens its drawer on a profession nobody opened in game", async ({ page }) => {
+  await page.goto("/professions/engineering?recipe=96001");
+  const drawer = page.getByRole("dialog", { name: "Big Iron Bomb" });
+  await expect(drawer).toBeVisible();
+  await expect(page.getByText("No recipes scanned yet")).toBeHidden();
+  await drawer.getByRole("button", { name: "Close" }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page).toHaveURL(/\/professions\/engineering\?tab=all$/);
+  await expect(page.getByRole("table", { name: "Recipes" }).getByRole("link", { name: "Big Iron Bomb" })).toBeVisible();
+});
+
 test("on a phone a row opens the recipe as a sheet", async ({ page }) => {
   test.skip(!isPhone(page), "phone only");
   await page.goto("/professions/tailoring");
