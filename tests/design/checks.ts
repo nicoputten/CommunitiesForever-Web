@@ -149,7 +149,8 @@ export async function expectBackground(page: Page, kind: "map" | "data"): Promis
 export async function expectTouchTargets(page: Page): Promise<void> {
   const small = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>("a[href], button, input, select, textarea, summary, [tabindex]")]
-      .filter((el) => el.tabIndex >= 0 && el.checkVisibility())
+      // Radix's focus guards (an open dialog's invisible 0 × 0 spans that keep Tab inside it) are no targets (WEB-92).
+      .filter((el) => el.tabIndex >= 0 && el.checkVisibility() && !el.hasAttribute("data-radix-focus-guard"))
       .map((el) => ({ el, r: el.getBoundingClientRect() }))
       // The skip link sits above the page until it has focus. A hundredth of a pixel is rounding: the map's markers
       // keep their size under any zoom by scaling back (1 / zoom × zoom).

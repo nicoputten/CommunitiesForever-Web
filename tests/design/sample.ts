@@ -5,6 +5,7 @@
 // PvP ranks) comes from sampleDoomsday.ts (WEB-63).
 
 import { doomsdayChar, doomsdayPerson } from "./sampleDoomsday";
+import { SAMPLE_RECIPES } from "./sampleItems";
 
 /** The design server's "now" (FIXED_NOW): 2026-11-19 20:00 UTC, a Thursday evening. */
 export const NOW = 1795118400;
@@ -312,10 +313,36 @@ function lua(value: Lua, indent = ""): string {
   return items.length === 0 ? "{}" : `{\n${items.join("\n")}\n${indent}}`;
 }
 
+/**
+ * When each profession's window was last scanned (CF-38 `scannedAt`, WEB-92), seconds before NOW; a profession left
+ * out was never opened in game (Ves's Enchanting, Kel's Engineering: "Recipes not scanned").
+ */
+const SCANS: Record<string, Record<string, number>> = {
+  "Player-1-0000C001": { Tailoring: 2 * D, Enchanting: 2 * D },
+  "Player-1-0000E001": { Tailoring: H, Cooking: H },
+  "Player-1-0000A001": { Tailoring: 19 * D, Cooking: 19 * D },
+  "Player-1-0000B002": { Alchemy: D, "First Aid": D },
+  "Player-1-0000A002": { Blacksmithing: 3 * D },
+  "Player-1-0000B001": { Leatherworking: 5 * H },
+};
+
+/** The CF-38 recipe fields of a character (WEB-92): the learned set, its scan time, each profession's scan time. */
+function recipeFields(c: Sample, now: number): Record<string, Lua> {
+  const recipes = SAMPLE_RECIPES[c.guid];
+  const scans = SCANS[c.guid] ?? {};
+  const times = Object.values(scans);
+  if (recipes === undefined || times.length === 0) return {};
+  return {
+    recipes: Object.fromEntries(Object.entries(recipes).map(([id, item]) => [id, item])),
+    recipesAt: now - Math.min(...times),
+  };
+}
+
 /** A character record; `owner` (display name) and `before` (an earlier file) pick its Doomsday fields. */
 function char(c: Sample, now: number, owner: string, before: boolean): Lua {
   const trees = TREES[c.classFile]!;
   const most = c.talents.indexOf(Math.max(...c.talents));
+  const scans = SCANS[c.guid] ?? {};
   return {
     classFile: c.classFile,
     faction: c.faction,
@@ -325,8 +352,14 @@ function char(c: Sample, now: number, owner: string, before: boolean): Lua {
     level: c.level,
     mainTree: most + 1,
     name: c.name,
-    professions: Object.fromEntries(c.professions.map(([name, rank, max]) => [SKILL[name]!, { max, name, rank }])),
+    professions: Object.fromEntries(
+      c.professions.map(([name, rank, max]) => [
+        SKILL[name]!,
+        { max, name, rank, ...(scans[name] !== undefined && { scannedAt: now - scans[name] }) },
+      ]),
+    ),
     raceID: RACE[c.race],
+    ...recipeFields(c, now),
     realm: REALM,
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),

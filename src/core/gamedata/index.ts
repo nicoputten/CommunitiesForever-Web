@@ -7,3 +7,4 @@ export * from "./places";
 export * from "./races";
 export * from "./rulesets";
 export * from "./zones";
+export * from "./items";

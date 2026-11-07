@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { ProfessionSummary } from "@/core/views/professions";
+import type { ProfessionEntry, ProfessionSummary } from "@/core/views/professions";
+import type { RecipeTotals } from "@/core/views/recipes";
 import { professionSlug } from "@/core/views/rosterQuery";
 import { characterHref } from "@/components/roster/CharacterRow";
 import { classTextStyle } from "./classStyle";
@@ -9,7 +10,7 @@ import styles from "./ProfessionCard.module.css";
 
 /** One profession (professions board): its status and everyone's skill bar, the best first and starred. The title
  * opens the roster filtered on it; the card's id lets other pages link here (WEB-23 "Compare with the group"). */
-export function ProfessionCard({ profession: p }: { profession: ProfessionSummary }) {
+export function ProfessionCard({ profession: p, recipes }: { profession: ProfessionSummary; recipes?: RecipeTotals }) {
   const slug = professionSlug(p.skillLine);
   const titleId = `profession-${slug}`;
   return (
@@ -24,26 +25,39 @@ export function ProfessionCard({ profession: p }: { profession: ProfessionSummar
       {p.entries.length === 0 ? (
         <p className={styles.nobody}>Nobody has it yet</p>
       ) : (
-        <ul className={styles.entries}>
-          {p.entries.map((e) => (
-            <li key={e.character.guid} className={styles.entry}>
-              <Link href={characterHref(e.character.guid)} className={styles.name} style={classTextStyle(e.character)}>
-                {e.character.name}
-                {e.best && (
-                  <>
-                    <span className={styles.best} aria-hidden="true">
-                      ★
-                    </span>
-                    <span className="visually-hidden">, best in the group</span>
-                  </>
-                )}
-              </Link>
-              <SkillBar rank={e.rank} max={e.max} best={e.best} old={e.old} />
-              <span className={styles.value}>{e.max === undefined ? e.rank : `${e.rank} / ${e.max}`}</span>
-            </li>
-          ))}
-        </ul>
+        <CrafterBars entries={p.entries} />
+      )}
+      {recipes !== undefined && (
+        <Link className={styles.recipes} href={`/professions/${encodeURIComponent(slug)}`}>
+          <b>{recipes.known}</b>&nbsp;of {recipes.total} {recipes.total === 1 ? "recipe" : "recipes"} ›
+        </Link>
       )}
     </section>
+  );
+}
+
+/** Everyone's skill bar in a profession, the best first and starred (professions board; also the profession page's
+ * header, WEB-92). */
+export function CrafterBars({ entries }: { entries: ProfessionEntry[] }) {
+  return (
+    <ul className={styles.entries}>
+      {entries.map((e) => (
+        <li key={e.character.guid} className={styles.entry}>
+          <Link href={characterHref(e.character.guid)} className={styles.name} style={classTextStyle(e.character)}>
+            {e.character.name}
+            {e.best && (
+              <>
+                <span className={styles.best} aria-hidden="true">
+                  ★
+                </span>
+                <span className="visually-hidden">, best in the group</span>
+              </>
+            )}
+          </Link>
+          <SkillBar rank={e.rank} max={e.max} best={e.best} old={e.old} />
+          <span className={styles.value}>{e.max === undefined ? e.rank : `${e.rank} / ${e.max}`}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

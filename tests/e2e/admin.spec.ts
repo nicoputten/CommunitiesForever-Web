@@ -122,12 +122,12 @@ test("Switch community asks first, and says nothing is hidden", async ({ page, c
 });
 
 // WEB-91: the owner's Item data box. Pressing the button would reach wago.tools from the test, so this stops before
-// it; the import run is tested in tests/server/itemImport.test.ts.
+// it; the import run is tested in tests/server/itemImport.test.ts. The seed wrote the sample item database (WEB-92).
 test("the owner sees the Item data box, with Import item data", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/admin");
   const box = panel(page, "Item data");
-  await expect(box.getByTestId("item-import-line")).toHaveText("No item data yet.");
+  await expect(box.getByTestId("item-import-line")).toHaveText(/^Build sample · 23 recipes · 27 items · imported /);
   await expect(box.getByRole("button", { name: "Import item data" })).toBeEnabled();
 });
 

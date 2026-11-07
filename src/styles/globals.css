@@ -118,3 +118,45 @@ html[data-tab="hidden"] [data-ambient],
 html[data-tab="hidden"] [data-ambient] * {
   animation-play-state: paused !important;
 }
+
+/* Item quality (WEB-92, recipes boards): --quality for icon borders, --quality-text for names (the boards' lighter
+   rare and epic). Set by data-quality on an icon, a name or a tooltip. */
+[data-quality="poor"] {
+  --quality: var(--quality-poor);
+  --quality-text: var(--quality-poor);
+}
+
+[data-quality="common"] {
+  --quality: var(--quality-common);
+  --quality-text: var(--quality-common);
+}
+
+[data-quality="uncommon"] {
+  --quality: var(--quality-uncommon);
+  --quality-text: var(--quality-uncommon);
+}
+
+[data-quality="rare"] {
+  --quality: var(--quality-rare);
+  --quality-text: var(--quality-rare-text);
+}
+
+[data-quality="epic"] {
+  --quality: var(--quality-epic);
+  --quality-text: var(--quality-epic-text);
+}
+
+[data-quality="legendary"] {
+  --quality: var(--quality-legendary);
+  --quality-text: var(--quality-legendary);
+}
+
+[data-quality="artifact"] {
+  --quality: var(--quality-artifact);
+  --quality-text: var(--quality-artifact);
+}
+
+[data-quality="heirloom"] {
+  --quality: var(--quality-heirloom);
+  --quality-text: var(--quality-heirloom);
+}

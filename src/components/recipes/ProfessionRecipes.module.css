@@ -1,0 +1,228 @@
+/* The profession page's controls, layout and states (WEB-92, boards recipes-page, recipes-phone, recipes-states). */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2-5);
+}
+
+/* All 185 · Known 112 · Nobody has 73 (the board's segmented look). */
+.tabs {
+  display: inline-flex;
+  border: var(--border) solid var(--line-neutral);
+  border-radius: var(--r-btn);
+  overflow: hidden;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  min-height: var(--size-filter);
+  padding: 0 var(--s-3-5);
+  border: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab b {
+  font-weight: var(--fw-medium);
+  color: var(--text-faint);
+}
+
+.tab[data-state="active"] {
+  background: var(--tint-tab);
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
+}
+
+.tab:focus-visible {
+  outline: var(--focus-width) solid var(--gold);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  box-sizing: border-box;
+  min-width: var(--size-filter-search);
+  min-height: var(--size-touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: var(--surface-filter);
+  color: var(--text-faint);
+}
+
+.search:focus-within {
+  border-color: var(--gold);
+}
+
+.searchIcon {
+  flex: none;
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-touch);
+  border: 0;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+  outline: none;
+}
+
+.search input::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+.filters {
+  display: flex;
+  gap: var(--s-2-5);
+}
+
+.filter {
+  min-width: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.layout[data-drawer] {
+  grid-template-columns: minmax(0, 1fr) var(--size-drawer);
+}
+
+.content {
+  min-width: 0;
+}
+
+.layout[data-drawer] .content {
+  padding-right: var(--s-5-5);
+}
+
+.content:focus-visible {
+  outline: var(--focus-width) solid var(--gold);
+  outline-offset: var(--focus-offset);
+}
+
+.stale {
+  margin-bottom: var(--s-2);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.noResults {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-10) 0;
+  text-align: center;
+}
+
+.stateTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-name);
+  font-size: var(--fs-title);
+  color: var(--text-strong);
+}
+
+.stateMeta {
+  margin-top: var(--s-1-5);
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+}
+
+.notScanned {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--s-7) 0;
+}
+
+.notScanned > a {
+  margin-top: var(--s-3-5);
+}
+
+/* Below 1024 px the drawer is a sheet: the table keeps the width. */
+@media (max-width: 1023px) {
+  .layout[data-drawer] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .layout[data-drawer] .content {
+    padding-right: 0;
+  }
+}
+
+/* Phone (board recipes-phone): the search on its own line, the filters scroll sideways, then the tabs in one row. */
+@media (max-width: 767px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+
+  .search {
+    order: 1;
+    min-width: 0;
+  }
+
+  .filters {
+    order: 2;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filter {
+    flex: none;
+  }
+
+  .tabs {
+    order: 3;
+    align-self: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .tab {
+    min-height: var(--size-touch);
+    padding: 0 var(--s-3);
+  }
+
+  .spacer {
+    display: none;
+  }
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3-5);
+}

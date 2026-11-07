@@ -1,0 +1,44 @@
+/* The boards' secondary button (recipes-drawer "Copy link", recipes-phone "Open recipe", recipes-states "See all
+   recipes"): gold outline, 44 px. The same look as the site's other outline buttons (--button-line-gold). */
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  box-sizing: border-box;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-4-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--button-line-gold);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  color: var(--gold-bright);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold-pale);
+}
+
+/* A text link with a 44 px target ("Clear filters", "All Tailoring recipes ›"). */
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  color: var(--gold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.textLink:hover {
+  color: var(--gold-bright);
+}
