@@ -4,7 +4,8 @@
 // Sources (rule 10):
 // - Blizzard's client data of the Forever build (wago.tools DB2 CSV exports, product `wowf`): SkillLineAbility
 //   (which spells are recipes of which profession, the thresholds), SpellEffect (the created item), SpellReagents,
-//   SpellName and Spell (names, Equip/Use texts), ItemSparse (name, quality, levels, bind, slot, stack), Item (class,
+//   SpellName and Spell (names, Equip/Use texts), SpellMisc and SpellDuration (a spell's duration), SpellRadius,
+//   SpellAuraOptions and SpellTargetRestrictions (the numbers Use texts name, WEB-95: ./spellText.ts), ItemSparse (name, quality, levels, bind, slot, stack), Item (class,
 //   subclass, icon), ItemModifiedAppearance and ItemAppearance (the icon of items without one in Item), ItemSubClass
 //   (type names), ItemXItemEffect and ItemEffect (an item's spells; which recipe a
 //   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names).
@@ -23,6 +24,7 @@
 import { float, int } from "./csv";
 import { n, s, type SqlRow } from "./sqlDump";
 import { greenThreshold } from "./skill";
+import { type SpellEffectInfo, type SpellInfo, type SpellLookup, spellText } from "./spellText";
 
 export const DB2_TABLES = [
   "ItemSparse",
@@ -35,6 +37,11 @@ export const DB2_TABLES = [
   "SpellReagents",
   "SpellName",
   "Spell",
+  "SpellMisc",
+  "SpellDuration",
+  "SpellRadius",
+  "SpellAuraOptions",
+  "SpellTargetRestrictions",
   "ItemXItemEffect",
   "ItemEffect",
   "ManifestInterfaceData",
@@ -228,23 +235,75 @@ function text(v: string | undefined): string | undefined {
   return v !== undefined && v !== "" ? v : undefined;
 }
 
-/**
- * Fills a spell description's numbers from its effects: `$s1`, `$m1` (effect 1's points), `${...}` around a plain
- * number, with `.N` decimals after it. Anything else (`$d`, `$o1`, `$l...;`) can't be filled: undefined.
- */
-export function spellText(
-  description: string | undefined,
-  points: readonly (number | undefined)[],
-): string | undefined {
-  if (description === undefined || description === "") return undefined;
-  let out = description.replace(/\$[sm]([1-3])/g, (whole, i: string) => {
-    const v = points[Number(i) - 1];
-    return v === undefined ? whole : String(Math.abs(v));
-  });
-  out = out.replace(/\$\{(-?\d+(?:\.\d+)?)\}(?:\.(\d))?/g, (_, num: string, decimals: string | undefined) =>
-    decimals !== undefined ? Number(num).toFixed(Number(decimals)) : String(Number(num)),
-  );
-  return out.includes("$") ? undefined : out.trim();
+/** Rows by a key, the base difficulty's (DifficultyID 0) first. */
+function byBase(rows: Rows | undefined, key: string): Map<number, Record<string, string>> {
+  const out = new Map<number, Record<string, string>>();
+  for (const r of rows ?? []) {
+    const id = int(r, key);
+    if (id === undefined) continue;
+    if (!out.has(id) || ((int(r, "DifficultyID") ?? 0) === 0 && (int(out.get(id), "DifficultyID") ?? 0) !== 0)) {
+      out.set(id, r);
+    }
+  }
+  return out;
+}
+
+/** What a spell's description reads (./spellText.ts), from the client's spell tables. */
+export function spellLookup(db2: ImportInput["db2"], effects: Map<number, Record<string, string>[]>): SpellLookup {
+  const spells = byId(db2.Spell);
+  const names = byId(db2.SpellName);
+  const misc = byBase(db2.SpellMisc, "SpellID");
+  const durations = byId(db2.SpellDuration);
+  const radii = byId(db2.SpellRadius);
+  const auraOptions = byBase(db2.SpellAuraOptions, "SpellID");
+  const targets = byBase(db2.SpellTargetRestrictions, "SpellID");
+  const cache = new Map<number, SpellInfo | undefined>();
+  const positive = (v: number | undefined) => (v !== undefined && v > 0 ? v : undefined);
+  return (id) => {
+    if (cache.has(id)) return cache.get(id);
+    const spell = spells.get(id);
+    const name = text(names.get(id)?.Name_lang);
+    let info: SpellInfo | undefined;
+    if (spell !== undefined || name !== undefined) {
+      const fxs: (SpellEffectInfo | undefined)[] = [];
+      const base = new Set<number>();
+      for (const fx of effects.get(id) ?? []) {
+        const index = int(fx, "EffectIndex");
+        if (index === undefined || index < 0 || index > 2) continue;
+        // The base difficulty's effect wins.
+        const isBase = (int(fx, "DifficultyID") ?? 0) === 0;
+        if (base.has(index) && !isBase) continue;
+        if (isBase) base.add(index);
+        const e: SpellEffectInfo = { points: float(fx, "EffectBasePointsF") };
+        const variance = positive(float(fx, "Variance"));
+        if (variance !== undefined) e.variance = variance;
+        const period = positive(int(fx, "EffectAuraPeriod"));
+        if (period !== undefined) e.period = period;
+        const radius = positive(float(radii.get(int(fx, "EffectRadiusIndex_0") ?? -1), "Radius"));
+        if (radius !== undefined) e.radius = radius;
+        const miscValue = int(fx, "EffectMiscValue_0");
+        if (miscValue !== undefined) e.misc = miscValue;
+        const chain = positive(int(fx, "EffectChainTargets"));
+        if (chain !== undefined) e.chainTargets = chain;
+        fxs[index] = e;
+      }
+      const m = misc.get(id);
+      const aura = auraOptions.get(id);
+      info = {
+        name,
+        description: text(spell?.Description_lang),
+        effects: fxs,
+        duration: positive(int(durations.get(int(m, "DurationIndex") ?? -1), "Duration")),
+        procChance: positive(int(aura, "ProcChance")),
+        procCharges: positive(int(aura, "ProcCharges")),
+        procCooldown: positive(int(aura, "ProcCategoryRecovery")),
+        stacks: positive(int(aura, "CumulativeAura")),
+        maxTargets: positive(int(targets.get(id), "MaxTargets")),
+      };
+    }
+    cache.set(id, info);
+    return info;
+  };
 }
 
 export function buildItemDatabase(input: ImportInput): ItemDatabase {
@@ -610,7 +669,7 @@ function buildItems(
 ): ItemRecord[] {
   const sparse = byId(db2.ItemSparse);
   const base = byId(db2.Item);
-  const spells = byId(db2.Spell);
+  const spells = spellLookup(db2, effects);
   const icons = new Map<number, string>();
   for (const r of db2.ManifestInterfaceData ?? []) {
     const id = int(r, "ID");
@@ -702,12 +761,7 @@ function buildItems(
       }
     }
     for (const { spell, trigger, cooldown: ms } of itemSpells) {
-      const points: (number | undefined)[] = [];
-      for (const fx of effects.get(spell) ?? []) {
-        const index = int(fx, "EffectIndex");
-        if (index !== undefined && index >= 0 && index < 3) points[index] = float(fx, "EffectBasePointsF");
-      }
-      let line = spellText(text(spells.get(spell)?.Description_lang), points);
+      let line = spellText(spells(spell), spells);
       if (line === undefined) continue;
       const cooldown = ms ?? -1;
       if (trigger === 0 && cooldown > 0) line += ` (${cooldownText(cooldown)} Cooldown)`;

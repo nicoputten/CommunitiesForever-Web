@@ -79,7 +79,7 @@ written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads st
 Data used for the first import (2026-11-06):
 | Source | What | Version |
 |---|---|---|
-| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
+| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
 | The Classic Era client, same export | SkillLineAbility (recipes Forever has that Era lacks are Forever's own), SpellEffect with Effect 36 (what cmangos' trainer and recipe-item spells teach: Forever's client no longer has those spells) | `wow_classic_era` 1.15.9.70576 |
 | [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
 
@@ -105,6 +105,12 @@ on); 2,693 items (what recipes make and use; 335 of Forever's items have no name
   stock), rep (the recipe item needs a standing: faction and rank); drop (a creature's, chest's or container's loot,
   through reference tables; the dungeon or raid when all its creatures are in one; the creatures when at most three,
   else a world drop); quest (a reward, or a reward spell that teaches it). `is_rare` is true for drop and rep.
+- **Use, Equip and Chance on hit lines (WEB-95):** the item's spells (ItemXItemEffect, else cmangos' `spellid_N`), each
+  spell's description with its tokens filled from the client's spell tables as the game's tooltip does
+  (`src/core/recipes/spellText.ts` lists every token and its source): points (a potion's spread as "1050 to 1750"),
+  durations in the tooltip's words ("1 hour", "2 hrs", "10 min", "15 sec"), totals over a duration (5 sec ticks for food
+  and drink), periods, radii, proc chance and cooldown, other spells' numbers and descriptions, level conditions read at
+  the level cap. A token the data can't fill is dropped and the line kept.
 - **Icons:** the client's icon file id (Item, else the item's default appearance) mapped to its file name with
   ManifestInterfaceData (Blizzard's own list, so no community listfile is needed), served by the icon cache
   (`/api/item-icons/<name>`, docs/ARCHITECTURE.md).

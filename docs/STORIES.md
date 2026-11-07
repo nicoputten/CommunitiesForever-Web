@@ -45,6 +45,17 @@ Nico tested Runs on the live site (27 Oct 2026) and the design came back as "Run
 ## E9 Live test fixes (2026-10-29)
 Nico tested the live site read-only on 29 Oct 2026. The brief is `docs/DESIGN-BRIEF-LIVE-TEST.md`, with the boards `live-test-findings`, `live-test-site-fixes` and `live-test-phone` (the bot's are `bot-visual-*`). Where `docs/DOOMSDAY.md` disagrees on the PvP Virgin rule or the day label, the brief is newer and wins. Bugs 1, 2, 4 and 5 are data rules: the engine worker builds them, and WEB-65 shows the results. Nothing here changes live settings or data.
 
+### WEB-95 Item tooltips: Use texts with durations and totals
+Nico (2026-11-07): Elixir of Minor Defense and Minor Arcane Elixir show only their name and "Max Stack: 20", on hover
+and in the recipe drawer. The import dropped every Use/Equip line with a token it couldn't fill, and almost every
+consumable has `$d` (duration). Now the import also reads SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions and
+SpellTargetRestrictions and fills `$d`, `$o`, `$t`, `$a`, `$h`, `$n`, `$u`, `$i`, `$q`, `$x`, `$s` ranges, `$M`,
+`${...}` arithmetic, `$/N;`, other spells' tokens and descriptions (`$12345s1`, `$@spelldesc12345`), `$l`/`$g` and
+`$?` conditions (`src/core/recipes/spellText.ts`); a token still unfilled is dropped and the line kept. The stored item
+shape is unchanged (only more `use`/`equip`/`chanceOnHit` lines); the owner re-runs "Import item data" after the
+release. Done when: unit tests for an elixir, a healing potion's range, food and a bandage, a weapon proc and the
+leftovers; lint, tests and build pass.
+
 ### WEB-94 Item import: fall back to the last known build
 On 2026-11-07 the live "Import item data" failed with "wago.tools answered 503.": wago.tools' build list
 (`/api/builds`) was down while its table exports still answered. Now, when the build list fails, the import uses the
@@ -310,3 +321,62 @@ Nico (2026-11-07) gave Part D to the WEB-90 worker. Board RC08; contract `docs/B
 - **/craft:** `lookup/craftable` (autocomplete over what recipes make) and `lookup/craft` (the item and its quality colour, the profession and skill, every crafter with a difficulty colour, the reagents with counts, the recipe's drawer URL, where it is learned, the public icon path). 404 when no recipe makes it.
 - Names only, never BattleTags or gold. WEB-92 owns the professions pages and the item tooltip: nothing of them changes here.
 - Done when: tests that a first scan and a trainer recipe make no event, a drop recipe makes one that is never made again, and the three `/craft` answers; lint, tests and build pass.
+
+## E16 More game data from the item import (2026-11-07)
+Nico (2026-11-07): what else the item import can give, as stories. Checked on the Forever build 1.60.1.70790: it has
+`DungeonEncounter` (bosses: name, map, order), `ItemSet`, `Talent` and `TalentTab`; it has **no** Adventure Guide
+loot tables (`JournalEncounter`, `JournalEncounterItem`, `JournalInstance` answer 400). Loot comes from cmangos
+(already imported for WEB-90). Builds on WEB-95's spell texts.
+**Every story here needs a design first:** the designer makes its board(s) before a worker builds it; until then the
+story waits. Each lists what the board has to show.
+
+### WEB-96 Boss loot on dungeon pages and planned runs (needs a design)
+- **Import:** bosses per dungeon from the Forever client's `DungeonEncounter` (name, `MapID`, `OrderIndex`; its `ID`
+  is the `encounterID` the addon logs), matched to cmangos `creature_template` by name; each boss's drops from
+  `creature_loot_template` and `reference_loot_template` (chance, quest-only drops apart). Dungeons from
+  `src/core/gamedata/dungeons.ts`; raids too, but only once they are in that list.
+- **Dungeon page:** the bosses in order, each with its drops (icon, name, quality, chance), item tooltips (WEB-92's
+  `ItemTooltip`), drops that teach a recipe link to the recipe's drawer; marked as Classic data.
+- **Planned run:** what the run's dungeon drops, compact, linking to the dungeon page.
+- Drops cmangos lists that the Forever client has no item for are left out; a boss without a cmangos match shows
+  its name without loot.
+- **Design needed:** the boss list with loot on the dungeon page (desktop and phone), the compact loot on a planned
+  run, the "Classic data" mark, a boss without loot.
+- Done when: import tests with invented fixtures (name matching, reference loot, quest-only drops, missing items);
+  view-model tests; design checks with baselines Nico approved; lint, tests and build pass.
+
+### WEB-97 Which bosses a run killed (needs a design; pairs with the addon's CF-103)
+- An upload's runs may carry `bossIds` (CF-103: the `encounterID`s killed, optional). Stored per run; older uploads
+  and runs without it keep only the count, as now.
+- The character page's and the dungeon page's run history show the bosses by name (WEB-96's import), each linking
+  to its loot; without `bossIds` the count as now.
+- Compatibility (rule 4): every released addon sends only `bosses` (a count): nothing changes for them.
+- **Design needed:** a run's killed bosses in the run history (desktop and phone), the count-only fallback.
+- Done when: upload tests with and without `bossIds`; view-model tests; design checks; lint, tests and build pass.
+
+### WEB-98 Where to get a recipe's reagents (needs a design)
+- From the data already imported (cmangos `npc_vendor`, the loot tables, gathering nodes in
+  `gameobject_loot_template`): per reagent in the recipe drawer, whether it is sold by a vendor (name, zone,
+  limited stock), dropped (the top sources), gathered (herb, ore, skinning) or crafted (links to that recipe).
+  At most 3 sources per reagent, best first.
+- Same in `/craft`'s answer (`docs/BOT-API.md`, optional field), so DoomBot can show it later.
+- **Design needed:** the sources under each reagent in the drawer and in the phone sheet.
+- Done when: import tests (vendor, drop, gathered, crafted, none); view-model tests; design checks; lint, tests and
+  build pass.
+
+### WEB-99 Item sets in item tooltips (needs a design)
+- **Import:** the Forever client's `ItemSet` (name, items) and its bonuses (`ItemSetSpell`: spell and threshold, texts
+  through WEB-95's spell texts). Forever's own copies of sets (new item IDs) are sets of their own.
+- **Tooltip:** a set item shows the set's name with the count, its items, and the bonuses (`(2) Set: ...`) the way
+  the game does, with nobody's pieces marked (the site doesn't know gear).
+- **Design needed:** the set block in the tooltip, desktop and phone sheet.
+- Done when: import tests; tooltip view-model tests; design checks; lint, tests and build pass.
+
+### WEB-100 Talent tooltips (needs a design)
+- **Import:** the Forever client's `TalentTab` and `Talent` (tree, row, column, ranks, spell per rank), the texts
+  through WEB-95's spell texts.
+- The character page's talent bars (`TalentBars`) show each tree's talents on hover or tap: name, rank, text, as far
+  as the synced talents tell which ones (check what the addon sends first; points per tree only means tree tooltips
+  only).
+- **Design needed:** the talent tooltip, and a talent tree view if the synced data allows one.
+- Done when: import tests; view-model tests; design checks; lint, tests and build pass.
