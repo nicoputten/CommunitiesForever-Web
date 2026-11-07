@@ -45,7 +45,17 @@ function data(): ItemDatabase {
     ],
     bossDrops: [
       { bossId: 9003, itemId: 7001, position: 1, chance: 36, classId: 2, subclassId: 7, classes: 9 },
-      { bossId: 9003, itemId: 7002, position: 2, chance: 0.4, classId: 9, subclassId: 2, recipeId: 20001 },
+      {
+        bossId: 9003,
+        itemId: 7002,
+        position: 2,
+        chance: 0.4,
+        classId: 9,
+        subclassId: 2,
+        recipeId: 20001,
+        skill: 150,
+        line: 185,
+      },
       { bossId: 9003, itemId: 7999, position: 3, chance: 2, questId: 300 },
     ],
   };
@@ -103,6 +113,8 @@ describe("dungeon bosses", () => {
         classId: 9,
         subclassId: 2,
         recipeId: 20001,
+        skill: 150,
+        line: 185,
         name: "Pattern: Test Robe",
         quality: 2,
         iconName: null,

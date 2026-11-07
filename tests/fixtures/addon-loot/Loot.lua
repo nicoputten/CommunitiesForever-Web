@@ -15,7 +15,7 @@ ns.LootData = {
   dungeons = {
     dm = {
       { id = 9001, name = "Test Brute", drops = {
-          { item = 7006, chance = 0.2, cls = 9, sub = 5, recipe = 20001 },
+          { item = 7006, chance = 0.2, cls = 9, sub = 5, recipe = 20001, skill = 150, line = 185 },
       } },
       { id = 9003, name = "Test Captain", final = true, drops = {
           { item = 7003, chance = 40, cls = 4, sub = 4, classes = 1 },

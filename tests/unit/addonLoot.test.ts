@@ -26,7 +26,17 @@ const drops: BossDropRecord[] = [
   { bossId: 9003, itemId: 7003, position: 1, chance: 40, classId: 4, subclassId: 4, classes: 1 },
   { bossId: 9003, itemId: 7005, position: 3, chance: 0.3, classId: 12, subclassId: 0, questId: 300 },
   { bossId: 9003, itemId: 7001, position: 2, chance: 12.3, classId: 2, subclassId: 4 },
-  { bossId: 9001, itemId: 7006, position: 1, chance: 0.2, classId: 9, subclassId: 5, recipeId: 20001 },
+  {
+    bossId: 9001,
+    itemId: 7006,
+    position: 1,
+    chance: 0.2,
+    classId: 9,
+    subclassId: 5,
+    recipeId: 20001,
+    skill: 150,
+    line: 185,
+  },
   { bossId: 9102, itemId: 7001, position: 1, chance: 30, classId: 2, subclassId: 4 },
 ];
 const input = { build: "1.60.1.70862", cmangos: "0123456789abcdef0123456789abcdef01234567", bosses, drops };
@@ -67,7 +77,7 @@ describe("Data\\Loot.lua", () => {
       {
         id: 9001,
         name: "Test Brute",
-        drops: [{ item: 7006, chance: 0.2, cls: 9, sub: 5, recipe: 20001 }],
+        drops: [{ item: 7006, chance: 0.2, cls: 9, sub: 5, recipe: 20001, skill: 150, line: 185 }],
       },
       {
         id: 9003,

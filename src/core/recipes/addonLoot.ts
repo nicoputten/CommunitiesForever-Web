@@ -116,6 +116,8 @@ export function addonLootLua(input: AddonLootInput): string {
         if (d.classes !== undefined) row += `, classes = ${d.classes}`;
         if (d.questId !== undefined) row += `, quest = ${d.questId}`;
         if (d.recipeId !== undefined) row += `, recipe = ${d.recipeId}`;
+        if (d.skill !== undefined) row += `, skill = ${d.skill}`;
+        if (d.line !== undefined) row += `, line = ${d.line}`;
         lines.push(`${row} },`);
       }
       lines.push("      } },");

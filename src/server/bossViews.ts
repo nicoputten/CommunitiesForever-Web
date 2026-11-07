@@ -44,6 +44,8 @@ function dropRecord(r: typeof bossDrops.$inferSelect): BossDropRecord {
   if (r.classes !== null) d.classes = r.classes;
   if (r.questId !== null) d.questId = r.questId;
   if (r.recipeId !== null) d.recipeId = r.recipeId;
+  if (r.skill !== null) d.skill = r.skill;
+  if (r.line !== null) d.line = r.line;
   return d;
 }
 

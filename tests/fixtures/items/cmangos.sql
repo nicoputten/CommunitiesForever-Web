@@ -17,7 +17,7 @@ CREATE TABLE `creature_loot_template` (
   `comments` varchar(300) DEFAULT '',
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,''),(7201,5003,25,0,1,1,0,'Test Shirt Item'),(7201,5004,0.5,0,1,1,0,'Test Robe Item');
+INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,''),(7201,5003,25,0,1,1,0,'Test Shirt Item'),(7201,5004,0.5,0,1,1,0,'Test Robe Item'),(7201,6005,0.5,0,1,1,0,'Pattern: Test Bag');
 CREATE TABLE `creature_template` (
   `Entry` mediumint unsigned NOT NULL DEFAULT '0',
   `Name` char(100) NOT NULL DEFAULT '',

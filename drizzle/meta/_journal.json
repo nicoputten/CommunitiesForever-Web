@@ -218,6 +218,13 @@
       "when": 1794047644595,
       "tag": "0030_boss_loot",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1794049845181,
+      "tag": "0031_boss_drop_skill",
+      "breakpoints": true
     }
   ]
 }

@@ -128,6 +128,8 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
             classes: d.classes ?? null,
             questId: d.questId ?? null,
             recipeId: d.recipeId ?? null,
+            skill: d.skill ?? null,
+            line: d.line ?? null,
           })),
         )
         .run(),
