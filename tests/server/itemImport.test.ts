@@ -21,6 +21,8 @@ let dir: string;
 let db: Db;
 let asked: string[];
 let wagoDown: boolean;
+/** Only wago.tools' build list is down (WEB-94); 403, so the test needn't wait for retries. */
+let buildsDown: boolean;
 
 /** A CSV body that breaks off after `cut` characters, as wago.tools does with long exports. */
 function cutOff(body: string, cut: number): Response {
@@ -42,6 +44,7 @@ const fake: typeof fetch = async (input) => {
   asked.push(url.pathname + url.search);
   // 403: no retry (a 5xx is asked again after a pause).
   if (url.host === "wago.tools" && wagoDown) return new Response("", { status: 403 });
+  if (url.pathname === "/api/builds" && buildsDown) return new Response("", { status: 403 });
   if (url.pathname === "/api/builds") {
     return Response.json({
       wowf: [
@@ -79,6 +82,7 @@ beforeEach(() => {
   db = openDatabase(path.join(dir, "test.sqlite"));
   asked = [];
   wagoDown = false;
+  buildsDown = false;
 });
 
 afterEach(() => {
@@ -138,5 +142,33 @@ describe("Import item data", () => {
     expect(importRunState()).toMatchObject({ running: false, last: { error: "wago.tools answered 403." } });
     expect(db.select().from(itemImport).get()).toBeUndefined();
     expect(db.select().from(adminLog).all()).toEqual([]);
+  });
+
+  it("uses the known builds when only the build list is down (WEB-94)", async () => {
+    buildsDown = true;
+    const steps: string[] = [];
+    const summary = await importItems(db, { ...options(), onStep: (s) => steps.push(s) });
+    expect(summary).toMatchObject({ build: FOREVER, era: ERA, fallback: true, changed: true });
+    expect(steps).toContain(`wago.tools' build list didn't answer; using build ${FOREVER}`);
+    expect(db.select().from(recipes).all()).toHaveLength(10);
+  });
+
+  it("falls back to the last import's builds, not the pinned ones (WEB-94)", async () => {
+    await importItems(db, options());
+    db.update(itemImport).set({ build: "1.60.1.70800" }).run(); // as if the last import had a newer build
+    buildsDown = true;
+    const seen: string[] = [];
+    const spy: typeof fetch = async (input, init) => {
+      seen.push(String(input));
+      return fake(input, init);
+    };
+    const summary = await importItems(db, { ...options(), fetch: spy });
+    expect(summary).toMatchObject({ build: "1.60.1.70800", fallback: true });
+    expect(seen.some((u) => u.includes("build=1.60.1.70800"))).toBe(true);
+  });
+
+  it("marks no fallback when the build list answers", async () => {
+    const summary = await importItems(db, options());
+    expect(summary.fallback).toBeUndefined();
   });
 });
