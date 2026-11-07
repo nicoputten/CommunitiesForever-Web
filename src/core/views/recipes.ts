@@ -566,4 +566,13 @@ export interface TooltipItem {
   quality?: number;
   icon?: string;
   data: ItemRecord;
+  /** WEB-104: a recipe item's created item, shown under it as in game; undefined for any other item. */
+  creates?: TooltipCreated;
+}
+
+/** What a recipe item (pattern, plan, formula) makes, and what for: the game's tooltip under the recipe's. */
+export interface TooltipCreated {
+  item: TooltipItem;
+  /** The reagents as the recipe drawer lists them (most first), with their names where the item data has one. */
+  reagents: { id: number; name?: string; count: number }[];
 }
