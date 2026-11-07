@@ -7,7 +7,7 @@ import { cleanName, stripEscapes } from "./sanitize";
 // Tables the addon writes as arrays may come out of the parser as {} when empty, so lists accept both.
 
 /** Highest addon schemaVersion this site reads. */
-export const SUPPORTED_SCHEMA = 2;
+export const SUPPORTED_SCHEMA = 3;
 
 /**
  * Why a file can't be read (the upload screen shows each, WEB-19): not a CommunitiesForever file at all, one that is

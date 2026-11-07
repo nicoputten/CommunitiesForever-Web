@@ -38,6 +38,15 @@ describe("normalize: file and schema", () => {
     expect(() => norm('return { schemaVersion = "1" }')).toThrow("no schemaVersion");
   });
 
+  it("reads the addon's schema 3 (CF-103: kill times, liveKills) as it reads schema 2", () => {
+    const body = `liveKills = { ["Player-1-A"] = { [2747] = 1000 } },
+      runs = { ["Player-1-A"] = { instance = "The Deadmines", bosses = { [2747] = 1000 } } }`;
+    expect(norm(`return { schemaVersion = 3, ${body} }`)).toEqual({
+      ...norm(`return { schemaVersion = 2, ${body} }`),
+      schemaVersion: 3,
+    });
+  });
+
   it("rejects a newer schema with the version in the message", () => {
     expect(() => norm(`return { schemaVersion = ${SUPPORTED_SCHEMA + 1} }`)).toThrow(
       `The file has schema version ${SUPPORTED_SCHEMA + 1}; this site reads up to ${SUPPORTED_SCHEMA}. Update the site.`,
