@@ -135,14 +135,17 @@ bosses with the next "Import item data".
   Monastery, Blackrock Spire, Stratholme and Dire Maul boss (the client has one map for each; each wing has its own
   final). Without a hand-made final (Forever's own
   dungeons), or when the client renamed it, the last boss the client lists is the final. 241 bosses on build 70862.
-- **`boss_drops`** (boss_id, item_id, position, chance, class_id, subclass_id, classes, quest_id, recipe_id): the boss's
+- **`boss_drops`** (boss_id, item_id, position, chance, class_id, subclass_id, classes, quest_id, recipe_id, skill,
+  line): the boss's
   own rows in cmangos `creature_loot_template` (its `creature_template` by name, spawned on the instance's map, else
   one spawned nowhere: a summoned boss; plus the creatures of an encounter fought together, e.g. Mograine with
   Whitemane). Reference tables (shared world drops) are left out. Chance in percent, one decimal: cmangos'
   `ChanceOrQuestChance`, negative for a quest drop; a 0 in a loot group shares what the group's other rows leave of
   100 %. Kept: 1 % or more, plus quest items and recipes at any chance (at least 0.1). Sorted highest chance first.
   `classes` = AllowableClass (the client's ItemSparse, else cmangos), null for every class. `quest_id` = the quest that
-  asks for a quest drop (`ReqItemId1..4`, lowest ID). `recipe_id` = the recipe a recipe item teaches (as WEB-90).
+  asks for a quest drop (`ReqItemId1..4`, lowest ID). `recipe_id` = the recipe a recipe item teaches (as WEB-90); for a recipe drop also `skill` (to learn it: the recipe item's
+  RequiredSkillRank, else the recipe's orange, as the recipe drawer shows) and `line` (the profession's skill line),
+  for "Can learn" (migration `0031_boss_drop_skill`).
   The dropped items join `items` (names, icons, tooltips). Forever's own dungeons aren't in cmangos: no loot. A few
   encounters have no creature (Blackrock Depths' Ring of Law, The Vault, The Seven): no loot. 1,940 drops on build
   70862.

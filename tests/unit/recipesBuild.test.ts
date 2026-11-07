@@ -88,7 +88,11 @@ describe("sources", () => {
   });
 
   it("vendors: limited stock, vendor templates, quests", () => {
-    expect(sources(9005)).toEqual([{ kind: "vendor_limited", npc: "Test Merchant", isRare: false }]);
+    expect(sources(9005)).toEqual([
+      { kind: "vendor_limited", npc: "Test Merchant", isRare: false },
+      // WEB-96's dungeon boss drops it too.
+      { kind: "drop", place: "Deadmines", npc: "Test Deadmines Boss", isRare: true },
+    ]);
     expect(sources(9006)).toEqual([
       { kind: "vendor", npc: "Test Peddler", isRare: false },
       { kind: "quest", quest: "A Test Quest", isRare: false },
@@ -101,8 +105,8 @@ describe("sources", () => {
 });
 
 describe("items", () => {
-  it("only what recipes make and use", () => {
-    expect(data.items.map((i) => i.id)).toEqual([5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 279999]);
+  it("what recipes make and use, and what dungeon bosses drop (WEB-96)", () => {
+    expect(data.items.map((i) => i.id)).toEqual([5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 6005, 279999]);
   });
 
   it("the tooltip: client data first, cmangos' numbers, the Equip and Use texts", () => {
@@ -157,9 +161,20 @@ describe("bosses (WEB-96)", () => {
     expect(data.bosses).toEqual([
       { id: 8001, name: "Test Deadmines Boss", dungeonId: "dm", position: 1, final: true, optional: false },
     ]);
-    // 25 % kept, 0.5 % left out.
+    // 25 % kept, 0.5 % left out, a recipe at 0.5 % kept with its skill (cmangos' RequiredSkillRank) and profession.
     expect(data.bossDrops).toEqual([
       { bossId: 8001, itemId: 5003, position: 1, chance: 25, classId: 4, subclassId: 1 },
+      {
+        bossId: 8001,
+        itemId: 6005,
+        position: 2,
+        chance: 0.5,
+        classId: 9,
+        subclassId: 2,
+        recipeId: 9005,
+        skill: 65,
+        line: 197,
+      },
     ]);
   });
 });

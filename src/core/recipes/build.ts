@@ -642,6 +642,15 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
     recipeItems,
   });
   for (const d of bossDrops) itemIds.add(d.itemId);
+  // A recipe drop's skill and profession, as the recipe drawer shows them: the item's RequiredSkillRank, else orange.
+  const recipeById = new Map(recipes.map((r) => [r.id, r]));
+  for (const d of bossDrops) {
+    const recipe = recipeById.get(d.recipeId ?? -1);
+    if (recipe === undefined) continue;
+    const skill = itemNeed(d.itemId) || recipe.orange;
+    if (skill > 0) d.skill = skill;
+    d.line = recipe.skillLineId;
+  }
 
   const items = buildItems(
     db2,

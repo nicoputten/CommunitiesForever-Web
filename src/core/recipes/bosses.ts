@@ -50,6 +50,10 @@ export interface BossDropRecord {
   questId?: number;
   /** The recipe (spell ID) a recipe item teaches. */
   recipeId?: number;
+  /** A recipe drop: the skill to learn it (the recipe item's RequiredSkillRank, else the recipe's orange; ./build.ts). */
+  skill?: number;
+  /** A recipe drop: the profession's skill line (185 Cooking, ...). */
+  line?: number;
 }
 
 type Rows = Record<string, string>[];
