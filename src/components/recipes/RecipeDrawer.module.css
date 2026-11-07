@@ -169,7 +169,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  top: var(--size-sheet-top);
+  top: var(--size-drawer-sheet-top);
   z-index: 61;
   display: flex;
   flex-direction: column;
