@@ -34,7 +34,7 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `self.battleTag`, `self.displayName` | the uploader (Nico) | person row |
 | `self.chars[guid]` | own characters (`Char`) | alts |
 | `people[battleTag]` | each friend: `displayName`, `chars[guid]`, `receivedAt`, `via` (relayed by), `removed[guid]` | alts, data age |
-| `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; `pvp = { hk, rank, rankName, weekKills, weekHonor, deaths, duelsWon, duelsLost }` (CF-52: lifetime honorable kills, PvP rank 0 to 14 and the game's name for it, this week's kills and honor, lifetime deaths and duels); `riding` (CF-53: 0, 75 or 150); later `recipes` (addon CF-38) | alts, professions, Doomsday feats (WEB-56) |
+| `Char` | `guid, name, classFile, raceID, level, faction, realm, ilvl, professions[skillLineID] = {name, rank, max}, talents, mainTree, role, quests, updatedAt, lastPlayed`; `pvp = { hk, rank, rankName, weekKills, weekHonor, deaths, duelsWon, duelsLost }` (CF-52: lifetime honorable kills, PvP rank 0 to 14 and the game's name for it, this week's kills and honor, lifetime deaths and duels); `riding` (CF-53: 0, 75 or 150). CF-38 (WEB-90): `recipes = { [recipeID] = itemID }` (every learned recipe of every profession, complete on each scan; `itemID` 0 when the recipe makes no item), `recipesAt` (server time of the scan), `recipeLines = { [recipeID] = skillLineID }` (own characters only, where `GetTradeSkillLineForRecipe` answers; the item database wins); per profession `link` (the bare `trade:...` payload without the `|H` wrapper, kept whole up to 4,096 characters, else dropped), `linkType` (`short` / `long`), `spec` (English specialisation name, Blacksmithing, Leatherworking or Engineering, rarely set), `scannedAt`. Friends' copies under `people[*].chars` carry `recipes` and `recipesAt` too once synced: merge takes the recipes from the copy with the newest `recipesAt` (the rest of the record still by `updatedAt`). `recipeOrder` and `recipesBase` (the addon's own bookkeeping) are not read. Older addons send none of it: read as nothing known, never as nothing learned | alts, professions, Doomsday feats (WEB-56), recipes (WEB-90) |
 | `locations[guid]` | `{ zone, seenAt }`: last zone seen in the community while Nico was online. Zone name text, can be a dungeon. | map |
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
 | `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`. Since CF-52: `kills[zone]`, `deaths = { { t, zone, cause } }` (cause `fall`, `fire`, `lava`, `drown`, `fatigue`, `player`, `creature` or `other`; anything else is read as `other`), `duels = { { t, won, vs } }` (`vs` the opponent's full name). CF-53: `loot = { rare, epic = { { id, name, slot, level } } }` (`slot` an `INVTYPE_*` token), `notable[itemID]`, `gold = { gained, spent }` (copper, never shown as an amount), `sessions = { { from, to } }`, `groups[guid] = true`. CF-55: `pvpKills = { { t, zone, name, lvl, myLvl, class, race, rank, solo, bg } }` (`lvl` -1 is a skull; each victim field only when readable). Capped as the addon caps them (50 deaths, duels, epics and sessions, 40 groups, 100 kills per day and character). `false` from addons that had "Share my activity" (gone, Nico 2026-10-28): read as nothing sent. The last 7 realm days only | weekly recap history (WEB-41), Doomsday (E8) |
@@ -69,3 +69,44 @@ their ids under `received` (WEB-44). Each item: `id` (unique per player: account
 | `ping` | `run`, `battleTag`, `guid`, `name` (who to ping) | a `ping` bot event |
 
 The run log (CF-23, in the feed: `feed[day][guid].runs`) decides "Ran it" (WEB-43, `src/core/runOutcome.ts`).
+
+## Item database (WEB-90)
+Not from uploads: the items and recipes the site shows come from the game client's own data and cmangos, imported by
+hand once per game patch (the owner's "Import item data" on the admin page, WEB-91, or `npm run import:items`; both use the newest builds wago.tools lists unless given others; built by `src/core/recipes/build.ts`,
+written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads stay in a cache folder outside the repo
+(default `DATA_DIR/import-cache`) and are never committed; the tests use invented fixtures (`tests/fixtures/items/`).
+
+Data used for the first import (2026-11-06):
+| Source | What | Version |
+|---|---|---|
+| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
+| The Classic Era client, same export | SkillLineAbility (recipes Forever has that Era lacks are Forever's own), SpellEffect with Effect 36 (what cmangos' trainer and recipe-item spells teach: Forever's client no longer has those spells) | `wow_classic_era` 1.15.9.70576 |
+| [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
+
+wago.tools cuts long CSV exports off after a few seconds; the script asks for rows in ID order (`sort[ID]=asc`) and
+continues after the last whole row (`filter[ID]=>last`) until a download ends cleanly.
+
+**Licence and attribution.** cmangos classic-db is © the CMaNGOS project, licensed GPL-3.0. The site imports facts from
+it (which NPC teaches or sells a recipe, which creature drops it, an item's armor and stats) into its own database at
+run time; no cmangos file or row is committed to this repo, and the downloaded dump stays in the import cache. The
+client data is Blizzard's, read through wago.tools.
+
+What the import makes (2026-11-06, build 70790): 2,483 recipes of the nine recipe skill lines (the crafting professions,
+Cooking, First Aid, Mining for Smelting), 926 of them Forever's own (not in Classic Era, spell IDs mostly from 1,229,432
+on); 2,693 items (what recipes make and use; 335 of Forever's items have no name in the client data yet); 1,286 sources.
+- **Recipes:** SkillLineAbility rows of those skill lines whose spell creates an item (SpellEffect 24) or enchants one
+  (53). Thresholds: orange = the lowest skill a source needs (the recipe item's `RequiredSkillRank`, else the trainer's
+  `reqskillvalue`, never above yellow; else `MinSkillLineRank`), yellow = `TrivialSkillLineRankLow`, grey =
+  `TrivialSkillLineRankHigh`, green = (yellow + grey) / 2 rounded down.
+- **Removed and unobtainable:** a Classic Era recipe that nothing teaches (no trainer, vendor, loot or quest in cmangos,
+  360 of them) is kept with `obtainable = false`, so a character who knows one still shows it, but it counts in no
+  total and never as "Nobody has". Forever's own recipes count as obtainable; where they are learned is not known yet.
+- **Sources:** trainer (also recipes learned with the profession, AcquireMethod 1); vendor, `vendor_limited` (limited
+  stock), rep (the recipe item needs a standing: faction and rank); drop (a creature's, chest's or container's loot,
+  through reference tables; the dungeon or raid when all its creatures are in one; the creatures when at most three,
+  else a world drop); quest (a reward, or a reward spell that teaches it). `is_rare` is true for drop and rep.
+- **Icons:** the client's icon file id (Item, else the item's default appearance) mapped to its file name with
+  ManifestInterfaceData (Blizzard's own list, so no community listfile is needed), served by the icon cache
+  (`/api/item-icons/<name>`, docs/ARCHITECTURE.md).
+- **Uploads fill the gaps** (amendment 2): a recipe or item the database doesn't have is stored from the uploaded
+  recipe -> item pair (origin `upload`, without a name), until an import has it.

@@ -3,10 +3,13 @@ import { timeAgo } from "@/core/views/age";
 import type { CharacterPage } from "@/core/views/character";
 import type { CharacterView, ProfessionView } from "@/core/views/characters";
 import { professionSlug, ROLE_NAMES } from "@/core/views/rosterQuery";
+import type { RecipeLine } from "@/core/views/recipes";
 import { capitalize } from "@/core/views/text";
 import { characterHref } from "@/components/roster/CharacterRow";
 import { SkillBar } from "@/components/professions/SkillBar";
 import { ClassDisc } from "@/components/ui/ClassDisc";
+import { InfoTip } from "@/components/ui/InfoTip";
+import { LocalTime } from "@/components/ui/LocalTime";
 import { classColours } from "./classStyle";
 import panel from "./Panel.module.css";
 import styles from "./CharacterPanels.module.css";
@@ -46,8 +49,17 @@ export function AtAGlance({ character: c }: { character: CharacterView }) {
   );
 }
 
-/** The professions panel (character board): skill bars on the 300 scale, secondary ones muted. */
-export function ProfessionList({ professions }: { professions: ProfessionView[] }) {
+/** The professions panel (character board): skill bars on the 300 scale, secondary ones muted. Under each crafting
+ * profession its recipe line (WEB-92, board recipes-character). */
+export function ProfessionList({
+  professions,
+  guid,
+  recipes = {},
+}: {
+  professions: ProfessionView[];
+  guid?: string;
+  recipes?: Record<string, RecipeLine>;
+}) {
   const top = professions[0];
   return (
     <section className={panel.box} aria-labelledby="character-professions">
@@ -66,6 +78,9 @@ export function ProfessionList({ professions }: { professions: ProfessionView[] 
                 </span>
                 <SkillBar rank={p.rank} max={p.max} best={p.kind !== "secondary"} />
                 <span className={panel.value}>{p.max === undefined ? p.rank : `${p.rank} / ${p.max}`}</span>
+                {recipes[p.skillLine] !== undefined && guid !== undefined && (
+                  <RecipeSubLine line={recipes[p.skillLine]!} guid={guid} />
+                )}
               </li>
             ))}
           </ul>
@@ -75,6 +90,35 @@ export function ProfessionList({ professions }: { professions: ProfessionView[] 
         </>
       )}
     </section>
+  );
+}
+
+/** "86 recipes ›" to the profession page filtered to this character; "as of 21 Oct" when its scan is older than 7
+ * days; "Recipes not scanned" with an ⓘ when it never was (board recipes-character). */
+function RecipeSubLine({ line, guid }: { line: RecipeLine; guid: string }) {
+  if (line.kind === "notScanned") {
+    return (
+      <span className={panel.recipes}>
+        Recipes not scanned
+        <InfoTip>{`Open ${line.name} in game once.`}</InfoTip>
+      </span>
+    );
+  }
+  return (
+    <span className={panel.recipes}>
+      <Link
+        className={panel.recipeLink}
+        href={`/professions/${encodeURIComponent(line.slug)}?char=${encodeURIComponent(guid)}`}
+      >
+        {line.count} {line.count === 1 ? "recipe" : "recipes"} ›
+      </Link>
+      {line.spec !== undefined && <span className={panel.spec}>{line.spec}</span>}
+      {line.staleAt !== undefined && (
+        <span>
+          as of <LocalTime at={line.staleAt} day="date" />
+        </span>
+      )}
+    </span>
   );
 }
 

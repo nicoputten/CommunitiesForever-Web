@@ -1,4 +1,4 @@
-import { blob, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { blob, index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
 import type { Often } from "@/core/doomsday/missionPool";
@@ -6,6 +6,7 @@ import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
+import type { ItemRecord, SourceKind } from "@/core/recipes/build";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
@@ -652,4 +653,157 @@ export const missionPlan = sqliteTable(
     at: integer("at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.period, t.n] })],
+);
+
+// --- WEB-90: the item and recipe database (src/core/recipes/build.ts, scripts/import-items.ts) -------------------
+// Imported by hand once per game patch (not derived from uploads, a rebuild never touches it), plus the recipes and
+// items of Forever's own that only uploads know (origin "upload": the addon's recipe -> item pairs), until an import
+// has them.
+
+/** An item a recipe makes or uses. `data` holds the tooltip fields (ItemRecord); the columns are copies for queries. */
+export const items = sqliteTable("items", {
+  id: integer("id").primaryKey(),
+  /** Null for an item of Forever's own the client data has no name for (show it without a name or tooltip). */
+  name: text("name"),
+  quality: integer("quality"),
+  iconName: text("icon_name"),
+  data: text("data", { mode: "json" }).$type<ItemRecord>().notNull(),
+  origin: text("origin").$type<"import" | "upload">().notNull(),
+});
+
+/** A recipe: its spell ID (what the addon uploads), profession, the item it makes and the four thresholds. */
+export const recipes = sqliteTable(
+  "recipes",
+  {
+    id: integer("id").primaryKey(),
+    name: text("name"),
+    /** Null for an upload-only recipe without the addon's `recipeLines`. */
+    skillLineId: integer("skill_line_id"),
+    createdItemId: integer("created_item_id"),
+    /** Orange, yellow, green, grey (src/core/recipes/skill.ts); null for upload-only recipes. */
+    orange: integer("orange"),
+    yellow: integer("yellow"),
+    green: integer("green"),
+    grey: integer("grey"),
+    /** For grouping: gear slot, enchant slot or item type ("Chest", "Bag", "Cloth"). */
+    category: text("category"),
+    /** False: a Classic Era recipe nothing teaches any more. Left out of totals and "Nobody has"; shown if known. */
+    obtainable: integer("obtainable", { mode: "boolean" }).notNull(),
+    /** A recipe of Forever's own: not in Classic Era, where it is learned is not known. */
+    foreverOnly: integer("forever_only", { mode: "boolean" }).notNull(),
+    origin: text("origin").$type<"import" | "upload">().notNull(),
+  },
+  (t) => [index("recipes_skill_line").on(t.skillLineId), index("recipes_created_item").on(t.createdItemId)],
+);
+
+export const recipeReagents = sqliteTable(
+  "recipe_reagents",
+  {
+    recipeId: integer("recipe_id").notNull(),
+    itemId: integer("item_id").notNull(),
+    count: integer("count").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.recipeId, t.itemId] })],
+);
+
+/** Where a recipe is learned; several per recipe. */
+export const recipeSources = sqliteTable(
+  "recipe_sources",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    recipeId: integer("recipe_id").notNull(),
+    kind: text("kind").$type<SourceKind>().notNull(),
+    /** The dungeon or raid of a drop. */
+    place: text("place"),
+    /** The creature, object or vendor, when only a few. */
+    npc: text("npc"),
+    quest: text("quest"),
+    faction: text("faction"),
+    /** The standing a rep recipe needs ("Honored"). */
+    rank: text("rank"),
+    /** Drop and rep (handoff "Rare find"). */
+    isRare: integer("is_rare", { mode: "boolean" }).notNull(),
+  },
+  (t) => [index("recipe_sources_recipe").on(t.recipeId)],
+);
+
+/** One row: which data the last import used and when (docs/SOURCE-DATA.md "Item database"). */
+export const itemImport = sqliteTable("item_import", {
+  id: integer("id").primaryKey(),
+  build: text("build").notNull(),
+  eraBuild: text("era_build").notNull(),
+  cmangos: text("cmangos").notNull(),
+  importedAt: integer("imported_at").notNull(),
+  items: integer("items").notNull(),
+  recipes: integer("recipes").notNull(),
+  /** SHA-256 of the imported data: the same data again changes nothing. */
+  hash: text("hash").notNull(),
+});
+
+// --- WEB-90: who knows what (derived from uploads, rebuilt with them; src/server/recipes.ts) ------------------------
+
+/** A character's profession as the newest record has it, with CF-38's link and scan time. */
+export const characterProfessions = sqliteTable(
+  "character_professions",
+  {
+    guid: text("guid").notNull(),
+    skillLineId: integer("skill_line_id").notNull(),
+    owner: text("owner"),
+    name: text("name"),
+    skill: integer("skill"),
+    max: integer("max"),
+    spec: text("spec"),
+    /** The bare `trade:...` payload (CF-38), no escape sequences. */
+    link: text("link"),
+    linkType: text("link_type").$type<"short" | "long">(),
+    /** When the addon last scanned this profession's window; null: never (C's "not scanned"). */
+    scannedAt: integer("scanned_at"),
+  },
+  (t) => [primaryKey({ columns: [t.guid, t.skillLineId] })],
+);
+
+/** A character's recipe scan (CF-38 `recipesAt`): its first one is the baseline. */
+export const characterRecipeScans = sqliteTable("character_recipe_scans", {
+  guid: text("guid").primaryKey(),
+  owner: text("owner"),
+  recipesAt: integer("recipes_at"),
+  /** The upload whose scan was the character's first (baseline) and the newest one. */
+  firstUploadId: integer("first_upload_id").notNull(),
+  uploadId: integer("upload_id").notNull(),
+});
+
+/** A recipe a character knows. */
+export const characterRecipes = sqliteTable(
+  "character_recipes",
+  {
+    guid: text("guid").notNull(),
+    recipeId: integer("recipe_id").notNull(),
+    /** The item the addon says it makes (null: none). */
+    itemId: integer("item_id"),
+    /** The scan time it first showed up in (`recipesAt`), else the upload's time. */
+    firstSeenAt: integer("first_seen_at").notNull(),
+    /** True when it came with the first scan of the character or its profession (never "newly learned"). */
+    baseline: integer("baseline", { mode: "boolean" }).notNull(),
+    uploadId: integer("upload_id").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.guid, t.recipeId] }), index("character_recipes_recipe").on(t.recipeId)],
+);
+
+/**
+ * New rare finds (a newly learned recipe whose every source is a drop or rep) per character per upload, for the
+ * Discord bot's feed (Part D). Written by accepted uploads only, never by a rebuild, so nothing is posted twice; not
+ * derived. `postedAt` stays null until Part D posts it.
+ */
+export const recipeFinds = sqliteTable(
+  "recipe_finds",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    uploadId: integer("upload_id").notNull(),
+    guid: text("guid").notNull(),
+    owner: text("owner"),
+    recipeId: integer("recipe_id").notNull(),
+    at: integer("at").notNull(),
+    postedAt: integer("posted_at"),
+  },
+  (t) => [uniqueIndex("recipe_finds_upload_guid_recipe").on(t.uploadId, t.guid, t.recipeId)],
 );

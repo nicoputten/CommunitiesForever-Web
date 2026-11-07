@@ -121,6 +121,16 @@ test("Switch community asks first, and says nothing is hidden", async ({ page, c
   await expect(dialog).toBeHidden();
 });
 
+// WEB-91: the owner's Item data box. Pressing the button would reach wago.tools from the test, so this stops before
+// it; the import run is tested in tests/server/itemImport.test.ts. The seed wrote the sample item database (WEB-92).
+test("the owner sees the Item data box, with Import item data", async ({ page, context, baseURL }) => {
+  await signInAs(context, baseURL!, E2E.admin);
+  await page.goto("/admin");
+  const box = panel(page, "Item data");
+  await expect(box.getByTestId("item-import-line")).toHaveText(/^Build sample · 23 recipes · 27 items · imported /);
+  await expect(box.getByRole("button", { name: "Import item data" })).toBeEnabled();
+});
+
 // WEB-64: the owner makes a friend an admin and removes them again; the admin sees the page without the owner's
 // boxes. Each project uses its own friend, and leaves them a member.
 const HELPER: Record<string, { tag: string; name: string }> = {
@@ -159,6 +169,8 @@ test("the owner makes a friend an admin, who helps without the owner's controls,
   await expect(theirs.getByRole("region", { name: "Uploader devices" })).toHaveCount(0);
   // WEB-83: switching the community is the owner's.
   await expect(theirs.getByRole("region", { name: "Community", exact: true })).toHaveCount(0);
+  // WEB-91: importing item data is the owner's.
+  await expect(theirs.getByRole("region", { name: "Item data", exact: true })).toHaveCount(0);
   // WEB-79: the Mission pool is the owner's: no box, and an old link says so.
   await expect(theirs.getByRole("region", { name: "Doomsday missions" })).toHaveCount(0);
   await theirs.goto("/admin/missions");

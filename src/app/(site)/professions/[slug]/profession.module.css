@@ -1,0 +1,61 @@
+/* The profession page (WEB-92, board recipes-page): "← Professions", the name with its card badge, "112 of 185 recipes
+   known" and the card's crafter bars. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3-5);
+}
+
+.back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  margin: calc(var(--s-3) * -1) 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--gold-bright);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-display);
+  line-height: var(--lh-name);
+  color: var(--gold-bright);
+}
+
+.count {
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+}
+
+.crafters {
+  max-width: var(--size-crafters);
+}
+
+.skeletonRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.crafters:has(> span) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+}
+
+.skeletonRow {
+  display: grid;
+  grid-template-columns: var(--size-item-icon) minmax(0, 1fr);
+  gap: var(--s-5);
+  align-items: center;
+  min-height: var(--size-touch);
+}

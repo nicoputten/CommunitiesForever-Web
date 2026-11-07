@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { encode } from "next-auth/jwt";
@@ -122,6 +122,28 @@ describe("proxy", () => {
   it("answers API routes without a session with 401", async () => {
     expect((await proxy(await request("/api/uploads", undefined, { method: "POST" }))).status).toBe(401);
     expect((await proxy(await request("/api/anything"))).status).toBe(401);
+  });
+
+  // WEB-91: the one open route added for the item icons; every other API route of the app still needs a session.
+  it("keeps every API route but the open ones behind a session", async () => {
+    const OPEN = ["/api/auth/", "/api/health", "/api/item-icons/", "/api/uploader/v1/", "/api/bot/v1/"];
+    const root = path.join(__dirname, "../../src/app/api");
+    const routes = readdirSync(root, { recursive: true, encoding: "utf8" })
+      .filter((f) => /(^|[\\/])route\.ts$/.test(f))
+      .map((f) => `/api/${path.dirname(f).split(path.sep).join("/")}`.replace(/\[\.{0,3}(\w+)\]/g, "x"));
+    expect(routes.length).toBeGreaterThan(20);
+    const closed = routes.filter((r) => !OPEN.some((o) => r === o || r.startsWith(o)));
+    expect(closed).toContain("/api/uploads");
+    for (const route of closed) {
+      expect(isPublic(route), route).toBe(false);
+      expect((await proxy(await request(route))).status, route).toBe(401);
+    }
+    expect(isPublic("/api/item-icons/inv_misc_questionmark")).toBe(true);
+    expect(isPublic("/api/item-icons")).toBe(false);
+    expect(isPublic("/api/item-iconsx/a")).toBe(false);
+    expect((await proxy(await request("/api/item-icons/inv_misc_questionmark"))).headers.get("x-middleware-next")).toBe(
+      "1",
+    );
   });
 
   it("sends someone not on the list to the not-on-the-list page, or 403 for the API", async () => {

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recipes · tooltip & drawer</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+.strings{font:12.5px/1.5 Inter,sans-serif;color:#C9CFD9;padding:16px 18px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);align-self:start}
+.strings h3{margin:0 0 8px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+.strings ol{margin:0;padding-left:22px;columns:2;column-gap:26px}
+.strings li{padding:1px 0}
+.strings .tl{margin-top:10px;color:#D4AF6A;font-size:11px;letter-spacing:.1em;text-transform:uppercase}.ttp{position:absolute;z-index:5;background:rgba(6,10,18,.97);border:1px solid #5C6A85;padding:8px 10px;font:12.5px/1.45 Inter,sans-serif;color:#C9CFD9;box-shadow:0 6px 18px rgba(0,0,0,.6);white-space:nowrap}
+.ttp b{display:block;font-size:13.5px;color:#FFFFFF;font-weight:600}
+.ver{scroll-margin-top:90px;padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:10px}
+.ver.hit{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.16),rgba(12,18,30,.85) 55%);box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.vh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.vh h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.vh span{font-size:13px;color:#8E98A8}
+.vh a{margin-left:auto;font-size:12px;color:#6E7888;text-decoration:none}
+.ver ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55;color:#C9CFD9}
+.vh .ltag{font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;background:#D4AF6A;color:#0B0F14;text-transform:uppercase;letter-spacing:.05em}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid rgba(212,175,106,.18)}
+.tabs2 a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;color:#AEB6C3;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 a.act{color:#F3EBDA;border-bottom-color:#D4AF6A;font-weight:600}
+.qr{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.qr:last-child{border-bottom:0}
+.qt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.qt b{font:500 15px Inter,sans-serif;color:#F3EBDA}
+.qt span{font-size:12px;color:#7E8898}
+.who{display:flex;flex-wrap:wrap;gap:6px 14px}
+.ch{display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;min-height:28px}
+.more{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:28px;padding:0 8px;border-radius:999px;border:1px solid rgba(174,182,195,.3);font:600 12px Inter,sans-serif;color:#C9CFD9;background:#0E1626}
+.phone{width:375px;border-radius:28px;overflow:hidden;border:1px solid rgba(212,175,106,.3);box-shadow:0 30px 80px rgba(0,0,0,.5);background:#070C15}
+.cap2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#D4AF6A;margin-bottom:8px}
+.H1b{margin:0;font:38px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3DFAE}
+.subb{margin:6px 0 0;font-size:15px;color:#8E98A8;line-height:1.5;max-width:1200px}
+.reuse{padding:14px 16px;border-radius:12px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);font-size:13px;line-height:1.55;color:#C9CFD9}
+.reuse b{color:#F3EBDA}
+.reuse h3{margin:0 0 6px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+
+.oldp .card{padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.78);border:1px solid rgba(212,175,106,.18);display:flex;flex-direction:column;gap:10px}
+.oldp .card.gap{border-color:rgba(224,138,74,.45);background:linear-gradient(180deg,rgba(224,138,74,.07),rgba(12,18,30,.78) 60%)}
+.oldp .ch{display:flex;align-items:center;gap:8px}
+.oldp .pn{font:17px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3EBDA;flex:1}
+.oldp .st{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px}
+.oldp .cov{background:rgba(127,217,154,.14);color:#9BE3B0}
+.oldp .thin{background:rgba(212,175,106,.16);color:#F0D08E}
+.oldp .gp{background:rgba(224,138,74,.18);color:#F0A774}
+.oldp .r{display:grid;grid-template-columns:96px minmax(0,1fr) 62px;gap:8px;align-items:center;font-size:12px}
+.oldp .r .v{text-align:right;color:#AEB6C3;font-variant-numeric:tabular-nums}
+.oldp .trk{position:relative;height:7px;border-radius:4px;background:#161E2B;overflow:hidden}
+.oldp .cap{position:absolute;left:0;top:0;bottom:0;background:rgba(212,175,106,.16)}
+.oldp .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.oldp .tk{position:absolute;top:0;bottom:0;width:1px;background:rgba(7,12,21,.9)}
+.oldp .best{color:#F0D08E;margin-left:3px}
+.oldp table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+.oldp th{font-weight:500;color:#7E8898;font-size:11px;padding:8px 6px;text-align:center;border-bottom:1px solid rgba(212,175,106,.25);white-space:nowrap}
+.oldp th:first-child,.oldp td:first-child{text-align:left;padding-left:12px}
+.oldp td{padding:6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);color:#C9CFD9}
+.oldp .c{display:inline-block;min-width:34px;padding:3px 0;border-radius:5px}
+.oldp .rl{display:inline-flex;align-items:center;min-height:28px;font-size:12px;color:#D4AF6A;text-decoration:none}
+.oldp .rl b{font-weight:600;color:#F0D08E}
+.ic{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid;border-radius:4px;overflow:hidden;background:linear-gradient(145deg,#3A3226,#121212)}
+.ic .n{position:absolute;right:2px;bottom:0;font:700 11px Inter,sans-serif;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.wtt{width:300px;box-sizing:border-box;padding:9px 11px 10px;border-radius:5px;border:1px solid #5E6A80;background:linear-gradient(180deg,rgba(9,13,26,.98),rgba(4,7,16,.98));box-shadow:0 10px 26px rgba(0,0,0,.6);font:13px/1.42 Inter,sans-serif;color:#FFFFFF}
+.wtt .t{font-size:15px;font-weight:600}
+.wtt .r{display:flex;justify-content:space-between;gap:10px}
+.wtt .gr{color:#1EFF00}.wtt .mu{color:#B8B8B8}.wtt .yl{color:#FFD100}
+.srch{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(212,175,106,.45);background:#0B111C;font-size:15px;color:#F3EBDA}
+.srch .ph{color:#6E7888}
+.dd{border-radius:12px;border:1px solid rgba(212,175,106,.35);background:#0B111C;box-shadow:0 20px 50px rgba(0,0,0,.55);padding:6px}
+.dd .gh{padding:8px 10px 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.res{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:52px;padding:4px 10px;border-radius:8px}
+.res.on{background:rgba(212,175,106,.12)}
+.res .nm{font-size:15px;font-weight:500}
+.res .sub{font-size:12px;color:#8E98A8}
+.whos{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;vertical-align:1px;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.flt{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0E1626;font-size:13px;color:#C9CFD9;white-space:nowrap}
+.flt.on{border-color:#D4AF6A;background:rgba(212,175,106,.14);color:#F3EBDA}
+.seg2{display:inline-flex;border:1px solid rgba(174,182,195,.25);border-radius:10px;overflow:hidden}
+.seg2 span{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;font-size:13px;color:#AEB6C3}
+.seg2 span.on{background:rgba(212,175,106,.18);color:#F3EBDA;font-weight:600}
+.seg2 b{font-weight:500;color:#7E8898}
+.rt{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px;color:#C9CFD9}
+.rt th{text-align:left;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7E8898;padding:8px 10px;border-bottom:1px solid rgba(212,175,106,.3);white-space:nowrap}
+.rt td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.rt tr.rsel td{background:rgba(212,175,106,.10)}
+.rt tr.miss td{color:#8E98A8}
+.rt tr.cat td{padding:14px 10px 6px;font:15px 'Marcellus SC',serif;color:#F0D08E;border-bottom:1px solid rgba(212,175,106,.2)}
+.skl{display:inline-flex;gap:2px;align-items:center;font:600 12px Inter,sans-serif;font-variant-numeric:tabular-nums}
+.src{font-size:13px;color:#C9CFD9}.src em{font-style:normal;color:#7E8898}
+.drw{width:440px;box-sizing:border-box;border-left:1px solid rgba(212,175,106,.3);background:#0A101B;display:flex;flex-direction:column;gap:16px;padding:20px 20px 24px}
+.lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.rg{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:40px}
+.chipq{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;border:1px solid rgba(174,182,195,.25);color:#C9CFD9;white-space:nowrap}
+.stale{font-size:12px;color:#8E98A8}
+.pbar{position:relative;height:6px;border-radius:3px;background:#1B2232;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;background:#D4AF6A;border-radius:3px}
+.prow{display:grid;grid-template-columns:120px minmax(0,1fr) 44px;gap:12px;align-items:center;min-height:30px;font-size:14px;color:#E6E1D6}
+.prow .n{text-align:right;font-variant-numeric:tabular-nums}
+.psub{grid-column:2 / -1;display:flex;gap:10px;align-items:center;margin-top:-6px;font-size:12px;color:#8E98A8}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:18px 18px 0 0;border-top:1px solid rgba(212,175,106,.35);background:#0A101B;box-shadow:0 -20px 50px rgba(0,0,0,.6)}
+
+</style>
+</helmet>
+<div style="width: 2040px; box-sizing: border-box; padding: 48px 56px 64px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px">
+  <div><h1 class="H1b">Recipes · item tooltip &amp; recipe drawer</h1><p class="subb">Real size. The tooltip is our own, built from the item database; the drawer is what a row opens.</p></div><div style="display: grid; grid-template-columns: 1000px 440px 460px; gap: 32px; align-items: start"><div style="display: flex; flex-direction: column; gap: 28px"><div style="display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap">
+      <div><div class="cap2">Crafted item</div><div class="wtt" style="width: 300px; "><div class="t" style="color: #C26BFF">Robe of the Archmage</div>
+          <div>Binds when equipped</div><div class="r"><span>Chest</span><span>Cloth</span></div><div>79 Armor</div>
+          <div>+12 Intellect</div><div>+12 Spirit</div><div>Durability 100 / 100</div><div>Requires Level 57</div>
+          <div class="gr">Equip: Increases damage and healing done by magical spells and effects by up to 40.</div>
+          <div class="gr">Use: Restores 375 to 625 mana. (5 Min Cooldown)</div></div></div><div><div class="cap2">Reagent</div><div class="wtt" style="width: 240px; "><div class="t">Bolt of Runecloth</div><div class="mu">Crafting Reagent</div><div>Max Stack: 20</div></div></div><div><div class="cap2">Recipe item (drops)</div><div class="wtt" style="width: 300px; "><div class="t" style="color: #C26BFF">Pattern: Robe of the Archmage</div><div>Binds when picked up</div>
+          <div>Requires Tailoring (300)</div><div class="gr">Use: Teaches you how to sew a Robe of the Archmage.</div></div></div></div><div class="reuse"><h3>Tooltip rules</h3>
+      <b>Built from our own item data</b> (wago.tools Classic tables, by item id): name in quality colour, bind, slot and type on one line, armor, stats, durability, required level, green Equip/Use lines. <b>No sell price</b> (gold is never shown).<br>
+      <b>Looks like the game:</b> dark blue-black, 1 px grey-blue border, 13 px text, 300 px wide (reagents 240). It’s the one place the site copies the game look on purpose.<br>
+      <b>Icons</b> come from the icon cache on the server (fetched once per icon, served by us). Border colour = quality.<br>
+      <b>Phone:</b> no hover; tap the icon to open the tooltip in a sheet (board RC05).</div></div><div><div class="cap2">Drawer · 440 px</div><aside class="drw" style="">
+      <div style="display: flex; gap: 12px; align-items: flex-start"><span class="ic" style="width: 48px; height: 48px; border-color: #A335EE"><svg width="44" height="44" viewBox="0 0 32 32"><path d="M11 5h10l3 6-3 2 2 14H9l2-14-3-2z" fill="#B66BE8" stroke="#3A1652" stroke-width="1"></path><path d="M16 6v20" stroke="#E5C5FF" stroke-width="1.2"></path></svg></span><div style="min-width: 0; flex: 1"><div style="font: 20px Marcellus, serif; color: #C26BFF; line-height: 1.25">Robe of the Archmage</div><div style="font-size: 13px; color: #8E98A8; margin-top: 2px">Tailoring · Chest</div></div><span style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(174,182,195,.25); color: #C9CFD9">✕</span></div>
+      <div class="wtt" style="width: 400px; width: 100%; box-sizing: border-box"><div class="t" style="color: #C26BFF">Robe of the Archmage</div>
+          <div>Binds when equipped</div><div class="r"><span>Chest</span><span>Cloth</span></div><div>79 Armor</div>
+          <div>+12 Intellect</div><div>+12 Spirit</div><div>Durability 100 / 100</div><div>Requires Level 57</div>
+          <div class="gr">Equip: Increases damage and healing done by magical spells and effects by up to 40.</div>
+          <div class="gr">Use: Restores 375 to 625 mana. (5 Min Cooldown)</div></div>
+      <div><div class="lbl">Skill</div><div style="margin-top: 4px"><span class="skl"><span style="color: #FF8040">300</span><span style="color: #4A5468">·</span><span style="color: #FFFF00">315</span><span style="color: #4A5468">·</span><span style="color: #40BF40">322</span><span style="color: #4A5468">·</span><span style="color: #808080">330</span></span></div></div>
+      <div><div class="lbl">Reagents</div><div class="rg"><span class="ic" style="width: 34px; height: 34px; border-color: #FFFFFF"><svg width="30" height="30" viewBox="0 0 32 32"><rect x="5" y="9" width="22" height="14" rx="3" fill="#C9B8E8"></rect><path d="M9 9v14M14 9v14M19 9v14" stroke="#7C68A8" stroke-width="1.4"></path></svg></span><span style="font-size: 14px; color: #FFFFFF">Bolt of Runecloth</span><span style="font: 600 14px Inter, sans-serif; color: #F3EBDA">×12</span></div><div class="rg"><span class="ic" style="width: 34px; height: 34px; border-color: #FFFFFF"><svg width="30" height="30" viewBox="0 0 32 32"><path d="M6 10l10-4 10 4-10 4z" fill="#E6E1D6"></path><path d="M6 10v10l10 4V14z" fill="#B8B2A4"></path><path d="M26 10v10l-10 4V14z" fill="#8C8678"></path></svg></span><span style="font-size: 14px; color: #FFFFFF">Mooncloth</span><span style="font: 600 14px Inter, sans-serif; color: #F3EBDA">×4</span></div><div class="rg"><span class="ic" style="width: 34px; height: 34px; border-color: #0070DD"><svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="9" fill="#C8A8F0"></circle><circle cx="13" cy="13" r="3" fill="#F4ECFF"></circle></svg></span><span style="font-size: 14px; color: #4DA3FF">Essence of Water</span><span style="font: 600 14px Inter, sans-serif; color: #F3EBDA">×2</span></div><div class="rg"><span class="ic" style="width: 34px; height: 34px; border-color: #FFFFFF"><svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="#D8D2C2"></circle><path d="M8 14h16M8 18h16" stroke="#8C8470"></path></svg></span><span style="font-size: 14px; color: #FFFFFF">Rune Thread</span><span style="font: 600 14px Inter, sans-serif; color: #F3EBDA">×1</span></div></div>
+      <div><div class="lbl">Can make it</div><div style="display: flex; align-items: center; justify-content: space-between; min-height: 36px; font-size: 14px"><span style="color: #3FC7EB; white-space: nowrap; ">Mira<span class="dot" style="background: #FF8040" aria-label="orange"></span></span><span style="font-size: 12px; color: #8E98A8">Tailoring 300 · online</span></div></div>
+      <div><div class="lbl">Learn from</div><div style="display: flex; gap: 10px; align-items: center; min-height: 40px"><span class="ic" style="width: 30px; height: 30px; border-color: #A335EE"><svg width="26" height="26" viewBox="0 0 32 32"><path d="M11 5h10l3 6-3 2 2 14H9l2-14-3-2z" fill="#B66BE8" stroke="#3A1652" stroke-width="1"></path><path d="M16 6v20" stroke="#E5C5FF" stroke-width="1.2"></path></svg></span><span style="font-size: 14px"><span class="src">Drop <em>· Blackrock Spire</em></span></span></div></div>
+      <div style="display: flex; gap: 8px"><a href="#" class="btn sec">Copy link</a></div></aside></div><div class="strings"><h3>Visible strings · 39</h3><ol><li>Robe of the Archmage</li><li>Binds when equipped</li><li>Chest</li><li>Cloth</li><li>79 Armor</li><li>+12 Intellect</li><li>+12 Spirit</li><li>Durability 100 / 100</li><li>Requires Level 57</li><li>Equip: Increases damage and healing done by magical spells and effects by up to 40.</li><li>Use: Restores 375 to 625 mana. (5 Min Cooldown)</li><li>Bolt of Runecloth</li><li>Crafting Reagent</li><li>Max Stack: 20</li><li>Pattern: Robe of the Archmage</li><li>Binds when picked up</li><li>Requires Tailoring (300)</li><li>Use: Teaches you how to sew a Robe of the Archmage.</li><li>Tailoring · Chest</li><li>Skill</li><li>300</li><li>315</li><li>322</li><li>330</li><li>Reagents</li><li>×12</li><li>Mooncloth</li><li>×4</li><li>Essence of Water</li><li>×2</li><li>Rune Thread</li><li>×1</li><li>Can make it</li><li>Mira</li><li>Tailoring 300 · online</li><li>Learn from</li><li>Drop</li><li>· Blackrock Spire</li><li>Copy link</li></ol><div class="tl">Tooltips &amp; menus</div><ol><li>Copy link: Link copied</li></ol><div style="margin-top: 10px; font-size: 11px; color: #6E7888">Window chrome (title, tabs) not listed.</div></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2040,"height":989}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

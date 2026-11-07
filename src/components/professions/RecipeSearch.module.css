@@ -1,26 +1,25 @@
-.frame {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-3-5) var(--s-4);
-  border-radius: var(--r-card);
-  background: var(--surface);
-  border: var(--border) dashed var(--line-recipe);
+/* "Who can craft…?" (WEB-92, board recipes-search): the live search in the place of WEB-24's dashed placeholder. */
+
+.root {
+  position: relative;
 }
 
 .field {
-  flex: 1;
-  min-width: var(--size-recipe-min);
   display: flex;
   align-items: center;
   gap: var(--s-2-5);
-  height: var(--size-recipe);
+  box-sizing: border-box;
+  min-height: var(--size-search-lg);
   padding: 0 var(--s-3-5);
-  border-radius: var(--r-btn);
-  background: var(--input-bg);
-  border: var(--border) solid var(--line-input);
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line-search);
+  background: var(--surface-search);
   color: var(--text-faint);
+}
+
+.field:focus-within,
+.field[data-open] {
+  border-color: var(--gold);
 }
 
 .icon {
@@ -32,29 +31,112 @@
 .field input {
   flex: 1;
   min-width: 0;
+  min-height: var(--size-touch);
   border: 0;
   background: transparent;
   font-family: var(--font-ui);
-  font-size: var(--fs-body);
-  color: var(--text);
+  font-size: var(--fs-cta);
+  color: var(--text-strong);
   outline: none;
 }
 
-/* The board's #6E7888 fails contrast; --text-faint passes (DESIGN.md §11). */
+/* The board's #6E7888 fails contrast; --text-faint passes (DESIGN.md §11, WEB-24). */
 .field input::placeholder {
   color: var(--text-faint);
   opacity: 1;
 }
 
-.note {
-  font-size: var(--fs-meta);
-  color: var(--text-muted);
+.field input::-webkit-search-cancel-button {
+  display: none;
 }
 
-/* Phone (no board, DESIGN.md §11): the field over the note. */
+.esc {
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.popup {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--size-results-top);
+  z-index: 20;
+  padding: var(--s-1-5);
+  border-radius: var(--r-card);
+  border: var(--border) solid var(--line-strong);
+  background: var(--surface-search);
+  box-shadow: var(--shadow-results);
+}
+
+.popup[hidden] {
+  display: none;
+}
+
+.groupHead {
+  padding: var(--s-2) var(--s-2-5) var(--s-1);
+  font-size: var(--fs-overline);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.result {
+  display: grid;
+  grid-template-columns: var(--size-item-icon-result) minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  align-items: center;
+  min-height: var(--size-result);
+  padding: var(--s-1) var(--s-2-5);
+  border-radius: var(--r-nav);
+  cursor: pointer;
+}
+
+.result[data-active] {
+  background: var(--tint-result);
+}
+
+.resultText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-0-5);
+  min-width: 0;
+}
+
+.resultName {
+  font-size: var(--fs-cta);
+}
+
+.resultMeta {
+  display: flex;
+}
+
+.resultSub {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.all {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  padding: 0 var(--s-2-5);
+  font-size: var(--fs-body-sm);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.all:hover {
+  color: var(--gold-bright);
+}
+
+/* Phone (board recipes-search, 375 px): no profession column. */
 @media (max-width: 639px) {
-  .field {
-    min-width: 0;
-    flex-basis: 100%;
+  .result {
+    grid-template-columns: var(--size-item-icon-result) minmax(0, 1fr);
+  }
+
+  .resultSub {
+    display: none;
   }
 }

@@ -19,6 +19,7 @@ import { auth } from "@/server/auth";
 import { CUTOFF_CONFIRM } from "@/core/cutoff";
 import { clearCutoff, storeCutoff } from "@/server/cutoff";
 import { getDb, type Db } from "@/server/db";
+import { startItemImport } from "@/server/itemImportRun";
 import { rebuild, switchCommunity, undoSwitchCommunity } from "@/server/uploads";
 
 // The admin page's actions (WEB-18; owner and admins since WEB-64). Each checks again who the caller is (CLAUDE.md
@@ -182,4 +183,14 @@ export async function switchCommunityAction(): Promise<void> {
 export async function undoSwitchCommunityAction(): Promise<void> {
   await asAdmin((db, by) => undoSwitchCommunity(db, by, nowSeconds()), true);
   revalidatePath("/", "layout");
+}
+
+// --- item data (WEB-91; the owner only) -------------------------------------------------------------------------------
+
+/**
+ * "Import item data": the item and recipe import of `npm run import:items`, run by the server in the background (one
+ * at a time; a second press while one runs changes nothing). The page shows its progress and result.
+ */
+export async function importItemDataAction(): Promise<void> {
+  await asAdmin((db, by) => startItemImport(db, by, nowSeconds()), true);
 }

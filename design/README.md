@@ -89,3 +89,9 @@ The co-admin boards (2026-10-29, from `docs/DESIGN-PROMPT-ADMINS.md`) are new bo
 The live-test boards (2026-10-29, canvas "Doombringers v2", section "Live test · 29 Oct") come with Nico's brief `docs/DESIGN-BRIEF-LIVE-TEST.md`, which says what to change. One real account name on `live-test-findings` was replaced by a made-up one before committing.
 
 The Mission pool boards (2026-11-03) show example missions; the page lists the real pool (`docs/STORIES.md` E10). All names on them are made up.
+| `recipes-character` | `RC01Character.dc.html` | Recipes: the character page's Professions box with a recipe line per crafting profession, "as of", "Recipes not scanned" (WEB-92) |
+| `recipes-search` | `RC02Search.dc.html` | Recipes: the existing Professions page with the live search ("Who can craft…?") and a recipe line per crafting card, desktop and 375 px (WEB-92) |
+| `recipes-page` | `RC03Page.dc.html` | Recipes: the profession page `/professions/<slug>` with tabs, filters, the grouped table and the drawer (WEB-92) |
+| `recipes-drawer` | `RC04Drawer.dc.html` | Recipes: the item tooltip and the recipe drawer at real size (WEB-92) |
+| `recipes-phone` | `RC05Phone.dc.html` | Recipes: the profession page on a 375 px phone, the drawer and the tooltip as sheets (WEB-92) |
+| `recipes-states` | `RC06States.dc.html` | Recipes: Nobody has, one character, no results, not scanned, loading (WEB-92) |

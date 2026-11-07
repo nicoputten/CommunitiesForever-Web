@@ -25,8 +25,8 @@ const desktop = { ...devices["Desktop Chrome"] };
 // A touch phone at the narrowest width of the design (DESIGN.md §3: phone 375–390).
 const phone = { ...devices["Pixel 7"], viewport: { width: 375, height: 812 } };
 
-/** Run by their own projects, in order: empty, seed, then roster, professions, character and Doomsday (WEB-63). */
-const OTHERS = /(\.empty|\.setup|(roster(-table)?|professions|character|doomsday)\.spec)\.ts$/;
+/** Run by their own projects, in order: empty, seed, then roster, professions, recipes, character and Doomsday (WEB-63, WEB-92). */
+const OTHERS = /(\.empty|\.setup|(roster(-table)?|professions|recipes|character|doomsday)\.spec)\.ts$/;
 
 // Runs against the production build: `npm run build` first (CI does).
 export default defineConfig({
@@ -44,14 +44,14 @@ export default defineConfig({
     // add members and characters.
     {
       name: "roster-desktop",
-      testMatch: /(roster(-table)?|professions|character|doomsday)\.spec\.ts$/,
+      testMatch: /(roster(-table)?|professions|recipes|character|doomsday)\.spec\.ts$/,
       testIgnore: [],
       dependencies: ["seed"],
       use: desktop,
     },
     {
       name: "roster-phone",
-      testMatch: /(roster(-table)?|professions|character|doomsday)\.spec\.ts$/,
+      testMatch: /(roster(-table)?|professions|recipes|character|doomsday)\.spec\.ts$/,
       testIgnore: [],
       dependencies: ["seed"],
       use: phone,
@@ -65,6 +65,8 @@ export default defineConfig({
       PORT: String(port),
       HOSTNAME: "localhost",
       DATA_DIR: process.env.E2E_DATA_DIR,
+      // Item icons (WEB-92): the seed draws the sample's; nothing is ever fetched from a CDN.
+      ICON_CDN_URL: "http://127.0.0.1:9/{icon}.jpg",
       AUTH_SECRET: E2E.secret,
       AUTH_URL: `http://localhost:${port}`,
       ADMIN_BATTLETAG: E2E.admin,

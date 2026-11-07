@@ -17,13 +17,22 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
+    "import:items": "node --import ./scripts/ts-hooks.mjs scripts/import-items.ts",
     "test:design": "vitest run tests/design && playwright test -c playwright.design.config.ts"
   },
   "dependencies": {
+    "@floating-ui/react": "0.27.20",
+    "@radix-ui/react-dialog": "1.3.1",
+    "@radix-ui/react-hover-card": "1.2.1",
+    "@radix-ui/react-tabs": "1.2.1",
+    "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.14.22",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.4",
+    "minisearch": "7.2.0",
     "next": "^16.4.3",
     "next-auth": "5.0.0-beta.32",
+    "nuqs": "2.10.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-zoom-pan-pinch": "4.2.0"

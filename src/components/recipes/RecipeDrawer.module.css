@@ -1,0 +1,229 @@
+/* The recipe drawer (WEB-92, board recipes-drawer "Drawer · 440 px"; the phone sheet: recipes-phone). */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-name);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-state);
+  color: var(--quality-text, var(--text-strong));
+  overflow-wrap: anywhere;
+}
+
+.sub {
+  margin-top: var(--s-0-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-drawer-close);
+  height: var(--size-drawer-close);
+  padding: 0;
+  border-radius: var(--r-nav);
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  color: var(--text-chip);
+  cursor: pointer;
+}
+
+.close:hover {
+  border-color: var(--line-hover);
+  color: var(--text-strong);
+}
+
+.close svg {
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.label {
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reagent {
+  display: grid;
+  grid-template-columns: var(--size-item-icon-reagent) minmax(0, 1fr) auto;
+  gap: var(--s-2-5);
+  align-items: center;
+  min-height: var(--size-drawer-row);
+}
+
+.reagentIcon {
+  display: inline-flex;
+}
+
+.reagentName {
+  font-size: var(--fs-body);
+  color: var(--quality-text, var(--text));
+}
+
+.count {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-strong);
+}
+
+.maker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: var(--size-drawer-close);
+  font-size: var(--fs-body);
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.nobody {
+  font-size: var(--fs-body-sm);
+  color: var(--text-faint);
+}
+
+.learn {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-drawer-row);
+  font-size: var(--fs-body);
+}
+
+.copy {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.copied {
+  font-size: var(--fs-meta);
+  color: var(--fresh-text);
+}
+
+/* The frames: a non-modal panel right of the table on desktop, a sheet on a phone. */
+.panel {
+  position: sticky;
+  top: calc(var(--size-bar) + var(--s-4));
+  box-sizing: border-box;
+  width: var(--size-drawer);
+  max-height: calc(100vh - var(--size-bar) - var(--s-8));
+  overflow-y: auto;
+  padding: var(--s-5) var(--s-5) var(--s-6);
+  border-left: var(--border) solid var(--line-drawer);
+  background: var(--surface-drawer);
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: var(--size-drawer-sheet-top);
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  border-top: var(--border) solid var(--line-strong);
+  background: var(--surface-drawer);
+  box-shadow: var(--shadow-sheet-lg);
+  transition: transform var(--dur-sheet) var(--ease-out);
+}
+
+.sheet[data-dragging] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    transition: none;
+  }
+}
+
+:global(html[data-motion="off"]) .sheet {
+  transition: none;
+}
+
+.sheetGrab {
+  display: flex;
+  justify-content: center;
+  padding: var(--s-2);
+  touch-action: none;
+}
+
+.sheetGrab span {
+  width: var(--size-grab);
+  height: var(--size-grab-h);
+  border-radius: var(--r-badge);
+  background: var(--grab);
+}
+
+.sheetBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--s-4) var(--s-6);
+}
+
+/* 44 px targets on a phone. */
+@media (max-width: 1023px) {
+  .close {
+    width: var(--size-touch);
+    height: var(--size-touch);
+  }
+
+  .maker,
+  .learn,
+  .reagent {
+    min-height: var(--size-touch);
+  }
+}

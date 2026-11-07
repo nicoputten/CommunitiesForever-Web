@@ -1,10 +1,11 @@
-import type { Dataset, Person } from "./model";
+import type { Character, Dataset, Person } from "./model";
 import { dict, finalize } from "./normalize";
 
 // Merges two datasets (the state so far and a new upload, or two uploads) into one. The result does not depend on
 // the order: merge(a, b) equals merge(b, a), so a rebuild over all uploads gives the same state as uploading them
 // one by one. Same rules as the addon's Merge.lua where it has one:
-// - characters: a record beats a stub; between records the newer updatedAt wins
+// - characters: a record beats a stub; between records the newer updatedAt wins, but the recipes come from the copy
+//   with the newer recipesAt (WEB-90)
 // - locations: newer seenAt wins; presence links: newer lastSeen wins (and decide the owner, in finalize)
 // - people: fields of the newer record (version, then receivedAt); removals are kept, the later time per GUID
 // - the uploader's own record is the truth for their characters: one it no longer lists is removed at that
@@ -27,9 +28,7 @@ export function merge(a: Dataset, b: Dataset): Dataset {
     uploader: top.uploader,
     community: { ...(top === a ? b : a).community, ...top.community },
     people: mergeMaps(a.people, b.people, mergePerson),
-    characters: mergeMaps(a.characters, b.characters, (x, y) =>
-      pick(x, y, (c) => [c.hasRecord ? 1 : 0, c.updatedAt ?? 0, c.lastPlayed ?? 0]),
-    ),
+    characters: mergeMaps(a.characters, b.characters, mergeCharacter),
     locations: mergeMaps(a.locations, b.locations, (x, y) => pick(x, y, (s) => [s.seenAt])),
     presence: mergeMaps(a.presence, b.presence, (x, y) => pick(x, y, (l) => [l.lastSeen])),
   };
@@ -45,6 +44,35 @@ export function merge(a: Dataset, b: Dataset): Dataset {
     }
   }
   return finalize(merged);
+}
+
+/**
+ * Between records the newer updatedAt wins; the learned recipes (addon CF-38, WEB-90) come from the copy with the newer
+ * scan (`recipesAt`) instead, since a friend's relayed copy can be newer in other fields but older in its recipes, or
+ * lack them.
+ */
+function mergeCharacter(x: Character, y: Character): Character {
+  const winner = pick(x, y, (c) => [c.hasRecord ? 1 : 0, c.updatedAt ?? 0, c.lastPlayed ?? 0]);
+  const scan = pick(
+    x,
+    y,
+    // On an equal scan time, the copy that wins as a record.
+    (c) => [
+      c.recipes !== undefined ? 1 : 0,
+      c.recipesAt ?? 0,
+      c.hasRecord ? 1 : 0,
+      c.updatedAt ?? 0,
+      c.lastPlayed ?? 0,
+    ],
+    (c) => [c.recipes, c.recipesAt, c.recipeLines],
+  );
+  if (scan === winner || scan.recipes === undefined) return winner;
+  const out: Character = { ...winner, recipes: scan.recipes };
+  delete out.recipesAt;
+  delete out.recipeLines;
+  if (scan.recipesAt !== undefined) out.recipesAt = scan.recipesAt;
+  if (scan.recipeLines !== undefined) out.recipeLines = scan.recipeLines;
+  return out;
 }
 
 /** Characters of the uploader that `other` has and `record`'s own record no longer lists. */

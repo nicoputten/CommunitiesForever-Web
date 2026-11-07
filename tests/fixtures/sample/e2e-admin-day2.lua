@@ -91,6 +91,7 @@ CommunitiesForeverDB = {
                 ["max"] = 225,
                 ["name"] = "Leatherworking",
                 ["rank"] = 195,
+                ["scannedAt"] = 1793026800,
               },
               [393] = {
                 ["max"] = 225,
@@ -99,6 +100,10 @@ CommunitiesForeverDB = {
               },
             },
             ["raceID"] = 8,
+            ["recipes"] = {
+              [97001] = 90024,
+            },
+            ["recipesAt"] = 1793026800,
             ["realm"] = "Forever PvP",
             ["role"] = "dps",
             ["talents"] = {
@@ -145,11 +150,13 @@ CommunitiesForeverDB = {
                 ["max"] = 225,
                 ["name"] = "First Aid",
                 ["rank"] = 225,
+                ["scannedAt"] = 1792958400,
               },
               [171] = {
                 ["max"] = 225,
                 ["name"] = "Alchemy",
                 ["rank"] = 160,
+                ["scannedAt"] = 1792958400,
               },
               [182] = {
                 ["max"] = 225,
@@ -158,6 +165,11 @@ CommunitiesForeverDB = {
               },
             },
             ["raceID"] = 6,
+            ["recipes"] = {
+              [94002] = 90021,
+              [98001] = 90025,
+            },
+            ["recipesAt"] = 1792958400,
             ["realm"] = "Forever PvP",
             ["role"] = "heal",
             ["talents"] = {
@@ -2147,11 +2159,13 @@ CommunitiesForeverDB = {
                 ["max"] = 300,
                 ["name"] = "Tailoring",
                 ["rank"] = 300,
+                ["scannedAt"] = 1792872000,
               },
               [333] = {
                 ["max"] = 300,
                 ["name"] = "Enchanting",
                 ["rank"] = 285,
+                ["scannedAt"] = 1792872000,
               },
               [356] = {
                 ["max"] = 300,
@@ -2160,6 +2174,22 @@ CommunitiesForeverDB = {
               },
             },
             ["raceID"] = 5,
+            ["recipes"] = {
+              [91001] = 90001,
+              [91003] = 90003,
+              [91004] = 90004,
+              [91006] = 90006,
+              [91007] = 90007,
+              [91008] = 90008,
+              [91009] = 90009,
+              [91010] = 90010,
+              [91011] = 90011,
+              [91012] = 90017,
+              [92001] = 0,
+              [92002] = 0,
+              [1229504] = 279972,
+            },
+            ["recipesAt"] = 1792872000,
             ["realm"] = "Forever PvP",
             ["role"] = "dps",
             ["talents"] = {
@@ -4444,14 +4474,23 @@ CommunitiesForeverDB = {
                 ["max"] = 225,
                 ["name"] = "Cooking",
                 ["rank"] = 144,
+                ["scannedAt"] = 1793041200,
               },
               [197] = {
                 ["max"] = 225,
                 ["name"] = "Tailoring",
                 ["rank"] = 199,
+                ["scannedAt"] = 1793041200,
               },
             },
             ["raceID"] = 8,
+            ["recipes"] = {
+              [91008] = 90008,
+              [91011] = 90011,
+              [91012] = 90017,
+              [93001] = 90026,
+            },
+            ["recipesAt"] = 1793041200,
             ["realm"] = "Forever PvP",
             ["role"] = "heal",
             ["talents"] = {
@@ -5561,11 +5600,13 @@ CommunitiesForeverDB = {
               ["max"] = 150,
               ["name"] = "Cooking",
               ["rank"] = 69,
+              ["scannedAt"] = 1791403200,
             },
             [197] = {
               ["max"] = 225,
               ["name"] = "Tailoring",
               ["rank"] = 181,
+              ["scannedAt"] = 1791403200,
             },
             [333] = {
               ["max"] = 225,
@@ -5574,6 +5615,13 @@ CommunitiesForeverDB = {
             },
           },
           ["raceID"] = 5,
+          ["recipes"] = {
+            [91008] = 90008,
+            [91011] = 90011,
+            [91012] = 90017,
+            [93001] = 90026,
+          },
+          ["recipesAt"] = 1791403200,
           ["realm"] = "Forever PvP",
           ["role"] = "dps",
           ["talents"] = {
@@ -5630,6 +5678,7 @@ CommunitiesForeverDB = {
               ["max"] = 150,
               ["name"] = "Blacksmithing",
               ["rank"] = 120,
+              ["scannedAt"] = 1792785600,
             },
             [186] = {
               ["max"] = 150,
@@ -5638,6 +5687,10 @@ CommunitiesForeverDB = {
             },
           },
           ["raceID"] = 2,
+          ["recipes"] = {
+            [95001] = 90022,
+          },
+          ["recipesAt"] = 1792785600,
           ["realm"] = "Forever PvP",
           ["role"] = "tank",
           ["talents"] = {

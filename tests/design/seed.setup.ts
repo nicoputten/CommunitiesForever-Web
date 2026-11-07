@@ -3,7 +3,14 @@ import { answerRun, planRun, setTimeZone } from "../e2e/runs";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "../e2e/session";
 import { publishReleases } from "../e2e/uploaderApi";
-import { ADMIN, sampleSavedVariables, type SampleDay } from "./sample";
+import { ADMIN, NOW, sampleSavedVariables, type SampleDay } from "./sample";
+import { seedItems } from "./seedItems";
+
+// The item database and icons the recipe screens show (WEB-92), before the uploads name their recipes.
+test("write the sample item database", async ({ page }) => {
+  // Imported the day before "now".
+  await seedItems(page, process.env.DESIGN_DATA_DIR!, NOW - 24 * 3600);
+});
 
 // Seeds the design server's fresh database with the sample data through the real upload route, as the admin: the
 // day before first, then the design sample, so upload 2 has a session report with level ups and skill gains (WEB-20).
