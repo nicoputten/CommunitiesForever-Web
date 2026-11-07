@@ -292,14 +292,17 @@ describe("level fit and class roles (WEB-47)", () => {
     expect(at(43)).toEqual(["over", "+1 over", true, true]);
     expect(at(51)).toEqual(["over", "+9 over", true, true]);
     expect(at(52)).toEqual(["carry", "carry · +10", true, false]);
-    expect(at(31)).toEqual(["low", "1 below", true, false]);
+    // WEB-102: the shared rule with the addon fits from 2 below the minimum.
+    expect(at(31)).toEqual(["fits", "fits", true, true]);
+    expect(at(30)).toEqual(["fits", "fits", true, true]);
+    expect(at(29)).toEqual(["low", "3 below", true, false]);
     expect(at(27)).toEqual(["low", "5 below", true, false]);
     // Every level may be picked (WEB-52); 6+ below is never suggested and gets the "tough" note.
     expect(at(26)).toEqual(["tooLow", "6 below", true, false]);
     expect(at(undefined)).toEqual(["tooLow", "level unknown", true, false]);
     expect(levelFit(20, 32, 42).note).toBe("This will be tough.");
     expect(levelFit(55, 32, 42).note).toBe("Little XP for you here.");
-    expect(levelFit(30, 32, 42).note).toBe("This will be tough.");
+    expect(levelFit(29, 32, 42).note).toBe("This will be tough.");
   });
 
   it("roles per class", () => {

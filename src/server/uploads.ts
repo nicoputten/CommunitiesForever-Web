@@ -15,7 +15,9 @@ import { readGameItems, type GameItem } from "@/core/gameItems";
 import { type LedgerCounts, ledgerCounts, MAX_UPLOAD_BYTES as LIMIT, type StoredUpload } from "@/core/views/upload";
 import { datasetSince, feedsSince, goalsSince } from "@/core/cutoff";
 import { readAllGoals, type PersonGoals } from "@/core/doomsday/record";
+import { readBossKills } from "@/core/bossKills";
 import { readFeeds, type PersonFeed } from "@/core/feed";
+import type { BossKill } from "@/core/runProgress";
 import { LuaParseError, parseLua } from "@/core/lua";
 import { canonical, merge } from "@/core/merge";
 import type { Character, Dataset, Person, PresenceLink, Sighting } from "@/core/model";
@@ -40,7 +42,7 @@ import { clearRecipes, recordRecipes } from "./recipes";
 import { recordRecipeFinds } from "./recipeBot";
 import { applyGameItems, markRanIt, runAnswersOf } from "./gameItems";
 import type { Db } from "./db";
-import { clearHistory, recordFeeds, recordGoals, recordSightings, relinkHistory } from "./history";
+import { clearHistory, recordBossKills, recordFeeds, recordGoals, recordSightings, relinkHistory } from "./history";
 import { cutoffAt } from "./cutoff";
 import {
   latestSwitch,
@@ -112,6 +114,8 @@ type Read =
       data: Dataset;
       feeds: PersonFeed[];
       goals: PersonGoals[];
+      /** WEB-97: the file's boss kills (records, runs in progress, live kills). */
+      kills: BossKill[];
       gameItems: GameItem[];
       /** The file's roster (WEB-85), when it has one that holds the uploader (checked before the cut-off trims data). */
       roster?: RosterFile;
@@ -126,6 +130,7 @@ function since(result: Read, cutoff: number): Read {
     data: datasetSince(result.data, cutoff),
     feeds: feedsSince(result.feeds, cutoff),
     goals: goalsSince(result.goals, cutoff),
+    kills: result.kills.filter((k) => k.at >= cutoff),
   };
 }
 
@@ -141,6 +146,7 @@ function read(bytes: Uint8Array): Read {
       data,
       feeds: readFeeds(chunk),
       goals: readAllGoals(chunk),
+      kills: readBossKills(chunk),
       gameItems: readGameItems(chunk),
       ...(roster !== undefined && rosterHoldsUploader(data, roster.guids) ? { roster } : {}),
     };
@@ -503,6 +509,11 @@ function recordHistory(
     uploadId,
   );
   relinkHistory(tx, links);
+  recordBossKills(
+    tx,
+    result.kills.filter((k) => kept.guid(k.guid)),
+    uploadId,
+  );
   const locations = Object.fromEntries(Object.entries(result.data.locations).filter(([guid]) => kept.guid(guid)));
   recordSightings(tx, locations, uploadId);
 }

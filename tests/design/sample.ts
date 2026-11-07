@@ -425,6 +425,25 @@ function sampleProbe(at: number): Lua {
   };
 }
 
+/**
+ * WEB-97 (addon CF-103): boss kills in The Deadmines (sampleItems.ts DM_BOSSES): tonight's run, started two hours ago
+ * at the 19:00 reset (past, so the map, roster and runs list stay as they were), has three bosses down (Grom's run in progress, Kel's kills shared live); on Tuesday Kel, Zul and Ruk cleared
+ * it (VanCleef). Encounter ids are the sample's.
+ */
+export const SAMPLE_RUN_START = NOW - 120 * 60;
+function sampleKills(now: number): { runs: Lua; liveKills: Lua } {
+  const tonight = (min: number) => now - 120 * 60 + min * 60;
+  const tuesday = now - 2 * D - 2 * H;
+  return {
+    runs: { "Player-1-0000A002": { name: "The Deadmines", kind: "party", bosses: { 9301: tonight(18), 9302: tonight(31), 9303: tonight(44) } } },
+    liveKills: {
+      "Player-1-0000C002": { 9301: tonight(18), 9302: tonight(31), 9303: tonight(44), 9306: tuesday },
+      "Player-1-0000E002": { 9306: tuesday + 1 },
+      "Player-1-0000D001": { 9306: tuesday + 1 },
+    },
+  }; // prettier-ignore
+}
+
 /** The sample as the SavedVariables file the game writes. */
 export function sampleSavedVariables({
   self = ADMIN,
@@ -468,7 +487,8 @@ export function sampleSavedVariables({
     ),
     presence,
     ...(probe && { probe: sampleProbe(now - ago - H) }),
-    schemaVersion: 2,
+    ...(ago === 0 && sampleKills(now)),
+    schemaVersion: 3,
     self: {
       battleTag: self,
       chars: Object.fromEntries(mine.map((c) => [c.guid, char(c, now, "Nico", ago > 0)])),

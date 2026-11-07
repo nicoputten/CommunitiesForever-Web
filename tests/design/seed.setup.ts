@@ -3,7 +3,11 @@ import { answerRun, planRun, setTimeZone } from "../e2e/runs";
 import { E2E } from "../../playwright.config";
 import { signInAs } from "../e2e/session";
 import { publishReleases } from "../e2e/uploaderApi";
-import { ADMIN, NOW, sampleSavedVariables, type SampleDay } from "./sample";
+import path from "node:path";
+import { eq } from "drizzle-orm";
+import { DB_FILE, openDatabase } from "@/server/db";
+import { runAnswers, runs } from "@/server/db/schema";
+import { ADMIN, NOW, SAMPLE_RUN_START, sampleSavedVariables, type SampleDay } from "./sample";
 import { seedItems } from "./seedItems";
 
 // The item database and icons the recipe screens show (WEB-92), before the uploads name their recipes.
@@ -80,6 +84,52 @@ test("plan the sample runs", async ({ page, context, baseURL }) => {
 
   await as(ADMIN);
   await answerRun(page, wc, "maybe", "Player-1-0000A002");
+});
+
+// WEB-97 (board DL05): tonight's run in The Deadmines, started two hours ago with three bosses down (the sample's
+// kills). Written straight into the database as planned the day before (the form takes no time in the past): Nico
+// leads as Grom, Mira and Femke are in with Kel and Zul, Jorrit maybe with Ruk.
+test("plan the started Deadmines run", async () => {
+  const db = openDatabase(path.join(process.env.DESIGN_DATA_DIR!, DB_FILE));
+  try {
+    if (db.select().from(runs).where(eq(runs.dungeonId, "dm")).get() !== undefined) return;
+    const planned = SAMPLE_RUN_START - 24 * 3600;
+    const { id } = db
+      .insert(runs)
+      .values({
+        dungeonId: "dm",
+        startsAt: SAMPLE_RUN_START,
+        organiser: ADMIN,
+        source: "website",
+        createdAt: planned,
+        updatedAt: planned,
+      })
+      .returning({ id: runs.id })
+      .get();
+    const answers: [string, "in" | "maybe", string, "tank" | "healer" | "damage"][] = [
+      [ADMIN, "in", "Player-1-0000A002", "tank"],
+      ["Mira#1188", "in", "Player-1-0000C002", "healer"],
+      ["Femke#3307", "in", "Player-1-0000E002", "damage"],
+      ["Jorrit#4410", "maybe", "Player-1-0000D001", "damage"],
+    ];
+    for (const [battleTag, answer, guid, role] of answers)
+      db.insert(runAnswers)
+        .values({
+          runId: id,
+          key: battleTag.toLowerCase(),
+          battleTag,
+          guid,
+          answer,
+          role,
+          source: "website",
+          answeredAt: planned + 60,
+          waitlisted: false,
+          movedUp: false,
+        })
+        .run();
+  } finally {
+    db.$client.close();
+  }
 });
 
 // The uploader's kept versions and their notes (WEB-73, board uploader-changes), published as the release workflow

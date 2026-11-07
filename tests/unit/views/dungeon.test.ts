@@ -122,8 +122,8 @@ describe("the dungeon page", () => {
       ["Healer", ["Lia Thornwhisper 37 · Femke", "Tok Ironhide 33 · Bob"]],
       ["Damage", ["Bob Example 41 · Bob", "Ves Doombringer 39 · Nico"]],
     ]);
-    // Grom is a warrior: he can tank, and is the closest below.
-    expect(fits[0]!.short).toMatchObject({ name: "Grom Ashfeller", level: 24, levels: 8, colorToken: "--warrior" });
+    // Grom is a warrior: he can tank, and is the closest below; 6 short of fitting (from 30, WEB-102: min - 2).
+    expect(fits[0]!.short).toMatchObject({ name: "Grom Ashfeller", level: 24, levels: 6, colorToken: "--warrior" });
     expect(fits[1]!.short).toBeUndefined();
   });
 

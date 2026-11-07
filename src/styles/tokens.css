@@ -1027,4 +1027,28 @@
   --size-grab: 40px;
   --size-grab-h: 4px;
   --grab: #4a5468;
+  /* The dungeon page's Bosses & loot (DL04, WEB-102) */
+  --size-loot-row: 46px; /* a loot row */
+  --size-loot-chance: 44px; /* the drop % column */
+  --size-jump-row: 36px; /* the Bosses jump list (the list is a supplement to the page; the boss headings are the targets) */
+  --size-jump-n: 18px; /* the jump list's numbers */
+  --boss-number: #6e7888; /* a boss's number (heading, jump list) */
+  --size-boss-sticky: 90px; /* where the jump list sticks and a boss heading lands, under the top bar */
+  --line-boss: rgba(212, 175, 106, 0.15); /* between bosses */
+  --tag-quest-bg: rgba(212, 175, 106, 0.16); /* the Quest tag */
+  --tag-quest-text: #f0d08e;
+  --tag-unknown-bg: rgba(127, 217, 154, 0.14); /* "Nobody knows it" */
+  --tag-unknown-text: #9be3b0;
+  --opacity-unusable: 0.45; /* a drop the picked character can't use, with the switch off */
+  --fs-boss: 18px; /* a boss's name (Marcellus SC, letter-spacing --ls-tag) */
+  /* The run page's Bosses box (DL05, WEB-97) */
+  --size-boss-row: 34px;
+  --size-boss-check: 18px; /* the ✓ disc and the open ring */
+  --size-boss-check-icon: 11px;
+  --size-boss-bar: 6px;
+  --r-boss-bar: 3px;
+  --boss-bar-track: #1b2232;
+  --boss-bar-fill: #7fd99a;
+  --boss-killed: #3ba55d; /* the ✓ disc */
+  --boss-open-ring: #3a4456; /* a boss not down yet */
 }

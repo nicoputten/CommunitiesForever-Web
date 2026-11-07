@@ -10,7 +10,13 @@ import styles from "@/components/runs/Runs.module.css";
 import { MoveStatus, SlotMenu } from "@/components/runs/SlotMenu";
 import { ClassDisc } from "@/components/ui/ClassDisc";
 import type { ClassFile } from "@/core/gamedata/classes";
+import { BEFORE_START } from "@/core/runProgress";
+import { runDungeon } from "@/core/runs";
+import { runBosses } from "@/core/views/bossProgress";
+import { dungeonHref } from "@/core/views/dungeon";
 import { ROLE_LABEL, runDetail } from "@/core/views/runs";
+import { CheckIcon } from "@/components/ui/icons";
+import { dungeonBosses, killsOf, latestGroupUpload, resetAfter } from "@/server/bossProgress";
 import { getDb } from "@/server/db";
 import { getBotSettings } from "@/server/discord";
 import { runsInput } from "@/server/runsInput";
@@ -24,15 +30,41 @@ const color = (token: string | undefined) =>
 /**
  * A run's page (WEB-40; v2 WEB-49, board `runs-v2-run-detail`): the time as large as the title, your answer through
  * the picker (or the organiser's bar), the group with each slot's ⋯ menu for the organiser and the admin, Could fill,
- * Maybe and Reserve, the answers with role, fit and day.
+ * Maybe and Reserve, the answers with role, fit and day. WEB-97 (board DL05): the Bosses box once the run has started,
+ * "Dungeon page ›" under the title.
  */
 export default async function RunPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
   const id = Number((await params).id);
   if (viewer === undefined || !Number.isInteger(id)) notFound();
   const db = getDb();
-  const run = runDetail(runsInput(db, viewer.battleTag, nowSeconds()), id);
-  if (run === undefined) notFound();
+  const input = runsInput(db, viewer.battleTag, nowSeconds());
+  const run = runDetail(input, id);
+  const record = input.runs.find((r) => r.id === id);
+  if (run === undefined || record === undefined) notFound();
+  const dungeon = runDungeon(record.dungeonId);
+  const bosses = dungeon === undefined ? [] : dungeonBosses(db, dungeon);
+  const reset = resetAfter(db, record.startsAt);
+  const boss = runBosses(
+    record,
+    bosses,
+    killsOf(
+      db,
+      bosses.map((b) => b.id),
+      record.startsAt - BEFORE_START,
+      reset,
+    ),
+    reset,
+    latestGroupUpload(db, record, input.characters),
+    {
+      characters: input.characters,
+      people: input.people,
+      viewer: viewer.battleTag,
+      timeZone: input.viewer.timeZone,
+      now: input.now,
+    },
+  );
+  const dungeonPage = dungeon === undefined ? undefined : dungeonHref(dungeon.id);
   const settings = getBotSettings(db);
   // The site doesn't see the bot's edits; a runs channel with run posts on means the post follows the answers.
   const discordPost = settings.runs && settings.runsChannel !== null;
@@ -65,10 +97,24 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
           <h1 className={styles.runTitle}>{c.dungeon}</h1>
           <p className={styles.whenBig}>
             <span className={styles.runTitle}>{run.when}</span>
-            {run.countdown !== undefined && <span className={styles.countdown}>{run.countdown}</span>}
+            {boss?.cleared === true ? (
+              <span className={styles.countdown}>cleared</span>
+            ) : (
+              run.countdown !== undefined && <span className={styles.countdown}>{run.countdown}</span>
+            )}
           </p>
           {c.organiserTime !== undefined && <p className={styles.meta}>{c.organiserTime}</p>}
-          <p className={styles.meta}>{run.levels}</p>
+          <p className={styles.meta}>
+            {run.levels}
+            {dungeonPage !== undefined && (
+              <>
+                {" · "}
+                <Link href={dungeonPage} className={styles.inlineLink}>
+                  Dungeon page ›
+                </Link>
+              </>
+            )}
+          </p>
           {run.note !== undefined && <p className={styles.quote}>“{run.note}”</p>}
         </div>
         {(run.mayEdit || run.mayDelete) && (
@@ -284,6 +330,65 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         </div>
 
         <aside className={styles.aside}>
+          {boss !== undefined && (
+            <section className={styles.box} aria-labelledby="bosses">
+              <div className={styles.boxHead}>
+                <h2 id="bosses" className={styles.boxTitle}>
+                  Bosses
+                </h2>
+                <span className={styles.bossCount} data-cleared={boss.cleared || undefined}>
+                  {boss.count}
+                </span>
+              </div>
+              <div
+                className={styles.bossBar}
+                role="progressbar"
+                aria-label="Bosses down"
+                aria-valuemin={0}
+                aria-valuemax={boss.total}
+                aria-valuenow={boss.done}
+              >
+                <i style={{ width: `${boss.total === 0 ? 0 : (100 * boss.done) / boss.total}%` }} />
+              </div>
+              {boss.asOf !== undefined && <p className={styles.small}>{boss.asOf}</p>}
+              <ul className={styles.bossList}>
+                {boss.rows.map((b) => [
+                  b.wing !== undefined && (
+                    <li key={`wing-${b.id}`} className={styles.bossWing}>
+                      {b.wing}
+                    </li>
+                  ),
+                  <li key={b.id} className={styles.bossRow} data-state={b.state} title={b.tip}>
+                    {b.state === "killed" ? (
+                      <span className={styles.bossCheck}>
+                        <CheckIcon />
+                      </span>
+                    ) : b.state === "skipped" ? (
+                      <span className={styles.bossSkip} aria-hidden="true">
+                        –
+                      </span>
+                    ) : (
+                      <span className={styles.bossRing} aria-hidden="true" />
+                    )}
+                    <span className={styles.bossRowName}>{b.name}</span>
+                    {b.state === "killed" ? (
+                      <span className={styles.bossTime}>
+                        <span className="visually-hidden">killed </span>
+                        {b.time}
+                      </span>
+                    ) : b.state !== "open" ? (
+                      <span className={styles.bossTime}>{b.state}</span>
+                    ) : null}
+                  </li>,
+                ])}
+              </ul>
+              {dungeonPage !== undefined && (
+                <Link href={`${dungeonPage}#bosses-loot`} className={styles.inlineLink}>
+                  Loot on the dungeon page ›
+                </Link>
+              )}
+            </section>
+          )}
           {run.mayMove && (
             <section className={styles.box} aria-labelledby="tools">
               <h2 id="tools" className={styles.boxTitle}>

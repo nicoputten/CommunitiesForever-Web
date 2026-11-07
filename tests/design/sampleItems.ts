@@ -1,3 +1,4 @@
+import type { BossDropRecord } from "@/core/recipes/bosses";
 import type { ItemDatabase, ItemRecord, RecipeRecord, SourceKind } from "@/core/recipes/build";
 
 // The design checks' item database (WEB-92): example recipes and items for the recipe screens, as the boards draw
@@ -28,6 +29,63 @@ const LEATHERWORKING = 165;
 const FIRST_AID = 129;
 
 const item = (r: ItemRecord): ItemRecord => r;
+
+interface LootItem {
+  id: number;
+  name: string;
+  quality: number;
+  classId: number;
+  subclassId: number;
+  inventoryType?: number;
+  typeName?: string;
+  icon: string;
+}
+
+/** WEB-102: the board's Deadmines drops (board DL04), as items. */
+const DEADMINES: LootItem[] = [
+  { id: 90101, name: "Rhahk’Zor’s Hammer", quality: 2, classId: 2, subclassId: 5, inventoryType: 17, typeName: "Mace", icon: "sample_mace" },
+  { id: 90102, name: "Buzzer Blade", quality: 3, classId: 2, subclassId: 15, inventoryType: 13, typeName: "Dagger", icon: "sample_dagger" },
+  { id: 90103, name: "Lavishly Jeweled Ring", quality: 3, classId: 4, subclassId: 0, inventoryType: 11, typeName: "Miscellaneous", icon: "sample_ring" },
+  { id: 90104, name: "Smelting Pants", quality: 2, classId: 4, subclassId: 2, inventoryType: 7, typeName: "Leather", icon: "sample_pants" },
+  { id: 90105, name: "Thistlenettle’s Badge", quality: 1, classId: 12, subclassId: 0, icon: "sample_badge" },
+  { id: 90106, name: "Smite’s Mighty Hammer", quality: 2, classId: 2, subclassId: 5, inventoryType: 17, typeName: "Mace", icon: "sample_mace" },
+  { id: 90107, name: "Thief’s Blade", quality: 3, classId: 2, subclassId: 7, inventoryType: 13, typeName: "Sword", icon: "sample_sword" },
+  { id: 90108, name: "Smite’s Reaver", quality: 2, classId: 2, subclassId: 0, inventoryType: 13, typeName: "Axe", icon: "sample_axe" },
+  { id: 90109, name: "Emberstone Staff", quality: 3, classId: 2, subclassId: 10, inventoryType: 17, typeName: "Staff", icon: "sample_staff" },
+  { id: 90110, name: "Blackened Defias Armor", quality: 2, classId: 4, subclassId: 2, inventoryType: 5, typeName: "Leather", icon: "sample_chest" },
+  { id: 90111, name: "Cape of the Brotherhood", quality: 3, classId: 4, subclassId: 1, inventoryType: 16, typeName: "Cloth", icon: "sample_cape" },
+  { id: 90112, name: "Cruel Barb", quality: 3, classId: 2, subclassId: 7, inventoryType: 13, typeName: "Sword", icon: "sample_sword" },
+  { id: 90113, name: "Corsair’s Overshirt", quality: 2, classId: 4, subclassId: 1, inventoryType: 5, typeName: "Cloth", icon: "sample_chest" },
+  { id: 90114, name: "Blackened Defias Leggings", quality: 2, classId: 4, subclassId: 2, inventoryType: 7, typeName: "Leather", icon: "sample_pants" },
+  { id: 90115, name: "Blackened Defias Gloves", quality: 2, classId: 4, subclassId: 2, inventoryType: 10, typeName: "Leather", icon: "sample_gloves" },
+  { id: 90116, name: "Blackened Defias Boots", quality: 2, classId: 4, subclassId: 2, inventoryType: 8, typeName: "Leather", icon: "sample_boots" },
+  { id: 90117, name: "Blackened Defias Belt", quality: 2, classId: 4, subclassId: 2, inventoryType: 6, typeName: "Leather", icon: "sample_belt" },
+  { id: 90118, name: "Cookie’s Tenderizer", quality: 2, classId: 2, subclassId: 4, inventoryType: 13, typeName: "Mace", icon: "sample_mace" },
+  // The board's Recipe: Westfall Stew, as a recipe the sample already has (nobody knows it).
+  { id: 90119, name: "Recipe: Roast Raptor", quality: 1, classId: 9, subclassId: 5, typeName: "Cooking", icon: "sample_recipe" },
+]; // prettier-ignore
+
+function DEADMINES_ITEMS(): ItemRecord[] {
+  return DEADMINES.map((d) => {
+    const r: ItemRecord = {
+      id: d.id,
+      name: d.name,
+      quality: d.quality,
+      classId: d.classId,
+      subclassId: d.subclassId,
+      iconName: d.icon,
+    };
+    if (d.inventoryType !== undefined) r.inventoryType = d.inventoryType;
+    if (d.typeName !== undefined) r.typeName = d.typeName;
+    if (d.classId === 2 || d.classId === 4) r.bonding = 2;
+    if (d.classId === 12) r.bonding = 4;
+    if (d.classId === 9) {
+      r.bonding = 1;
+      r.use = ["Teaches you how to cook Roast Raptor."];
+    }
+    return r;
+  });
+}
 
 /** The items, by made-up ID. */
 export const ITEMS: ItemRecord[] = [
@@ -129,6 +187,8 @@ export const ITEMS: ItemRecord[] = [
   item({ id: 90025, name: "Heavy Silk Bandage", quality: 1, maxStack: 20, iconName: "sample_bandage" }),
   item({ id: 90026, name: "Spiced Wolf Meat", quality: 1, maxStack: 20, iconName: "sample_food" }),
   item({ id: 90027, name: "Roast Raptor", quality: 1, maxStack: 20, iconName: "sample_food" }),
+  // WEB-102: The Deadmines' loot as board DL04 draws it (names from the board; ids made up).
+  ...DEADMINES_ITEMS(),
   // An item of Forever's own the client data has no name for yet (amendment 2): fallback name and icon.
   item({ id: 279972 }),
 ];
@@ -353,10 +413,44 @@ const RECIPES: SampleRecipe[] = [
   },
 ];
 
+/** WEB-102: The Deadmines' bosses (board DL04; made-up encounter ids), each with its drops: [item, chance, extra]. */
+const DM_BOSSES: { id: number; name: string; final?: true; optional?: true; drops: [number, number, Partial<BossDropRecord>?][] }[] = [
+  { id: 9301, name: "Rhahk’Zor", drops: [[90101, 77]] },
+  { id: 9302, name: "Sneed", drops: [[90103, 31], [90102, 30]] },
+  { id: 9303, name: "Gilnid", drops: [[90105, 100, { questId: 99001 }], [90104, 40]] },
+  { id: 9304, name: "Mr. Smite", drops: [[90107, 33], [90106, 31], [90108, 29]] },
+  { id: 9305, name: "Captain Greenskin", drops: [[90109, 30]] },
+  {
+    id: 9306,
+    name: "Edwin VanCleef",
+    final: true,
+    drops: [[90110, 36], [90111, 29], [90112, 26], [90113, 18], [90114, 15], [90115, 12], [90116, 9], [90117, 7]],
+  },
+  { id: 9307, name: "Cookie", optional: true, drops: [[90118, 41], [90119, 12, { recipeId: 93002, skill: 150, line: 185 }]] },
+]; // prettier-ignore
+
+const byItem = new Map(DEADMINES.map((d) => [d.id, d]));
+
 export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
-  // WEB-96: the dungeon page's boss list comes with WEB-102.
-  bosses: [],
-  bossDrops: [],
+  bosses: DM_BOSSES.map((b, i) => ({
+    id: b.id,
+    name: b.name,
+    dungeonId: "dm",
+    position: i + 1,
+    final: b.final === true,
+    optional: b.optional === true,
+  })),
+  bossDrops: DM_BOSSES.flatMap((b) =>
+    b.drops.map(([itemId, chance, extra], i) => ({
+      bossId: b.id,
+      itemId,
+      position: i + 1,
+      chance,
+      classId: byItem.get(itemId)!.classId,
+      subclassId: byItem.get(itemId)!.subclassId,
+      ...extra,
+    })),
+  ),
   items: ITEMS,
   recipes: RECIPES.map((r): RecipeRecord => {
     const rec: RecipeRecord = {

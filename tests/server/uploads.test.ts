@@ -132,12 +132,12 @@ describe("upload", () => {
   });
 
   it("stores a newer schema as rejected with its version", () => {
-    const result = upload(db, new TextEncoder().encode("return { schemaVersion = 3 }"), "Ada#1001", 1000);
-    expect(result.reason).toContain("schema version 3");
-    expect(result).toMatchObject({ unreadable: "newer-format", schemaVersion: 3 });
+    const result = upload(db, new TextEncoder().encode("return { schemaVersion = 4 }"), "Ada#1001", 1000);
+    expect(result.reason).toContain("schema version 4");
+    expect(result).toMatchObject({ unreadable: "newer-format", schemaVersion: 4 });
     expect(db.select().from(uploads).get()).toMatchObject({
       status: "rejected",
-      schemaVersion: 3,
+      schemaVersion: 4,
       unreadable: "newer-format",
     });
     expect(loadState(db)).toBeUndefined();
@@ -294,10 +294,10 @@ describe("upload screen (WEB-19)", () => {
   });
 
   it("keeps the unreadable reason through a rebuild", () => {
-    upload(db, new TextEncoder().encode("return { schemaVersion = 3 }"), "Ada#1001", 1000);
+    upload(db, new TextEncoder().encode("return { schemaVersion = 4 }"), "Ada#1001", 1000);
     db.update(uploads).set({ unreadable: null }).run();
     rebuild(db);
-    expect(getUpload(db, 1)).toMatchObject({ unreadable: "newer-format", schemaVersion: 3 });
+    expect(getUpload(db, 1)).toMatchObject({ unreadable: "newer-format", schemaVersion: 4 });
   });
 
   it("knows display names by BattleTag", () => {

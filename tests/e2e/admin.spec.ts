@@ -127,7 +127,7 @@ test("the owner sees the Item data box, with Import item data", async ({ page, c
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/admin");
   const box = panel(page, "Item data");
-  await expect(box.getByTestId("item-import-line")).toHaveText(/^Build sample · 23 recipes · 27 items · imported /);
+  await expect(box.getByTestId("item-import-line")).toHaveText(/^Build sample · 23 recipes · 46 items · imported /);
   await expect(box.getByRole("button", { name: "Import item data" })).toBeEnabled();
 });
 

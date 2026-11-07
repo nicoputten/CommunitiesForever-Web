@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { itemQuality } from "@/core/gamedata/items";
 import { itemFallbackName, itemTooltip } from "@/core/views/itemTooltip";
 import type { TooltipItem } from "@/core/views/recipes";
@@ -9,11 +10,14 @@ export function ItemTooltipCard({
   item,
   width = "item",
   titleId,
+  footer,
 }: {
   id: number;
   item: TooltipItem | undefined;
   width?: "item" | "reagent" | "full";
   titleId?: string;
+  /** Lines under the game's (WEB-102: a recipe drop's "Nobody knows it" and who could learn it). */
+  footer?: ReactNode;
 }) {
   const view =
     item === undefined
@@ -41,6 +45,7 @@ export function ItemTooltipCard({
           </div>
         ),
       )}
+      {footer !== undefined && <div className={styles.footer}>{footer}</div>}
     </div>
   );
 }
