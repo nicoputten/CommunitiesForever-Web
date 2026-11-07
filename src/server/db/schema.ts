@@ -1,4 +1,4 @@
-import { blob, index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { blob, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
 import type { Often } from "@/core/doomsday/missionPool";
@@ -739,6 +739,51 @@ export const itemImport = sqliteTable("item_import", {
   /** SHA-256 of the imported data: the same data again changes nothing. */
   hash: text("hash").notNull(),
 });
+
+// --- WEB-96: dungeon bosses and their loot (src/core/recipes/bosses.ts), written by the item import -------------
+
+/** A dungeon boss: the client's DungeonEncounter, in its order per dungeon (or wing). */
+export const dungeonBosses = sqliteTable(
+  "dungeon_bosses",
+  {
+    /** DungeonEncounter.ID = ENCOUNTER_END's encounterID (what the addon records as a kill). */
+    id: integer("id").primaryKey(),
+    /** The site's dungeon id (src/core/gamedata/dungeons.ts). */
+    dungeonId: text("dungeon_id").notNull(),
+    /** Scarlet Monastery's and Blackrock Spire's wing id; null for dungeons without wings. */
+    wingId: text("wing_id"),
+    /** 1, 2, ... within the dungeon or wing. */
+    position: integer("position").notNull(),
+    name: text("name").notNull(),
+    /** Ends the dungeon (or wing): "Cleared" means this boss died. */
+    final: integer("final", { mode: "boolean" }).notNull(),
+    /** Doesn't count towards "N of M". */
+    optional: integer("optional", { mode: "boolean" }).notNull(),
+  },
+  (t) => [index("dungeon_bosses_dungeon").on(t.dungeonId, t.wingId, t.position)],
+);
+
+/** A boss's own drop (cmangos classic-db, GPL-3.0): >= 1 %, plus its quest items and recipes; highest chance first. */
+export const bossDrops = sqliteTable(
+  "boss_drops",
+  {
+    bossId: integer("boss_id").notNull(),
+    itemId: integer("item_id").notNull(),
+    /** 1, 2, ...: highest chance first. */
+    position: integer("position").notNull(),
+    /** Percent, one decimal. */
+    chance: real("chance").notNull(),
+    classId: integer("class_id"),
+    subclassId: integer("subclass_id"),
+    /** AllowableClass bit mask; null: every class. */
+    classes: integer("classes"),
+    /** The quest it only drops for. */
+    questId: integer("quest_id"),
+    /** The recipe (spell ID) a recipe item teaches. */
+    recipeId: integer("recipe_id"),
+  },
+  (t) => [primaryKey({ columns: [t.bossId, t.itemId] })],
+);
 
 // --- WEB-90: who knows what (derived from uploads, rebuilt with them; src/server/recipes.ts) ------------------------
 

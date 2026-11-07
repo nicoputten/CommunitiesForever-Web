@@ -87,6 +87,7 @@ Nine new five-player dungeons next to the Vanilla ones ([Blizzard: Explore the N
 - Inside Ruins of Lordaeron, `GetInstanceInfo()` names it "Ruins of Lordaeron" (instanceID 2999). Confirmed (beta client).
 - Bosses per dungeon (for Doomsday's "Clear every boss of a dungeon"): the site uses the addon's `Goals.BOSSES` (from the game's DungeonEncounter table, Classic Era, checked 2026-10-28) as `DUNGEON_BOSSES` in `src/core/doomsday/rules.ts`. Dungeons with wings or optional bosses and Forever's new dungeons have no count until launch; no progress shows for them.
 - Boss loot reworked: unique boss items at least Rare quality. Unverified ([mmonster](https://mmonster.co/wow-forever/guides/articles/forever-vs-classic)).
+- Bosses on the Forever client (WEB-96, build 1.60.1.70862, its DungeonEncounter table): every Vanilla dungeon and all nine new ones have a boss list; map names "The Shaper's Terrace" and "The Hall of Thanes" carry a "The". `ENCOUNTER_END`'s encounterID is DungeonEncounter.ID (`3353, Witherfang` in Ruins of Lordaeron, API-FINDINGS V35). Final and optional bosses: `src/core/gamedata/bosses.ts` (warcraft.wiki.gg). Loot shown is Classic 1.12's (cmangos), so the rework above isn't reflected; Forever's new dungeons have no loot data yet.
 
 ## Raids
 | Raid | Size | Location | Status | Source |

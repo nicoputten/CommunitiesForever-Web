@@ -8,7 +8,8 @@
 //   SpellAuraOptions and SpellTargetRestrictions (the numbers Use texts name, WEB-95: ./spellText.ts), ItemSparse (name, quality, levels, bind, slot, stack), Item (class,
 //   subclass, icon), ItemModifiedAppearance and ItemAppearance (the icon of items without one in Item), ItemSubClass
 //   (type names), ItemXItemEffect and ItemEffect (an item's spells; which recipe a
-//   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names).
+//   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names), DungeonEncounter (WEB-96: the
+//   bosses, ./bosses.ts).
 // - The Classic Era client (same export): its SkillLineAbility tells Forever's own recipes apart, and its learn-spell
 //   effects (SpellEffect 36) map cmangos' trainer and recipe-item spells, which Forever's client no longer has, to the
 //   recipe they teach.
@@ -23,6 +24,7 @@
 // Reputation standings (the game's FACTION_STANDING_LABEL1..8): 0 Hated .. 7 Exalted.
 import { float, int } from "./csv";
 import { n, s, type SqlRow } from "./sqlDump";
+import { type BossDropRecord, type BossRecord, buildBosses } from "./bosses";
 import { greenThreshold } from "./skill";
 import { type SpellEffectInfo, type SpellInfo, type SpellLookup, spellText } from "./spellText";
 
@@ -47,6 +49,7 @@ export const DB2_TABLES = [
   "ManifestInterfaceData",
   "Faction",
   "Map",
+  "DungeonEncounter",
 ] as const;
 export type Db2Table = (typeof DB2_TABLES)[number];
 
@@ -177,6 +180,9 @@ export interface ItemDatabase {
   recipes: RecipeRecord[];
   reagents: ReagentRecord[];
   sources: SourceRecord[];
+  /** WEB-96: dungeon bosses in the client's order, and each boss's own loot (./bosses.ts). */
+  bosses: BossRecord[];
+  bossDrops: BossDropRecord[];
 }
 
 /** Enum.InventoryType names as the game's tooltip shows them (GlobalStrings INVTYPE_*), for gear categories. */
@@ -622,6 +628,21 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
     }
   }
 
+  // --- WEB-96: dungeon bosses and their loot; the dropped items join the items ---
+  const { bosses, drops: bossDrops } = buildBosses({
+    encounters: db2.DungeonEncounter ?? [],
+    maps: db2.Map ?? [],
+    itemRows: byId(db2.Item),
+    sparseRows,
+    itemTemplates,
+    creatureTemplates: cm.creature_template ?? [],
+    creatures: cm.creature ?? [],
+    creatureLoot: cm.creature_loot_template ?? [],
+    quests: cm.quest_template ?? [],
+    recipeItems,
+  });
+  for (const d of bossDrops) itemIds.add(d.itemId);
+
   const items = buildItems(
     db2,
     itemTemplates,
@@ -637,7 +658,7 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
 
   const sourceList: SourceRecord[] = [];
   for (const recipe of recipes) for (const src of sources.get(recipe.id) ?? []) sourceList.push(src);
-  return { items, recipes, reagents, sources: sourceList };
+  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops };
 }
 
 /**

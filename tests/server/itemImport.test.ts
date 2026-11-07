@@ -104,6 +104,8 @@ describe("importItems", () => {
       foreverOnly: 1,
       unobtainable: 1,
       sources: 10,
+      bosses: 1,
+      bossDrops: 1,
       changed: true,
     });
     // ItemSparse came in two parts: from the start, then after the last whole row (ID 5003).

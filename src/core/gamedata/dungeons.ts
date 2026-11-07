@@ -33,7 +33,7 @@ export interface LevelRange {
 export interface Wing {
   /** Unique among the instance's wings, lower case ("armory"). */
   id: string;
-  /** The addon's id when the wing is a dungeon of its own ("smarm"). */
+  /** The addon's id when the wing is a dungeon of its own there ("smarm", "ubrs"; WEB-96: the loot file's key). */
   addonId?: string;
   name: string;
   typicalLevels: LevelRange;
@@ -217,8 +217,8 @@ export const DUNGEONS: readonly DungeonInfo[] = [
     zone: "burning",
     typicalLevels: typical(55, 60),
     wings: [
-      { id: "lower", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
-      { id: "upper", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "lower", addonId: "lbrs", name: "Lower Blackrock Spire", typicalLevels: typical(55, 60) },
+      { id: "upper", addonId: "ubrs", name: "Upper Blackrock Spire", typicalLevels: typical(55, 60) },
     ],
     zoneTexts: ["Blackrock Spire", "Lower Blackrock Spire", "Upper Blackrock Spire"],
   },
