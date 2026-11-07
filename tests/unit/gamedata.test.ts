@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CLASSES,
   DUNGEONS,
+  LEGACY_DUNGEONS,
   RUNNABLE_DUNGEONS,
   BATTLEGROUND,
   ELSEWHERE,
@@ -209,10 +210,36 @@ describe("dungeons", () => {
     expect(ids).toContain("brs");
     expect(ids).not.toContain("sm");
     expect(ids).not.toContain("ony");
-    const others = RUNNABLE_DUNGEONS.filter((d) => d.instanceId !== "sm");
+    // WEB-102: Stratholme and Dire Maul are run per wing too; their whole-instance ids are legacy only.
+    const wings = ["sm", "strat", "dme"];
+    expect(ids).not.toContain("strat");
+    expect(ids).not.toContain("dme");
+    expect(ids).toEqual(expect.arrayContaining(["strat-live", "strat-undead", "dme-east", "dme-west", "dme-north"]));
+    const others = RUNNABLE_DUNGEONS.filter((d) => !wings.includes(d.instanceId));
     expect(others.map((d) => d.id)).toEqual(
-      DUNGEONS.filter((d) => d.kind === "dungeon" && d.id !== "sm").map((d) => d.id),
+      DUNGEONS.filter((d) => d.kind === "dungeon" && !wings.includes(d.id)).map((d) => d.id),
     );
+  });
+
+  it("Stratholme's and Dire Maul's wings carry the Group Finder ranges and addon ids (WEB-102)", () => {
+    const wing = (id: string) => RUNNABLE_DUNGEONS.find((d) => d.id === id)!;
+    expect(
+      ["dme-east", "dme-west", "dme-north", "strat-live", "strat-undead"].map((id) => [
+        wing(id).addonId,
+        wing(id).typicalLevels.min,
+        wing(id).typicalLevels.max,
+      ]),
+    ).toEqual([
+      ["dmeast", 54, 60],
+      ["dmwest", 56, 60],
+      ["dmnorth", 56, 60],
+      ["stratlive", 58, 60],
+      ["stratud", 58, 60],
+    ]);
+    expect(LEGACY_DUNGEONS.map((d) => [d.id, d.addonId, d.whole])).toEqual([
+      ["dme", "dme", true],
+      ["strat", "strat", true],
+    ]);
   });
 });
 

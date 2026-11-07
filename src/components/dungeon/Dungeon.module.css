@@ -21,6 +21,11 @@
   gap: var(--s-4);
 }
 
+/* WEB-102: the side column runs the page's height, so the Bosses jump list can stay in view. */
+.aside[data-sticky] {
+  align-self: stretch;
+}
+
 @media (max-width: 1023px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
@@ -436,4 +441,252 @@
   min-height: var(--size-touch);
   font-size: var(--fs-meta);
   color: var(--gold);
+}
+
+/* --- bosses & loot (WEB-102, board DL04) --------------------------------------------------------------------------- */
+
+.lootHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s-2) var(--s-3-5);
+}
+
+.lootControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3-5);
+}
+
+.classic {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.usableBy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+}
+
+.usableDropdown {
+  min-width: 0;
+}
+
+.boss {
+  padding: var(--s-3-5) 0 var(--s-1-5);
+  border-top: var(--border) solid var(--line-boss);
+  scroll-margin-top: var(--size-boss-sticky);
+}
+
+.lootHead + .boss {
+  border-top: 0;
+}
+
+.bossName {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2-5);
+  margin: 0 0 var(--s-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-boss);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-tag);
+  color: var(--gold-pale);
+}
+
+.bossN {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  letter-spacing: normal;
+  color: var(--boss-number);
+}
+
+.optional {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  letter-spacing: normal;
+  color: var(--text-dim);
+}
+
+.loot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-0-5) var(--s-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lootRow {
+  display: grid;
+  grid-template-columns: var(--size-item-icon-result) minmax(0, 1fr) var(--size-loot-chance);
+  gap: var(--s-2-5);
+  align-items: center;
+  min-height: var(--size-loot-row);
+}
+
+/* A drop the picked character can never use: the icon dimmed, the text faint (dimming the text itself would drop it
+   under the contrast minimum). */
+.lootRow[data-unusable] .lootIcon {
+  opacity: var(--opacity-unusable);
+}
+
+.lootRow[data-unusable] .lootName,
+.lootRow[data-unusable] .lootType,
+.lootRow[data-unusable] .chance {
+  color: var(--text-faint);
+}
+
+.lootIcon {
+  display: inline-flex;
+}
+
+.lootText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lootNameLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-0-5) var(--s-2);
+  min-width: 0;
+}
+
+.lootName {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  color: var(--quality-text, var(--text));
+  text-decoration: none;
+}
+
+a.lootName:hover {
+  text-decoration: underline;
+}
+
+.lootType {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.chance {
+  text-align: right;
+  font-size: var(--fs-body-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-chip);
+}
+
+.tag {
+  padding: var(--s-0-5) var(--s-1-75);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.tag[data-tag="quest"] {
+  background: var(--tag-quest-bg);
+  color: var(--tag-quest-text);
+}
+
+.tag[data-tag="unknown"] {
+  background: var(--tag-unknown-bg);
+  color: var(--tag-unknown-text);
+}
+
+.showMore {
+  margin-top: var(--s-1);
+  min-height: var(--size-filter);
+  padding: 0 var(--s-3-5);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-neutral);
+  background: transparent;
+  color: var(--gold);
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.showMore:hover {
+  border-color: var(--line-link);
+}
+
+@media (max-width: 767px) {
+  .loot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .showMore {
+    min-height: var(--size-touch);
+  }
+}
+
+/* The Bosses jump list: sticky at the top of the side column; left out under 1024 px (one column). */
+.jump {
+  position: sticky;
+  top: var(--size-boss-sticky);
+  z-index: 1;
+}
+
+.jumpList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jumpList a {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  min-height: var(--size-jump-row);
+  font-size: var(--fs-body);
+  color: var(--text-chip);
+  text-decoration: none;
+}
+
+.jumpList a:hover {
+  color: var(--text-strong);
+}
+
+.jumpList a[aria-current] {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.jumpN {
+  width: var(--size-jump-n);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  color: var(--boss-number);
+}
+
+@media (max-width: 1023px) {
+  .jump {
+    display: none;
+  }
+}
+
+/* Ran here (WEB-97): "Last cleared Tue" and who was there. */
+.cleared {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.clearedBy {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
 }

@@ -500,6 +500,28 @@ export const sightings = sqliteTable(
 );
 
 /**
+ * WEB-97 (addon CF-103): every boss kill the uploads showed, from the records' runs (`bossKills`), the uploader's runs
+ * in progress and friends' live kills (src/core/bossKills.ts). Derived like the history: written with every accepted
+ * upload, rebuilt by rebuild(). A planned run's boss progress and the dungeon page's "Last cleared" read it.
+ */
+export const bossKills = sqliteTable(
+  "boss_kills",
+  {
+    guid: text("guid").notNull(),
+    /** DungeonEncounter.ID (the client's ENCOUNTER_END encounterID; dungeon_bosses.id). */
+    encounterId: integer("encounter_id").notNull(),
+    /** Server time of the kill, Unix seconds. */
+    at: integer("at").notNull(),
+    /** The first upload that showed it. */
+    sourceUpload: integer("source_upload").notNull(),
+  },
+  (t) => [
+    uniqueIndex("boss_kills_guid_encounter_at_unique").on(t.guid, t.encounterId, t.at),
+    index("boss_kills_encounter_at").on(t.encounterId, t.at),
+  ],
+);
+
+/**
  * What the game sent (WEB-43, the addon's `pending`: plans, answers, asks, pings), by the item's id, so a file
  * uploaded twice changes nothing. Not derived: a rebuild doesn't apply them again. Their ids go back to the game as
  * `received` (GET /api/uploader/v1/runs), and the addon then forgets them.

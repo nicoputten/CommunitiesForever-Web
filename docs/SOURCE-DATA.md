@@ -12,8 +12,9 @@ Source of truth: the addon repo, `docs/ARCHITECTURE.md` "Data model". This file 
 | v0.3 | 1 | `tests/fixtures/addon/v0.3/savedvariables.lua` |
 | v0.4 | 1 | `tests/fixtures/addon/v0.4/savedvariables.lua` |
 | unreleased (CF-47, CF-48) | 2 | `tests/fixtures/addon-unreleased/pending.lua` (the `pending` list only, the addon's own sample) |
+| unreleased (CF-103) | 3 | none yet: the addon's golden fixture joins `tests/fixtures/addon/` with its release |
 
-Schema 2 adds only `global.pending`; the site reads schemas 1 and 2 with the same reader (`SUPPORTED_SCHEMA` = 2) and the pending items apart (`src/core/gameItems.ts`, WEB-43). A newer schema is stored as rejected ("newer format").
+Schema 2 adds only `global.pending`; the site reads schemas 1 and 2 with the same reader (`SUPPORTED_SCHEMA` = 2) and the pending items apart (`src/core/gameItems.ts`, WEB-43). Schema 3 (addon CF-103, WEB-97) changes only `runs[guid].bosses` (kill times instead of `true`) and adds `liveKills`; the same reader takes it (`SUPPORTED_SCHEMA` = 3). A newer schema is stored as rejected ("newer format").
 
 The addon fixtures hold `global` only (as `return { ... }`), captured from invented players.
 
@@ -39,7 +40,9 @@ The addon fixtures hold `global` only (as `return { ... }`), captured from inven
 | `presence[guid]` | `{ battleTag, lastSeen }`: BNet presence link | last seen online |
 | `self.feed`, `people[bt].feed` | activity per realm day (CF-22/23): per character `name, classFile, at, levelFrom, levelTo, quests[zone], ranks[profession], learned[profession], runs[]`. Since CF-52: `kills[zone]`, `deaths = { { t, zone, cause } }` (cause `fall`, `fire`, `lava`, `drown`, `fatigue`, `player`, `creature` or `other`; anything else is read as `other`), `duels = { { t, won, vs } }` (`vs` the opponent's full name). CF-53: `loot = { rare, epic = { { id, name, slot, level } } }` (`slot` an `INVTYPE_*` token), `notable[itemID]`, `gold = { gained, spent }` (copper, never shown as an amount), `sessions = { { from, to } }`, `groups[guid] = true`. CF-55: `pvpKills = { { t, zone, name, lvl, myLvl, class, race, rank, solo, bg } }` (`lvl` -1 is a skull; each victim field only when readable). Capped as the addon caps them (50 deaths, duels, epics and sessions, 40 groups, 100 kills per day and character). `false` from addons that had "Share my activity" (gone, Nico 2026-10-28): read as nothing sent. The last 7 realm days only | weekly recap history (WEB-41), Doomsday (E8) |
 | `self.goals`, `people[bt].goals` | Doomsday goals (CF-56): `days[n]` and `weeks[w]` each `{ set, swapped[id] = originalId, done[id] = time, at }`, plus `streak`, `best`, `pool` (the pool version), `reset` (seconds after midnight realm time). Ids at most 24 characters, at most 5 per day and 4 per week; numbers 0 or more. `false` is read as nothing sent. The last 7 days and 2 weeks only | Doomsday (WEB-55, WEB-58) |
-| `runs` | Nico's runs in progress | later (backlog) |
+| `runs` | the uploader's runs in progress per character (CF-23): only `bosses = { [encounterID] = at }` is read (CF-103, schema 3; schema 2's `true` has no time and is left out) | boss kills (WEB-97, `src/core/bossKills.ts`) |
+| `liveKills` | friends' boss kills shared live (CF-103): `[guid] = { [encounterID] = at }`, kept 2 days by the addon | boss kills (WEB-97) |
+| `feed.*.*.runs.*.bossKills` | CF-103, optional: `{ [encounterID] = at }`, the bosses a finished run killed (encounterID = DungeonEncounter.ID, `at` server time), next to the unchanged `bosses` count; missing on older addons (a count only) | boss kills (WEB-97): `boss_kills`, each (character, boss, time) once; a planned run's progress and the dungeon page's "Last cleared" |
 | `probe` | the addon's hidden launch probe: per client flavour, per item `{ status, detail, at, build, ... }`, at most ~30 KB | the owner's download only (WEB-82): never normalized, stored or shown; read from the raw upload |
 | `members` | the selected community's members (addon CF-89, the first release after v1.2.1): `[guid] = { name, seenAt }`, as the uploader's client last saw them, replaced whole on every update. Missing in v1.2.1 and older. Only the GUID keys and the newest `seenAt` are read | who is a member (WEB-85, `src/core/members.ts`) |
 | `settings` | `clubName` only | page title / group name |
@@ -55,7 +58,7 @@ Times are Unix seconds. Any field can be missing in older releases.
 - `community = { id, name }`: `id` is always a string (`settings.clubId` is a number in real files, a string in the fixtures).
 - `uploader` (person key of `self`) and `version` (`self.version`).
 - The feed is read apart from the `Dataset` (`readFeeds`, `src/core/feed.ts`, WEB-41): it is history, kept per day in its own tables, not merged state. So are the Doomsday goals (`readAllGoals`, `src/core/doomsday/record.ts`, WEB-55).
-- Not read yet: `runs`, `invite`, other `settings`.
+- Not read yet: `invite`, other `settings`; of `runs` only the kills.
 
 ## The game's items (`pending`, WEB-43)
 Schema 2 (addon CF-47, CF-48): what the player did in game that has to reach the site, until the site's runs list

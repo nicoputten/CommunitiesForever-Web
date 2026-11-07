@@ -373,29 +373,55 @@ Built (2026-11-07), docs/SOURCE-DATA.md "Dungeon bosses and their loot":
   makes them so. The optional list holds only bosses the wiki calls optional, rare, summoned or a bonus boss.
 
 ### WEB-102 Dungeon page: bosses & loot (DL04)
-- On the dungeon page (board DL04), between Who fits and Quests: **Bosses & loot**, every boss in the client's order
-  (`dungeonBossViews`, WEB-96), number + name, optional bosses marked "optional"; the boss's drops at most 6, then
-  "Show N more ▾"; loot in two columns: icon with quality border, name in quality colour, type, drop % (highest
-  first). Tags: "Quest" (a quest-only drop) and "Nobody knows it" (a recipe nobody in the group has); a recipe drop
-  opens its recipe drawer; item tooltips (WEB-92's `ItemTooltip`).
-- "Usable by [character ▾]" (defaults to your most recently played character, remembered): dims what that character
-  can't use, the switch hides it; "N more" counts after it. Usable = the class can ever use it (AllowableClass, the
-  armor types the class reaches by 60, shields, weapon types it can learn; shared golden cases
-  `loot-usable-cases.json` from the addon's CF-106).
-- One "Classic data ⓘ" per section ("Drops and chances come from Classic 1.12 and may differ on Forever").
-- A **Bosses** jump list at the top of the right column (sticky; the boss in view is bold). Each Scarlet Monastery
-  wing is a dungeon page of its own with its own bosses.
-- Done when: view-model tests (order, optional, usable, "N more"); Playwright for the main flow; design checks with
-  baselines Nico approved; lint, tests and build pass.
+Built (2026-11-07), board `design/boards/dungeon-bosses-loot` (DL04):
+- **Bosses & loot** between Who fits and Quests (`src/components/dungeon/BossesLoot.tsx`, view model
+  `src/core/views/dungeonLoot.ts` `bossesLoot`): every boss in the client's order, number + name, "optional" in grey;
+  its drops (WEB-96's `boss_drops`) in two columns (one on a phone): icon with quality border, name in quality colour,
+  type line ("Two-Hand · Mace", "Leather · Legs", "Quest item", "Recipe · Cooking", as the addon's
+  `DungeonLoot.typeText`), drop % (highest first). At most 6, then "Show N more ▾" (`LOOT_SHOWN`), counted after the
+  Usable switch. Tags "Quest" and "Nobody knows it"; a recipe drop's name links to its recipe drawer
+  (`/professions/<slug>?recipe=<spell>`), its tooltip adds "Nobody knows it", who has the profession ("Can learn:
+  Lia Thornwhisper · Cooking 150") and "Click to open the recipe ›" (`ItemTooltip`'s new `footer`). Every item has
+  WEB-92's tooltip (phone: the sheet, with "Open recipe").
+- **Usable by [character ▾]** with a switch: your characters, the most recently played first (the default); the
+  pick and the switch are remembered in this browser (`localStorage` `cf.usableBy`). Off dims what the class can
+  never use (icon at `--opacity-unusable`, text `--text-faint`), on hides it. The rule: `src/core/loot.ts` `usable`,
+  checked against the addon's `loot-usable-cases.json`. One "Classic data ⓘ".
+- **Bosses** jump list at the top of the side column (`BossJump.tsx`): sticky, the boss in view bold; left out under
+  1024 px. The box and the list only show once an item import has bosses for the dungeon.
+- **One fit rule** (Nico, 2026-11-07): `levelFit` fits from `min - 2` (`FIT_BELOW`; `dungeonFit` against the addon's
+  `dungeon-fit-cases.json`): Who fits, Plan's suggestions, could fill, the roster's bands and the bot's run data.
+- **Stratholme and Dire Maul wings are dungeons of their own** (`wingsAreDungeons`): `strat-live` (Main Gate, addon
+  `stratlive`), `strat-undead` (Service Gate, `stratud`), `dme-east`, `dme-west`, `dme-north` (`dmeast`, `dmwest`,
+  `dmnorth`), ranges from the client's Group Finder (813 East 54–60, 814 West 56–60, 815 North 56–60, 816 and 1603
+  58–60). The old `strat` and `dme` (`LEGACY_DUNGEONS`, `whole`) stay readable: stored runs and older addons' plans
+  keep them, `/dungeons/strat` goes to the first wing, they are never offered for a new run, and their progress
+  counts the wings they have kills in, cleared when any wing's final boss dies.
+- Golden cases copied byte for byte to `tests/fixtures/addon-golden/` from the addon's CF-106 branch (see its README;
+  copy again from `develop` once CF-106 merges). Checked by `tests/unit/dungeonGolden.test.ts`.
+- Open (for Nico): the dimmed rows' faint text instead of 45 % opacity (contrast), the dropdown's name not in its
+  class colour, both in `docs/DESIGN.md` "Deviations" as asked.
 
-### WEB-97 Which bosses a run killed (needs a design; pairs with the addon's CF-103)
-- An upload's runs may carry `bossIds` (CF-103: the `encounterID`s killed, optional). Stored per run; older uploads
-  and runs without it keep only the count, as now.
-- The character page's and the dungeon page's run history show the bosses by name (WEB-96's `dungeon_bosses`), each linking
-  to its loot; without `bossIds` the count as now.
-- Compatibility (rule 4): every released addon sends only `bosses` (a count): nothing changes for them.
-- **Design needed:** a run's killed bosses in the run history (desktop and phone), the count-only fallback.
-- Done when: upload tests with and without `bossIds`; view-model tests; design checks; lint, tests and build pass.
+### WEB-97 Which bosses a run killed (DL05; pairs with the addon's CF-103)
+Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
+- **Uploads:** `src/core/bossKills.ts` reads every kill of a file: the records' `runs.*.bossKills = { [encounterID] =
+  at }`, the uploader's runs in progress (`runs[guid].bosses`, schema 3; schema 2's `true` has no time and is left
+  out) and friends' `liveKills`. Each (character, boss, time) once in `boss_kills` (migration `0031_boss_kills`),
+  written with the history (rebuilt by a rebuild). The site now reads schema 3 (`SUPPORTED_SCHEMA`). Older addons send
+  a count only: no kills, nothing changes for them (rule 4).
+- **Progress** (`src/core/runProgress.ts`, the addon's `run-progress-cases.json`): kills of the dungeon's bosses by
+  any character of the run's group (I'm in, Maybe, the organiser's lead) from 1 h before the start until the first
+  daily reset after it (the Doomsday day boundary, as the addon's Runs tab); optional bosses don't count; cleared =
+  the final boss died; an optional boss not killed on a cleared run is skipped.
+- **Run page** (`src/core/views/bossProgress.ts` `runBosses`): a Bosses box at the top of the side column once the
+  run has started: ✓ and the kill time per boss (hover: "Killed 20:31 · from Grom’s log"), "3 of 6" and a bar,
+  "optional", "– skipped" once cleared, "Cleared · 21:24"; while going "as of 20:45 · Grom’s upload" (the newest
+  upload of someone in the group). "cleared" next to the time once cleared. "Dungeon page ›" under the title, "Loot
+  on the dungeon page ›" under the bosses. The bot doesn't change.
+- **Dungeon page:** Planned here says "5 in · 3 of 6 bosses" once a run has a kill; Ran here says "Last cleared Tue"
+  and the characters who killed the final boss then (kills of it within 10 minutes), when a kill log shows one.
+- Open (for Nico): the board's "started 20:04" next to the time: the site doesn't know when a group entered (the
+  feed has no start time), so the page keeps its "started N min ago".
 
 ### WEB-98 Where to get a recipe's reagents (needs a design)
 - From the data already imported (cmangos `npc_vendor`, the loot tables, gathering nodes in

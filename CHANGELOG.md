@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Dungeon pages: a Bosses & loot box lists every boss with the loot it drops, its drop chance, quest items and recipes nobody in the group knows yet (with who could learn them). "Usable by" picks one of your characters and dims or hides what its class can never use; it remembers your choice. A Bosses list on the side jumps to each boss. Needs an "Import item data" after the release.
+- Runs: once a planned run has started, its page shows which bosses are down, when, and from whose log, "3 of 6" with a bar, and "Cleared" when the last boss dies. The dungeon page shows a started run's bosses under Planned here and when the dungeon was last cleared, and by whom, under Ran here. Needs the addon version that records boss kills.
+- Stratholme (Main Gate, Service Gate) and Dire Maul (East, West, North) are now planned per wing, each with its own level range, page and bosses. Runs planned for the whole instance before keep working.
+- A dungeon now fits a character from two levels below its range, everywhere: Who fits, Plan a run's suggestions, could fill and the roster's bands (the same rule as the addon).
+
 ## v0.11.2 (2026-11-07)
 ### Fixed
 - Potions, elixirs, food, bandages and other items show what they do again: their Use, Equip and Chance on hit lines ("Increases armor by 50 for 1 hour.", "Restores 1050 to 1750 health.") now appear in item tooltips and recipe details. Needs "Import item data" once after the release.

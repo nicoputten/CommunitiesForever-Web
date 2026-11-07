@@ -1077,3 +1077,92 @@
   text-decoration: line-through;
   color: var(--text-muted);
 }
+
+/* --- the run page's Bosses box (WEB-97, board DL05) ----------------------------------------------------------------- */
+
+.bossCount {
+  margin-left: auto;
+  font-size: var(--fs-body-sm);
+  color: var(--text-chip);
+}
+
+.bossCount[data-cleared] {
+  font-weight: var(--fw-semibold);
+  color: var(--fresh-text);
+}
+
+.bossBar {
+  position: relative;
+  height: var(--size-boss-bar);
+  border-radius: var(--r-boss-bar);
+  background: var(--boss-bar-track);
+  overflow: hidden;
+}
+
+.bossBar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--r-boss-bar);
+  background: var(--boss-bar-fill);
+}
+
+.bossList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bossRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  min-height: var(--size-boss-row);
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+}
+
+.bossRow[data-state="killed"] {
+  color: var(--text);
+}
+
+.bossCheck,
+.bossRing,
+.bossSkip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--size-boss-check);
+  height: var(--size-boss-check);
+  border-radius: var(--r-pill);
+}
+
+.bossCheck {
+  background: var(--boss-killed);
+  color: var(--text-strong);
+}
+
+.bossCheck svg {
+  width: var(--size-boss-check-icon);
+  height: var(--size-boss-check-icon);
+}
+
+.bossRing {
+  border: var(--border) solid var(--boss-open-ring);
+}
+
+.bossSkip {
+  color: var(--text-faint);
+}
+
+.bossRowName {
+  min-width: 0;
+}
+
+.bossTime {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}

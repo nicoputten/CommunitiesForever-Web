@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Site · run page · bosses</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+.strings{font:12.5px/1.5 Inter,sans-serif;color:#C9CFD9;padding:16px 18px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);align-self:start}
+.strings h3{margin:0 0 8px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+.strings ol{margin:0;padding-left:22px;columns:2;column-gap:26px}
+.strings li{padding:1px 0}
+.strings .tl{margin-top:10px;color:#D4AF6A;font-size:11px;letter-spacing:.1em;text-transform:uppercase}.ttp{position:absolute;z-index:5;background:rgba(6,10,18,.97);border:1px solid #5C6A85;padding:8px 10px;font:12.5px/1.45 Inter,sans-serif;color:#C9CFD9;box-shadow:0 6px 18px rgba(0,0,0,.6);white-space:nowrap}
+.ttp b{display:block;font-size:13.5px;color:#FFFFFF;font-weight:600}
+.ver{scroll-margin-top:90px;padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:10px}
+.ver.hit{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.16),rgba(12,18,30,.85) 55%);box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.vh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.vh h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.vh span{font-size:13px;color:#8E98A8}
+.vh a{margin-left:auto;font-size:12px;color:#6E7888;text-decoration:none}
+.ver ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55;color:#C9CFD9}
+.vh .ltag{font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;background:#D4AF6A;color:#0B0F14;text-transform:uppercase;letter-spacing:.05em}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid rgba(212,175,106,.18)}
+.tabs2 a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;color:#AEB6C3;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 a.act{color:#F3EBDA;border-bottom-color:#D4AF6A;font-weight:600}
+.qr{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.qr:last-child{border-bottom:0}
+.qt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.qt b{font:500 15px Inter,sans-serif;color:#F3EBDA}
+.qt span{font-size:12px;color:#7E8898}
+.who{display:flex;flex-wrap:wrap;gap:6px 14px}
+.ch{display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;min-height:28px}
+.more{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:28px;padding:0 8px;border-radius:999px;border:1px solid rgba(174,182,195,.3);font:600 12px Inter,sans-serif;color:#C9CFD9;background:#0E1626}
+.phone{width:375px;border-radius:28px;overflow:hidden;border:1px solid rgba(212,175,106,.3);box-shadow:0 30px 80px rgba(0,0,0,.5);background:#070C15}
+.cap2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#D4AF6A;margin-bottom:8px}
+.H1b{margin:0;font:38px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3DFAE}
+.subb{margin:6px 0 0;font-size:15px;color:#8E98A8;line-height:1.5;max-width:1200px}
+.reuse{padding:14px 16px;border-radius:12px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);font-size:13px;line-height:1.55;color:#C9CFD9}
+.reuse b{color:#F3EBDA}
+.reuse h3{margin:0 0 6px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+
+.oldp .card{padding:14px 16px;border-radius:12px;background:rgba(12,18,30,.78);border:1px solid rgba(212,175,106,.18);display:flex;flex-direction:column;gap:10px}
+.oldp .card.gap{border-color:rgba(224,138,74,.45);background:linear-gradient(180deg,rgba(224,138,74,.07),rgba(12,18,30,.78) 60%)}
+.oldp .ch{display:flex;align-items:center;gap:8px}
+.oldp .pn{font:17px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3EBDA;flex:1}
+.oldp .st{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px}
+.oldp .cov{background:rgba(127,217,154,.14);color:#9BE3B0}
+.oldp .thin{background:rgba(212,175,106,.16);color:#F0D08E}
+.oldp .gp{background:rgba(224,138,74,.18);color:#F0A774}
+.oldp .r{display:grid;grid-template-columns:96px minmax(0,1fr) 62px;gap:8px;align-items:center;font-size:12px}
+.oldp .r .v{text-align:right;color:#AEB6C3;font-variant-numeric:tabular-nums}
+.oldp .trk{position:relative;height:7px;border-radius:4px;background:#161E2B;overflow:hidden}
+.oldp .cap{position:absolute;left:0;top:0;bottom:0;background:rgba(212,175,106,.16)}
+.oldp .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.oldp .tk{position:absolute;top:0;bottom:0;width:1px;background:rgba(7,12,21,.9)}
+.oldp .best{color:#F0D08E;margin-left:3px}
+.oldp table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+.oldp th{font-weight:500;color:#7E8898;font-size:11px;padding:8px 6px;text-align:center;border-bottom:1px solid rgba(212,175,106,.25);white-space:nowrap}
+.oldp th:first-child,.oldp td:first-child{text-align:left;padding-left:12px}
+.oldp td{padding:6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);color:#C9CFD9}
+.oldp .c{display:inline-block;min-width:34px;padding:3px 0;border-radius:5px}
+.oldp .rl{display:inline-flex;align-items:center;min-height:28px;font-size:12px;color:#D4AF6A;text-decoration:none}
+.oldp .rl b{font-weight:600;color:#F0D08E}
+.ic{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid;border-radius:4px;overflow:hidden;background:linear-gradient(145deg,#3A3226,#121212)}
+.ic .n{position:absolute;right:2px;bottom:0;font:700 11px Inter,sans-serif;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.wtt{width:300px;box-sizing:border-box;padding:9px 11px 10px;border-radius:5px;border:1px solid #5E6A80;background:linear-gradient(180deg,rgba(9,13,26,.98),rgba(4,7,16,.98));box-shadow:0 10px 26px rgba(0,0,0,.6);font:13px/1.42 Inter,sans-serif;color:#FFFFFF}
+.wtt .t{font-size:15px;font-weight:600}
+.wtt .r{display:flex;justify-content:space-between;gap:10px}
+.wtt .gr{color:#1EFF00}.wtt .mu{color:#B8B8B8}.wtt .yl{color:#FFD100}
+.srch{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(212,175,106,.45);background:#0B111C;font-size:15px;color:#F3EBDA}
+.srch .ph{color:#6E7888}
+.dd{border-radius:12px;border:1px solid rgba(212,175,106,.35);background:#0B111C;box-shadow:0 20px 50px rgba(0,0,0,.55);padding:6px}
+.dd .gh{padding:8px 10px 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.res{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:52px;padding:4px 10px;border-radius:8px}
+.res.on{background:rgba(212,175,106,.12)}
+.res .nm{font-size:15px;font-weight:500}
+.res .sub{font-size:12px;color:#8E98A8}
+.whos{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;vertical-align:1px;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.flt{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid rgba(174,182,195,.25);background:#0E1626;font-size:13px;color:#C9CFD9;white-space:nowrap}
+.flt.on{border-color:#D4AF6A;background:rgba(212,175,106,.14);color:#F3EBDA}
+.seg2{display:inline-flex;border:1px solid rgba(174,182,195,.25);border-radius:10px;overflow:hidden}
+.seg2 span{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;font-size:13px;color:#AEB6C3}
+.seg2 span.on{background:rgba(212,175,106,.18);color:#F3EBDA;font-weight:600}
+.seg2 b{font-weight:500;color:#7E8898}
+.rt{width:100%;table-layout:fixed;border-collapse:collapse;font-size:14px;color:#C9CFD9}
+.rt th{text-align:left;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7E8898;padding:8px 10px;border-bottom:1px solid rgba(212,175,106,.3);white-space:nowrap}
+.rt td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.rt tr.rsel td{background:rgba(212,175,106,.10)}
+.rt tr.miss td{color:#8E98A8}
+.rt tr.cat td{padding:14px 10px 6px;font:15px 'Marcellus SC',serif;color:#F0D08E;border-bottom:1px solid rgba(212,175,106,.2)}
+.skl{display:inline-flex;gap:2px;align-items:center;font:600 12px Inter,sans-serif;font-variant-numeric:tabular-nums}
+.src{font-size:13px;color:#C9CFD9}.src em{font-style:normal;color:#7E8898}
+.drw{width:440px;box-sizing:border-box;border-left:1px solid rgba(212,175,106,.3);background:#0A101B;display:flex;flex-direction:column;gap:16px;padding:20px 20px 24px}
+.lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7E8898}
+.rg{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:40px}
+.chipq{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;border:1px solid rgba(174,182,195,.25);color:#C9CFD9;white-space:nowrap}
+.stale{font-size:12px;color:#8E98A8}
+.pbar{position:relative;height:6px;border-radius:3px;background:#1B2232;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;background:#D4AF6A;border-radius:3px}
+.prow{display:grid;grid-template-columns:120px minmax(0,1fr) 44px;gap:12px;align-items:center;min-height:30px;font-size:14px;color:#E6E1D6}
+.prow .n{text-align:right;font-variant-numeric:tabular-nums}
+.psub{grid-column:2 / -1;display:flex;gap:10px;align-items:center;margin-top:-6px;font-size:12px;color:#8E98A8}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:18px 18px 0 0;border-top:1px solid rgba(212,175,106,.35);background:#0A101B;box-shadow:0 -20px 50px rgba(0,0,0,.6)}
+
+.lg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 24px}
+.lrow{display:grid;grid-template-columns:36px minmax(0,1fr) 44px;gap:10px;align-items:center;min-height:46px}
+.lrow .nm{font-size:14px;font-weight:500}
+.lrow .ty{font-size:12px;color:#8E98A8}
+.lrow .pc{text-align:right;font-size:13px;color:#C9CFD9;font-variant-numeric:tabular-nums}
+.lrow.dim{opacity:.45}
+.bsec{padding:14px 0 6px;border-top:1px solid rgba(212,175,106,.15)}
+.bsec:first-of-type{border-top:0}
+.bsec h3{margin:0 0 4px;display:flex;align-items:baseline;gap:10px;font:18px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.bsec h3 span{font:600 12px Inter,sans-serif;color:#6E7888}
+.tg{font:600 11px Inter,sans-serif;padding:2px 7px;border-radius:999px;margin-left:8px;white-space:nowrap}
+.tg.q{background:rgba(212,175,106,.16);color:#F0D08E}.tg.n{background:rgba(127,217,154,.14);color:#9BE3B0}
+.jl a{display:flex;align-items:center;gap:10px;min-height:36px;font-size:14px;color:#C9CFD9;text-decoration:none}
+.jl a.cur{color:#F3EBDA;font-weight:600}
+.jl a span{width:18px;font:600 12px Inter,sans-serif;color:#6E7888}
+.tgl{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#C9CFD9}
+.sw{position:relative;display:inline-block;width:36px;height:20px;border-radius:10px;background:#2A3446}
+.sw.on{background:#D4AF6A}.sw:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#C9CFD9}
+.sw.on:after{left:19px;background:#0B0F14}
+
+</style>
+</helmet>
+<div style="width: 2000px; box-sizing: border-box; padding: 48px 56px 64px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px">
+  <div><h1 class="H1b">Site · run page · boss progress</h1><p class="subb">Once a run starts, its page shows which bosses are down.</p></div><div style="display: grid; grid-template-columns: 1440px 460px; gap: 32px; align-items: start"><div style="display: flex; flex-direction: column; gap: 28px">
+      <div><div class="cap2">1440 px · run in progress, 3 of 6, as of the last upload</div><div style="width: 1440px; height: 720px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; border: 1px solid rgba(212,175,106,.25); border-radius: 6px"><header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15)">
+    <div style="display: flex; align-items: center; gap: 10px"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span></div>
+    <nav aria-label="Main" style="display: flex; gap: 4px"><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Map</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Roster</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Professions</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); font-weight: 600">Runs</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Doomsday</a></nav><div style="flex: 1"></div><a href="#" style="padding: 8px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; color: #AEB6C3">Uploader</a><a href="#" style="padding: 8px 12px; font-size: 13px; color: #AEB6C3; text-decoration: none">Discord</a>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">A</span>Ada</div></header><main style="max-width: 1280px; margin: 0 auto; padding: 22px 24px 48px; display: flex; flex-direction: column; gap: 12px"><nav style="font-size: 13px; color: #8E98A8"><a href="#" style="text-decoration: none">Runs</a> › The Deadmines</nav>
+      <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">The Deadmines</h1>
+      <div style="font: 24px Marcellus, serif; color: #F3EBDA">Today · 20:00 <span style="font: 600 14px Inter, sans-serif; color: #7FD99A; margin-left: 8px">started 20:04</span></div>
+      <div style="font-size: 13px; color: #8E98A8">Levels 17–26 · Westfall · <a href="#" style="text-decoration: none">Dungeon page ›</a></div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px; align-items: start; margin-top: 8px"><div style="display: flex; flex-direction: column; gap: 18px"><section class="box" style="opacity: .45"><h2 class="bt">Group</h2><div style="height: 150px"></div></section><section class="box" style="opacity: .45"><h2 class="bt">Answers</h2><div style="height: 120px"></div></section></div><div style="display: flex; flex-direction: column; gap: 16px"><section class="box"><div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="bt">Bosses</h2><span style="font-size: 13px; color: #C9CFD9">3 of 6</span></div><div class="pbar" style="position: relative; height: 6px; border-radius: 3px; background: #1B2232; overflow: hidden"><i style="position: absolute; left: 0; top: 0; bottom: 0; width: 50.0%; background: #7FD99A; border-radius: 3px"></i></div><div style="font-size: 12px; color: #7E8898">as of 20:45 · Grom’s upload</div><div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Rhahk’Zor<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:18</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Sneed<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:31</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Gilnid<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:44</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #8E98A8"><span style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid #3A4456"></span>Mr. Smite<span style="margin-left: auto; font-size: 12px; color: #7E8898"></span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #8E98A8"><span style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid #3A4456"></span>Captain Greenskin<span style="margin-left: auto; font-size: 12px; color: #7E8898"></span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #8E98A8"><span style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid #3A4456"></span>Edwin VanCleef<span style="margin-left: auto; font-size: 12px; color: #7E8898"></span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #8E98A8"><span style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid #3A4456"></span>Cookie<span style="margin-left: auto; font-size: 12px; color: #7E8898">optional</span></div></div><a href="#" style="font-size: 13px; color: #D4AF6A; text-decoration: none">Loot on the dungeon page ›</a></section><section class="box" style="opacity: .45"><h2 class="bt">Reminder</h2><div style="height: 50px"></div></section></div></div></main></div></div><div><div class="cap2">1440 px · cleared: VanCleef down, Cookie skipped</div><div style="width: 1440px; height: 760px; overflow: hidden; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; border: 1px solid rgba(212,175,106,.25); border-radius: 6px"><header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; box-sizing: border-box; border-bottom: 1px solid rgba(212,175,106,0.15)">
+    <div style="display: flex; align-items: center; gap: 10px"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="#D4AF6A" stroke-width="1.5"><path d="M13 2l9 4v7c0 6-4 9-9 11C8 22 4 19 4 13V6z"></path><path d="M13 7v12M8 12h10"></path></svg><span style="font: 20px 'Marcellus SC', serif; letter-spacing: .08em; color: #F0D08E">Doombringers</span></div>
+    <nav aria-label="Main" style="display: flex; gap: 4px"><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Map</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Roster</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Professions</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #F3EBDA; text-decoration: none; background: rgba(212,175,106,0.14); font-weight: 600">Runs</a><a href="#" style="padding: 8px 14px; border-radius: 8px; font-size: 14px; color: #AEB6C3; text-decoration: none; ">Doomsday</a></nav><div style="flex: 1"></div><a href="#" style="padding: 8px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; color: #AEB6C3">Uploader</a><a href="#" style="padding: 8px 12px; font-size: 13px; color: #AEB6C3; text-decoration: none">Discord</a>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 30px; height: 30px; border-radius: 50%; background: #2A3446; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: #F0D08E">A</span>Ada</div></header><main style="max-width: 1280px; margin: 0 auto; padding: 22px 24px 48px; display: flex; flex-direction: column; gap: 12px"><nav style="font-size: 13px; color: #8E98A8"><a href="#" style="text-decoration: none">Runs</a> › The Deadmines</nav>
+      <h1 style="margin: 0; font: 34px 'Marcellus SC', serif; letter-spacing: .05em; color: #F3DFAE">The Deadmines</h1>
+      <div style="font: 24px Marcellus, serif; color: #F3EBDA">Today · 20:00 <span style="font: 600 14px Inter, sans-serif; color: #9BE3B0; margin-left: 8px">cleared</span></div>
+      <div style="font-size: 13px; color: #8E98A8">Levels 17–26 · Westfall · <a href="#" style="text-decoration: none">Dungeon page ›</a></div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px; align-items: start; margin-top: 8px"><div style="display: flex; flex-direction: column; gap: 18px"><section class="box" style="opacity: .45"><h2 class="bt">Group</h2><div style="height: 150px"></div></section><section class="box" style="opacity: .45"><h2 class="bt">Answers</h2><div style="height: 120px"></div></section></div><div style="display: flex; flex-direction: column; gap: 16px"><section class="box"><div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="bt">Bosses</h2><span style="font-size: 13px; color: #9BE3B0">Cleared · 21:24</span></div><div class="pbar" style="position: relative; height: 6px; border-radius: 3px; background: #1B2232; overflow: hidden"><i style="position: absolute; left: 0; top: 0; bottom: 0; width: 100.0%; background: #7FD99A; border-radius: 3px"></i></div><div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Rhahk’Zor<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:18</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Sneed<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:31</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Gilnid<span style="margin-left: auto; font-size: 12px; color: #7E8898">20:44</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Mr. Smite<span style="margin-left: auto; font-size: 12px; color: #7E8898">21:02</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Captain Greenskin<span style="margin-left: auto; font-size: 12px; color: #7E8898">21:10</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #E6E1D6"><span style="width: 18px; height: 18px; border-radius: 50%; background: #3BA55D; display: inline-flex; align-items: center; justify-content: center"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="#fff" stroke-width="2"></path></svg></span>Edwin VanCleef<span style="margin-left: auto; font-size: 12px; color: #7E8898">21:24</span></div><div style="display: flex; align-items: center; gap: 10px; min-height: 34px; font-size: 14px; color: #6E7888"><span style="width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; color: #6E7888">–</span>Cookie<span style="margin-left: auto; font-size: 12px; color: #7E8898">skipped</span></div></div><a href="#" style="font-size: 13px; color: #D4AF6A; text-decoration: none">Loot on the dungeon page ›</a></section><section class="box" style="opacity: .45"><h2 class="bt">Reminder</h2><div style="height: 50px"></div></section></div></div></main></div></div></div><div class="strings"><h3>Visible strings · 38</h3><ol><li>Map</li><li>Roster</li><li>Professions</li><li>Runs</li><li>Uploader</li><li>Discord</li><li>A</li><li>Ada</li><li>› The Deadmines</li><li>The Deadmines</li><li>Today · 20:00</li><li>started 20:04</li><li>Levels 17–26 · Westfall ·</li><li>Dungeon page ›</li><li>Group</li><li>Answers</li><li>Bosses</li><li>3 of 6</li><li>as of 20:45 · Grom’s upload</li><li>Rhahk’Zor</li><li>20:18</li><li>Sneed</li><li>20:31</li><li>Gilnid</li><li>20:44</li><li>Mr. Smite</li><li>Captain Greenskin</li><li>Edwin VanCleef</li><li>Cookie</li><li>optional</li><li>Loot on the dungeon page ›</li><li>Reminder</li><li>cleared</li><li>Cleared · 21:24</li><li>21:02</li><li>21:10</li><li>21:24</li><li>skipped</li></ol><div class="tl">Tooltips &amp; menus</div><ol><li>Hover on a boss: Killed 20:31 · from Grom’s log</li></ol><div style="margin-top: 10px; font-size: 11px; color: #6E7888">Window chrome (title, tabs) not listed.</div></div></div>
+      <div class="reuse" style="max-width: 1440px"><h3>Rules</h3>The run page (RunDetailV2) keeps its Group and Answers. New: a <b>Bosses</b> box at the top of the right column, only once the run has started (the first kill or the start time): a ✓ and the kill time per boss from the kill log of anyone in the group, “3 of 6” (required bosses only; optional ones say “optional”) and a bar. <b>Final boss down → “Cleared · 21:24”</b> and the run counts for “Last cleared”; an optional boss that wasn’t killed then shows “– skipped” in grey. While running, a grey <b>“as of 20:45 · Grom’s upload”</b> line sits under the bar, because the site only learns kills from uploads (SavedVariables are written on /reload or logout); it goes once the run is cleared. The addon itself shows kills live. <b>Dungeon page ›</b> under the title, <b>Loot on the dungeon page ›</b> under the bosses. Before the start the box isn’t shown. The bot doesn’t change.</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2000,"height":1919}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
