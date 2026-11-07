@@ -451,3 +451,17 @@ Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
   only).
 - **Design needed:** the talent tooltip, and a talent tree view if the synced data allows one.
 - Done when: import tests; view-model tests; design checks; lint, tests and build pass.
+
+### WEB-103 Spike: Everloot as a boss loot source (investigation only)
+Done (2026-11-07), report: [docs/research/everloot-loot-source.md](research/everloot-loot-source.md). Nico asked
+whether [Everloot](https://everloot.app) (data CC BY-SA 4.0) can replace cmangos for boss loot, or fill in where it
+has nothing. We don't gather drops with our own addon.
+- **Access:** the drop rates and the public corpus answer 30 requests an hour per address without a key, 2,000 with
+  Nico's free key. Our whole boss input is about 9 requests today.
+- **Shape:** drops are keyed by creature ID, and encounters by the same encounter ID as `dungeon_bosses`.
+- **Coverage today:** 4 of 183 classic bosses (Ragefire Chasm only) and 0 of Forever's 58. VanCleef, Mutanus and
+  Arugal have nothing yet. Where Everloot has data, it shows Forever's new loot that cmangos can't know.
+- **Licence:** CC BY-SA 4.0 may go into the addon's GPL-3.0 `Data\Loot.lua`, with the credit "Data from Everloot
+  (https://everloot.app), CC BY-SA 4.0." in the file and next to the data on the site. No Everloot logo.
+- **Outcome:** don't replace cmangos. Fill in later as a "Forever data" layer once Everloot covers a quarter of our
+  bosses or any new Forever dungeon. The report sketches that story and its cost.
