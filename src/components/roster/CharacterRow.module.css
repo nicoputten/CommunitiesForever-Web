@@ -22,9 +22,8 @@
   color: var(--text);
 }
 
-/* Old data: the disc and level bar fade as on the board; the text keeps its contrast (DESIGN.md §11). */
-.row[data-old] .lead > *,
-.row[data-old] .bar {
+/* Old data: the disc fades as on the board; the text keeps its contrast (DESIGN.md §11). */
+.row[data-old] .lead > * {
   opacity: var(--opacity-old);
 }
 
@@ -53,27 +52,6 @@
   margin-top: var(--s-0-5);
   font-size: var(--fs-meta);
   color: var(--text-muted);
-}
-
-.bar {
-  position: relative;
-  height: var(--size-level-bar);
-  margin-top: var(--s-1-5);
-  border-radius: var(--r-level-bar);
-  background: var(--track);
-  overflow: hidden;
-}
-
-.bar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: calc(var(--level) * 100%);
-  background: var(--class);
-}
-
-.bar[data-max]::after {
-  background: linear-gradient(90deg, var(--class), var(--gold-bright));
 }
 
 .professions {
