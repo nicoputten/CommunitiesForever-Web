@@ -76,9 +76,8 @@
   gap: var(--s-2-5);
 }
 
-/* Old data: the disc and level bar fade as on the board; the text keeps its contrast (DESIGN.md §11, WEB-21). */
-.row[data-old] .character > [role="img"],
-.row[data-old] .bar {
+/* Old data: the disc fades as on the board; the text keeps its contrast (DESIGN.md §11, WEB-21). */
+.row[data-old] .character > [role="img"] {
   opacity: var(--opacity-old);
 }
 
@@ -100,30 +99,6 @@
 
 .old {
   color: var(--stale-note);
-}
-
-.bar {
-  position: relative;
-  display: inline-block;
-  width: var(--size-table-bar);
-  height: var(--size-table-bar-h);
-  margin-left: var(--s-2);
-  vertical-align: middle;
-  border-radius: var(--r-level-bar);
-  background: var(--track);
-  overflow: hidden;
-}
-
-.bar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: calc(var(--level) * 100%);
-  background: var(--class, var(--avatar));
-}
-
-.bar[data-max]::after {
-  background: linear-gradient(90deg, var(--class, var(--avatar)), var(--gold-bright));
 }
 
 .row td.wrap {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { classInfo, MAX_LEVEL } from "@/core/gamedata";
+import { classInfo } from "@/core/gamedata";
 import { dataAge, timeAgo } from "@/core/views/age";
 import type { CharacterView, PersonView } from "@/core/views/characters";
 import { defaultSortDir, type RosterFriend, type RosterSort } from "@/core/views/roster";
@@ -135,7 +135,6 @@ function Row({ character: c, person, own, player, now }: RowProps) {
       : ({ "--class": `var(${info.colorToken})`, "--class-text": `var(${info.textToken})` } as CSSProperties);
   const old = person?.old === true;
   const talents = talentsText(c.mainTreeName, c.talents);
-  const level = c.level === undefined ? 0 : Math.min(c.level, MAX_LEVEL) / MAX_LEVEL;
   let note: ReactNode = null;
   if (old) note = <span className={styles.old}> · {person?.daysOld ?? 7} d old</span>;
   else if (person?.via !== undefined) note = <span className={styles.via}> · via {person.via.name}</span>;
@@ -161,15 +160,7 @@ function Row({ character: c, person, own, player, now }: RowProps) {
           {note}
         </td>
       )}
-      <td>
-        {c.level ?? <Dash />}
-        <span
-          aria-hidden="true"
-          className={styles.bar}
-          data-max={c.level === MAX_LEVEL || undefined}
-          style={{ "--level": level } as CSSProperties}
-        />
-      </td>
+      <td>{c.level ?? <Dash />}</td>
       <td>{[c.raceName, c.className].filter((p) => p !== undefined).join(" ") || <Dash />}</td>
       <td>{c.role === undefined ? <Dash /> : ROLE_NAMES[c.role]}</td>
       <td>{talents ?? <Dash />}</td>

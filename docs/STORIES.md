@@ -485,3 +485,16 @@ Nico tested v0.12.0 (2026-11-07) on a boss's pattern nobody knows ("Pattern: Dar
   other items); e2e: a recipe link on an unscanned profession opens and closes its drawer, a recipe drop's hover
   tooltip names the created item; lint, tests, build and design checks pass (the recipe-drop tooltip's screenshot
   baseline changes: new baseline after Nico's OK).
+
+### WEB-105 Roster: no level bar on a character
+Nico (2026-11-08): the thin bar under a roster card's class line only shows level / 60, which the level on the disc
+already says; it has no value. It goes, not repurposed.
+- **Roster cards:** the bar under the name and class line is gone; the row keeps its layout without a gap where the
+  bar was. Old friend data still fades the disc only.
+- **Roster table:** the same level / 60 mini bar next to the number in the Level column goes too; the number stays.
+- **Character page:** the hero's level block ("Level 42 · 18 levels to 60" with its bar) stays; it is a labelled block
+  of its own board.
+- The bar's tokens (`--size-level-bar`, `--r-level-bar`, `--size-table-bar`, `--size-table-bar-h`) leave
+  `tokens.css`; the deviation is recorded in `docs/DESIGN.md`.
+- Done when: lint, tests, build, e2e and design checks pass; the roster and roster-table screenshot baselines change
+  (new baselines after Nico's OK).
