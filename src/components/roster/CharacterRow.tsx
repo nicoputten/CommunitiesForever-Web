@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { classInfo, MAX_LEVEL } from "@/core/gamedata";
+import { classInfo } from "@/core/gamedata";
 import { dataAge, timeAgo } from "@/core/views/age";
 import type { CharacterView } from "@/core/views/characters";
 import { ROLE_NAMES } from "@/core/views/rosterQuery";
@@ -36,7 +36,6 @@ export function CharacterRow({ character: c, now, old = false }: CharacterRowPro
     .filter((p) => p !== undefined && p !== "");
   const professions = c.professions.slice(0, TOP_PROFESSIONS);
   const played = c.lastPlayed === undefined ? "—" : capitalize(timeAgo(c.lastPlayed, now));
-  const level = c.level === undefined ? 0 : Math.min(c.level, MAX_LEVEL) / MAX_LEVEL;
   return (
     <Link href={characterHref(c.guid)} className={styles.row} style={style} data-old={old || undefined}>
       <span className={styles.lead}>
@@ -53,12 +52,6 @@ export function CharacterRow({ character: c, now, old = false }: CharacterRowPro
           {what.join(" · ")}
           {c.faction !== undefined && <FactionTag faction={c.faction} />}
         </span>
-        <span
-          aria-hidden="true"
-          className={styles.bar}
-          data-max={c.level === MAX_LEVEL || undefined}
-          style={{ "--level": level } as CSSProperties}
-        />
       </span>
       <span className={styles.professions}>
         {professions.length === 0 ? (

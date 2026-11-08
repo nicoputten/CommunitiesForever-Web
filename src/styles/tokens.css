@@ -248,8 +248,6 @@
   --size-row-lead: 48px; /* roster-cards: character row, disc column */
   --size-row-prof: 168px; /* roster-cards: character row, professions column */
   --size-row-seen: 112px; /* roster-cards: character row, last played column */
-  --size-level-bar: 3px; /* roster-cards: level bar under the name */
-  --r-level-bar: 2px;
   --size-dot: 14px; /* roster-cards-runs: level spread dot (hit area --size-touch, WEB-32) */
   --size-dot-group: 26px; /* roster-cards-runs: dot of characters within 2 levels, with a count */
   --size-dot-count: 18px; /* roster-cards-runs: the count inside it */
@@ -279,8 +277,6 @@
   --s-1-75: 7px; /* roster-table: profession pill padding */
   --r-pill-sm: 5px; /* roster-table: profession pill */
   --size-disc-xs: 26px; /* roster-table: class disc */
-  --size-table-bar: 60px; /* roster-table: level bar width */
-  --size-table-bar-h: 4px; /* roster-table: level bar height */
   --sheet-backdrop: rgba(5, 10, 18, 0.6); /* roster table on phone (no board): behind the filter sheet */
 
   /* atmosphere (WEB-16): ambient loops of DESIGN.md §6; the ones §6 does not list come from the board named */

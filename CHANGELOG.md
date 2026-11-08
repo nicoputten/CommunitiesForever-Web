@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Changed
+- Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.
+
 ## v0.12.1 (2026-11-07)
 ### Fixed
 - Recipes: a recipe link (a boss's recipe drop, DoomBot) opens the recipe also on a profession nobody opened in game yet, instead of "No recipes scanned yet". A recipe's tooltip now shows the item it makes and its reagents under it, as in game.
