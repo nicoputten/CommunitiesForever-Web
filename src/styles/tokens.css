@@ -1047,4 +1047,12 @@
   --boss-bar-fill: #7fd99a;
   --boss-killed: #3ba55d; /* the ✓ disc */
   --boss-open-ring: #3a4456; /* a boss not down yet */
+  /* Where to get a reagent, in the recipe drawer (reagent-sources, WEB-98) */
+  --line-reagent: rgba(255, 255, 255, 0.06); /* between reagents */
+  --lh-source: 1.4; /* a source line */
+  --source-skin: #c8965a; /* the skinning knife's blade */
+  --source-skin-dark: #8a6a3a; /* its handle */
+  --source-herb-dark: #3a7a4a; /* the leaf's outline (the leaf: --fresh) */
+  --tag-limited-bg: rgba(240, 167, 116, 0.14); /* "limited stock" (text: --pill-soon-text) */
+  --pad-tag-limited: 1px 7px;
 }

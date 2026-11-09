@@ -592,6 +592,19 @@ One per character per accepted upload that brought new rare finds: recipes the c
 - `recipe.skill`: the skill to learn it (orange; RC08's "Tailoring 300").
 - `crafters`: everyone who knows it, highest skill first, all of them (the bot shows 5 and "+N more"). `difficulty` (`orange`, `yellow`, `green`, `grey`) is what crafting it gives that character (RC08's 🟠🟡🟢⚪); left out without a skill.
 - `crafters` empty: nobody knows it; `sources` says where it is learned ("Nobody can make it yet.").
+- `reagents[].sources` (optional, WEB-98): where to get that reagent, best first, at most 3, as the site's recipe drawer
+  shows it; `[]`: none known ("No known source"). Left out (the whole field) while the site's item data has no reagent
+  sources yet (an import from before WEB-98). Never a price. One of:
+  - `{ "kind": "vendor", "npc": "Tharynn Bouden", "zone": "Elwynn Forest", "limited": false }`: `zone` optional;
+    `limited` true: the vendor has a few, then restocks ("limited stock").
+  - `{ "kind": "crafted", "recipeId": 3818, "name": "Cured Heavy Hide", "profession": "Leatherworking", "skill": 150,
+    "known": true, "url": "/professions/leatherworking?recipe=3818" }`: the recipe that makes it; `known`: someone in
+    the group knows it; `skill` (to learn it) and `url` optional.
+  - `{ "kind": "skinning", "creatureType": "Beast", "minLevel": 30, "maxLevel": 45 }`: all three optional.
+  - `{ "kind": "herbalism" | "mining", "nodes": ["Kingsblood"] }`: one or two nodes.
+  - `{ "kind": "drop", "creatures": [{ "name": "Shadowmaw Panther", "chance": 6 }] }`: one or two creatures, `chance` in
+    percent (two decimals), highest first.
+  Unknown `kind`s may come later: skip them.
 - `404 not_found` ("No recipe makes that."): no recipe makes it. `400 invalid_request` without `item`.
 
 ## Visual posts (WEB-66)

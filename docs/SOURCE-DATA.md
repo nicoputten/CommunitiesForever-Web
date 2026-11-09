@@ -82,9 +82,9 @@ written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads st
 Data used for the first import (2026-11-06):
 | Source | What | Version |
 |---|---|---|
-| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map, DungeonEncounter (the bosses, WEB-96) | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
+| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map, DungeonEncounter (the bosses, WEB-96), Lock, CreatureType, UiMapAssignment, AreaTable (where to get a reagent, WEB-98) | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
 | The Classic Era client, same export | SkillLineAbility (recipes Forever has that Era lacks are Forever's own), SpellEffect with Effect 36 (what cmangos' trainer and recipe-item spells teach: Forever's client no longer has those spells) | `wow_classic_era` 1.15.9.70576 |
-| [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), the bosses' own loot (`creature_loot_template`, WEB-96), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
+| [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), the bosses' own loot (`creature_loot_template`, WEB-96), where to get a reagent (`npc_vendor`, the loot tables, `skinning_loot_template`, `gameobject_template`, `creature` and `gameobject` spawns, WEB-98), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
 
 wago.tools cuts long CSV exports off after a few seconds; the script asks for rows in ID order (`sort[ID]=asc`) and
 continues after the last whole row (`filter[ID]=>last`) until a download ends cleanly.
@@ -149,6 +149,38 @@ bosses with the next "Import item data".
   The dropped items join `items` (names, icons, tooltips). Forever's own dungeons aren't in cmangos: no loot. A few
   encounters have no creature (Blackrock Depths' Ring of Law, The Vault, The Seven): no loot. 1,940 drops on build
   70862.
+
+### Where to get a reagent (WEB-98)
+Built by `src/core/recipes/reagentSources.ts` in the same import, written in the same transaction, for every item a
+recipe uses. An import before WEB-98 has none: the drawer then shows no sources at all (not "No known source") until
+the next "Import item data". **`reagent_sources`** (item_id, kind, position, name, zone, chance, recipe_id,
+creature_type, min_level, max_level; migration `0033_reagent_sources`), a few per kind, best first (`position`):
+- **`vendor`, `vendor_limited`** (3 each): cmangos `npc_vendor` and `npc_vendor_template` (through
+  `creature_template.VendorTemplateId`); `maxcount` > 0 is a limited stock that restocks. One row per NPC name; spawned
+  NPCs first, then those whose zone is known, then the NPC's level nearest the reagent's item level. `zone`: the
+  first spawn point's zone, the smallest of the Forever client's `UiMapAssignment` rectangles that holds it (Region_0..2
+  the minimum x, y, z, Region_3..5 the maximum) whose `AreaTable` row is a zone (`ParentAreaID` 0); inside an instance
+  the map's name.
+- **`crafted`** (3): the obtainable recipes that make it (`recipes.created_item_id`), the lowest skill first.
+- **`skinning`** (1): cmangos `skinning_loot_template` through `creature_template.SkinningLootId`. The creatures whose
+  chance is at least half the best one's: their most common type (the client's `CreatureType` name) and their level
+  range.
+- **`herbalism`, `mining`** (2 each): chest-type objects (`gameobject_template` type 3; `data0` the lock, `data1` the
+  loot) whose lock (the client's `Lock`: a key of type 2 is a skill, its index a `LockType`, 2 Herbalism, 3 Mining)
+  needs the skill, and whose `gameobject_loot_template` has the reagent. One row per node name, spawned nodes first,
+  the best chance first.
+- **`drop`** (2): cmangos `creature_loot_template` through `creature_template.LootId`, with reference tables. `chance`
+  in percent (two decimals): a row's `ChanceOrQuestChance` (below 0: quest only, left out); a 0 in a loot group shares
+  what the group's other rows leave of 100 %; a reference row multiplies its chance into the reference table's. One
+  row per creature name, spawned creatures only (when any is), creatures with 3 or more spawn points first (a unique
+  NPC with a 100 % cloth drop is no place to farm cloth), then the best chance, then the level nearest the item level.
+- None: an item none of these know (disenchanting materials, fished fish, Forever's own items, quest items): no rows,
+  "No known source".
+
+The drawer and `/craft` pick at most 3 (`src/core/views/reagentSources.ts`, Nico's order: a vendor without a stock
+limit, crafted by someone in the group, skinning, herbalism, mining, a limited vendor, crafted by nobody yet, a drop),
+one line per kind except crafted (one per recipe). Build 70862: 588 reagents, 471 with a source, 1,092 rows.
+
 - **The addon's loot file** (`npm run export:addon-loot -- <out>`, `scripts/export-addon-loot.ts`,
   `src/core/recipes/addonLoot.ts`): `Data\Loot.lua` for the addon (the shared dungeons contract), keyed by the addon's
   dungeon ids (a wing's own id: smgy, smlib, smarm, smcath, lbrs, ubrs, stratlive, stratud, dmeast, dmwest, dmnorth;

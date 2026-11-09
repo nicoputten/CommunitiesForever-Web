@@ -106,7 +106,9 @@ describe("sources", () => {
 
 describe("items", () => {
   it("what recipes make and use, and what dungeon bosses drop (WEB-96)", () => {
-    expect(data.items.map((i) => i.id)).toEqual([5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 6005, 279999]);
+    expect(data.items.map((i) => i.id)).toEqual([
+      5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 5011, 5012, 5013, 5015, 6005, 279999,
+    ]);
   });
 
   it("the tooltip: client data first, cmangos' numbers, the Equip and Use texts", () => {

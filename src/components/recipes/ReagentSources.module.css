@@ -1,0 +1,127 @@
+/* Where to get a reagent (WEB-98, board reagent-sources): 13 px lines under the reagent's name, an icon each. */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-75);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: var(--size-icon) minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: start;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-source);
+  color: var(--text-chip);
+}
+
+.icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  margin-top: var(--s-0-5);
+  fill: none;
+  stroke-width: 1.4;
+}
+
+.icon [data-part="line"] {
+  stroke: currentColor;
+}
+
+.icon [data-part="fill"] {
+  fill: currentColor;
+}
+
+.icon[data-kind="vendor"] {
+  color: var(--gold);
+}
+
+.icon[data-kind="crafted"] {
+  color: var(--gold);
+}
+
+.icon[data-kind="crafted"] [data-part="head"] {
+  fill: var(--text-muted);
+}
+
+.icon[data-kind="skinning"] {
+  color: var(--source-skin);
+}
+
+.icon[data-kind="skinning"] [data-part="dark"] {
+  stroke: var(--source-skin-dark);
+  stroke-width: 2;
+}
+
+.icon[data-kind="herbalism"] {
+  color: var(--fresh);
+}
+
+.icon[data-kind="herbalism"] [data-part="fill"] {
+  stroke: var(--source-herb-dark);
+  stroke-width: 0.8;
+}
+
+.icon[data-kind="herbalism"] [data-part="dark"] {
+  stroke: var(--source-herb-dark);
+}
+
+.icon[data-kind="mining"] {
+  color: var(--text-muted);
+}
+
+.icon[data-kind="drop"] {
+  color: var(--text-chip);
+}
+
+.kind {
+  color: var(--text-dim);
+}
+
+.chance {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Medium weight: a link in a line of text needs more than its colour (WCAG 1.4.1, axe link-in-text-block). */
+.link {
+  color: var(--gold);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--gold-bright);
+}
+
+.limited {
+  display: inline-block;
+  margin-left: var(--s-1);
+  padding: var(--pad-tag-limited);
+  border-radius: var(--r-pill);
+  background: var(--tag-limited-bg);
+  color: var(--pill-soon-text);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-source);
+  white-space: nowrap;
+}
+
+.none {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-faint);
+}
+
+/* 44 px targets on a phone: the link's inline box grows around its text without moving the line. */
+@media (max-width: 1023px) {
+  .link {
+    padding-block: calc((var(--size-touch) - var(--fs-body-sm)) / 2);
+  }
+}

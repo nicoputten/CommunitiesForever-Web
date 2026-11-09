@@ -232,6 +232,13 @@
       "when": 1794050787129,
       "tag": "0032_boss_kills",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1794256253211,
+      "tag": "0033_reagent_sources",
+      "breakpoints": true
     }
   ]
 }

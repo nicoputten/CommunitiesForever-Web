@@ -99,7 +99,7 @@ describe("importItems", () => {
     expect(summary).toEqual({
       build: FOREVER,
       era: ERA,
-      items: 11,
+      items: 15, // WEB-98: the fixtures' reagents for where to get one
       recipes: 10,
       foreverOnly: 1,
       unobtainable: 1,

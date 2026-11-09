@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Recipes: every reagent in a recipe's panel says where to get it, at most three ways, best first: the vendor that sells it (and where, with "limited stock" when it only has a few), the recipe that makes it (with who in the group knows it first; the link opens that recipe, Back returns), skinning, herbs or ore, then the creatures that drop it with their chance. "No known source" when the game data has none. DoomBot's `/craft` gets the same, for the bot's next version. Needs "Import item data" once after the release.
+
 ## v0.12.2 (2026-11-08)
 ### Changed
 - Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.

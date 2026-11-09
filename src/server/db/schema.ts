@@ -7,6 +7,7 @@ import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 import type { ItemRecord, SourceKind } from "@/core/recipes/build";
+import type { ReagentSourceKind } from "@/core/recipes/reagentSources";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
@@ -747,6 +748,33 @@ export const recipeSources = sqliteTable(
     isRare: integer("is_rare", { mode: "boolean" }).notNull(),
   },
   (t) => [index("recipe_sources_recipe").on(t.recipeId)],
+);
+
+/**
+ * WEB-98: where to get a reagent (src/core/recipes/reagentSources.ts): vendors, the recipes that make it, skinning,
+ * herb and ore nodes, drops. A few per kind, best first; the drawer picks at most 3.
+ */
+export const reagentSources = sqliteTable(
+  "reagent_sources",
+  {
+    itemId: integer("item_id").notNull(),
+    kind: text("kind").$type<ReagentSourceKind>().notNull(),
+    /** 1, 2, ...: best first within the kind. */
+    position: integer("position").notNull(),
+    /** The vendor, creature, or herb or ore node. */
+    name: text("name"),
+    /** A vendor's zone. */
+    zone: text("zone"),
+    /** A drop's chance in percent. */
+    chance: real("chance"),
+    /** Crafted: the recipe (spell ID) that makes it. */
+    recipeId: integer("recipe_id"),
+    /** Skinning: the creatures' type and levels. */
+    creatureType: text("creature_type"),
+    minLevel: integer("min_level"),
+    maxLevel: integer("max_level"),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.kind, t.position] })],
 );
 
 /** One row: which data the last import used and when (docs/SOURCE-DATA.md "Item database"). */
