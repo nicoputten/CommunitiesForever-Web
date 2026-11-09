@@ -82,7 +82,7 @@ written by `src/server/itemDb.ts`). Never scraped from Wowhead. The downloads st
 Data used for the first import (2026-11-06):
 | Source | What | Version |
 |---|---|---|
-| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map, DungeonEncounter (the bosses, WEB-96), Lock, CreatureType, UiMapAssignment, AreaTable (where to get a reagent, WEB-98) | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
+| Blizzard's client data of **WoW: Forever**, DB2 tables as CSV from [wago.tools](https://wago.tools) | ItemSparse, Item, ItemModifiedAppearance, ItemAppearance, ItemSubClass, SkillLineAbility, SpellEffect, SpellReagents, SpellName, Spell, SpellMisc, SpellDuration, SpellRadius, SpellAuraOptions, SpellTargetRestrictions (the numbers in Use texts, WEB-95), ItemXItemEffect, ItemEffect, ManifestInterfaceData (icon file names), Faction, Map, DungeonEncounter (the bosses, WEB-96), ItemSet and ItemSetSpell (item sets, WEB-99), Lock, CreatureType, UiMapAssignment, AreaTable (where to get a reagent, WEB-98) | product `wowf`, build **1.60.1.70790** (the Forever client: WOW_PROJECT_ID 18, Interface 16001, the same build number) |
 | The Classic Era client, same export | SkillLineAbility (recipes Forever has that Era lacks are Forever's own), SpellEffect with Effect 36 (what cmangos' trainer and recipe-item spells teach: Forever's client no longer has those spells) | `wow_classic_era` 1.15.9.70576 |
 | [cmangos classic-db](https://github.com/cmangos/classic-db), `Full_DB/ClassicDB_1_12_1_z2815.sql.gz` | where each recipe is learned (`npc_trainer`, `npc_vendor`, the loot tables, `quest_template`), the bosses' own loot (`creature_loot_template`, WEB-96), where to get a reagent (`npc_vendor`, the loot tables, `skinning_loot_template`, `gameobject_template`, `creature` and `gameobject` spawns, WEB-98), and the tooltip numbers ItemSparse no longer has as flat values (armor, stats, resistances, durability, weapon damage and speed), as of Vanilla 1.12 | commit `28ef625` (2024-01-17) |
 
@@ -119,6 +119,20 @@ on); 2,693 items (what recipes make and use; 335 of Forever's items have no name
   (`/api/item-icons/<name>`, docs/ARCHITECTURE.md).
 - **Uploads fill the gaps** (amendment 2): a recipe or item the database doesn't have is stored from the uploaded
   recipe -> item pair (origin `upload`, without a name), until an import has it.
+
+### Item sets (WEB-99)
+Built by `src/core/recipes/itemSets.ts` in the same import, written in the same transaction. The item data of an import
+before WEB-99 has no sets; they come with the next "Import item data".
+- **`item_sets`** (id = `ItemSet.ID`, name, items JSON `[{id, name}]`, bonuses JSON `[{threshold, text}]`): the Forever
+  client's `ItemSet` rows with at least one piece among `items`. The pieces in the client's order (`ItemID_0..16`),
+  named from ItemSparse, else cmangos' `item_template`; a piece without a name keeps none (the tooltip shows "Item
+  <id>"). The bonuses are the set's `ItemSetSpell` rows (`SpellID`, `Threshold`), the spell's description filled in as
+  the Use and Equip lines are (WEB-95); a bonus whose text can't be filled is left out, sorted by threshold. Forever's
+  own copies of a Classic set (new item IDs, e.g. "Cenarion Raiment" 2142 next to Classic's 205, both in build 70790)
+  are rows of their own, so each is a set. 545 sets on build 70790, up to 9 pieces.
+- **An item's set** is `items.data.setId`: ItemSparse's `ItemSet`, else the lowest set that lists it (one item, 221785,
+  is listed by two sets). The tooltip shows it (`withSets` in `src/server/recipeViews.ts`); nobody's gear is known, so
+  the count is always 0.
 
 ### Dungeon bosses and their loot (WEB-96)
 Built by `src/core/recipes/bosses.ts` in the same import, written in the same transaction (an import with the same

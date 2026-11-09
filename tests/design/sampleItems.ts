@@ -1,6 +1,7 @@
 import type { BossDropRecord } from "@/core/recipes/bosses";
 import type { ItemDatabase, ItemRecord, RecipeRecord, SourceKind } from "@/core/recipes/build";
 import type { ReagentSourceRecord } from "@/core/recipes/reagentSources";
+import type { ItemSetRecord } from "@/core/recipes/itemSets";
 
 // The design checks' item database (WEB-92): example recipes and items for the recipe screens, as the boards draw
 // them (recipes-page, recipes-drawer: "Recipe names, numbers and sources on the boards are example data"). IDs are
@@ -66,6 +67,19 @@ const DEADMINES: LootItem[] = [
   { id: 90119, name: "Recipe: Roast Raptor", quality: 1, classId: 9, subclassId: 5, typeName: "Cooking", icon: "sample_recipe" },
 ]; // prettier-ignore
 
+/** WEB-99 (board WB99): VanCleef's five leather pieces as a set; the bonus texts are made up, as the board's. */
+const DEFIAS_PIECES = [90110, 90114, 90115, 90116, 90117];
+const DEFIAS_SET: ItemSetRecord = {
+  id: 9901,
+  name: "Defias Leather",
+  items: DEFIAS_PIECES.map((id) => ({ id, name: DEADMINES.find((d) => d.id === id)!.name })),
+  bonuses: [
+    { threshold: 2, text: "+50 Armor." },
+    { threshold: 3, text: "Increases your chance to dodge an attack by 1%." },
+    { threshold: 5, text: "+10 Agility." },
+  ],
+};
+
 function DEADMINES_ITEMS(): ItemRecord[] {
   return DEADMINES.map((d) => {
     const r: ItemRecord = {
@@ -80,6 +94,7 @@ function DEADMINES_ITEMS(): ItemRecord[] {
     if (d.typeName !== undefined) r.typeName = d.typeName;
     if (d.classId === 2 || d.classId === 4) r.bonding = 2;
     if (d.classId === 12) r.bonding = 4;
+    if (DEFIAS_PIECES.includes(d.id)) r.setId = DEFIAS_SET.id;
     if (d.classId === 9) {
       r.bonding = 1;
       r.use = ["Teaches you how to cook Roast Raptor."];
@@ -500,6 +515,7 @@ export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
     })),
   ),
   items: ITEMS,
+  sets: [DEFIAS_SET],
   recipes: RECIPES.map((r): RecipeRecord => {
     const rec: RecipeRecord = {
       id: r.id,

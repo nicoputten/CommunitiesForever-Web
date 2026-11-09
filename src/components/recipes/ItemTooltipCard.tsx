@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
 import { itemQuality } from "@/core/gamedata/items";
-import { itemFallbackName, itemTooltip, reagentsLine, type ItemTooltipView } from "@/core/views/itemTooltip";
-import type { TooltipItem } from "@/core/views/recipes";
+import {
+  itemFallbackName,
+  itemSetView,
+  itemTooltip,
+  reagentsLine,
+  type ItemTooltipView,
+} from "@/core/views/itemTooltip";
+import type { TooltipItem, TooltipSet } from "@/core/views/recipes";
 import styles from "./ItemTooltip.module.css";
 
 function viewOf(id: number, item: TooltipItem | undefined): ItemTooltipView | Omit<ItemTooltipView, "named" | "id"> {
@@ -27,6 +33,31 @@ function Lines({ lines }: { lines: ItemTooltipView["lines"] }) {
         <span>{l.right}</span>
       </div>
     ),
+  );
+}
+
+/**
+ * WEB-99 (board WB99): the set under the item's own lines, as the game shows a set nobody wears: the name and
+ * "(0/N)" in gold, the pieces indented, then the bonuses, all pieces and bonuses in the game's grey.
+ */
+function SetBlock({ set }: { set: TooltipSet }) {
+  const view = itemSetView(set);
+  return (
+    <div className={styles.set}>
+      <div className={styles.setName}>{view.title}</div>
+      <ul className={styles.setPieces}>
+        {view.pieces.map((p, i) => (
+          <li key={i}>{p}</li>
+        ))}
+      </ul>
+      {view.bonuses.length > 0 && (
+        <ul className={styles.setBonuses}>
+          {view.bonuses.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -56,6 +87,7 @@ export function ItemTooltipCard({
         {view.name}
       </div>
       <Lines lines={view.lines} />
+      {item?.set !== undefined && "named" in view && view.named && <SetBlock set={item.set} />}
       {made !== undefined && (
         <div className={styles.created} data-quality={made.quality}>
           <div className={styles.createdName}>{made.name}</div>

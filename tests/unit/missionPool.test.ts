@@ -79,13 +79,13 @@ describe("the plan", () => {
   });
 
   it("an off mission doesn't come up on free days; the rest of the day stays the normal draw", () => {
-    const off: Settings = { "d.dungeonFriend": { off: true, often: "normal" } };
+    const off: Settings = { "d.nostalgia": { off: true, often: "normal" } };
     const plan = fullPlan(input({ settings: off }));
     const free = plan.days.filter((d) => !d.locked);
-    expect(free.some((d) => d.normal.includes("d.dungeonFriend"))).toBe(true);
+    expect(free.some((d) => d.normal.includes("d.nostalgia"))).toBe(true);
     for (const d of free) {
-      expect(d.plan).not.toContain("d.dungeonFriend");
-      if (!d.normal.includes("d.dungeonFriend")) expect(d.plan).toEqual(d.normal);
+      expect(d.plan).not.toContain("d.nostalgia");
+      if (!d.normal.includes("d.nostalgia")) expect(d.plan).toEqual(d.normal);
       else expect(d.plan.filter((id, i) => id !== d.normal[i]).length).toBeLessThanOrEqual(2);
     }
     expectDrawRules(free.map((d) => d.plan));
@@ -96,12 +96,12 @@ describe("the plan", () => {
 
   it("Often comes up more and Rare less than Normal, always with the draw's rules", () => {
     const count = (settings: Settings, id: string) => chain(21000, 400, settings).filter((p) => p.includes(id)).length;
-    const normal = count({}, "d.secondary");
-    const often = count({ "d.secondary": { off: false, often: "often" } }, "d.secondary");
-    const rare = count({ "d.secondary": { off: false, often: "rare" } }, "d.secondary");
+    const normal = count({}, "d.dungeon");
+    const often = count({ "d.dungeon": { off: false, often: "often" } }, "d.dungeon");
+    const rare = count({ "d.dungeon": { off: false, often: "rare" } }, "d.dungeon");
     expect(often).toBeGreaterThan(normal * 1.3);
     expect(rare).toBeLessThan(normal * 0.8);
-    expectDrawRules(chain(21000, 400, { "d.secondary": { off: false, often: "often" } }));
+    expectDrawRules(chain(21000, 400, { "d.dungeon": { off: false, often: "often" } }));
     expectDrawRules(chain(21000, 400, { "d.quests10": { off: true, often: "normal" } }));
   });
 

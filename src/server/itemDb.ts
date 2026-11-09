@@ -7,6 +7,7 @@ import {
   dungeonBosses,
   itemImport,
   items,
+  itemSets,
   reagentSources,
   recipeReagents,
   recipes,
@@ -41,6 +42,7 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
     tx.delete(dungeonBosses).run();
     tx.delete(bossDrops).run();
     tx.delete(reagentSources).run();
+    tx.delete(itemSets).run();
     replaceUploaded(
       tx,
       data.items.map((i) => i.id),
@@ -162,6 +164,13 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
             maxLevel: s.maxLevel ?? null,
           })),
         )
+        .run(),
+    );
+    // WEB-99: item sets.
+    insertAll(data.sets, (slice) =>
+      tx
+        .insert(itemSets)
+        .values(slice.map((x) => ({ id: x.id, name: x.name, items: x.items, bonuses: x.bonuses })))
         .run(),
     );
     tx.delete(itemImport).run();

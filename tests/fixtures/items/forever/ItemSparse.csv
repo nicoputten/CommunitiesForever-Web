@@ -1,15 +1,16 @@
-ID,Description_lang,Display_lang,Stackable,RequiredSkillRank,ItemLevel,Bonding,RequiredLevel,InventoryType,OverallQualityID
-5001,,"Test Bolt Item",20,0,30,0,0,0,1
-5002,"Made up for tests.","Test Thread",20,0,10,0,0,0,1
-5003,,"Test Shirt Item",1,0,12,2,5,4,2
-5004,,"Test Robe Item",1,0,60,1,55,20,4
-5005,,"Test Gloves Item",1,0,58,1,52,10,3
-5006,,"Test Bag Item",1,0,40,0,0,18,2
-5007,,"Test Cloak Item",1,0,30,2,25,16,2
-5008,,"Test Pants Item",1,0,45,2,40,7,3
-5009,,"Old Test Hat Item",1,0,20,2,15,1,1
-6003,,"Pattern: Test Robe",1,70,60,1,0,0,3
-5011,,"Test Leather",20,0,20,0,0,0,1
-5012,,"Test Herb",20,0,25,0,0,0,1
-5013,,"Test Ore",20,0,25,0,0,0,1
-5015,,"Test Gem",20,0,40,0,0,0,2
+ID,Description_lang,Display_lang,Stackable,RequiredSkillRank,ItemLevel,Bonding,RequiredLevel,InventoryType,OverallQualityID,ItemSet
+5001,,"Test Bolt Item",20,0,30,0,0,0,1,0
+5002,"Made up for tests.","Test Thread",20,0,10,0,0,0,1,0
+5003,,"Test Shirt Item",1,0,12,2,5,4,2,0
+5004,,"Test Robe Item",1,0,60,1,55,20,4,300
+5005,,"Test Gloves Item",1,0,58,1,52,10,3,0
+5006,,"Test Bag Item",1,0,40,0,0,18,2,0
+5007,,"Test Cloak Item",1,0,30,2,25,16,2,0
+5008,,"Test Pants Item",1,0,45,2,40,7,3,0
+5009,,"Old Test Hat Item",1,0,20,2,15,1,1,0
+6003,,"Pattern: Test Robe",1,70,60,1,0,0,3,0
+6101,,"Test Regalia Gloves",1,0,60,1,55,10,4,300
+5011,,"Test Leather",20,0,20,0,0,0,1,0
+5012,,"Test Herb",20,0,25,0,0,0,1,0
+5013,,"Test Ore",20,0,25,0,0,0,1,0
+5015,,"Test Gem",20,0,40,0,0,0,2,0

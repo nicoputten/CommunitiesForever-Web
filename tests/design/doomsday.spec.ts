@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { signInAs } from "../e2e/session";
 import {
-  DATA,
   TYPE,
   expectAccessible,
   expectBackground,
@@ -170,17 +169,19 @@ test("doomsday: design values", async ({ page }) => {
     await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
   }
 
-  const goal = page.getByTestId("goal").filter({ hasText: "Finish a class quest" });
+  const goal = page.getByTestId("goal").filter({ hasText: "Loot a rare item" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
-  await expectStyles(goal.getByText("Finish a class quest"), {
+  await expectStyles(goal.getByText("Loot a rare item"), {
     "font-family": "var(--font-name)",
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
-  const open = page.getByTestId("goal").filter({ hasText: "Lone wolf" });
+  // Pool version 4 (WEB-101): today's Skirmish (Revenge) has no progress the site can tell; the Hunt is a PvP goal.
+  const open = page.getByTestId("goal").filter({ hasText: "Revenge" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  await expectStyles(open.getByText("1 / 3"), { ...DATA, color: "var(--text)" });
+  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Human Mages" });
+  await expectStyles(hunt.getByText("PvP · the Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
@@ -208,7 +209,7 @@ test("doomsday: week and heatmap design values", async ({ page }) => {
     color: "var(--pvp-text)",
   });
   // WEB-65: who else is closest on each weekly, on a phone too.
-  await expectStyles(page.getByTestId("goal").getByText("Bob 4/5 · Mira 3/5"), {
+  await expectStyles(page.getByTestId("goal").getByText("Femke 5/5 done"), {
     "font-size": "var(--fs-meta-sm)",
     color: "var(--text-dim)",
   });
@@ -244,13 +245,13 @@ for (const tab of TABS) {
 
 test("doomsday roster chips: design values", async ({ page }) => {
   await openScreen(page, "/roster");
-  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 42 PvP 60/ });
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 44 PvP 60/ });
   await expectStyles(chip, {
     "background-color": "var(--surface-dd-chip)",
     "border-color": "var(--line-control)",
     "font-size": "var(--fs-meta)",
   });
-  await expectStyles(chip.getByText("PvE 42"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText("PvE 44"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
 });

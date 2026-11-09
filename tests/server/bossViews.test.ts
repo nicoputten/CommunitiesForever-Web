@@ -36,6 +36,7 @@ function data(): ItemDatabase {
     recipes: [],
     reagents: [],
     sources: [],
+    sets: [],
     bosses: [
       { id: 9001, name: "Test Brute", dungeonId: "dm", position: 1, final: false, optional: false },
       { id: 9003, name: "Test Captain", dungeonId: "dm", position: 2, final: true, optional: false },

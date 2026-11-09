@@ -12,6 +12,7 @@ import {
   type SourceData,
   type TooltipCreated,
   type TooltipItem,
+  type TooltipSet,
 } from "@/core/views/recipes";
 import type { ReagentSourceData } from "@/core/views/reagentSources";
 import type { Db } from "./db";
@@ -21,6 +22,7 @@ import {
   characterRecipes,
   items,
   reagentSources,
+  itemSets,
   recipeReagents,
   recipes,
   recipeSources,
@@ -204,10 +206,29 @@ function itemRows(db: Db, ids: readonly number[]): TooltipItem[] {
 
 /**
  * Items with their tooltip data, by ID (no gold: the item data has no sell price). A recipe item gets the item its
- * recipe makes (WEB-104, `withCreated`).
+ * recipe makes (WEB-104, `withCreated`), a set item its set (WEB-99, `withSets`).
  */
 export function tooltipItems(db: Db, ids: readonly number[]): TooltipItem[] {
-  return withCreated(db, itemRows(db, ids));
+  return withSets(db, withCreated(db, itemRows(db, ids)));
+}
+
+/**
+ * WEB-99: a set item's tooltip shows its set (name, pieces, bonuses) under its own lines, as in game. The set is the
+ * item data's `setId` (the item import); an item without one, or whose set the database doesn't have, gets nothing.
+ */
+export function withSets(db: Db, list: TooltipItem[]): TooltipItem[] {
+  const ids = [...new Set(list.flatMap((i) => (i.data.setId === undefined ? [] : [i.data.setId])))];
+  if (ids.length === 0) return list;
+  const sets = new Map<number, TooltipSet>(
+    chunked(ids, (slice) => db.select().from(itemSets).where(inArray(itemSets.id, slice)).all()).map((s) => [
+      s.id,
+      { name: s.name, items: s.items, bonuses: s.bonuses },
+    ]),
+  );
+  return list.map((i) => {
+    const set = i.data.setId === undefined ? undefined : sets.get(i.data.setId);
+    return set === undefined ? i : { ...i, set };
+  });
 }
 
 /**

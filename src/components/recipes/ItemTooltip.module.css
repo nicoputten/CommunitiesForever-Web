@@ -53,6 +53,32 @@
   color: var(--quality-text, var(--game-text));
 }
 
+/* WEB-99 (board WB99): the item's set after a 10 px gap: the name and "(0/N)" in gold, the pieces indented 10 px,
+   a 10 px gap, the bonuses. Nothing is worn, so pieces and bonuses are the game's "not worn" grey. */
+.set {
+  margin-top: var(--s-2-5);
+}
+
+.setName {
+  color: var(--game-yellow);
+}
+
+.setPieces,
+.setBonuses {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--game-grey);
+}
+
+.setPieces {
+  padding-left: var(--s-2-5);
+}
+
+.setBonuses {
+  margin-top: var(--s-2-5);
+}
+
 /* WEB-102: lines under the game's, set off by a rule (board DL04: a recipe drop's "Nobody knows it"). */
 .footer {
   display: flex;

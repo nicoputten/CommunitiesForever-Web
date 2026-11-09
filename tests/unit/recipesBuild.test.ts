@@ -130,6 +130,7 @@ describe("items", () => {
       stats: [{ type: 5, value: 3 }],
       equip: ["Increases your test skill by 5."],
       use: ["Restores 120.0 mana and 80 health. (5 Min Cooldown)"],
+      setId: 300,
     });
     expect(item(5004)).toMatchObject({
       stats: [
@@ -147,12 +148,50 @@ describe("items", () => {
     expect(item(5005)!.iconName).toBe("inv_gauntlets_test");
     expect(item(279999)).toEqual({
       id: 279999,
+      setId: 301,
       classId: 0,
       subclassId: 8,
       inventoryType: 0,
       typeName: "Other",
       iconName: "inv_banner_test",
     });
+  });
+});
+
+describe("item sets (WEB-99)", () => {
+  it("each set with an imported piece: its pieces in the client's order, the bonuses' texts by threshold", () => {
+    expect(data.sets).toEqual([
+      {
+        id: 300,
+        name: "Test Regalia",
+        // 6101 isn't an item of ours: its name comes from ItemSparse.
+        items: [
+          { id: 5003, name: "Test Shirt Item" },
+          { id: 5004, name: "Test Robe Item" },
+          { id: 6101, name: "Test Regalia Gloves" },
+        ],
+        // A bonus without a text (no spell) is left out, a repeated one counted once.
+        bonuses: [
+          { threshold: 2, text: "Increases your test skill by 5." },
+          { threshold: 3, text: "Lasts 30 min." },
+        ],
+      },
+      // Forever's own copy of the set (a new item ID): a set of its own; a piece without a name has none.
+      {
+        id: 301,
+        name: "Test Regalia",
+        items: [{ id: 279999 }, { id: 6102 }],
+        bonuses: [{ threshold: 2, text: "Increases your test skill by 5." }],
+      },
+    ]);
+  });
+
+  it("an item's set: ItemSparse's ItemSet, else the set that lists it; none for others", () => {
+    // 5004 is listed by 299 first, but ItemSparse names 300; 299 then has no piece of ours and is left out.
+    expect(item(5004)!.setId).toBe(300);
+    expect(item(5003)!.setId).toBe(300);
+    expect(item(279999)!.setId).toBe(301);
+    expect(item(5001)!.setId).toBeUndefined();
   });
 });
 
