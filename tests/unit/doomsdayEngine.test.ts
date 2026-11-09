@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
-import { canDo, drawWeek, EPOCH, goal, pointsFor, pool, POOL_VERSION, weekOf } from "@/core/doomsday/rules";
+import { boardData } from "@/core/doomsday/posts";
+import {
+  canDo,
+  draw,
+  drawWeek,
+  EPOCH,
+  goal,
+  gridCount,
+  HUNT_SINCE,
+  huntName,
+  huntTitle,
+  pointsFor,
+  pool,
+  POOL_VERSION,
+  weekOf,
+} from "@/core/doomsday/rules";
 
 // WEB-58: feat records as the Feats tab (WEB-60) shows them: display-ready titles, the epic item and a rank's rank.
 
@@ -164,7 +179,9 @@ describe("points per pool version", () => {
 
   it("scores today's drawn set in the site's pool version before the addon recorded it", () => {
     const goals = ada({}).today!.goals;
-    expect(goals.map((g) => g.points)).toEqual(goals.map((g) => pointsFor(g.goal.id, POOL_VERSION)));
+    expect(goals.map((g) => g.points)).toEqual(
+      goals.map((g) => pointsFor(g.goal.slot === "hunt" ? "hunt" : g.goal.id, POOL_VERSION)),
+    );
   });
 });
 
@@ -228,5 +245,148 @@ describe("the weekly draw by category", () => {
 
   it("keeps pool version 1's draw without categories", () => {
     expect(weeks.some((w) => new Set(categories(w, 1)).size < 3)).toBe(true);
+  });
+});
+
+// WEB-101 (addon CF-104): pool version 4 and the Hunt.
+describe("pool version 4", () => {
+  const today = doomsdaySnapshot(input).schedule.day;
+  const hunt = draw(today).hunt!;
+  const withGoals = (days: DoomsdayInput["goals"][string]["days"], factions: string[] = ["Horde"]): DoomsdayInput => ({
+    ...input,
+    data: {
+      ...input.data,
+      characters: Object.fromEntries(
+        factions.map((faction, i) => [`G${i}`, { ...input.data.characters.G!, guid: `G${i}`, faction }]),
+      ),
+    },
+    goals: { "Ada#1001": { days, weeks: {} } },
+  });
+  const adaOf = (i: DoomsdayInput) => doomsdaySnapshot(i).friends.find((f) => f.friendKey === "Ada#1001")!;
+
+  it("pools: 108 dailies, 6 Skirmish, 49 weeklies, 6 Bounty; Defend home retired; the Hunt from 4", () => {
+    expect(POOL_VERSION).toBe(4);
+    expect(HUNT_SINCE).toBe(4);
+    expect([pool("daily").length, pool("skirmish").length, pool("weekly").length, pool("bounty").length]).toEqual([
+      108, 6, 49, 6,
+    ]);
+    expect(pool("skirmish")).toEqual([
+      "p.frontLine",
+      "p.loneWolf",
+      "p.untouchable",
+      "p.revenge",
+      "p.flagHour",
+      "p.flagUp",
+    ]);
+    expect(pool("bounty")).toContain("b.flagged3h");
+    for (const id of ["d.reward", "d.fishFriend", "d.feedFriend", "d.summoned", "d.auctionPost"])
+      expect(pool("daily"), id).toContain(id);
+    expect(pool("skirmish", 3)).toContain("p.homeGuard");
+    expect(pool("skirmish", 4)).not.toContain("p.homeGuard");
+    expect(draw(today, 3).hunt).toBeUndefined();
+    expect(hunt.Horde).toBeDefined();
+  });
+
+  it("names a Hunt as the board and the bot do", () => {
+    expect(huntName({ race: "NightElf", class: "DRUID" })).toBe("Night Elf Druid");
+    expect(huntName({ race: "Scourge", class: "PRIEST" })).toBe("Undead Priest");
+    expect(huntTitle({ race: "NightElf", class: "DRUID" })).toBe("Hunt: Night Elf Druids");
+  });
+
+  it("the snapshot's Hunts: Horde characters hunt the Alliance combination", () => {
+    const snap = doomsdaySnapshot(input);
+    expect(snap.hunts.alliance).toEqual({
+      id: `hunt:${hunt.Horde!.race}:${hunt.Horde!.class}`,
+      track: "pvp",
+      slot: "hunt",
+      title: huntTitle(hunt.Horde!),
+      known: true,
+    });
+    expect(snap.hunts.horde?.title).toBe(huntTitle(hunt.Alliance!));
+  });
+
+  it("a pool-4 day's recorded hunt is the friend's Hunt before the Skirmish, done once and worth 5 PvP", () => {
+    const record = {
+      set: ["d.reward", "d.summoned", "d.auctionPost", "p.flagUp", "hunt"],
+      swapped: {},
+      done: { "d.reward": 1, hunt: 2, "p.flagUp": 3 },
+      pool: 4,
+    };
+    const ada = adaOf(withGoals({ [today]: record }));
+    expect(ada.today!.goals.map((g) => [g.goal.slot, g.columnId, g.points, g.doneAt])).toEqual([
+      ["pveDaily", "d.reward", 3, 1],
+      ["pveDaily", "d.summoned", 3, undefined],
+      ["pveDaily", "d.auctionPost", 3, undefined],
+      ["hunt", "hunt:alliance", 5, 2],
+      ["skirmish", "p.flagUp", 1, 3],
+    ]);
+    expect(ada.today!.goals[3]!.goal.title).toBe(huntTitle(hunt.Horde!));
+    expect(ada.points!.today).toEqual({ pve: 3, pvp: 5 + 1 });
+  });
+
+  it("a friend with both factions has both Hunts: one grid slot, done by either", () => {
+    const record = {
+      set: ["d.reward", "d.summoned", "d.auctionPost", "p.flagUp", "hunt"],
+      swapped: {},
+      done: { hunt: 2 },
+      pool: 4,
+    };
+    const ada = adaOf(withGoals({ [today]: record }, ["Horde", "Alliance"]));
+    const hunts = ada.today!.goals.filter((g) => g.goal.slot === "hunt");
+    expect(hunts.map((g) => g.columnId)).toEqual(["hunt:alliance", "hunt:horde"]);
+    expect(hunts.every((g) => g.doneAt === 2)).toBe(true);
+    expect(gridCount(ada.today!.goals, 0)).toEqual({ done: 1, total: 6 });
+    expect(ada.points!.today.pvp).toBe(5);
+  });
+
+  it("a pool-3 day keeps its catalogue and has no Hunt, next to a pool-4 day", () => {
+    const pool3 = {
+      set: ["d.quests10", "d.level", "d.potion", "p.homeGuard"],
+      swapped: {},
+      done: { "p.homeGuard": 1 },
+      pool: 3,
+    };
+    const pool4 = {
+      set: ["d.reward", "d.level", "d.potion", "p.revenge", "hunt"],
+      swapped: {},
+      done: { "p.revenge": 1, hunt: 2 },
+      pool: 4,
+    };
+    const yesterday = adaOf(withGoals({ [today - 1]: pool4, [today]: pool3 }));
+    expect(yesterday.today!.goals.map((g) => g.goal.id)).toEqual(["d.quests10", "d.level", "d.potion", "p.homeGuard"]);
+    expect(yesterday.today!.goals.at(-1)!.goal.known).toBe(true);
+    // Defend home (3, pool 3) today; Revenge (5) and the Hunt (5) yesterday.
+    expect(yesterday.points!.today.pvp).toBe(3);
+    expect(yesterday.points!.allTime.pvp).toBe(3 + 5 + 5);
+  });
+
+  it("the site's own draw today adds the Hunt, as the addon records it", () => {
+    const ada = adaOf(withGoals({}));
+    expect(ada.today!.goals.map((g) => g.goal.slot)).toEqual(["pveDaily", "pveDaily", "pveDaily", "hunt", "skirmish"]);
+  });
+
+  it("the bot's board: one Hunt column keyed by the hunted faction, a row's Hunt as `hunt`", () => {
+    const record = {
+      set: ["d.reward", "d.summoned", "d.auctionPost", "p.flagUp", "hunt"],
+      swapped: {},
+      done: { hunt: 2 },
+      pool: 4,
+    };
+    const i = withGoals({ [today]: record }, ["Horde", "Alliance"]);
+    const board = boardData(i, doomsdaySnapshot(i));
+    const column = board.goals.find((g) => g.slot === "hunt")!;
+    expect(column).toEqual({
+      slot: "hunt",
+      id: "hunt",
+      title: `The Hunt: ${huntName(hunt.Horde!)} or ${huntName(hunt.Alliance!)}`,
+      track: "pvp",
+      points: 5,
+      shortLabel: "Hunt",
+      hunt: { Alliance: huntName(hunt.Horde!), Horde: huntName(hunt.Alliance!) },
+    });
+    expect(board.goals.map((g) => g.slot)).toEqual(["pve1", "pve2", "pve3", "hunt", "skirmish"]);
+    const row = board.friends[0]!;
+    expect(row.goals).toEqual([{ slot: "hunt", id: "hunt", done: true, at: 2 }]);
+    expect([row.doneCount, row.goalCount]).toEqual([1, 6]);
   });
 });

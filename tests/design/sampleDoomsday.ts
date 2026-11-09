@@ -2,6 +2,7 @@ import {
   DAY,
   dayOf,
   dayStart,
+  draw,
   goalsForDay,
   goalsForWeek,
   POOL_VERSION,
@@ -167,7 +168,10 @@ export function doomsdayPerson(
   // Goals per Doomsday day: the engine's draw, the first k done a few hours after the reset.
   const days: Record<string, Lua> = {};
   for (let n = today - script.history; n <= last; n++) {
-    const { set, swapped } = goalsForDay(n);
+    const drawn = goalsForDay(n);
+    // As the addon records it: from pool version 4 the Hunt is the set's fifth id (CF-104).
+    const set = draw(n).hunt !== undefined ? [...drawn.set, "hunt"] : drawn.set;
+    const swapped = drawn.swapped;
     const done: Record<string, number> = {};
     if (n === today) {
       for (const [i, minute] of script.today ?? []) {
