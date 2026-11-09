@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.12.2 (2026-11-08)
 ### Changed
 - Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.
 
