@@ -1,6 +1,18 @@
 import { doomsdaySnapshot, type DoomsdayInput, prepare, periodTotals, scheduleAt } from "./engine";
 import { joinNames } from "../views/text";
-import { clockAt, crown, dayOf, dayStart, doomsdayDay, elo, gridCount, shortLabel, weekOf, weekStart } from "./rules";
+import {
+  clockAt,
+  crown,
+  dayOf,
+  dayStart,
+  doomsdayDay,
+  elo,
+  gridCount,
+  huntName,
+  shortLabel,
+  weekOf,
+  weekStart,
+} from "./rules";
 import type { DoomsdaySnapshot, FriendGoal, GoalRef } from "./snapshot";
 
 // What the bot gets about Doomsday (WEB-58, docs/BOT-API.md "Doomsday"): the daily board, the weekly ladder, the
@@ -77,10 +89,16 @@ function slotsOf(goals: readonly FriendGoal[], slots: readonly string[]) {
 /** A day's goals by their kind (WEB-66): the PvE dailies pve1 to pve3, the Hunt(s) `hunt`, the Skirmish `skirmish`. */
 function daySlotsOf(goals: readonly FriendGoal[]) {
   let pve = 0;
-  return goals.map((g) => ({
-    g,
-    slot: g.goal.slot === "hunt" ? "hunt" : g.goal.slot === "skirmish" ? "skirmish" : `pve${++pve}`,
-  }));
+  // A friend's Hunts (one per faction) are the one `hunt` slot, with id "hunt" as the column: the done one, else the first.
+  const hunts = goals.filter((g) => g.goal.slot === "hunt");
+  const hunt = hunts.find((g) => g.doneAt !== undefined) ?? hunts[0];
+  return goals
+    .filter((g) => g.goal.slot !== "hunt" || g === hunt)
+    .map((g) =>
+      g.goal.slot === "hunt"
+        ? { g: { ...g, goal: { ...g.goal, id: "hunt" } }, slot: "hunt" }
+        : { g, slot: g.goal.slot === "skirmish" ? "skirmish" : `pve${++pve}` },
+    );
 }
 
 function friendGoal(g: FriendGoal, slot: string): BotFriendGoal {
@@ -145,17 +163,34 @@ export function boardData(input: DoomsdayInput, snap: DoomsdaySnapshot): BoardDa
 function dayColumns(snap: DoomsdaySnapshot): BotGoal[] {
   const pve = snap.todayGoals.filter((g) => g.slot !== "skirmish");
   const skirmish = snap.todayGoals.filter((g) => g.slot === "skirmish");
-  const hunts = [
-    ...new Set(
-      snap.friends.flatMap((f) =>
-        (f.today?.goals ?? []).filter((g) => g.goal.slot === "hunt").map((g) => g.goal.title),
-      ),
-    ),
-  ];
+  // The Hunts the friends have, keyed by the hunted faction (BOT-API "Goals"): "hunt:alliance" is the Alliance prey.
+  const columns = new Set(
+    snap.friends.flatMap((f) => (f.today?.goals ?? []).filter((g) => g.goal.slot === "hunt").map((g) => g.columnId)),
+  );
+  const hunt: Record<string, string> = {};
+  for (const [faction, ref] of [
+    ["Alliance", snap.hunts.alliance],
+    ["Horde", snap.hunts.horde],
+  ] as const) {
+    const combo = ref?.id.split(":");
+    if (ref !== undefined && combo?.length === 3 && columns.has(`hunt:${faction.toLowerCase()}`))
+      hunt[faction] = huntName({ race: combo[1]!, class: combo[2]! });
+  }
+  const names = Object.values(hunt);
   return [
     ...pve.map((ref, i) => botGoal(ref, `pve${i + 1}`, 5)),
-    ...(hunts.length > 0
-      ? [{ slot: "hunt", id: "hunt", title: hunts.join(" or "), track: "pvp" as const, points: 5, shortLabel: "Hunt" }]
+    ...(names.length > 0
+      ? [
+          {
+            slot: "hunt",
+            id: "hunt",
+            title: `The Hunt: ${names.join(" or ")}`,
+            track: "pvp" as const,
+            points: 5,
+            shortLabel: "Hunt",
+            hunt,
+          },
+        ]
       : []),
     ...skirmish.map((ref) => botGoal(ref, "skirmish", 5)),
   ];
