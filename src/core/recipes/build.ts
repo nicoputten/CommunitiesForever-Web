@@ -9,7 +9,7 @@
 //   subclass, icon), ItemModifiedAppearance and ItemAppearance (the icon of items without one in Item), ItemSubClass
 //   (type names), ItemXItemEffect and ItemEffect (an item's spells; which recipe a
 //   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names), DungeonEncounter (WEB-96: the
-//   bosses, ./bosses.ts).
+//   bosses, ./bosses.ts), ItemSet and ItemSetSpell (WEB-99: the item sets and their bonuses, ./itemSets.ts).
 // - The Classic Era client (same export): its SkillLineAbility tells Forever's own recipes apart, and its learn-spell
 //   effects (SpellEffect 36) map cmangos' trainer and recipe-item spells, which Forever's client no longer has, to the
 //   recipe they teach.
@@ -25,6 +25,7 @@
 import { float, int } from "./csv";
 import { n, s, type SqlRow } from "./sqlDump";
 import { type BossDropRecord, type BossRecord, buildBosses } from "./bosses";
+import { buildItemSets, type ItemSetRecord } from "./itemSets";
 import { greenThreshold } from "./skill";
 import { type SpellEffectInfo, type SpellInfo, type SpellLookup, spellText } from "./spellText";
 
@@ -50,6 +51,8 @@ export const DB2_TABLES = [
   "Faction",
   "Map",
   "DungeonEncounter",
+  "ItemSet",
+  "ItemSetSpell",
 ] as const;
 export type Db2Table = (typeof DB2_TABLES)[number];
 
@@ -132,6 +135,8 @@ export interface ItemRecord {
   equip?: string[];
   use?: string[];
   chanceOnHit?: string[];
+  /** WEB-99: the item set it belongs to (ItemSetRecord.id); undefined for an item in none. */
+  setId?: number;
 }
 
 export interface RecipeRecord {
@@ -183,6 +188,8 @@ export interface ItemDatabase {
   /** WEB-96: dungeon bosses in the client's order, and each boss's own loot (./bosses.ts). */
   bosses: BossRecord[];
   bossDrops: BossDropRecord[];
+  /** WEB-99: the item sets with at least one piece among `items`, by ID (./itemSets.ts). */
+  sets: ItemSetRecord[];
 }
 
 /** Enum.InventoryType names as the game's tooltip shows them (GlobalStrings INVTYPE_*), for gear categories. */
@@ -652,13 +659,30 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
     d.line = recipe.skillLineId;
   }
 
+  const spells = spellLookup(db2, effects);
   const items = buildItems(
     db2,
     itemTemplates,
     spellsOfItem,
-    effects,
+    spells,
     [...itemIds].sort((a, b) => a - b),
   );
+  // WEB-99: the sets of those items, each item's set on the item.
+  const itemSets = buildItemSets({
+    sets: db2.ItemSet ?? [],
+    spells: db2.ItemSetSpell ?? [],
+    sparse: sparseRows,
+    templates: itemTemplates,
+    spellLookup: spells,
+  });
+  const usedSets = new Set<number>();
+  for (const item of items) {
+    const set = itemSets.setOf(item.id);
+    if (set === undefined) continue;
+    item.setId = set;
+    usedSets.add(set);
+  }
+  const sets = itemSets.sets.filter((x) => usedSets.has(x.id));
   const itemById = new Map(items.map((i) => [i.id, i]));
   for (const recipe of recipes) {
     const category = categoryOf(recipe, itemById.get(recipe.createdItemId ?? -1));
@@ -667,7 +691,7 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
 
   const sourceList: SourceRecord[] = [];
   for (const recipe of recipes) for (const src of sources.get(recipe.id) ?? []) sourceList.push(src);
-  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops };
+  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops, sets };
 }
 
 /**
@@ -694,12 +718,11 @@ function buildItems(
   db2: ImportInput["db2"],
   templates: Map<number, SqlRow>,
   spellsOfItem: Map<number, Record<string, string>[]>,
-  effects: Map<number, Record<string, string>[]>,
+  spells: SpellLookup,
   ids: number[],
 ): ItemRecord[] {
   const sparse = byId(db2.ItemSparse);
   const base = byId(db2.Item);
-  const spells = spellLookup(db2, effects);
   const icons = new Map<number, string>();
   for (const r of db2.ManifestInterfaceData ?? []) {
     const id = int(r, "ID");

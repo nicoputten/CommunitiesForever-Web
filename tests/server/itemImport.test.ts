@@ -2,10 +2,11 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { gzipSync } from "node:zlib";
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseCsv } from "@/core/recipes/csv";
 import { openDatabase, type Db } from "@/server/db";
-import { adminLog, itemImport, recipes } from "@/server/db/schema";
+import { adminLog, itemImport, items, itemSets, recipes } from "@/server/db/schema";
 import { importItems, latestBuilds } from "@/server/itemImport";
 import { importFinished, importRunState, startItemImport } from "@/server/itemImportRun";
 
@@ -106,8 +107,15 @@ describe("importItems", () => {
       sources: 11,
       bosses: 1,
       bossDrops: 2,
+      sets: 2,
       changed: true,
     });
+    // WEB-99: the sets and their bonuses, and each piece's set on the item.
+    expect(db.select().from(itemSets).all()).toMatchObject([
+      { id: 300, name: "Test Regalia", bonuses: [{ threshold: 2 }, { threshold: 3 }] },
+      { id: 301, name: "Test Regalia", items: [{ id: 279999 }, { id: 6102 }] },
+    ]);
+    expect(db.select().from(items).where(eq(items.id, 5004)).get()!.data.setId).toBe(300);
     // ItemSparse came in two parts: from the start, then after the last whole row (ID 5003).
     expect(asked.filter((a) => a.includes("/db2/ItemSparse/"))).toEqual([
       `/db2/ItemSparse/csv?build=${FOREVER}&sort%5BID%5D=asc`,

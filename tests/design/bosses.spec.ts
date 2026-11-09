@@ -126,6 +126,49 @@ test("dungeon bosses & loot: the recipe drop's tooltip", async ({ page }) => {
   await expectScreenshot(page, "dungeon-bosses-recipe");
 });
 
+test("dungeon bosses & loot: a set piece's tooltip (WEB-99)", async ({ page }) => {
+  // Board WB99: hovering a loot row (desktop), the icon's sheet (phone); VanCleef's five Defias Leather pieces.
+  await openScreen(page, DM);
+  const vancleef = page.getByRole("region", { name: /Edwin VanCleef/ });
+  if (isPhone(page)) {
+    await vancleef.getByRole("button", { name: "Blackened Defias Armor, item details" }).click();
+  } else {
+    await vancleef.getByText("Blackened Defias Armor", { exact: true }).hover();
+  }
+  const card = page.getByText("Defias Leather (0/5)").locator("../..");
+  await expectStyles(page.getByText("Defias Leather (0/5)"), {
+    color: "var(--game-yellow)",
+    "font-size": "var(--fs-game)",
+    "margin-top": "0px",
+  });
+  await expectStyles(page.getByText("Defias Leather (0/5)").locator(".."), { "margin-top": "var(--s-2-5)" });
+  const pieces = card.getByRole("list").first();
+  await expect(pieces.getByRole("listitem")).toHaveText([
+    "Blackened Defias Armor",
+    "Blackened Defias Leggings",
+    "Blackened Defias Gloves",
+    "Blackened Defias Boots",
+    "Blackened Defias Belt",
+  ]);
+  await expectStyles(pieces, { color: "var(--game-grey)", "padding-left": "var(--s-2-5)" });
+  const bonuses = card.getByRole("list").nth(1);
+  await expect(bonuses.getByRole("listitem")).toHaveText([
+    "(2) Set: +50 Armor.",
+    "(3) Set: Increases your chance to dodge an attack by 1%.",
+    "(5) Set: +10 Agility.",
+  ]);
+  await expectStyles(bonuses, { color: "var(--game-grey)", "margin-top": "var(--s-2-5)" });
+  if (isPhone(page)) {
+    await expectStyles(page.getByRole("dialog"), { "background-color": "var(--surface-drawer)" });
+    await expectTouchTargets(page);
+  } else {
+    await expectStyles(card.locator(".."), { width: "var(--size-game-tooltip)" });
+  }
+  await expectAccessible(page);
+  await expectNoMotion(page);
+  await expectScreenshot(page, "dungeon-bosses-set");
+});
+
 test("dungeon bosses & loot: touch targets", async ({ page }) => {
   test.skip(!isPhone(page));
   await openScreen(page, DM);

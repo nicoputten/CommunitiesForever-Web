@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recordCharacters } from "@/core/views";
-import { itemFallbackName, itemTooltip, reagentsLine } from "@/core/views/itemTooltip";
+import { itemFallbackName, itemSetView, itemTooltip, reagentsLine } from "@/core/views/itemTooltip";
 import {
   characterRecipeLines,
   defaultTab,
@@ -266,6 +266,62 @@ describe("live search (recipes-search)", () => {
     expect(groups.nobodyYet.map((e) => e.id)).toEqual([2, 8]);
     expect(groups.canCraft.some((e) => e.id === 5)).toBe(true);
     expect(groups.canCraft.length).toBeLessThanOrEqual(6);
+  });
+});
+
+describe("item set block (WEB-99, board WB99)", () => {
+  it("a 3-piece set: the name with 0 of 3, the pieces in order, the bonuses by threshold", () => {
+    expect(
+      itemSetView({
+        name: "Test Trappings",
+        items: [
+          { id: 1, name: "Test Cowl" },
+          { id: 2, name: "Test Mantle" },
+          { id: 3, name: "Test Robe" },
+        ],
+        bonuses: [
+          { threshold: 3, text: "Increases damage and healing done by magical spells and effects by up to 12." },
+          { threshold: 2, text: "Increases your chance to dodge an attack by 1%." },
+        ],
+      }),
+    ).toEqual({
+      title: "Test Trappings (0/3)",
+      pieces: ["Test Cowl", "Test Mantle", "Test Robe"],
+      bonuses: [
+        "(2) Set: Increases your chance to dodge an attack by 1%.",
+        "(3) Set: Increases damage and healing done by magical spells and effects by up to 12.",
+      ],
+    });
+  });
+
+  it("an 8-piece set: every piece, nothing worn, four bonuses; a nameless piece reads its fallback name", () => {
+    const names = ["Mask", "Mantle", "Robe", "Bracers", "Wraps", "Belt", "Leggings"];
+    const view = itemSetView({
+      name: "Test Raiment",
+      items: [...names.map((n, i) => ({ id: 10 + i, name: `Test ${n}` })), { id: 279972 }],
+      bonuses: [2, 4, 6, 8].map((threshold) => ({ threshold, text: `Bonus ${threshold}.` })),
+    });
+    expect(view.title).toBe("Test Raiment (0/8)");
+    expect(view.pieces).toHaveLength(8);
+    expect(view.pieces.at(-1)).toBe("Item 279972");
+    expect(view.bonuses).toEqual(["(2) Set: Bonus 2.", "(4) Set: Bonus 4.", "(6) Set: Bonus 6.", "(8) Set: Bonus 8."]);
+  });
+
+  it("a set without bonuses lists its pieces only", () => {
+    expect(
+      itemSetView({
+        name: "Test Pair",
+        items: [
+          { id: 1, name: "A" },
+          { id: 2, name: "B" },
+        ],
+        bonuses: [],
+      }),
+    ).toEqual({
+      title: "Test Pair (0/2)",
+      pieces: ["A", "B"],
+      bonuses: [],
+    });
   });
 });
 

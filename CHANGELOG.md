@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Item tooltips: a piece of an item set shows its set as in game: the set's name with "(0/5)", its pieces and the "(2) Set: …" bonuses, on hover and in the phone sheet. Nobody's gear is known, so nothing is marked as worn. Needs "Import item data" once after the release.
+
 ## v0.12.2 (2026-11-08)
 ### Changed
 - Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.

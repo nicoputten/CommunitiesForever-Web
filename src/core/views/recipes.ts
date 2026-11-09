@@ -1,6 +1,7 @@
 import { PROFESSIONS, professionInfo, type ClassFile } from "../gamedata";
 import { itemQuality, type ItemQuality } from "../gamedata/items";
 import type { ItemRecord, SourceKind } from "../recipes/build";
+import type { ItemSetBonus, ItemSetPiece } from "../recipes/itemSets";
 import { difficulty, type Difficulty, type Thresholds } from "../recipes/skill";
 import { OLD_AFTER } from "./age";
 import { byLevel, compareText, type CharacterView } from "./characters";
@@ -568,6 +569,15 @@ export interface TooltipItem {
   data: ItemRecord;
   /** WEB-104: a recipe item's created item, shown under it as in game; undefined for any other item. */
   creates?: TooltipCreated;
+  /** WEB-99: the item's set, shown under its own lines as in game; undefined for an item in none. */
+  set?: TooltipSet;
+}
+
+/** WEB-99: an item set as the tooltip shows it (src/core/recipes/itemSets.ts). */
+export interface TooltipSet {
+  name: string;
+  items: ItemSetPiece[];
+  bonuses: ItemSetBonus[];
 }
 
 /** What a recipe item (pattern, plan, formula) makes, and what for: the game's tooltip under the recipe's. */
