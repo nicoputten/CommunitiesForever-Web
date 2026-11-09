@@ -468,9 +468,9 @@ Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
   ("Rank 2/5", the text, "Next rank:", red "Requires ..."). Phone: a tap opens a sheet with the tree, a tapped talent's
   tooltip under it. **A** for a character without talent nodes (or before the import): the tree's name and points.
 - Done when: import tests; view-model tests (full, partial, unknown → A; states, requirements, arrows); design checks;
-  e2e; lint, tests and build pass. New screenshot baselines `talents-tree-tooltip`, `talents-tree`,
-  `talents-talent-tooltip`, `talents-locked`, `talents-a`; `character` changes (36 px tree rows): after Nico's OK.
-  Deviations in docs/DESIGN.md: Nico's OK.
+  e2e; lint, tests and build pass. Screenshot baselines `talents-tree-tooltip`, `talents-tree`,
+  `talents-talent-tooltip`, `talents-locked`, `talents-a` and the changed `character` (36 px tree rows): approved by
+  Nico. The deviations in docs/DESIGN.md (talents v2 on board WB101): approved by Nico.
 
 ### WEB-103 Spike: Everloot as a boss loot source (investigation only)
 Done (2026-11-07), report: [docs/research/everloot-loot-source.md](research/everloot-loot-source.md). Nico asked
