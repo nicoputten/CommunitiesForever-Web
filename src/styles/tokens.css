@@ -977,6 +977,7 @@
   --game-green: #1eff00;
   --game-yellow: #ffd100;
   --game-muted: #b8b8b8;
+  --game-grey: #808080; /* WB99: a set's pieces and bonuses nobody wears (the game's "not worn" grey) */
   --size-game-tooltip: 300px;
   --size-game-tooltip-sm: 240px; /* a reagent's */
   --s-2-25: 9px; /* the tooltip's padding */

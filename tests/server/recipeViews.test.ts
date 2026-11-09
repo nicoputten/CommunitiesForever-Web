@@ -6,7 +6,14 @@ import { beforeRosters } from "./beforeRosters";
 import type { ItemDatabase } from "@/core/recipes/build";
 import { openDatabase, type Db } from "@/server/db";
 import { writeItemDatabase } from "@/server/itemDb";
-import { characterRecipeRows, recipeRows, recipeTotalRows, tooltipItems, withCreated } from "@/server/recipeViews";
+import {
+  characterRecipeRows,
+  recipeRows,
+  recipeTotalRows,
+  tooltipItems,
+  withCreated,
+  withSets,
+} from "@/server/recipeViews";
 import { upload } from "@/server/uploads";
 
 // WEB-92: what the recipe pages read (src/server/recipeViews.ts), on invented data.
@@ -16,6 +23,15 @@ const DATABASE: ItemDatabase = {
   bosses: [{ id: 9001, name: "Test Boss", dungeonId: "dm", position: 1, final: true, optional: false }],
   // WEB-104: the item import's only record of which recipe a recipe item teaches.
   bossDrops: [{ bossId: 9001, itemId: 201, position: 1, chance: 5, classId: 9, subclassId: 2, recipeId: 1 }],
+  // WEB-99: the hood is a piece of a set; the robe is in none.
+  sets: [
+    {
+      id: 77,
+      name: "Test Regalia",
+      items: [{ id: 106, name: "Test Hood" }, { id: 107, name: "Test Gloves" }, { id: 108 }],
+      bonuses: [{ threshold: 2, text: "+10 Armor." }],
+    },
+  ],
   items: [
     { id: 101, name: "Test Robe", quality: 4, iconName: "inv_test", armor: 50 },
     { id: 102, name: "Test Bolt", quality: 1, classId: 7, maxStack: 20 },
@@ -29,6 +45,7 @@ const DATABASE: ItemDatabase = {
       use: ["Teaches you how to sew a Test Robe."],
     },
     { id: 202, name: "Pattern: Test Bolt", quality: 1, classId: 9, subclassId: 2 },
+    { id: 106, name: "Test Hood", quality: 3, setId: 77 },
   ],
   recipes: [
     {
@@ -155,5 +172,15 @@ describe("recipe views", () => {
     });
     // Any other item stays as it is.
     expect(withCreated(db, tooltipItems(db, [101]))[0]!.creates).toBeUndefined();
+  });
+
+  it("gives a set item its set; none for an item in no set or a set the database lacks (WEB-99)", () => {
+    expect(tooltipItems(db, [106])[0]!.set).toEqual({
+      name: "Test Regalia",
+      items: [{ id: 106, name: "Test Hood" }, { id: 107, name: "Test Gloves" }, { id: 108 }],
+      bonuses: [{ threshold: 2, text: "+10 Armor." }],
+    });
+    expect(tooltipItems(db, [101])[0]!.set).toBeUndefined();
+    expect(withSets(db, [{ id: 5, data: { id: 5, setId: 999 } }])[0]!.set).toBeUndefined();
   });
 });

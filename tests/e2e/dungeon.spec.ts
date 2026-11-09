@@ -126,6 +126,20 @@ test("the dungeon page's bosses and loot", async ({ page }) => {
     "true",
   );
 
+  // WEB-99: a set piece's tooltip (hover) or sheet (tap) shows its set, nothing worn.
+  if (phone) {
+    await vancleef.getByRole("button", { name: "Blackened Defias Armor, item details" }).click();
+  } else {
+    await vancleef.getByText("Blackened Defias Armor", { exact: true }).hover();
+  }
+  const setCard = phone ? page.getByRole("dialog") : page.getByText("Defias Leather (0/5)").locator("..");
+  await expect(setCard.getByText("Defias Leather (0/5)")).toBeVisible();
+  await expect(setCard.getByRole("listitem").filter({ hasText: "Blackened Defias Boots" })).toBeVisible();
+  await expect(setCard.getByText("(5) Set: +10 Agility.")).toBeVisible();
+  if (phone) await page.keyboard.press("Escape");
+  else await page.mouse.move(0, 0);
+  await expect(page.getByText("Defias Leather (0/5)")).toBeHidden();
+
   // The recipe nobody knows: its drawer.
   const cookie = loot.getByRole("region", { name: /Cookie/ });
   await expect(cookie.getByText("Nobody knows it")).toBeVisible();

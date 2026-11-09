@@ -45,7 +45,7 @@ async function main(): Promise<void> {
   const s = summaryOf(build, era, data, changed);
   console.log(
     `Done: ${s.items} items, ${s.recipes} recipes (${s.foreverOnly} Forever's own, ${s.unobtainable} unobtainable), ` +
-      `${s.sources} sources, ${s.bosses} bosses with ${s.bossDrops} drops. Changed: ${changed ? "yes" : "no"}.`,
+      `${s.sources} sources, ${s.bosses} bosses with ${s.bossDrops} drops, ${s.sets} item sets. Changed: ${changed ? "yes" : "no"}.`,
   );
 }
 
