@@ -299,6 +299,17 @@ says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) k
   days as pool 3.
 - Done when: the golden cases pass unchanged; unit tests for the new pool sizes; the Mission pool page and the
   design sample follow; screenshot baselines change only after Nico's OK.
+- **Built (2026-11-09, after addon PR #259 merged on its develop):** `since = 4` on all six new missions named above
+  (CF-104 added `d.reward`, `d.fishFriend` and `d.feedFriend`) plus `d.summoned`, `d.auctionPost` and `p.revenge`;
+  `retired = 4` on `p.homeGuard`; `HUNT_SINCE = 4`. Pools: 108 dailies, 49 weeklies, Skirmish 6, Bounty 6. Golden
+  cases from the addon's develop at `cd5cfb4`, unchanged. **The Hunt:** the snapshot's `hunts` per enemy faction
+  ("Hunt: Night Elf Druids", board `doomsday-today`); a pool-4 day's recorded `hunt` id becomes the friend's Hunt per
+  faction of their characters (Horde characters hunt the Alliance combination; none known: the Alliance Hunt), before
+  the Skirmish, done once (5 PvP); the site's own draw adds it too. One grid slot (`gridCount`). The bot's board: one
+  `hunt` column with `hunt` keyed by the hunted faction (BOT-API "Goals", already in the contract); the bot needs no
+  change. A day's `pool` decides its catalogue, so pool-3 and pool-4 days score side by side. The Mission pool page
+  doesn't plan the Hunt (the schedule has no Hunt slot, UPLOADER-API); its counts follow the pool. No new upload
+  field: CF-104's flag, revenge, summon and auction facts stay in the addon, so the site shows no progress for them.
 
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
@@ -443,14 +454,23 @@ Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
 - **Design needed:** the set block in the tooltip, desktop and phone sheet.
 - Done when: import tests; tooltip view-model tests; design checks; lint, tests and build pass.
 
-### WEB-100 Talent tooltips (needs a design)
-- **Import:** the Forever client's `TalentTab` and `Talent` (tree, row, column, ranks, spell per rank), the texts
-  through WEB-95's spell texts.
-- The character page's talent bars (`TalentBars`) show each tree's talents on hover or tap: name, rank, text, as far
-  as the synced talents tell which ones (check what the addon sends first; points per tree only means tree tooltips
-  only).
-- **Design needed:** the talent tooltip, and a talent tree view if the synced data allows one.
-- Done when: import tests; view-model tests; design checks; lint, tests and build pass.
+### WEB-100 Talent tooltips and the talent tree (board `talent-tooltips-v2`, WB101; A as the fallback)
+- **Import:** the Forever client's talent trees (`src/core/talents/build.ts`, table `talent_trees`, with "Import item
+  data"). Forever's talents are the class's C_Traits tree (TraitNode, TraitNodeEntry, TraitDefinition, TraitCond,
+  TraitEdge, SkillLineXTraitTree), not the Vanilla `Talent` table the story first named: that one is still in the
+  client but holds Vanilla's trees. TalentTab gives the trees' names and icons. Texts per rank through WEB-95's spell
+  texts with the rank curves (TraitDefinitionEffectPoints, CurvePoint); icons through the item icon cache.
+- **What uploads tell:** points per tree, and from the addon's CF-115 on `Char.talentNodes = { { id, ranks } }`
+  (TraitNode ID, or `posX` + `posY`).
+- The character page's talent rows: hover (desktop) shows the tree tooltip (the small tree, the talents with points:
+  icon, gold text, rank pill); a click opens the tree as the game's talent frame (icons in the game's states, rank
+  boxes, prerequisite arrows gold once the first talent has points), each talent's tooltip in the game's format
+  ("Rank 2/5", the text, "Next rank:", red "Requires ..."). Phone: a tap opens a sheet with the tree, a tapped talent's
+  tooltip under it. **A** for a character without talent nodes (or before the import): the tree's name and points.
+- Done when: import tests; view-model tests (full, partial, unknown → A; states, requirements, arrows); design checks;
+  e2e; lint, tests and build pass. Screenshot baselines `talents-tree-tooltip`, `talents-tree`,
+  `talents-talent-tooltip`, `talents-locked`, `talents-a` and the changed `character` (36 px tree rows): approved by
+  Nico. The deviations in docs/DESIGN.md (talents v2 on board WB101): approved by Nico.
 
 ### WEB-103 Spike: Everloot as a boss loot source (investigation only)
 Done (2026-11-07), report: [docs/research/everloot-loot-source.md](research/everloot-loot-source.md). Nico asked

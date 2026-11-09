@@ -25,3 +25,8 @@
     color-mix(in srgb, var(--class) var(--hero-light-mix), var(--mix-light))
   );
 }
+
+/* WEB-100: a row that opens its tree's tooltip (./TalentTooltip.module.css .row). */
+.item {
+  display: block;
+}

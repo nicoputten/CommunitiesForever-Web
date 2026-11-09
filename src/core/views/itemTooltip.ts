@@ -10,6 +10,7 @@ import {
   type ItemQuality,
 } from "../gamedata/items";
 import type { ItemRecord } from "../recipes/build";
+import type { ItemSetBonus, ItemSetPiece } from "../recipes/itemSets";
 
 // The item tooltip (WEB-92, handoff C1, board recipes-drawer): the game's own order, from our item database. No sell
 // price (gold is never shown). An item of Forever's own without a name (amendment 2) shows its fallback name only.
@@ -53,6 +54,28 @@ export function reagentsLine(reagents: readonly { id: number; name?: string; cou
     return r.count > 1 ? `${name} (${r.count})` : name;
   });
   return `Requires ${list.join(", ")}`;
+}
+
+/** WEB-99 (board WB99): an item's set block, under the item's own lines as in game. */
+export interface ItemSetView {
+  /** "Dreadmist Raiment (0/8)": nobody's pieces are known, so the count is always 0. */
+  title: string;
+  /** The pieces' names, in the client's order; none is marked (nothing is worn). */
+  pieces: string[];
+  /** "(2) Set: +200 Armor.", by threshold. */
+  bonuses: string[];
+}
+
+export function itemSetView(set: {
+  name: string;
+  items: readonly ItemSetPiece[];
+  bonuses: readonly ItemSetBonus[];
+}): ItemSetView {
+  return {
+    title: `${set.name} (0/${set.items.length})`,
+    pieces: set.items.map((p) => (p.name === undefined || p.name === "" ? itemFallbackName(p.id) : p.name)),
+    bonuses: [...set.bonuses].sort((a, b) => a.threshold - b.threshold).map((b) => `(${b.threshold}) Set: ${b.text}`),
+  };
 }
 
 const signed = (n: number) => (n < 0 ? `-${-n}` : `+${n}`);

@@ -1,5 +1,8 @@
 import type { BossDropRecord } from "@/core/recipes/bosses";
 import type { ItemDatabase, ItemRecord, RecipeRecord, SourceKind } from "@/core/recipes/build";
+import type { ReagentSourceRecord } from "@/core/recipes/reagentSources";
+import type { ItemSetRecord } from "@/core/recipes/itemSets";
+import { SAMPLE_TALENT_ICONS, SAMPLE_TALENTS } from "./sampleTalents";
 
 // The design checks' item database (WEB-92): example recipes and items for the recipe screens, as the boards draw
 // them (recipes-page, recipes-drawer: "Recipe names, numbers and sources on the boards are example data"). IDs are
@@ -65,6 +68,19 @@ const DEADMINES: LootItem[] = [
   { id: 90119, name: "Recipe: Roast Raptor", quality: 1, classId: 9, subclassId: 5, typeName: "Cooking", icon: "sample_recipe" },
 ]; // prettier-ignore
 
+/** WEB-99 (board WB99): VanCleef's five leather pieces as a set; the bonus texts are made up, as the board's. */
+const DEFIAS_PIECES = [90110, 90114, 90115, 90116, 90117];
+const DEFIAS_SET: ItemSetRecord = {
+  id: 9901,
+  name: "Defias Leather",
+  items: DEFIAS_PIECES.map((id) => ({ id, name: DEADMINES.find((d) => d.id === id)!.name })),
+  bonuses: [
+    { threshold: 2, text: "+50 Armor." },
+    { threshold: 3, text: "Increases your chance to dodge an attack by 1%." },
+    { threshold: 5, text: "+10 Agility." },
+  ],
+};
+
 function DEADMINES_ITEMS(): ItemRecord[] {
   return DEADMINES.map((d) => {
     const r: ItemRecord = {
@@ -79,6 +95,7 @@ function DEADMINES_ITEMS(): ItemRecord[] {
     if (d.typeName !== undefined) r.typeName = d.typeName;
     if (d.classId === 2 || d.classId === 4) r.bonding = 2;
     if (d.classId === 12) r.bonding = 4;
+    if (DEFIAS_PIECES.includes(d.id)) r.setId = DEFIAS_SET.id;
     if (d.classId === 9) {
       r.bonding = 1;
       r.use = ["Teaches you how to cook Roast Raptor."];
@@ -187,6 +204,11 @@ export const ITEMS: ItemRecord[] = [
   item({ id: 90025, name: "Heavy Silk Bandage", quality: 1, maxStack: 20, iconName: "sample_bandage" }),
   item({ id: 90026, name: "Spiced Wolf Meat", quality: 1, maxStack: 20, iconName: "sample_food" }),
   item({ id: 90027, name: "Roast Raptor", quality: 1, maxStack: 20, iconName: "sample_food" }),
+  // WEB-98: reagents for the gathered sources (board reagent-sources); existing icons, so the others keep their colours.
+  item({ id: 90030, name: "Heavy Leather", quality: 1, classId: 7, maxStack: 20, iconName: "sample_cloth" }),
+  item({ id: 90031, name: "Coarse Thread", quality: 1, classId: 7, maxStack: 20, iconName: "sample_thread" }),
+  item({ id: 90032, name: "Wild Steelbloom", quality: 1, classId: 7, maxStack: 20, iconName: "sample_essence" }),
+  item({ id: 90033, name: "Heavy Stone", quality: 1, classId: 7, maxStack: 20, iconName: "sample_stone" }),
   // WEB-102: The Deadmines' loot as board DL04 draws it (names from the board; ids made up).
   ...DEADMINES_ITEMS(),
   // An item of Forever's own the client data has no name for yet (amendment 2): fallback name and icon.
@@ -218,6 +240,7 @@ const RECIPES: SampleRecipe[] = [
     reagents: [
       [90010, 8],
       [90009, 10],
+      [90014, 2],
     ],
   },
   {
@@ -370,6 +393,7 @@ const RECIPES: SampleRecipe[] = [
     skill: [175, 195, 205, 215],
     category: "Elixir",
     sources: [{ kind: "trainer" }],
+    reagents: [[90032, 2]],
   },
   {
     id: 94002,
@@ -386,6 +410,7 @@ const RECIPES: SampleRecipe[] = [
     skill: [100, 115, 122, 130],
     category: "Trade Goods",
     sources: [{ kind: "trainer" }],
+    reagents: [[90033, 3]],
   },
   {
     id: 96001,
@@ -394,6 +419,11 @@ const RECIPES: SampleRecipe[] = [
     skill: [190, 195, 205, 215],
     category: "Explosives",
     sources: [{ kind: "trainer" }],
+    // WEB-98: a reagent another profession makes (Blacksmithing's, Grom knows it).
+    reagents: [
+      [90022, 1],
+      [90018, 1],
+    ],
   },
   {
     id: 97001,
@@ -402,6 +432,10 @@ const RECIPES: SampleRecipe[] = [
     skill: [150, 170, 180, 190],
     category: "Armor Kit",
     sources: [{ kind: "trainer" }],
+    reagents: [
+      [90030, 5],
+      [90031, 1],
+    ],
   },
   {
     id: 98001,
@@ -431,7 +465,38 @@ const DM_BOSSES: { id: number; name: string; final?: true; optional?: true; drop
 
 const byItem = new Map(DEADMINES.map((d) => [d.id, d]));
 
+/**
+ * WEB-98: where to get the reagents (board reagent-sources; NPCs, creatures and chances made up). The robe's drawer:
+ * two crafted reagents someone knows, a limited vendor with a drop, a vendor; Felcloth has none ("No known source");
+ * Heavy Leather is skinned, sold in limited stock and dropped; the herb and the stone are gathered; the bomb's grinding
+ * stone is Blacksmithing's (the drawer opens that recipe from Engineering's page, with Back).
+ */
+const REAGENT_SOURCES: ReagentSourceRecord[] = [
+  { itemId: 90009, kind: "crafted", position: 1, recipeId: 91009 },
+  { itemId: 90010, kind: "crafted", position: 1, recipeId: 91010 },
+  { itemId: 90011, kind: "crafted", position: 1, recipeId: 91011 },
+  { itemId: 90012, kind: "vendor_limited", position: 1, name: "Ilsa Brightwater", zone: "Winterspring" },
+  { itemId: 90012, kind: "drop", position: 1, name: "Tidal Wraith", chance: 12 },
+  { itemId: 90012, kind: "drop", position: 2, name: "Brine Lurker", chance: 4 },
+  { itemId: 90013, kind: "vendor", position: 1, name: "Orla Fenwick", zone: "Orgrimmar" },
+  { itemId: 90015, kind: "drop", position: 1, name: "Ashfang Raider", chance: 22 },
+  { itemId: 90015, kind: "drop", position: 2, name: "Gravemoor Brute", chance: 18 },
+  { itemId: 90017, kind: "crafted", position: 1, recipeId: 91012 },
+  { itemId: 90018, kind: "drop", position: 1, name: "Duskwhisper Cultist", chance: 31 },
+  { itemId: 90022, kind: "crafted", position: 1, recipeId: 95001 },
+  { itemId: 90030, kind: "vendor_limited", position: 1, name: "Hadda Stonebrow", zone: "Arathi Highlands" },
+  { itemId: 90030, kind: "skinning", position: 1, creatureType: "Beast", minLevel: 30, maxLevel: 45 },
+  { itemId: 90030, kind: "drop", position: 1, name: "Duskpelt Prowler", chance: 6 },
+  { itemId: 90030, kind: "drop", position: 2, name: "Elder Duskpelt Prowler", chance: 4 },
+  { itemId: 90031, kind: "vendor", position: 1, name: "Tobin Reed", zone: "Elwynn Forest" },
+  { itemId: 90032, kind: "herbalism", position: 1, name: "Wild Steelbloom" },
+  { itemId: 90032, kind: "vendor_limited", position: 1, name: "Marla Quill", zone: "Thousand Needles" },
+  { itemId: 90033, kind: "mining", position: 1, name: "Iron Deposit" },
+  { itemId: 90033, kind: "mining", position: 2, name: "Tin Vein" },
+];
+
 export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
+  talents: SAMPLE_TALENTS,
   bosses: DM_BOSSES.map((b, i) => ({
     id: b.id,
     name: b.name,
@@ -452,6 +517,7 @@ export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
     })),
   ),
   items: ITEMS,
+  sets: [DEFIAS_SET],
   recipes: RECIPES.map((r): RecipeRecord => {
     const rec: RecipeRecord = {
       id: r.id,
@@ -472,11 +538,16 @@ export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
   sources: RECIPES.flatMap((r) =>
     (r.sources ?? []).map((s) => ({ recipeId: r.id, ...s, isRare: s.kind === "drop" || s.kind === "rep" })),
   ),
+  reagentSources: REAGENT_SOURCES,
 };
 
 /** The icon names the sample uses, and the question mark: the seed draws each (sampleIcons in seed.setup.ts). */
 export const SAMPLE_ICONS = [
-  ...new Set([...ITEMS.flatMap((i) => (i.iconName === undefined ? [] : [i.iconName])), "inv_misc_questionmark"]),
+  ...new Set([
+    ...ITEMS.flatMap((i) => (i.iconName === undefined ? [] : [i.iconName])),
+    "inv_misc_questionmark",
+    ...SAMPLE_TALENT_ICONS,
+  ]),
 ];
 
 /** Who knows which recipe in the design sample (recipe ID -> item ID, CF-38's shape), and when each scanned. */

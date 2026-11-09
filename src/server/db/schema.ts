@@ -7,6 +7,9 @@ import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 import type { ItemRecord, SourceKind } from "@/core/recipes/build";
+import type { ReagentSourceKind } from "@/core/recipes/reagentSources";
+import type { ItemSetBonus, ItemSetPiece } from "@/core/recipes/itemSets";
+import type { ClassTalentsRecord } from "@/core/talents/build";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
@@ -749,6 +752,33 @@ export const recipeSources = sqliteTable(
   (t) => [index("recipe_sources_recipe").on(t.recipeId)],
 );
 
+/**
+ * WEB-98: where to get a reagent (src/core/recipes/reagentSources.ts): vendors, the recipes that make it, skinning,
+ * herb and ore nodes, drops. A few per kind, best first; the drawer picks at most 3.
+ */
+export const reagentSources = sqliteTable(
+  "reagent_sources",
+  {
+    itemId: integer("item_id").notNull(),
+    kind: text("kind").$type<ReagentSourceKind>().notNull(),
+    /** 1, 2, ...: best first within the kind. */
+    position: integer("position").notNull(),
+    /** The vendor, creature, or herb or ore node. */
+    name: text("name"),
+    /** A vendor's zone. */
+    zone: text("zone"),
+    /** A drop's chance in percent. */
+    chance: real("chance"),
+    /** Crafted: the recipe (spell ID) that makes it. */
+    recipeId: integer("recipe_id"),
+    /** Skinning: the creatures' type and levels. */
+    creatureType: text("creature_type"),
+    minLevel: integer("min_level"),
+    maxLevel: integer("max_level"),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.kind, t.position] })],
+);
+
 /** One row: which data the last import used and when (docs/SOURCE-DATA.md "Item database"). */
 export const itemImport = sqliteTable("item_import", {
   id: integer("id").primaryKey(),
@@ -809,6 +839,28 @@ export const bossDrops = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.bossId, t.itemId] })],
 );
+
+// --- WEB-99: item sets (src/core/recipes/itemSets.ts), written by the item import -----------------------------------
+
+/** An item set of the client (ItemSet) with its pieces and bonuses; an item's set is `items.data.setId`. */
+export const itemSets = sqliteTable("item_sets", {
+  /** ItemSet.ID. Forever's own copies of a set (new item IDs) have IDs of their own. */
+  id: integer("id").primaryKey(),
+  name: text("name").notNull(),
+  /** The pieces in the client's order, with their names where the item data has one. */
+  items: text("items", { mode: "json" }).$type<ItemSetPiece[]>().notNull(),
+  /** "(2) Set: ..." bonuses by threshold, the texts filled in (WEB-95). */
+  bonuses: text("bonuses", { mode: "json" }).$type<ItemSetBonus[]>().notNull(),
+});
+
+// --- WEB-100: the talent trees (src/core/talents/build.ts), written by the item import ----------------------------
+
+/** One class's three talent trees with every talent's position, ranks and texts (ClassTalentsRecord). */
+export const talentTrees = sqliteTable("talent_trees", {
+  /** The client's classFile token, e.g. "WARLOCK". */
+  classFile: text("class_file").primaryKey(),
+  data: text("data", { mode: "json" }).$type<ClassTalentsRecord>().notNull(),
+});
 
 // --- WEB-90: who knows what (derived from uploads, rebuilt with them; src/server/recipes.ts) ------------------------
 

@@ -41,6 +41,7 @@ const r = (id: number, skillLineId: number, over: Partial<RecipeRecord> = {}): R
 const DATABASE: ItemDatabase = {
   bosses: [],
   bossDrops: [],
+  sets: [],
   items: [{ id: 101, name: "Test Item 101", quality: 1, iconName: "inv_test" }, { id: 102 }],
   recipes: [r(1, 197), r(2, 197), r(3, 197), r(4, 197), r(9, 197), r(10, 185)],
   reagents: [{ recipeId: 2, itemId: 101, count: 3 }],

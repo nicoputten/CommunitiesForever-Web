@@ -141,7 +141,7 @@ describe("steering and the schedule", () => {
       `${OWNER}set Earn 5 profession skill points to Often`,
       `${OWNER}switched off Finish 10 quests`,
     ]);
-    expect(() => setMission(db, OWNER, "d.fishFriend", { off: true }, NOW, OWNER)).toThrow(/No such mission/);
+    expect(() => setMission(db, OWNER, "p.homeGuard", { off: true }, NOW, OWNER)).toThrow(/No such mission/);
   });
 
   it("a pin must fit its slot", () => {

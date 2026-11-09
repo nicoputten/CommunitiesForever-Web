@@ -344,7 +344,7 @@ A goal on the board or in a look-up:
 
 - `slot`: `pve1`, `pve2`, `pve3`, `hunt`, `skirmish` (daily); `week1`, `week2`, `week3`, `bounty` (weekly).
 - `id`: the goal id of `DOOMSDAY.md`. `title`: finished text ("Front line: 5 kills in Ashenvale"). An id the site doesn't know (from a newer addon) has `"unknown": true` and the title "A goal from a newer version"; it still counts.
-- The Hunt names a combination per enemy faction: the `hunt` slot carries `"hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" }` (keyed by the hunted faction), and its `title` names both.
+- The Hunt names a combination per enemy faction: the `hunt` slot carries `"hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" }` (keyed by the hunted faction), and its `title` names both. It is drawn from pool version 4 (WEB-101, addon CF-104); days of pool versions 1 to 3 have no `hunt` slot. `hunt` names only the factions the friends hunt (the faction of their characters: Horde characters hunt Alliance), and a friend's row has one `hunt` goal (`id` `"hunt"`), done when any of their Hunts is.
 - `points`: 5 for a daily, 15 for a weekly.
 
 A friend's goal (in a board row or a look-up) adds:
@@ -592,6 +592,19 @@ One per character per accepted upload that brought new rare finds: recipes the c
 - `recipe.skill`: the skill to learn it (orange; RC08's "Tailoring 300").
 - `crafters`: everyone who knows it, highest skill first, all of them (the bot shows 5 and "+N more"). `difficulty` (`orange`, `yellow`, `green`, `grey`) is what crafting it gives that character (RC08's 🟠🟡🟢⚪); left out without a skill.
 - `crafters` empty: nobody knows it; `sources` says where it is learned ("Nobody can make it yet.").
+- `reagents[].sources` (optional, WEB-98): where to get that reagent, best first, at most 3, as the site's recipe drawer
+  shows it; `[]`: none known ("No known source"). Left out (the whole field) while the site's item data has no reagent
+  sources yet (an import from before WEB-98). Never a price. One of:
+  - `{ "kind": "vendor", "npc": "Tharynn Bouden", "zone": "Elwynn Forest", "limited": false }`: `zone` optional;
+    `limited` true: the vendor has a few, then restocks ("limited stock").
+  - `{ "kind": "crafted", "recipeId": 3818, "name": "Cured Heavy Hide", "profession": "Leatherworking", "skill": 150,
+    "known": true, "url": "/professions/leatherworking?recipe=3818" }`: the recipe that makes it; `known`: someone in
+    the group knows it; `skill` (to learn it) and `url` optional.
+  - `{ "kind": "skinning", "creatureType": "Beast", "minLevel": 30, "maxLevel": 45 }`: all three optional.
+  - `{ "kind": "herbalism" | "mining", "nodes": ["Kingsblood"] }`: one or two nodes.
+  - `{ "kind": "drop", "creatures": [{ "name": "Shadowmaw Panther", "chance": 6 }] }`: one or two creatures, `chance` in
+    percent (two decimals), highest first.
+  Unknown `kind`s may come later: skip them.
 - `404 not_found` ("No recipe makes that."): no recipe makes it. `400 invalid_request` without `item`.
 
 ## Visual posts (WEB-66)

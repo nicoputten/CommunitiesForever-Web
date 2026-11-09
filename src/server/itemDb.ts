@@ -2,7 +2,18 @@ import { createHash } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 import type { ItemDatabase } from "@/core/recipes/build";
 import type { Db } from "./db";
-import { bossDrops, dungeonBosses, itemImport, items, recipeReagents, recipes, recipeSources } from "./db/schema";
+import {
+  bossDrops,
+  dungeonBosses,
+  itemImport,
+  items,
+  itemSets,
+  reagentSources,
+  recipeReagents,
+  recipes,
+  recipeSources,
+  talentTrees,
+} from "./db/schema";
 
 // WEB-90 (run by scripts/import-items.ts, so it imports nothing that Node's type stripping can't load): writes the item and recipe database the import script built (src/core/recipes/build.ts). One transaction;
 // the same data again changes nothing. Rows of Forever's own that only uploads brought (origin "upload") stay until
@@ -31,6 +42,9 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
     tx.delete(recipeSources).run();
     tx.delete(dungeonBosses).run();
     tx.delete(bossDrops).run();
+    tx.delete(reagentSources).run();
+    tx.delete(itemSets).run();
+    tx.delete(talentTrees).run();
     replaceUploaded(
       tx,
       data.items.map((i) => i.id),
@@ -132,6 +146,40 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
             line: d.line ?? null,
           })),
         )
+        .run(),
+    );
+    // WEB-98: where to get each reagent. An import from before WEB-98 (a dump) has none.
+    insertAll(data.reagentSources ?? [], (slice) =>
+      tx
+        .insert(reagentSources)
+        .values(
+          slice.map((s) => ({
+            itemId: s.itemId,
+            kind: s.kind,
+            position: s.position,
+            name: s.name ?? null,
+            zone: s.zone ?? null,
+            chance: s.chance ?? null,
+            recipeId: s.recipeId ?? null,
+            creatureType: s.creatureType ?? null,
+            minLevel: s.minLevel ?? null,
+            maxLevel: s.maxLevel ?? null,
+          })),
+        )
+        .run(),
+    );
+    // WEB-99: item sets.
+    insertAll(data.sets, (slice) =>
+      tx
+        .insert(itemSets)
+        .values(slice.map((x) => ({ id: x.id, name: x.name, items: x.items, bonuses: x.bonuses })))
+        .run(),
+    );
+    // WEB-100: the talent trees, one row per class.
+    insertAll(data.talents ?? [], (slice) =>
+      tx
+        .insert(talentTrees)
+        .values(slice.map((t) => ({ classFile: t.classFile, data: t })))
         .run(),
     );
     tx.delete(itemImport).run();

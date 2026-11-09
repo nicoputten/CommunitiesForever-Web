@@ -232,6 +232,27 @@
       "when": 1794050787129,
       "tag": "0032_boss_kills",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1794256032864,
+      "tag": "0033_item_sets",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1794262154349,
+      "tag": "0034_reagent_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1794262239776,
+      "tag": "0035_talent_trees",
+      "breakpoints": true
     }
   ]
 }

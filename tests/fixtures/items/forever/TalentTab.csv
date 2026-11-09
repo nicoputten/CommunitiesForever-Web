@@ -1,0 +1,4 @@
+ID,Name_lang,Description_lang,OrderIndex,ClassMask,SpellIconID
+31,"Test Right",,2,256,0
+32,"Test Left",,0,256,100022
+33,"Test Middle",,1,256,0

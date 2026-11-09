@@ -67,6 +67,8 @@ export interface ImportSummary {
   /** WEB-96: dungeon bosses and their drops. */
   bosses: number;
   bossDrops: number;
+  /** WEB-99: item sets with a piece among the items. */
+  sets: number;
   /** False when the data was the same as the last import's. */
   changed: boolean;
   /** True when wago.tools' build list didn't answer and the last known builds were used (WEB-94). */
@@ -267,6 +269,7 @@ export function summaryOf(build: string, era: string, data: ItemDatabase, change
     sources: data.sources.length,
     bosses: data.bosses.length,
     bossDrops: data.bossDrops.length,
+    sets: data.sets.length,
     changed,
   };
 }

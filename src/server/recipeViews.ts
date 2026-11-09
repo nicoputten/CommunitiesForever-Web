@@ -12,13 +12,17 @@ import {
   type SourceData,
   type TooltipCreated,
   type TooltipItem,
+  type TooltipSet,
 } from "@/core/views/recipes";
+import type { ReagentSourceData } from "@/core/views/reagentSources";
 import type { Db } from "./db";
 import {
   bossDrops,
   characterProfessions,
   characterRecipes,
   items,
+  reagentSources,
+  itemSets,
   recipeReagents,
   recipes,
   recipeSources,
@@ -56,29 +60,68 @@ export interface RecipeRows {
   reagents: ReagentData[];
   known: KnownData[];
   professions: CharacterProfessionData[];
+  /** WEB-98: where to get the reagents (`withReagentSources`); undefined before an import has any. */
+  reagentSources?: ReagentSourceData[];
 }
 
-/** One profession's recipes (or every recipe profession's, for the search) with everything their rows show. */
-export function recipeRows(db: Db, skillLine?: number): RecipeRows {
+/**
+ * One profession's recipes (or every recipe profession's, for the search) with everything their rows show. WEB-98,
+ * `withReagentSources` (the profession page): also where to get each reagent, and the other professions' recipes a
+ * crafted reagent links to, on down.
+ */
+export function recipeRows(db: Db, skillLine?: number, withReagentSources = false): RecipeRows {
   const recipeList: RecipeData[] = (
     skillLine === undefined
       ? db.select(recipeColumns).from(recipes).where(isNotNull(recipes.skillLineId)).all()
       : db.select(recipeColumns).from(recipes).where(eq(recipes.skillLineId, skillLine)).all()
   ).filter((r) => r.skillLineId !== null && hasRecipes(r.skillLineId));
-  const ids = recipeList.map((r) => r.id);
-  const sources = chunked(ids, (slice) =>
-    db.select().from(recipeSources).where(inArray(recipeSources.recipeId, slice)).all(),
-  );
-  const reagents = chunked(ids, (slice) =>
-    db.select().from(recipeReagents).where(inArray(recipeReagents.recipeId, slice)).all(),
-  );
-  const known = chunked(ids, (slice) =>
-    db
-      .select({ guid: characterRecipes.guid, recipeId: characterRecipes.recipeId })
-      .from(characterRecipes)
-      .where(inArray(characterRecipes.recipeId, slice))
-      .all(),
-  );
+  const read = (ids: readonly number[]) => ({
+    sources: chunked(ids, (slice) =>
+      db.select().from(recipeSources).where(inArray(recipeSources.recipeId, slice)).all(),
+    ),
+    reagents: chunked(ids, (slice) =>
+      db.select().from(recipeReagents).where(inArray(recipeReagents.recipeId, slice)).all(),
+    ),
+    known: chunked(ids, (slice) =>
+      db
+        .select({ guid: characterRecipes.guid, recipeId: characterRecipes.recipeId })
+        .from(characterRecipes)
+        .where(inArray(characterRecipes.recipeId, slice))
+        .all(),
+    ),
+  });
+  const { sources, reagents, known } = read(recipeList.map((r) => r.id));
+
+  let reagentSourceList: ReagentSourceData[] | undefined;
+  if (withReagentSources && db.select({ itemId: reagentSources.itemId }).from(reagentSources).limit(1).get()) {
+    reagentSourceList = [];
+    const haveRecipes = new Set(recipeList.map((r) => r.id));
+    const haveItems = new Set<number>();
+    let wanted = reagents.map((r) => r.itemId);
+    while (wanted.length > 0) {
+      const fresh = [...new Set(wanted)].filter((id) => !haveItems.has(id));
+      for (const id of fresh) haveItems.add(id);
+      const rows = chunked(fresh, (slice) =>
+        db.select().from(reagentSources).where(inArray(reagentSources.itemId, slice)).all(),
+      );
+      reagentSourceList.push(...rows);
+      // The recipes that make a reagent and aren't here yet: theirs, and their reagents, next.
+      const makers = [...new Set(rows.flatMap((r) => (r.recipeId === null ? [] : [r.recipeId])))].filter(
+        (id) => !haveRecipes.has(id),
+      );
+      const more = chunked(makers, (slice) =>
+        db.select(recipeColumns).from(recipes).where(inArray(recipes.id, slice)).all(),
+      ).filter((r) => r.skillLineId !== null && hasRecipes(r.skillLineId));
+      for (const r of more) haveRecipes.add(r.id);
+      recipeList.push(...more);
+      const extra = read(more.map((r) => r.id));
+      sources.push(...extra.sources);
+      reagents.push(...extra.reagents);
+      known.push(...extra.known);
+      wanted = extra.reagents.map((r) => r.itemId);
+    }
+  }
+
   const itemIds = [
     ...new Set([
       ...recipeList.flatMap((r) => (r.createdItemId == null ? [] : [r.createdItemId])),
@@ -106,6 +149,7 @@ export function recipeRows(db: Db, skillLine?: number): RecipeRows {
     reagents,
     known,
     professions,
+    ...(reagentSourceList !== undefined ? { reagentSources: reagentSourceList } : {}),
   };
 }
 
@@ -162,10 +206,29 @@ function itemRows(db: Db, ids: readonly number[]): TooltipItem[] {
 
 /**
  * Items with their tooltip data, by ID (no gold: the item data has no sell price). A recipe item gets the item its
- * recipe makes (WEB-104, `withCreated`).
+ * recipe makes (WEB-104, `withCreated`), a set item its set (WEB-99, `withSets`).
  */
 export function tooltipItems(db: Db, ids: readonly number[]): TooltipItem[] {
-  return withCreated(db, itemRows(db, ids));
+  return withSets(db, withCreated(db, itemRows(db, ids)));
+}
+
+/**
+ * WEB-99: a set item's tooltip shows its set (name, pieces, bonuses) under its own lines, as in game. The set is the
+ * item data's `setId` (the item import); an item without one, or whose set the database doesn't have, gets nothing.
+ */
+export function withSets(db: Db, list: TooltipItem[]): TooltipItem[] {
+  const ids = [...new Set(list.flatMap((i) => (i.data.setId === undefined ? [] : [i.data.setId])))];
+  if (ids.length === 0) return list;
+  const sets = new Map<number, TooltipSet>(
+    chunked(ids, (slice) => db.select().from(itemSets).where(inArray(itemSets.id, slice)).all()).map((s) => [
+      s.id,
+      { name: s.name, items: s.items, bonuses: s.bonuses },
+    ]),
+  );
+  return list.map((i) => {
+    const set = i.data.setId === undefined ? undefined : sets.get(i.data.setId);
+    return set === undefined ? i : { ...i, set };
+  });
 }
 
 /**

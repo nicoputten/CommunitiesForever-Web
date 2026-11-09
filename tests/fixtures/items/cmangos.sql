@@ -3,9 +3,11 @@ CREATE TABLE `creature` (
   `guid` int unsigned NOT NULL AUTO_INCREMENT,
   `id` mediumint unsigned NOT NULL DEFAULT '0',
   `map` smallint unsigned NOT NULL DEFAULT '0',
+  `position_x` float NOT NULL DEFAULT '0',
+  `position_y` float NOT NULL DEFAULT '0',
   PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature` VALUES (1,7001,229),(2,7101,0),(3,7102,0),(4,7103,0),(5,7104,0),(6,7002,0),(7,7201,36);
+INSERT INTO `creature` VALUES (1,7001,229,0,0),(2,7101,0,500,500),(3,7102,0,500,510),(4,7103,0,600,600),(5,7104,0,610,600),(6,7002,0,0,0),(7,7201,36,0,0),(8,7301,0,50,50),(9,7302,0,500,400),(10,7401,0,700,700),(11,7103,0,620,600),(12,7103,0,630,600);
 CREATE TABLE `creature_loot_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `item` mediumint unsigned NOT NULL DEFAULT '0',
@@ -17,21 +19,26 @@ CREATE TABLE `creature_loot_template` (
   `comments` varchar(300) DEFAULT '',
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,''),(7201,5003,25,0,1,1,0,'Test Shirt Item'),(7201,5004,0.5,0,1,1,0,'Test Robe Item'),(7201,6005,0.5,0,1,1,0,'Pattern: Test Bag');
+INSERT INTO `creature_loot_template` VALUES (7001,50001,100,0,-50001,1,0,'Test reference'),(7001,5002,30,0,1,2,0,'Test Thread'),(7101,5002,0,1,1,1,0,'Test Thread: shares group 1'),(7101,5003,60,1,1,1,0,''),(7102,5002,-100,0,1,1,0,'quest only'),(7103,5013,2,0,1,1,0,'Test Ore'),(7101,50002,1,0,-50002,1,0,''),(7102,50002,1,0,-50002,1,0,''),(7103,50002,1,0,-50002,1,0,''),(7104,50002,1,0,-50002,1,0,''),(7201,5003,25,0,1,1,0,'Test Shirt Item'),(7201,5004,0.5,0,1,1,0,'Test Robe Item'),(7201,6005,0.5,0,1,1,0,'Pattern: Test Bag');
 CREATE TABLE `creature_template` (
   `Entry` mediumint unsigned NOT NULL DEFAULT '0',
   `Name` char(100) NOT NULL DEFAULT '',
+  `MinLevel` tinyint unsigned NOT NULL DEFAULT '1',
+  `MaxLevel` tinyint unsigned NOT NULL DEFAULT '1',
+  `CreatureType` tinyint unsigned NOT NULL DEFAULT '0',
   `LootId` mediumint unsigned NOT NULL DEFAULT '0',
+  `SkinningLootId` mediumint unsigned NOT NULL DEFAULT '0',
   `VendorTemplateId` mediumint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Entry`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `creature_template` VALUES (7001,'Test Boss',7001,0),(7002,'Test Quartermaster',0,0),(7003,'Test Merchant',0,0),(7004,'Test Peddler',0,40),(7101,'Test Wolf',7101,0),(7102,'Test Wolf Pup',7102,0),(7103,'Test Wolf Elder',7103,0),(7104,'Test Wolf\'s Mother',7104,0),(7201,'Test Deadmines Boss',7201,0);
+INSERT INTO `creature_template` VALUES (7001,'Test Boss',30,30,7,7001,0,0),(7002,'Test Quartermaster',30,30,7,0,0,0),(7003,'Test Merchant',30,30,7,0,0,0),(7004,'Test Peddler',30,30,7,0,0,40),(7101,'Test Wolf',18,19,1,7101,7101,0),(7102,'Test Wolf Pup',5,6,1,7102,7102,0),(7103,'Test Wolf Elder',25,25,1,7103,0,0),(7104,'Test Wolf\'s Mother',25,25,1,7104,0,0),(7201,'Test Deadmines Boss',20,20,7,7201,0,0),(7301,'Test Thread Merchant',30,30,7,0,0,0),(7302,'Test Leather Seller',30,30,7,0,0,0),(7303,'Test Hidden Merchant',30,30,7,0,0,0),(7401,'Test Bear',20,22,1,0,7401,0);
 CREATE TABLE `gameobject` (
   `guid` int unsigned NOT NULL AUTO_INCREMENT,
   `id` mediumint unsigned NOT NULL DEFAULT '0',
   `map` smallint unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+INSERT INTO `gameobject` VALUES (1,8101,0),(2,8102,0),(3,8103,0);
 CREATE TABLE `gameobject_loot_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `item` mediumint unsigned NOT NULL DEFAULT '0',
@@ -43,13 +50,16 @@ CREATE TABLE `gameobject_loot_template` (
   `comments` varchar(300) DEFAULT '',
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+INSERT INTO `gameobject_loot_template` VALUES (8101,5012,80,0,1,1,0,'Test Herb'),(8102,5013,100,0,1,1,0,'Test Ore'),(8103,5012,50,0,1,1,0,'not a herb node');
 CREATE TABLE `gameobject_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `type` tinyint unsigned NOT NULL DEFAULT '0',
   `name` varchar(100) NOT NULL DEFAULT '',
+  `data0` int unsigned NOT NULL DEFAULT '0',
   `data1` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`entry`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+INSERT INTO `gameobject_template` VALUES (8101,3,'Test Bloom',10,8101),(8102,3,'Test Vein',11,8102),(8103,3,'Test Chest',12,8103);
 CREATE TABLE `item_loot_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `item` mediumint unsigned NOT NULL DEFAULT '0',
@@ -128,7 +138,7 @@ CREATE TABLE `npc_vendor` (
   `comments` mediumtext,
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `npc_vendor` VALUES (7002,6004,0,0,0,0,'Pattern: Test Gloves'),(7003,6005,1,9000,0,0,'Pattern: Test Bag');
+INSERT INTO `npc_vendor` VALUES (7002,6004,0,0,0,0,'Pattern: Test Gloves'),(7003,6005,1,9000,0,0,'Pattern: Test Bag'),(7303,5002,0,0,0,0,'Test Thread, never spawned'),(7301,5002,0,0,0,0,'Test Thread'),(7302,5011,5,3600,0,0,'Test Leather, limited');
 CREATE TABLE `npc_vendor_template` (
   `entry` mediumint unsigned NOT NULL DEFAULT '0',
   `item` mediumint unsigned NOT NULL DEFAULT '0',
@@ -161,4 +171,16 @@ CREATE TABLE `reference_loot_template` (
   `comments` varchar(300) DEFAULT '',
   PRIMARY KEY (`entry`,`item`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
-INSERT INTO `reference_loot_template` VALUES (50001,6003,5,1,1,1,0,'Pattern: Test Robe'),(50002,50003,100,0,-50003,1,0,'nested'),(50003,6007,0.1,0,1,1,0,'Pattern: Test Pants');
+INSERT INTO `reference_loot_template` VALUES (50001,6003,5,1,1,1,0,'Pattern: Test Robe'),(50002,50003,100,0,-50003,1,0,'nested'),(50003,6007,0.1,0,1,1,0,'Pattern: Test Pants'),(50001,5013,10,0,1,1,0,'Test Ore');
+CREATE TABLE `skinning_loot_template` (
+  `entry` mediumint unsigned NOT NULL DEFAULT '0',
+  `item` mediumint unsigned NOT NULL DEFAULT '0',
+  `ChanceOrQuestChance` float NOT NULL DEFAULT '100',
+  `groupid` tinyint unsigned NOT NULL DEFAULT '0',
+  `mincountOrRef` mediumint NOT NULL DEFAULT '1',
+  `maxcount` tinyint unsigned NOT NULL DEFAULT '1',
+  `condition_id` mediumint unsigned NOT NULL DEFAULT '0',
+  `comments` varchar(300) DEFAULT '',
+  PRIMARY KEY (`entry`,`item`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+INSERT INTO `skinning_loot_template` VALUES (7401,5011,50,0,1,1,0,'Test Leather'),(7101,5011,40,0,1,1,0,''),(7102,5011,5,0,1,1,0,'too rare to count');

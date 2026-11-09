@@ -3,7 +3,14 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Tabs from "@radix-ui/react-tabs";
 import MiniSearch from "minisearch";
-import { createSerializer, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import {
+  createSerializer,
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+} from "nuqs";
 import { useId, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from "react";
 import {
   SKILL_RANGES,
@@ -18,14 +25,15 @@ import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { LocalTime } from "@/components/ui/LocalTime";
 import { SearchIcon } from "@/components/ui/icons";
-import { RecipeDrawerBody } from "./RecipeDrawer";
+import { RecipeDrawerBody, type DrawerNav } from "./RecipeDrawer";
 import { RecipeTable } from "./RecipeTable";
 import buttons from "./buttons.module.css";
 import drawer from "./RecipeDrawer.module.css";
 import styles from "./ProfessionRecipes.module.css";
 
 // The profession page's recipes (WEB-92, handoff C4–C6, boards recipes-page, recipes-phone, recipes-states): tabs,
-// filters and the open recipe all live in the URL (?char=&type=&skill=&tab=&q=&recipe=), so any view is a link.
+// filters and the open recipe all live in the URL (?char=&type=&skill=&tab=&q=&recipe=), so any view is a link. WEB-98:
+// `back` holds the recipes a crafted reagent's link came from, for the drawer's Back arrow.
 
 const TABS = ["all", "known", "missing"] as const;
 
@@ -36,6 +44,7 @@ export const recipeParams = {
   tab: parseAsStringLiteral(TABS),
   q: parseAsString,
   recipe: parseAsInteger,
+  back: parseAsArrayOf(parseAsInteger),
 };
 
 export const recipeHref = createSerializer(recipeParams);
@@ -97,7 +106,14 @@ export function ProfessionRecipes({
   const filter = { tab, char, type, skill, matches };
   const rows = useMemo(() => filterRows(view.rows, filter), [view.rows, tab, char, type, skill, matches]); // eslint-disable-line react-hooks/exhaustive-deps
   const counts = tabCounts(view, char);
-  const open = params.recipe === null ? undefined : view.rows.find((r) => r.id === params.recipe);
+  // A recipe of this profession, or (WEB-98) another profession's that a crafted reagent links to.
+  const findRow = (id: number | null | undefined): (RecipeRow & { profession?: string }) | undefined =>
+    id === null || id === undefined
+      ? undefined
+      : (view.rows.find((r) => r.id === id) ?? view.linked.find((r) => r.id === id));
+  const open = findRow(params.recipe);
+  const back = params.back ?? [];
+  const backRow = findRow(back.at(-1));
   const crafter = view.crafters.find((c) => c.guid === char);
   const filtered = query.trim() !== "" || type !== undefined || skill !== undefined || char !== undefined;
 
@@ -105,9 +121,30 @@ export function ProfessionRecipes({
   // A link to a recipe of a profession nobody scanned (WEB-104: a boss's recipe drop, the bot) opens it over all
   // recipes; closing it stays on them rather than going back to "No recipes scanned yet".
   const openRecipe = (recipe: number | null) =>
-    void setParams(recipe === null && view.notScanned && params.tab === null ? { recipe, tab: "all" } : { recipe }, {
-      history: recipe === null ? "replace" : "push",
-    });
+    void setParams(
+      recipe === null && view.notScanned && params.tab === null
+        ? { recipe, back: null, tab: "all" }
+        : { recipe, back: null },
+      { history: recipe === null ? "replace" : "push" },
+    );
+  // WEB-98: a crafted reagent's link swaps the drawer to its recipe; Back returns.
+  const backFrom = open === undefined ? back : [...back, open.id];
+  const nav: DrawerNav = {
+    hrefFor: (recipe) => recipeHref({ ...params, recipe, back: backFrom }),
+    open: (recipe) => void setParams({ recipe, back: backFrom }, { history: "push" }),
+    ...(backRow !== undefined
+      ? {
+          back: {
+            name: backRow.name,
+            go: () =>
+              void setParams(
+                { recipe: backRow.id, back: back.length > 1 ? back.slice(0, -1) : null },
+                { history: "replace" },
+              ),
+          },
+        }
+      : {}),
+  };
 
   if (view.notScanned && params.tab === null && open === undefined) {
     const who = view.crafters[0]?.name;
@@ -239,7 +276,9 @@ export function ProfessionRecipes({
               {t === tab && body}
             </Tabs.Content>
           ))}
-          {open !== undefined && <Drawer row={open} profession={view.name} onClose={() => openRecipe(null)} />}
+          {open !== undefined && (
+            <Drawer row={open} profession={open.profession ?? view.name} nav={nav} onClose={() => openRecipe(null)} />
+          )}
         </div>
       </Tabs.Root>
     </>
@@ -247,7 +286,17 @@ export function ProfessionRecipes({
 }
 
 /** The open recipe: a non-modal panel on the right on desktop, a sheet below 1024 px (swipe down or ✕ closes). */
-function Drawer({ row, profession, onClose }: { row: RecipeRow; profession: string; onClose: () => void }) {
+function Drawer({
+  row,
+  profession,
+  nav,
+  onClose,
+}: {
+  row: RecipeRow;
+  profession: string;
+  nav: DrawerNav;
+  onClose: () => void;
+}) {
   const sheet = useSheet();
   const titleId = useId();
   const [drag, setDrag] = useState<number | undefined>(undefined);
@@ -258,7 +307,7 @@ function Drawer({ row, profession, onClose }: { row: RecipeRow; profession: stri
       <span aria-hidden="true">✕</span>
     </Dialog.Close>
   );
-  const body = <RecipeDrawerBody row={row} profession={profession} titleId={titleId} close={close} />;
+  const body = <RecipeDrawerBody row={row} profession={profession} titleId={titleId} close={close} nav={nav} />;
   const onOpenChange = (o: boolean) => !o && onClose();
 
   if (sheet) {

@@ -36,7 +36,7 @@ export default async function ProfessionPage({ params }: Props) {
 
   const db = getDb();
   const characters = recordCharacters(data, now);
-  const rows = recipeRows(db, line);
+  const rows = recipeRows(db, line, true);
   const view = professionRecipes({ ...rows, skillLine: line, characters, online: onlineGuids(data, now), now });
   const summary = professions(data, now).professions.find((p) => p.skillLine === String(line));
   const itemIds = [...rows.items.keys()];

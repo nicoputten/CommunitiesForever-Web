@@ -1,5 +1,16 @@
 import type { LuaChunk, LuaTable, LuaValue } from "./lua";
-import type { Character, Dataset, Person, PresenceLink, Profession, Pvp, Quest, Sighting, TalentTree } from "./model";
+import type {
+  Character,
+  Dataset,
+  Person,
+  PresenceLink,
+  Profession,
+  Pvp,
+  Quest,
+  Sighting,
+  TalentNode,
+  TalentTree,
+} from "./model";
 import { cleanName, stripEscapes } from "./sanitize";
 
 // Reads CommunitiesForeverDB.global (docs/SOURCE-DATA.md) into the internal shape (model.ts). Every field may be
@@ -258,6 +269,7 @@ function readChar(guid: string, owner: string, c: Table): Character {
     talents,
     mainTree,
     mainTreeName,
+    talentNodes: readTalentNodes(table(field(c, "talentNodes"))),
     role: str(c, "role"),
     autoRole: str(c, "autoRole"),
     roleOverride: str(c, "roleOverride"),
@@ -329,6 +341,26 @@ function readRecipeLines(t: Table | undefined): Record<string, number> | undefin
 }
 
 /** Highest PvP rank (DOOMSDAY.md "PvP rank titles"). */
+/** A class tree has about 55 nodes (Forever 1.60.1); more is not a talent tree. */
+const MAX_TALENT_NODES = 200;
+/** The most ranks a talent has (Vanilla and Forever: 5). */
+const MAX_TALENT_RANKS = 5;
+
+/** WEB-100: `talentNodes = { { id = 105889, ranks = 5 }, { posX = 9680, posY = 2130, ranks = 3 } }`; see TalentNode. */
+function readTalentNodes(t: Table | undefined): TalentNode[] | undefined {
+  if (t === undefined) return undefined;
+  const coord = (v: number | undefined) =>
+    v !== undefined && Number.isInteger(v) && Math.abs(v) <= MAX_ID ? v : undefined;
+  const out: TalentNode[] = [];
+  for (const value of list(t).slice(0, MAX_TALENT_NODES)) {
+    const n = table(value);
+    const ranks = num(n, "ranks");
+    if (ranks === undefined || !Number.isInteger(ranks) || ranks < 0 || ranks > MAX_TALENT_RANKS) continue;
+    out.push(compact({ id: id(num(n, "id")), posX: coord(num(n, "posX")), posY: coord(num(n, "posY")), ranks }));
+  }
+  return out;
+}
+
 const MAX_PVP_RANK = 14;
 
 /** `chars.*.pvp` (CF-52), cleaned as the addon's Pvp.clean: only the expected fields, counts 0 or more. */

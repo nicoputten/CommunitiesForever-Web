@@ -28,6 +28,8 @@ import {
   goalPoints,
   goalsForDay,
   goalsForWeek,
+  type Combo,
+  huntTitle,
   type Kill,
   ladder,
   type MissionSchedule,
@@ -391,6 +393,28 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   const weekGoals = [...weekDraw.weeklies, ...(weekDraw.bounty !== undefined ? [weekDraw.bounty] : [])].map((id) =>
     goalRef(id),
   );
+  // The Hunt (pool version 4, HUNT_SINCE): Horde characters hunt the draw's Horde combination (an Alliance race).
+  const huntRef = (c: Combo | undefined): GoalRef | undefined =>
+    c === undefined
+      ? undefined
+      : { id: `hunt:${c.race}:${c.class}`, track: "pvp", slot: "hunt", title: huntTitle(c), known: true };
+  const hunts: DoomsdaySnapshot["hunts"] = {};
+  const allianceHunt = huntRef(dayDraw.hunt?.Horde);
+  const hordeHunt = huntRef(dayDraw.hunt?.Alliance);
+  if (allianceHunt !== undefined) hunts.alliance = allianceHunt;
+  if (hordeHunt !== undefined) hunts.horde = hordeHunt;
+  /**
+   * A friend's Hunts: one per faction of their characters (Horde first), the board's Alliance Hunt when none is known
+   * (the group plays Horde, Nico 2026-10-28). Empty when today has no Hunt.
+   */
+  const huntsOf = (f: Friend): { ref: GoalRef; column: string }[] => {
+    const factions = new Set(f.chars.map((c) => c.faction));
+    const out: { ref: GoalRef; column: string }[] = [];
+    if (hunts.alliance !== undefined && (factions.has("Horde") || !factions.has("Alliance")))
+      out.push({ ref: hunts.alliance, column: "hunt:alliance" });
+    if (hunts.horde !== undefined && factions.has("Alliance")) out.push({ ref: hunts.horde, column: "hunt:horde" });
+    return out;
+  };
 
   const friendGoals = (
     set: readonly string[],
@@ -400,8 +424,24 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     progress: (id: string) => FriendGoal["progress"],
     // The pool version of the recorded day or week; the site's own for a set it drew (no record yet).
     pool: number,
-  ): FriendGoal[] =>
-    set.map((id) => {
+    // The friend's Hunts for the set's "hunt" id (today only).
+    huntGoals: readonly { ref: GoalRef; column: string }[] = [],
+  ): FriendGoal[] => {
+    // Board order: the PvE goals, the Hunt, then the PvP slot (the addon records the Hunt as the set's fifth id).
+    const ordered = [
+      ...set.filter((id) => id !== "hunt" && goal(id)?.slot !== "skirmish"),
+      ...set.filter((id) => id === "hunt"),
+      ...set.filter((id) => id !== "hunt" && goal(id)?.slot === "skirmish"),
+    ];
+    return ordered.flatMap((id): FriendGoal[] => {
+      if (id === "hunt" && huntGoals.length > 0) {
+        // Done once for the friend, by either faction's Hunt.
+        return huntGoals.map((h) => {
+          const g: FriendGoal = { goal: h.ref, columnId: h.column, points: goalPoints(id, pool)?.points ?? 0 };
+          if (done[id] !== undefined) g.doneAt = done[id];
+          return g;
+        });
+      }
       const original = swapped[id];
       const ref = goalRef(id, id === "p.frontLine" || id === "b.zone25" ? zone : undefined);
       const g: FriendGoal = { goal: ref, columnId: original ?? id, points: goalPoints(id, pool)?.points ?? 0 };
@@ -409,8 +449,9 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
       if (done[id] !== undefined) g.doneAt = done[id];
       const p = progress(id);
       if (p !== undefined) g.progress = p;
-      return g;
+      return [g];
     });
+  };
 
   /** Progress of the kill goals, exact from the raw kills (PvE goals: the addon sends none). */
   const killProgress = (f: Friend, inPeriod: (n: number) => boolean, zone: string | undefined) => {
@@ -562,7 +603,12 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     const daySet =
       dayRecord !== undefined && dayRecord.set.length > 0
         ? dayRecord
-        : { ...goalsForDay(today, situation, POOL_VERSION, input.schedule), done: {} };
+        : (({ set, swapped }) => ({
+            // The site's own draw: the Hunt joins the set when today has one (the addon records it so too).
+            set: dayDraw.hunt !== undefined ? [...set, "hunt"] : set,
+            swapped,
+            done: {},
+          }))(goalsForDay(today, situation, POOL_VERSION, input.schedule));
     const dayZone = zoneFor(today, 4, situation.highestToday ?? situation.highest);
     const done = dayRecord?.done ?? {};
     const weekRecord = f.goals.weeks[week];
@@ -615,6 +661,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
           dayZone,
           killProgress(f, dayDays, dayZone),
           dayRecord !== undefined ? entryPool(dayRecord) : POOL_VERSION,
+          huntsOf(f),
         ),
         ...(finished !== undefined ? { finishedAt: finished } : {}),
         duels: {
@@ -738,7 +785,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
       weekReset: dayStart(weekStart(week + 1), s),
     },
     todayGoals,
-    hunts: {},
+    hunts,
     weekGoals,
     friends: out,
     ...(crown !== undefined ? { crown: { friendKey: crown.friend, at: crown.at } } : {}),

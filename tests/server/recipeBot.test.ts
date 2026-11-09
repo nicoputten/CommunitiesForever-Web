@@ -34,6 +34,7 @@ const r = (id: number, skillLineId: number, over: Partial<RecipeRecord> = {}): R
 const DATABASE: ItemDatabase = {
   bosses: [],
   bossDrops: [],
+  sets: [],
   items: [
     { id: 101, name: "Test Bolt", quality: 1, iconName: "inv_test_bolt" },
     { id: 102, name: "Test Robe", quality: 4, iconName: "inv_test_robe" },
@@ -235,6 +236,55 @@ describe("/craft look-ups", () => {
       crafters: [],
       sources: [{ kind: "rep", faction: "Test Brotherhood", rank: "Honored" }],
     });
+  });
+
+  it("WEB-98: each reagent says where to get it once the import has reagent sources", async () => {
+    writeItemDatabase(
+      getDb(),
+      {
+        ...DATABASE,
+        recipes: [...DATABASE.recipes, r(5, 171, { createdItemId: 901, orange: 150 })],
+        reagentSources: [
+          { itemId: 900, kind: "vendor", position: 1, name: "Test Merchant", zone: "Test Town" },
+          { itemId: 900, kind: "drop", position: 1, name: "Test Wolf", chance: 12.5 },
+          { itemId: 901, kind: "crafted", position: 1, recipeId: 5 },
+        ],
+      },
+      { build: "test2", era: "test", cmangos: "test" },
+      2,
+    );
+    const { body } = await get("craft", "item=2");
+    expect(body.reagents).toEqual([
+      {
+        id: 900,
+        name: "Test Thread",
+        count: 12,
+        quality: 1,
+        qualityColor: "#ffffff",
+        sources: [
+          { kind: "vendor", npc: "Test Merchant", zone: "Test Town", limited: false },
+          { kind: "drop", creatures: [{ name: "Test Wolf", chance: 12.5 }] },
+        ],
+      },
+      {
+        id: 901,
+        name: "Test Essence",
+        count: 2,
+        quality: 2,
+        qualityColor: "#1eff00",
+        sources: [
+          {
+            kind: "crafted",
+            recipeId: 5,
+            name: "Test Essence",
+            profession: "Alchemy",
+            skill: 150,
+            known: false,
+            url: "/professions/alchemy?recipe=5",
+          },
+        ],
+      },
+    ]);
   });
 
   it("no recipe makes it: 404", async () => {

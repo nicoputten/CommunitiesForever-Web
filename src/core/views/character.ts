@@ -1,5 +1,5 @@
 import { MAX_LEVEL, MAX_TREE_POINTS, RUNNABLE_DUNGEONS, talentPointsAt, type RunnableDungeon } from "../gamedata";
-import type { Dataset } from "../model";
+import type { Dataset, TalentNode } from "../model";
 import { own } from "../people";
 import {
   byLevel,
@@ -45,6 +45,8 @@ export interface CharacterPage {
     /** From mainTree, an index into the trees. */
     mainTreeName?: string;
     maxTreePoints: number;
+    /** WEB-100: the synced talent nodes (no released addon sends them), for the tooltips (./talentTooltip.ts). */
+    nodes?: TalentNode[];
   };
   /**
    * The dungeon to suggest: of the dungeons (not raids) whose typical range holds the character's level, the one
@@ -58,7 +60,11 @@ export interface CharacterPage {
   otherCharacters: CharacterView[];
 }
 
-function talents(c: CharacterView, mainTree: number | undefined): CharacterPage["talents"] {
+function talents(
+  c: CharacterView,
+  mainTree: number | undefined,
+  nodes: TalentNode[] | undefined,
+): CharacterPage["talents"] {
   const trees: TalentBar[] = c.talents.map((t) => {
     const points = t.points ?? 0;
     const bar: TalentBar = { points, fill: Math.min(1, points / MAX_TREE_POINTS), main: false };
@@ -72,6 +78,7 @@ function talents(c: CharacterView, mainTree: number | undefined): CharacterPage[
   };
   if (c.level !== undefined) result.available = talentPointsAt(c.level);
   if (c.mainTreeName !== undefined) result.mainTreeName = c.mainTreeName;
+  if (nodes !== undefined) result.nodes = nodes;
   const main = mainTree !== undefined ? trees[mainTree - 1] : undefined;
   if (main !== undefined) main.main = true;
   return result;
@@ -119,7 +126,7 @@ export function characterPage(d: Dataset, guid: string, now: number): CharacterP
 
   const page: CharacterPage = {
     character,
-    talents: talents(character, record.mainTree),
+    talents: talents(character, record.mainTree, record.talentNodes),
     sameZone,
     otherCharacters:
       record.owner === undefined ? [] : group.filter((o) => o.owner === record.owner && o.guid !== guid).sort(byLevel),

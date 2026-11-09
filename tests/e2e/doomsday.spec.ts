@@ -19,7 +19,7 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page).toHaveURL(/\/doomsday$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Doomsday");
 
-  // Today: the viewer's points per track, the goals (3 PvE dailies and the Skirmish), the Duel slot, Today so far.
+  // Today: the viewer's points per track, the goals (3 PvE dailies, the Hunt and the Skirmish), the Duel slot, Today so far.
   await expect(
     page
       .getByText(/^PvE \d+$/)
@@ -35,9 +35,10 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(
     page.getByRole("heading", { name: /^Your goals · \w{3} (morning|afternoon|evening|night)$/ }),
   ).toBeVisible();
-  await expect(page.getByText(/^\d of 5 done$/)).toBeVisible();
+  await expect(page.getByText(/^\d of 6 done$/)).toBeVisible();
   await expect(page.getByText(/^resets \w{3} \d\d:\d\d · in \d+ (h|m)/).filter({ visible: true })).toHaveCount(1);
-  await expect(page.getByTestId("goal")).toHaveCount(4);
+  // The admin (Nico) has Horde and Alliance characters: a Hunt per faction, one slot on the grid.
+  await expect(page.getByTestId("goal")).toHaveCount(6);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
   await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
   // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click.
