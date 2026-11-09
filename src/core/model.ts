@@ -44,6 +44,18 @@ export interface TalentTree {
   points?: number;
 }
 
+/**
+ * WEB-100: one node of the class's talent tree with the ranks spent in it, if the addon ever syncs them (no released
+ * addon does: its CF-18 reads `{ posX, ranks }` per node in game and keeps only the points per tree). Which talent it
+ * is: the TraitNode `id`, else the node's position (`posX` and `posY`); `posX` alone names no talent.
+ */
+export interface TalentNode {
+  id?: number;
+  posX?: number;
+  posY?: number;
+  ranks: number;
+}
+
 export interface Quest {
   title?: string;
   area?: string;
@@ -86,6 +98,8 @@ export interface Character {
   /** 1-based index into talents of the tree with the most points. */
   mainTree?: number;
   mainTreeName?: string;
+  /** WEB-100: the talents taken, node by node; undefined from every addon so far (points per tree only). */
+  talentNodes?: TalentNode[];
   role?: string;
   autoRole?: string;
   roleOverride?: string;

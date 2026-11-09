@@ -5937,6 +5937,36 @@ CommunitiesForeverDB = {
               ["points"] = 20,
             },
           },
+          ["talentNodes"] = {
+            {
+              ["id"] = 105925,
+              ["ranks"] = 5,
+            },
+            {
+              ["id"] = 105924,
+              ["ranks"] = 5,
+            },
+            {
+              ["id"] = 105889,
+              ["ranks"] = 5,
+            },
+            {
+              ["id"] = 105888,
+              ["ranks"] = 5,
+            },
+            {
+              ["id"] = 105887,
+              ["ranks"] = 3,
+            },
+            {
+              ["id"] = 105886,
+              ["ranks"] = 2,
+            },
+            {
+              ["id"] = 105883,
+              ["ranks"] = 5,
+            },
+          },
           ["quests"] = {
             [9101] = {
               ["title"] = "Tiger Mastery",

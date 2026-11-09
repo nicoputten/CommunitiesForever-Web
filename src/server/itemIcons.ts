@@ -1,9 +1,9 @@
 import { mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { DEFAULT_ICON_CDN, FALLBACK_ICON, iconName, iconUrl, isJpeg } from "@/core/recipes/icons";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { dataDir, type Db } from "./db";
-import { items } from "./db/schema";
+import { items, talentTrees } from "./db/schema";
 
 // The icon cache (WEB-90, handoff B3): `DATA_DIR/icons/<name>.jpg`, fetched once from the CDN (ICON_CDN_URL) on the
 // first request for a name and served from disk from then on. A name the CDN doesn't have gets the game's
@@ -93,7 +93,20 @@ export async function itemIcon(raw: string, options: IconOptions = {}): Promise<
   return icon ?? (name !== FALLBACK_ICON ? await once(FALLBACK_ICON, options) : undefined);
 }
 
-/** Whether an item in the database has this icon (WEB-91: the open route serves only those). */
+/**
+ * Whether an item or a talent (WEB-100: a talent's or a talent tree's icon) in the database has this icon (WEB-91:
+ * the open route serves only those).
+ */
 export function isKnownIcon(db: Db, name: string): boolean {
-  return db.select({ id: items.id }).from(items).where(eq(items.iconName, name)).limit(1).get() !== undefined;
+  if (db.select({ id: items.id }).from(items).where(eq(items.iconName, name)).limit(1).get() !== undefined) return true;
+  // The talent trees are JSON per class (nine rows); the name is an icon name ([a-z0-9_-]), bound as a parameter.
+  const needle = `"icon":${JSON.stringify(name)}`;
+  return (
+    db
+      .select({ c: talentTrees.classFile })
+      .from(talentTrees)
+      .where(sql`instr(${talentTrees.data}, ${needle}) > 0`)
+      .limit(1)
+      .get() !== undefined
+  );
 }

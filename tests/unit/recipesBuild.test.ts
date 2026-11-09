@@ -219,3 +219,97 @@ describe("bosses (WEB-96)", () => {
     ]);
   });
 });
+
+describe("talent trees (WEB-100)", () => {
+  it("the item import builds each class's trees: icons, prerequisites, texts per rank from the rank curves", () => {
+    expect(data.talents).toEqual([
+      {
+        classFile: "WARLOCK",
+        traitTreeId: 900,
+        columns: 2,
+        rows: 2,
+        trees: [
+          {
+            name: "Test Left",
+            icon: "spell_test_tree",
+            columns: 2,
+            rows: 2,
+            talents: [
+              {
+                id: 1,
+                name: "Test Focus",
+                spellId: 9301,
+                maxRanks: 3,
+                row: 1,
+                column: 1,
+                posX: 1000,
+                posY: 2000,
+                // The curve's points per rank (3, 5, 9), not the spell's own 2.
+                texts: [
+                  "Increases your test damage by 3%.",
+                  "Increases your test damage by 5%.",
+                  "Increases your test damage by 9%.",
+                ],
+                // The base difficulty's SpellMisc icon.
+                icon: "spell_test_focus",
+              },
+              {
+                id: 2,
+                name: "Test Spark",
+                spellId: 9302,
+                maxRanks: 1,
+                row: 2,
+                column: 2,
+                gate: 5,
+                posX: 1600,
+                posY: 2600,
+                texts: [undefined],
+                // The type 2 edge; the type 0 one back only draws a line.
+                requires: [{ id: 1 }],
+              },
+            ],
+          },
+          {
+            name: "Test Middle",
+            columns: 1,
+            rows: 1,
+            talents: [
+              {
+                id: 3,
+                name: "Test Override",
+                spellId: 9303,
+                maxRanks: 2,
+                row: 1,
+                column: 1,
+                posX: 5000,
+                posY: 2000,
+                // No curve: the spell's own points on every rank.
+                texts: ["Test spells cost 10 less.", "Test spells cost 10 less."],
+                // TraitDefinition.OverrideIcon.
+                icon: "spell_test_thrift",
+              },
+            ],
+          },
+          {
+            name: "Test Right",
+            columns: 1,
+            rows: 1,
+            talents: [
+              {
+                id: 4,
+                name: "Test Ember",
+                spellId: 9304,
+                maxRanks: 5,
+                row: 1,
+                column: 1,
+                posX: 9000,
+                posY: 2000,
+                texts: [undefined, undefined, undefined, undefined, undefined],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+});

@@ -9,6 +9,7 @@ import type { Character, Dataset, Person } from "@/core/model";
 import type { ItemRecord, SourceKind } from "@/core/recipes/build";
 import type { ReagentSourceKind } from "@/core/recipes/reagentSources";
 import type { ItemSetBonus, ItemSetPiece } from "@/core/recipes/itemSets";
+import type { ClassTalentsRecord } from "@/core/talents/build";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
@@ -850,6 +851,15 @@ export const itemSets = sqliteTable("item_sets", {
   items: text("items", { mode: "json" }).$type<ItemSetPiece[]>().notNull(),
   /** "(2) Set: ..." bonuses by threshold, the texts filled in (WEB-95). */
   bonuses: text("bonuses", { mode: "json" }).$type<ItemSetBonus[]>().notNull(),
+});
+
+// --- WEB-100: the talent trees (src/core/talents/build.ts), written by the item import ----------------------------
+
+/** One class's three talent trees with every talent's position, ranks and texts (ClassTalentsRecord). */
+export const talentTrees = sqliteTable("talent_trees", {
+  /** The client's classFile token, e.g. "WARLOCK". */
+  classFile: text("class_file").primaryKey(),
+  data: text("data", { mode: "json" }).$type<ClassTalentsRecord>().notNull(),
 });
 
 // --- WEB-90: who knows what (derived from uploads, rebuilt with them; src/server/recipes.ts) ------------------------

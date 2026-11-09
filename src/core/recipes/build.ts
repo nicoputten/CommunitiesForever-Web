@@ -11,7 +11,7 @@
 //   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names), DungeonEncounter (WEB-96: the
 //   bosses, ./bosses.ts), ItemSet and ItemSetSpell (WEB-99: the item sets and their bonuses, ./itemSets.ts); Lock,
 //   CreatureType, UiMapAssignment and AreaTable (WEB-98: where to get a reagent, ./reagentSources.ts, which names its
-//   sources).
+//   sources); the talent tables of ../talents/build.ts (WEB-100).
 // - The Classic Era client (same export): its SkillLineAbility tells Forever's own recipes apart, and its learn-spell
 //   effects (SpellEffect 36) map cmangos' trainer and recipe-item spells, which Forever's client no longer has, to the
 //   recipe they teach.
@@ -30,6 +30,7 @@ import { type BossDropRecord, type BossRecord, buildBosses } from "./bosses";
 import { buildItemSets, type ItemSetRecord } from "./itemSets";
 import { buildReagentSources, type ReagentSourceRecord } from "./reagentSources";
 import { greenThreshold } from "./skill";
+import { buildTalentTrees, type ClassTalentsRecord, TALENT_TABLES } from "../talents/build";
 import { type SpellEffectInfo, type SpellInfo, type SpellLookup, spellText } from "./spellText";
 
 export const DB2_TABLES = [
@@ -61,6 +62,8 @@ export const DB2_TABLES = [
   "CreatureType",
   "UiMapAssignment",
   "AreaTable",
+  // WEB-100: the talent trees (src/core/talents/build.ts).
+  ...TALENT_TABLES,
 ] as const;
 export type Db2Table = (typeof DB2_TABLES)[number];
 
@@ -201,6 +204,8 @@ export interface ItemDatabase {
   sets: ItemSetRecord[];
   /** WEB-98: where to get each reagent (./reagentSources.ts); the import always builds it, older dumps lack it. */
   reagentSources?: ReagentSourceRecord[];
+  /** WEB-100: each class's talent trees (../talents/build.ts); undefined in data built before it. */
+  talents?: ClassTalentsRecord[];
 }
 
 /** Enum.InventoryType names as the game's tooltip shows them (GlobalStrings INVTYPE_*), for gear categories. */
@@ -717,7 +722,10 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
     db2,
     cmangos: cm,
   });
-  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops, sets, reagentSources };
+
+  // --- WEB-100: the talent trees, their texts from the same spell tables ---
+  const talents = buildTalentTrees(db2, spellLookup(db2, effects));
+  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops, sets, reagentSources, talents };
 }
 
 /**

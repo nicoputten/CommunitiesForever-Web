@@ -12,6 +12,7 @@ import {
   recipeReagents,
   recipes,
   recipeSources,
+  talentTrees,
 } from "./db/schema";
 
 // WEB-90 (run by scripts/import-items.ts, so it imports nothing that Node's type stripping can't load): writes the item and recipe database the import script built (src/core/recipes/build.ts). One transaction;
@@ -43,6 +44,7 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
     tx.delete(bossDrops).run();
     tx.delete(reagentSources).run();
     tx.delete(itemSets).run();
+    tx.delete(talentTrees).run();
     replaceUploaded(
       tx,
       data.items.map((i) => i.id),
@@ -171,6 +173,13 @@ export function writeItemDatabase(db: Db, data: ItemDatabase, meta: ImportMeta, 
       tx
         .insert(itemSets)
         .values(slice.map((x) => ({ id: x.id, name: x.name, items: x.items, bonuses: x.bonuses })))
+        .run(),
+    );
+    // WEB-100: the talent trees, one row per class.
+    insertAll(data.talents ?? [], (slice) =>
+      tx
+        .insert(talentTrees)
+        .values(slice.map((t) => ({ classFile: t.classFile, data: t })))
         .run(),
     );
     tx.delete(itemImport).run();
