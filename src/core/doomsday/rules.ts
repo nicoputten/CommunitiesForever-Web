@@ -1,9 +1,10 @@
+import { classInfo } from "../gamedata/classes";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 // Doomsday: the rules of the addon repo's docs/DOOMSDAY.md (WEB-58), the TypeScript copy of the addon's
 // src/core/Doomsday.lua (CF-55). Both pass tests/fixtures/doomsday/doomsday-cases.json, the golden cases, unchanged;
 // a rule change updates DOOMSDAY.md, the golden file and both copies in the same release. Pure.
 
-export const POOL_VERSION = 3;
+export const POOL_VERSION = 4;
 /** 19:00 realm time, seconds after midnight. */
 export const DEFAULT_RESET = 68400;
 export const DAY = 86400;
@@ -140,10 +141,17 @@ export function resetsText(nextReset: number, now: number, timeZone: string): st
  * "N of M done" (live test 2026-10-29): exactly the goals on the grid, the PvE dailies, the Hunt and the Skirmish,
  * plus the Duel slot, done after its first duel. The Duel slot still never counts for crossing out or the streak.
  */
-export function gridCount(goals: readonly { doneAt?: number }[], duels: number): { done: number; total: number } {
+export function gridCount(
+  goals: readonly { doneAt?: number; goal?: { slot: string } }[],
+  duels: number,
+): { done: number; total: number } {
+  // A friend with characters of both factions has a Hunt per faction (pool version 4): one grid slot, done by either.
+  const hunts = goals.filter((g) => g.goal?.slot === "hunt");
+  const rest = goals.filter((g) => g.goal?.slot !== "hunt");
+  const huntDone = hunts.some((g) => g.doneAt !== undefined);
   return {
-    done: goals.filter((g) => g.doneAt !== undefined).length + (duels > 0 ? 1 : 0),
-    total: goals.length + 1,
+    done: rest.filter((g) => g.doneAt !== undefined).length + (huntDone ? 1 : 0) + (duels > 0 ? 1 : 0),
+    total: rest.length + (hunts.length > 0 ? 1 : 0) + 1,
   };
 }
 
@@ -645,6 +653,7 @@ export const GOALS: readonly Goal[] = [
     id: "d.feedFriend",
     slot: "daily",
     category: "cooking",
+    since: 4,
     points: 3,
     text: "Give a friend a dish cooked by an own character",
     short: "Feed pal",
@@ -711,6 +720,7 @@ export const GOALS: readonly Goal[] = [
     id: "d.fishFriend",
     slot: "daily",
     category: "fishing",
+    since: 4,
     points: 3,
     text: "Fish in a group with a friend",
     short: "Fish buddy",
@@ -1102,6 +1112,7 @@ export const GOALS: readonly Goal[] = [
     id: "d.summoned",
     slot: "daily",
     category: "travel",
+    since: 4,
     points: 3,
     text: "Get summoned by a friend",
     short: "Summoned",
@@ -1199,6 +1210,7 @@ export const GOALS: readonly Goal[] = [
     id: "d.reward",
     slot: "daily",
     category: "loot",
+    since: 4,
     points: 3,
     text: "Earn an uncommon quest reward",
     short: "Reward",
@@ -1246,6 +1258,7 @@ export const GOALS: readonly Goal[] = [
     id: "d.auctionPost",
     slot: "daily",
     category: "economy",
+    since: 4,
     points: 3,
     text: "Put an item up for auction",
     short: "Auction",
@@ -2010,6 +2023,7 @@ export const GOALS: readonly Goal[] = [
     needs: "kill",
     can: "level20",
     fallback: ["p.loneWolf"],
+    retired: 4,
   },
   {
     id: "p.contested",
@@ -2126,6 +2140,7 @@ export const GOALS: readonly Goal[] = [
     id: "p.revenge",
     slot: "skirmish",
     category: "streaks",
+    since: 4,
     points: 5,
     text: "Revenge: kill the player who killed you",
     short: "Revenge",
@@ -2135,6 +2150,7 @@ export const GOALS: readonly Goal[] = [
     id: "p.flagHour",
     slot: "skirmish",
     category: "streaks",
+    since: 4,
     points: 3,
     text: "Stay flagged for 30 minutes without dying",
     short: "Flagged 30",
@@ -2386,6 +2402,7 @@ export const GOALS: readonly Goal[] = [
     id: "p.flagUp",
     slot: "skirmish",
     category: "taunts",
+    since: 4,
     points: 1,
     text: "Flag up for PvP",
     short: "Flag up",
@@ -2624,6 +2641,7 @@ export const GOALS: readonly Goal[] = [
     id: "b.flagged3h",
     slot: "bounty",
     category: "streaks",
+    since: 4,
     points: 5,
     text: "3 hours flagged for PvP",
     short: "Flagged 3h",
@@ -2829,8 +2847,11 @@ export const GOALS: readonly Goal[] = [
 
 const BY_ID = new Map(GOALS.map((g) => [g.id, g]));
 
-/** The Hunt joins with the pool version that verifies victim race and class (CF-54); undefined: not yet. */
-export const HUNT_SINCE: number | undefined = undefined;
+/**
+ * The Hunt joins with the pool version that verifies victim race and class (CF-54): pool version 4 (addon CF-104, Nico
+ * 2026-11-09; the victim comes from CF-110's pick). Pool versions 1 to 3 draw no Hunt.
+ */
+export const HUNT_SINCE: number | undefined = 4;
 
 export function goal(id: string): Goal | undefined {
   return BY_ID.get(id);
@@ -2873,6 +2894,31 @@ export interface Combo {
 /** The combinations a faction hunts, in list order (20 each). */
 export function combos(faction: Faction): Combo[] {
   return COMBOS[faction].flatMap(([race, classes]) => classes.map((c) => ({ race, class: c })));
+}
+
+/**
+ * The English names of the race tokens of COMBOS (UnitRace's second value; "Scourge" is the Undead's token). Source: the
+ * client's ChrRaces names, as src/core/gamedata/races.ts lists them by raceID.
+ */
+const RACE_NAMES: Readonly<Record<string, string>> = {
+  Human: "Human",
+  Dwarf: "Dwarf",
+  NightElf: "Night Elf",
+  Gnome: "Gnome",
+  Orc: "Orc",
+  Scourge: "Undead",
+  Tauren: "Tauren",
+  Troll: "Troll",
+};
+
+/** "Night Elf Druid": a Hunt combination in words (BOT-API "Goals"). */
+export function huntName(c: Combo): string {
+  return `${RACE_NAMES[c.race] ?? c.race} ${classInfo(c.class)?.name ?? c.class}`;
+}
+
+/** "Hunt: Night Elf Druids": a Hunt's title on the site's board (board `doomsday-today`). */
+export function huntTitle(c: Combo): string {
+  return `Hunt: ${huntName(c)}s`;
 }
 
 /** Zone bands by the level of the friend's highest character (the zone names as the feed stores them). */

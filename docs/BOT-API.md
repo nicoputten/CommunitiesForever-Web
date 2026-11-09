@@ -344,7 +344,7 @@ A goal on the board or in a look-up:
 
 - `slot`: `pve1`, `pve2`, `pve3`, `hunt`, `skirmish` (daily); `week1`, `week2`, `week3`, `bounty` (weekly).
 - `id`: the goal id of `DOOMSDAY.md`. `title`: finished text ("Front line: 5 kills in Ashenvale"). An id the site doesn't know (from a newer addon) has `"unknown": true` and the title "A goal from a newer version"; it still counts.
-- The Hunt names a combination per enemy faction: the `hunt` slot carries `"hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" }` (keyed by the hunted faction), and its `title` names both.
+- The Hunt names a combination per enemy faction: the `hunt` slot carries `"hunt": { "Alliance": "Night Elf Druid", "Horde": "Troll Priest" }` (keyed by the hunted faction), and its `title` names both. It is drawn from pool version 4 (WEB-101, addon CF-104); days of pool versions 1 to 3 have no `hunt` slot. `hunt` names only the factions the friends hunt (the faction of their characters: Horde characters hunt Alliance), and a friend's row has one `hunt` goal (`id` `"hunt"`), done when any of their Hunts is.
 - `points`: 5 for a daily, 15 for a weekly.
 
 A friend's goal (in a board row or a look-up) adds:

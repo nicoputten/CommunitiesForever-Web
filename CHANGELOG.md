@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Doomsday: pool version 4, with the addon of the same release. New dailies Reward, Fish buddy, Feed pal, Summoned and Auction; new Skirmish missions Revenge, Flagged 30 and Flag up; a new Bounty, Flagged 3h. Defend home leaves the pool. The Hunt is on: every day a race and class of the other faction to kill, worth 5 PvP points, on the board between the dailies and the Skirmish and in DoomBot's board. Days a friend played on the older addon keep their pool 3 missions and points.
+
 ## v0.12.2 (2026-11-08)
 ### Changed
 - Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.
