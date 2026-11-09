@@ -299,6 +299,17 @@ says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) k
   days as pool 3.
 - Done when: the golden cases pass unchanged; unit tests for the new pool sizes; the Mission pool page and the
   design sample follow; screenshot baselines change only after Nico's OK.
+- **Built (2026-11-09, after addon PR #259 merged on its develop):** `since = 4` on all six new missions named above
+  (CF-104 added `d.reward`, `d.fishFriend` and `d.feedFriend`) plus `d.summoned`, `d.auctionPost` and `p.revenge`;
+  `retired = 4` on `p.homeGuard`; `HUNT_SINCE = 4`. Pools: 108 dailies, 49 weeklies, Skirmish 6, Bounty 6. Golden
+  cases from the addon's develop at `cd5cfb4`, unchanged. **The Hunt:** the snapshot's `hunts` per enemy faction
+  ("Hunt: Night Elf Druids", board `doomsday-today`); a pool-4 day's recorded `hunt` id becomes the friend's Hunt per
+  faction of their characters (Horde characters hunt the Alliance combination; none known: the Alliance Hunt), before
+  the Skirmish, done once (5 PvP); the site's own draw adds it too. One grid slot (`gridCount`). The bot's board: one
+  `hunt` column with `hunt` keyed by the hunted faction (BOT-API "Goals", already in the contract); the bot needs no
+  change. A day's `pool` decides its catalogue, so pool-3 and pool-4 days score side by side. The Mission pool page
+  doesn't plan the Hunt (the schedule has no Hunt slot, UPLOADER-API); its counts follow the pool. No new upload
+  field: CF-104's flag, revenge, summon and auction facts stay in the addon, so the site shows no progress for them.
 
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
