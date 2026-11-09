@@ -672,8 +672,9 @@ a.lootName:hover {
   color: var(--boss-number);
 }
 
+/* `nav.jump`: wins over the Runs box's `display: flex` (the same element) whichever stylesheet the build puts last. */
 @media (max-width: 1023px) {
-  .jump {
+  nav.jump {
     display: none;
   }
 }

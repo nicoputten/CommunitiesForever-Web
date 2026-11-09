@@ -7,6 +7,7 @@ import { OLD_AFTER } from "./age";
 import { byLevel, compareText, type CharacterView } from "./characters";
 import { itemFallbackName, recipeFallbackName } from "./itemTooltip";
 import { coverage, type Coverage } from "./professions";
+import { reagentSourceLines, type ReagentSourceData, type ReagentSourceLine } from "./reagentSources";
 import { professionSlug } from "./rosterQuery";
 
 // Recipes on the site (WEB-92, handoff Part C): the recipe line on the character page and on each profession card, the
@@ -241,7 +242,8 @@ export interface RecipeRow {
   thresholds?: Thresholds;
   knownBy: Knower[];
   sources: SourceView[];
-  reagents: { itemId: number; count: number }[];
+  /** WEB-98: `sources` where to get it, best first (at most 3, empty: none known); left out before the import has any. */
+  reagents: { itemId: number; count: number; sources?: ReagentSourceLine[] }[];
   obtainable: boolean;
   /** Counts as "Nobody has": obtainable, nobody knows it, and where it's learned is known. */
   nobody: boolean;
@@ -274,6 +276,17 @@ export interface ProfessionRecipesView {
   types: string[];
   /** Someone has the profession, but nobody ever opened it in game (RC06 "No recipes scanned yet"). */
   notScanned: boolean;
+  /**
+   * WEB-98: the recipes of other professions that make a reagent here (and theirs, on down), for the drawer's
+   * crafted-reagent link; this profession's own are in `rows`.
+   */
+  linked: LinkedRecipe[];
+}
+
+/** A recipe of another profession the drawer can open from a reagent (WEB-98). */
+export interface LinkedRecipe extends RecipeRow {
+  skillLine: number;
+  profession: string;
 }
 
 export const OTHER_CATEGORY = "Other";
@@ -289,6 +302,8 @@ export interface ProfessionRecipesInput {
   professions: readonly CharacterProfessionData[];
   /** Characters seen online in the newest data ("Tailoring 300 · online"). */
   online?: ReadonlySet<string>;
+  /** WEB-98: where to get the reagents; undefined before an import has them (no source lines then). */
+  reagentSources?: readonly ReagentSourceData[];
   now: number;
 }
 
@@ -343,12 +358,33 @@ export function professionRecipes(input: ProfessionRecipesInput): ProfessionReci
   }
   const sourcesOf = group(input.sources, (s) => s.recipeId);
   const reagentsOf = group(input.reagents, (r) => r.recipeId);
+  const recipeById = new Map(input.recipes.map((r) => [r.id, r]));
+  const reagentSourcesOf =
+    input.reagentSources === undefined ? undefined : group(input.reagentSources, (s) => s.itemId);
+  // A character's skill in a profession: the crafters' for this one, the character's own for a linked one.
+  const skillIn = (guid: string, line: number) =>
+    line === skillLine
+      ? skillOf.get(guid)
+      : byGuid.get(guid)?.professions.find((p) => p.skillLine === String(line))?.rank;
 
-  const rows: RecipeRow[] = [];
-  for (const r of input.recipes) {
-    if (r.skillLineId !== skillLine) continue;
+  /** WEB-98: what a crafted reagent's line shows of the recipe that makes it. */
+  const craftedInfo = (recipeId: number) => {
+    const r = recipeById.get(recipeId);
+    if (r === undefined || r.skillLineId === null || !hasRecipes(r.skillLineId)) return undefined;
+    const item = r.createdItemId == null ? undefined : input.items.get(r.createdItemId);
+    const profession = professionInfo(r.skillLineId)?.name ?? PROFESSIONS[r.skillLineId]?.name;
+    if (profession === undefined) return undefined;
+    const info: { name: string; profession: string; skill?: number; known: boolean } = {
+      name: recipeLook(r, item).name,
+      profession,
+      known: (knowers.get(recipeId)?.length ?? 0) > 0,
+    };
+    if (r.orange != null) info.skill = r.orange;
+    return info;
+  };
+
+  const rowOf = (r: RecipeData, line: number): RecipeRow => {
     const guids = knowers.get(r.id) ?? [];
-    if (!r.obtainable && guids.length === 0) continue;
     const thresholds = recipeThresholds(r);
     const item = r.createdItemId == null ? undefined : input.items.get(r.createdItemId);
     const look = recipeLook(r, item);
@@ -357,7 +393,7 @@ export function professionRecipes(input: ProfessionRecipesInput): ProfessionReci
         const c = byGuid.get(guid)!;
         const k: Knower = { guid, name: c.name ?? guid };
         if (c.classFile !== undefined) k.classFile = c.classFile;
-        const skill = skillOf.get(guid);
+        const skill = skillIn(guid, line);
         if (skill !== undefined) k.skill = skill;
         const d = thresholds === undefined ? undefined : difficulty(skill, thresholds);
         if (d !== undefined) k.difficulty = d;
@@ -375,7 +411,13 @@ export function professionRecipes(input: ProfessionRecipesInput): ProfessionReci
       knownBy,
       sources,
       reagents: (reagentsOf.get(r.id) ?? [])
-        .map((g) => ({ itemId: g.itemId, count: g.count }))
+        .map((g) => {
+          const reagent: RecipeRow["reagents"][number] = { itemId: g.itemId, count: g.count };
+          if (reagentSourcesOf !== undefined) {
+            reagent.sources = reagentSourceLines(reagentSourcesOf.get(g.itemId) ?? [], craftedInfo);
+          }
+          return reagent;
+        })
         .sort((a, b) => b.count - a.count || a.itemId - b.itemId),
       obtainable: r.obtainable,
       nobody: r.obtainable && knownBy.length === 0 && !(r.foreverOnly && sources.length === 0),
@@ -383,7 +425,33 @@ export function professionRecipes(input: ProfessionRecipesInput): ProfessionReci
     if (look.icon !== undefined) row.icon = look.icon;
     if (r.createdItemId != null) row.itemId = r.createdItemId;
     if (thresholds !== undefined) row.thresholds = thresholds;
-    rows.push(row);
+    return row;
+  };
+
+  const rows: RecipeRow[] = [];
+  for (const r of input.recipes) {
+    if (r.skillLineId !== skillLine) continue;
+    if (!r.obtainable && (knowers.get(r.id) ?? []).length === 0) continue;
+    rows.push(rowOf(r, skillLine));
+  }
+
+  // WEB-98: the other professions' recipes a crafted reagent links to, and the ones their reagents link to.
+  const linked: LinkedRecipe[] = [];
+  const seen = new Set(rows.map((r) => r.id));
+  const queue = rows.slice();
+  while (queue.length > 0) {
+    const row = queue.shift()!;
+    for (const reagent of row.reagents) {
+      for (const s of reagent.sources ?? []) {
+        if (s.kind !== "crafted" || seen.has(s.recipeId)) continue;
+        seen.add(s.recipeId);
+        const r = recipeById.get(s.recipeId);
+        if (r === undefined || r.skillLineId === null) continue;
+        const l: LinkedRecipe = { ...rowOf(r, r.skillLineId), skillLine: r.skillLineId, profession: s.profession };
+        linked.push(l);
+        queue.push(l);
+      }
+    }
   }
 
   // Groups by their best skill, highest first; rows by skill, highest first, then the best quality, then by name.
@@ -416,6 +484,7 @@ export function professionRecipes(input: ProfessionRecipesInput): ProfessionReci
     rows,
     types: [...new Set(rows.map((r) => r.category))],
     notScanned: crafters.length > 0 && !anyScanned,
+    linked,
   };
 }
 

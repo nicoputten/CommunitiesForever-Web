@@ -4,8 +4,10 @@ import { nowSeconds } from "@/app/clock";
 import { getDataset } from "@/app/dataset";
 import { characterPage, hereToo, miniMap } from "@/core/views";
 import { characterRecipeLines } from "@/core/views/recipes";
+import { talentTooltips } from "@/core/views/talentTooltip";
 import { getDb } from "@/server/db";
 import { characterRecipeRows } from "@/server/recipeViews";
+import { classTalents } from "@/server/talentTrees";
 import { CharacterHero } from "@/components/character/CharacterHero";
 import { AtAGlance, OtherCharacters, ProfessionList } from "@/components/character/CharacterPanels";
 import { MiniMap } from "@/components/character/MiniMap";
@@ -32,6 +34,8 @@ export default async function CharacterDetail(props: Props) {
   const c = page.character;
   const recipeRows = characterRecipeRows(getDb(), c.guid);
   const recipes = characterRecipeLines(c, recipeRows.professions, recipeRows.counts, now);
+  // WEB-100: each tree's tooltip, its talents where the synced nodes name them.
+  const tooltips = talentTooltips(page.talents.trees, page.talents.nodes, classTalents(getDb(), c.classFile));
   return (
     <div className={styles.page}>
       <Link href="/roster" className={styles.back}>
@@ -44,7 +48,7 @@ export default async function CharacterDetail(props: Props) {
             <AtAGlance character={c} />
           </div>
           <div className={styles.talents}>
-            <TalentBars talents={page.talents} classFile={c.classFile} />
+            <TalentBars talents={page.talents} classFile={c.classFile} tooltips={tooltips} />
           </div>
         </div>
         <div className={styles.column}>

@@ -16,6 +16,7 @@ import {
   recipeUrl,
 } from "@/core/recipes/bot";
 import type { Difficulty } from "@/core/recipes/skill";
+import { reagentSourceLines, type ReagentSourceLine } from "@/core/views/reagentSources";
 import { getBotSettings } from "./discord";
 import type { Db } from "./db";
 import {
@@ -23,6 +24,7 @@ import {
   characterProfessions,
   characterRecipes,
   items,
+  reagentSources,
   recipeFinds,
   recipeReagents,
   recipes,
@@ -225,10 +227,91 @@ export interface CraftAnswer {
   item: BotItem;
   /** Everyone who knows it, highest skill first. */
   crafters: Crafter[];
-  reagents: { id: number; name?: string; count: number; quality?: number; qualityColor?: string }[];
+  reagents: {
+    id: number;
+    name?: string;
+    count: number;
+    quality?: number;
+    qualityColor?: string;
+    /** WEB-98: where to get it, best first, at most 3 (empty: none known); left out before the import has any. */
+    sources?: BotReagentSource[];
+  }[];
   /** Where it is learned: always sent, the bot shows it when nobody knows it. */
   sources: BotSource[];
   url?: string;
+}
+
+/** A reagent's source as the drawer shows it (src/core/views/reagentSources.ts); a crafted one with its recipe's link. */
+export type BotReagentSource = ReagentSourceLine & { url?: string };
+
+/** WEB-98: where to get each reagent, by item; undefined before an import has any reagent sources. */
+function reagentSourcesOf(db: Db, d: Dataset, itemIds: readonly number[]): Map<number, BotReagentSource[]> | undefined {
+  if (itemIds.length === 0 || !db.select({ itemId: reagentSources.itemId }).from(reagentSources).limit(1).get()) {
+    return undefined;
+  }
+  const rows = db
+    .select()
+    .from(reagentSources)
+    .where(inArray(reagentSources.itemId, [...itemIds]))
+    .all();
+  const makers = [...new Set(rows.flatMap((r) => (r.recipeId === null ? [] : [r.recipeId])))];
+  const makerRows = new Map(
+    (makers.length === 0
+      ? []
+      : db
+          .select({
+            id: recipes.id,
+            name: recipes.name,
+            skillLineId: recipes.skillLineId,
+            createdItemId: recipes.createdItemId,
+            orange: recipes.orange,
+          })
+          .from(recipes)
+          .where(inArray(recipes.id, makers))
+          .all()
+    ).map((r) => [r.id, r]),
+  );
+  const madeItems = [...makerRows.values()].flatMap((r) => (r.createdItemId === null ? [] : [r.createdItemId]));
+  const names = new Map(
+    (madeItems.length === 0
+      ? []
+      : db.select({ id: items.id, name: items.name }).from(items).where(inArray(items.id, madeItems)).all()
+    ).map((i) => [i.id, i.name]),
+  );
+  const known = new Set(
+    (makers.length === 0
+      ? []
+      : db
+          .select({ guid: characterRecipes.guid, recipeId: characterRecipes.recipeId })
+          .from(characterRecipes)
+          .where(inArray(characterRecipes.recipeId, makers))
+          .all()
+    )
+      .filter((k) => d.characters[k.guid] !== undefined)
+      .map((k) => k.recipeId),
+  );
+  const crafted = (id: number) => {
+    const r = makerRows.get(id);
+    const profession = professionName(r?.skillLineId);
+    const name = (r?.createdItemId != null ? names.get(r.createdItemId) : undefined) ?? r?.name;
+    if (r === undefined || profession === undefined || name == null) return undefined;
+    return { name, profession, known: known.has(id), ...(r.orange !== null ? { skill: r.orange } : {}) };
+  };
+  const out = new Map<number, BotReagentSource[]>();
+  for (const id of itemIds) {
+    out.set(
+      id,
+      reagentSourceLines(
+        rows.filter((r) => r.itemId === id),
+        crafted,
+      ).map((line): BotReagentSource => {
+        if (line.kind !== "crafted") return line;
+        const url = recipeUrl(makerRows.get(line.recipeId)?.skillLineId, line.recipeId);
+        return url === undefined ? line : { ...line, url };
+      }),
+    );
+  }
+  return out;
 }
 
 export function craftAnswer(db: Db, d: Dataset, recipeId: number): CraftAnswer | undefined {
@@ -273,8 +356,14 @@ export function craftAnswer(db: Db, d: Dataset, recipeId: number): CraftAnswer |
       : []
     ).map((i) => [i.id, i]),
   );
+  const where = reagentSourcesOf(
+    db,
+    d,
+    reagentRows.map((r) => r.itemId),
+  );
   const reagents = reagentRows.map((r) => {
     const i = reagentItems.get(r.itemId);
+    const sources = where?.get(r.itemId);
     return {
       id: r.itemId,
       count: r.count,
@@ -282,6 +371,7 @@ export function craftAnswer(db: Db, d: Dataset, recipeId: number): CraftAnswer |
       ...(i?.quality !== null && i?.quality !== undefined
         ? { quality: i.quality, qualityColor: qualityColor(i.quality) }
         : {}),
+      ...(sources !== undefined ? { sources } : {}),
     };
   });
   const profession = professionName(recipe.skillLineId);

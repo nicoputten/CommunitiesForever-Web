@@ -125,6 +125,29 @@ describe("recipe views", () => {
     expect(rows.professions).toEqual([{ guid: "V", skillLineId: 197, skill: 300, spec: "Mooncloth", scannedAt: 90 }]);
   });
 
+  it("WEB-98: the page also reads where to get each reagent, and the other professions' recipes that make one", () => {
+    expect(recipeRows(db, 185, true).reagentSources).toBeUndefined(); // nothing imported yet
+    writeItemDatabase(
+      db,
+      {
+        ...DATABASE,
+        reagents: [...DATABASE.reagents, { recipeId: 3, itemId: 102, count: 1 }],
+        reagentSources: [
+          { itemId: 102, kind: "crafted", position: 1, recipeId: 2 },
+          { itemId: 102, kind: "vendor", position: 1, name: "Test Merchant" },
+        ],
+      },
+      { build: "b2", era: "e", cmangos: "c" },
+      2,
+    );
+    const rows = recipeRows(db, 185, true);
+    expect(rows.reagentSources?.map((s) => s.kind).sort()).toEqual(["crafted", "vendor"]);
+    // Cooking's stew uses Tailoring's bolt: recipe 2 comes along for the drawer's link, with its own reagents.
+    expect(rows.recipes.map((r) => r.id).sort()).toEqual([2, 3]);
+    expect([...rows.items.keys()].sort()).toEqual([102, 103]);
+    expect(recipeRows(db, 185).reagentSources).toBeUndefined();
+  });
+
   it("reads every recipe profession for the search, never Fishing", () => {
     expect(
       recipeRows(db)

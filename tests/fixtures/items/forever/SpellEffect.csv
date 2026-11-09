@@ -14,3 +14,5 @@ ID,EffectIndex,Effect,EffectBasePointsF,EffectItemType,EffectTriggerSpell,SpellI
 13,0,6,5,0,0,9201
 14,0,30,120,0,0,9202
 15,1,30,80,0,0,9202
+16,0,6,2,0,0,9301
+17,0,6,10,0,0,9303

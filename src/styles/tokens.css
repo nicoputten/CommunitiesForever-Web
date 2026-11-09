@@ -1048,4 +1048,72 @@
   --boss-bar-fill: #7fd99a;
   --boss-killed: #3ba55d; /* the ✓ disc */
   --boss-open-ring: #3a4456; /* a boss not down yet */
+  /* Where to get a reagent, in the recipe drawer (reagent-sources, WEB-98) */
+  --line-reagent: rgba(255, 255, 255, 0.06); /* between reagents */
+  --lh-source: 1.4; /* a source line */
+  --source-skin: #c8965a; /* the skinning knife's blade */
+  --source-skin-dark: #8a6a3a; /* its handle */
+  --source-herb-dark: #3a7a4a; /* the leaf's outline (the leaf: --fresh) */
+  --tag-limited-bg: rgba(240, 167, 116, 0.14); /* "limited stock" (text: --pill-soon-text) */
+  --pad-tag-limited: 1px 7px;
+  /* The talents (WEB-100, board talent-tooltips-v2, WB101 "closer to the game"): the game's talent frame and tooltips */
+  --size-talent-row: 36px; /* a tree's row in the Talents box (hit area --size-touch on phone) */
+  --r-talent-row: 8px;
+  --tint-talent-row: rgba(212, 175, 106, 0.1); /* the row whose tooltip or tree is open */
+  --ring-talent-row: inset 0 0 0 1px rgba(212, 175, 106, 0.35);
+  --talent-frame:
+    radial-gradient(260px 220px at 50% 30%, rgba(190, 70, 20, 0.35), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(240px 260px at 30% 90%, rgba(110, 40, 160, 0.3), rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, #1a0e10, #0a0608); /* fire and shadow behind a tree */
+  --line-talent-frame: #5a4a2a;
+  --r-talent-frame: 6px;
+  --shadow-talent-frame: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 10px 28px rgba(0, 0, 0, 0.55);
+  --talent-frame-head: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.15));
+  --line-talent-head: rgba(212, 175, 106, 0.25);
+  --fs-talent-tree: 17px; /* the tree's name in the frame (Marcellus SC) */
+  --size-talent-tree-icon: 22px;
+  --size-talent: 44px; /* a talent in the frame */
+  --s-talent-x: 30px; /* between columns, rows; the frame's padding (phone: 34, 24, 14) */
+  --s-talent-y: 28px;
+  --s-talent-pad: 18px;
+  --s-talent-x-phone: 34px;
+  --s-talent-y-phone: 24px;
+  --s-talent-pad-phone: 14px;
+  --size-talent-mini: 26px; /* the tree tooltip's small tree */
+  --s-talent-x-mini: 14px;
+  --s-talent-y-mini: 9px;
+  --s-talent-pad-mini: 10px;
+  --size-talent-list: 30px; /* a talent's icon in the tree tooltip's list */
+  --r-talent: 5px;
+  --line-talent: #5e5e5e; /* locked (greyed out by --filter-talent-locked) */
+  --line-talent-open: #8a8a8a;
+  --talent-empty: #1a1a1a; /* a talent without an icon */
+  --shadow-talent: 0 0 0 1px #000, inset 0 0 6px rgba(0, 0, 0, 0.8);
+  --shadow-talent-full: 0 0 0 1px #000, 0 0 8px rgba(255, 209, 0, 0.55); /* gold glow, with --game-yellow */
+  --shadow-talent-partial: 0 0 0 1px #000, 0 0 6px rgba(30, 255, 0, 0.4); /* with --game-green */
+  --filter-talent-locked: grayscale(1) brightness(0.55);
+  --ring-talent-picked: 0 0 0 2px #fff; /* the tapped talent (phone) */
+  --size-talent-rank: 22px; /* the rank box: min width, height */
+  --size-talent-rank-h: 15px;
+  --s-talent-rank: -7px; /* how far it sticks out at the bottom right */
+  --fs-talent-rank: 10px;
+  --r-talent-rank: 3px;
+  --talent-rank-bg: #0a0a0a;
+  --line-talent-rank: #3a3a3a;
+  --talent-rank-text: #c9c9c9;
+  --line-talent-rank-full: #7a6420;
+  --line-talent-rank-partial: #2e6a20;
+  --size-talent-arrow: 6px;
+  --size-talent-arrow-head: 8px;
+  --talent-arrow: #6a6a6a; /* gold (--game-yellow) once the first talent has points */
+  --surface-talent-tip: rgba(6, 9, 20, 0.97); /* the game's talent tooltip */
+  --r-talent-tip: 4px;
+  --game-red: #ff2020; /* "Requires Intensity" */
+  --size-talent-tree-tip: 440px; /* the tree tooltip */
+  --size-talent-tree-mini: 150px; /* its small tree's column */
+  --line-talent-split: #2a3348;
+  --line-talent-list: rgba(255, 255, 255, 0.06);
+  --fs-talent-name: 13.5px;
+  --fs-talent-text: 12.5px;
+  --lh-talent-text: 1.4;
 }

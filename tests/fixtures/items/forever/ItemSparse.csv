@@ -10,3 +10,7 @@ ID,Description_lang,Display_lang,Stackable,RequiredSkillRank,ItemLevel,Bonding,R
 5009,,"Old Test Hat Item",1,0,20,2,15,1,1,0
 6003,,"Pattern: Test Robe",1,70,60,1,0,0,3,0
 6101,,"Test Regalia Gloves",1,0,60,1,55,10,4,300
+5011,,"Test Leather",20,0,20,0,0,0,1,0
+5012,,"Test Herb",20,0,25,0,0,0,1,0
+5013,,"Test Ore",20,0,25,0,0,0,1,0
+5015,,"Test Gem",20,0,40,0,0,0,2,0

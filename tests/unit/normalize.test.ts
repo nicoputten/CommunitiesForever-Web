@@ -87,6 +87,31 @@ describe("normalize: missing and wrong fields", () => {
   });
 });
 
+describe("normalize: talent nodes (WEB-100)", () => {
+  it("reads the nodes by ID or position and drops what can't be one", () => {
+    const d = global(`self = { battleTag = "A#1", chars = { G = { talentNodes = {
+      { id = 105889, ranks = 5 },
+      { posX = 9680, posY = 2130, ranks = 3 },
+      { posX = 9080, ranks = 0 },
+      { id = 1, ranks = 6 },
+      { id = 2, ranks = 1.5 },
+      { id = -4, posX = "x", ranks = 2 },
+      "not a table",
+    } } } }`);
+    expect(d.characters.G?.talentNodes).toEqual([
+      { id: 105889, ranks: 5 },
+      { posX: 9680, posY: 2130, ranks: 3 },
+      { posX: 9080, ranks: 0 },
+      { ranks: 2 },
+    ]);
+  });
+
+  it("leaves them out when the addon doesn't send them (every release so far)", () => {
+    const d = global('self = { battleTag = "A#1", chars = { G = { talents = { { name = "Arms", points = 5 } } } } }');
+    expect(d.characters.G).not.toHaveProperty("talentNodes");
+  });
+});
+
 describe("normalize: people", () => {
   it("names people: own display name > BattleTag name part", () => {
     const d = global(`

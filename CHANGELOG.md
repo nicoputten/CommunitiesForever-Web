@@ -1,8 +1,10 @@
 # Changelog
 
 ## Unreleased
+- Recipes: every reagent in a recipe's panel says where to get it, at most three ways, best first: the vendor that sells it (and where, with "limited stock" when it only has a few), the recipe that makes it (with who in the group knows it first; the link opens that recipe, Back returns), skinning, herbs or ore, then the creatures that drop it with their chance. "No known source" when the game data has none. DoomBot's `/craft` gets the same, for the bot's next version. Needs "Import item data" once after the release.
 - Item tooltips: a piece of an item set shows its set as in game: the set's name with "(0/5)", its pieces and the "(2) Set: …" bonuses, on hover and in the phone sheet. Nobody's gear is known, so nothing is marked as worn. Needs "Import item data" once after the release.
 - Doomsday: pool version 4, with the addon of the same release. New dailies Reward, Fish buddy, Feed pal, Summoned and Auction; new Skirmish missions Revenge, Flagged 30 and Flag up; a new Bounty, Flagged 3h. Defend home leaves the pool. The Hunt is on: every day a race and class of the other faction to kill, worth 5 PvP points, on the board between the dailies and the Skirmish and in DoomBot's board. Days a friend played on the older addon keep their pool 3 missions and points.
+- Character page: hover (or tap on a phone) a talent tree to see its tooltip: the tree and its points. Once the addon tells which talents a character took, the tooltip shows a small picture of the tree and the talents with their rank and text, and a click (or tap) opens the whole tree as in game: the spell icons, gold for full rank, green for some, greyed out where it can't be taken yet, arrows to the talents a talent opens, and each talent's tooltip with its next rank and what it requires. The talent trees come with "Import item data" (run it once after the release).
 
 ## v0.12.2 (2026-11-08)
 ### Changed

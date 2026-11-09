@@ -6,6 +6,7 @@
 
 import { doomsdayChar, doomsdayPerson } from "./sampleDoomsday";
 import { SAMPLE_RECIPES } from "./sampleItems";
+import { VES_TALENT_NODES } from "./sampleTalents";
 
 /** The design server's "now" (FIXED_NOW): 2026-11-19 20:00 UTC, a Thursday evening. */
 export const NOW = 1795118400;
@@ -68,6 +69,8 @@ interface Sample {
   /** Quest log: the character board's titles under invented quest IDs, in board order (WEB-23); with the quest log's
    * header for the dungeon page's Quests box (WEB-76). */
   quests?: Record<number, string | { title: string; area: string }>;
+  /** WEB-100: the talents node by node, as an addon that syncs them would send them (sampleTalents.ts). */
+  talentNodes?: [number, number][];
 }
 
 const NICO: Sample[] = [
@@ -81,6 +84,7 @@ const NICO: Sample[] = [
     ilvl: 34,
     role: "dps",
     talents: [10, 0, 20],
+    talentNodes: VES_TALENT_NODES,
     professions: [
       ["Tailoring", 187, 225],
       ["Enchanting", 160, 225],
@@ -363,6 +367,11 @@ function char(c: Sample, now: number, owner: string, before: boolean): Lua {
     realm: REALM,
     role: c.role,
     talents: trees.map((name, i) => ({ name, points: c.talents[i]! })),
+    // Only while they add up to the points (an earlier day's file has fewer points).
+    ...(c.talentNodes !== undefined &&
+      c.talentNodes.reduce((sum, [, ranks]) => sum + ranks, 0) === c.talents.reduce((a, b) => a + b, 0) && {
+        talentNodes: c.talentNodes.map(([id, ranks]) => ({ id, ranks })),
+      }),
     ...(c.quests !== undefined && {
       quests: Object.fromEntries(
         Object.entries(c.quests).map(([id, q]) => [id, typeof q === "string" ? { title: q } : q]),

@@ -1,0 +1,4 @@
+ID,ZoneName,AreaName_lang,ContinentID,ParentAreaID
+12,TestForest,"Test Forest",0,0
+1519,TestCity,"Test City",0,0
+99,TestGlade,"Test Glade",0,12

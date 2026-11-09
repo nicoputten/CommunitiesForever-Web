@@ -1,0 +1,75 @@
+/* A talent tree's row in the Talents box (WEB-100, board talent-tooltips-v2): the panel row's grid
+   (Panel.module.css .row) as a button, outlined in gold while its tooltip or tree is open; the desktop dialog with the
+   whole tree and the phone sheet's content. */
+
+.row {
+  display: grid;
+  grid-template-columns: var(--size-character-label) minmax(0, 1fr) var(--size-character-value);
+  gap: var(--s-2-5);
+  align-items: center;
+  box-sizing: border-box;
+  width: calc(100% + 2 * var(--s-2));
+  min-height: var(--size-talent-row);
+  margin: 0 calc(-1 * var(--s-2));
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-talent-row);
+  background: none;
+  font: inherit;
+  font-size: var(--fs-body-sm);
+  color: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.row[aria-haspopup] {
+  cursor: pointer;
+}
+
+.row[data-open] {
+  background: var(--tint-talent-row);
+  box-shadow: var(--ring-talent-row);
+}
+
+.row:focus-visible {
+  outline: var(--border-strong) solid var(--gold-bright);
+  outline-offset: var(--border-strong);
+}
+
+@media (hover: none) {
+  .row {
+    min-height: var(--size-touch);
+    cursor: pointer;
+  }
+}
+
+/* The phone sheet's content: the tree, a tapped talent's tooltip under it. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* Desktop: the whole tree, centred over the page. */
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--s-4);
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--line-strong);
+  background: var(--surface-drawer);
+  box-shadow: var(--shadow-sheet-lg);
+  transform: translate(-50%, -50%);
+}
+
+.close {
+  align-self: flex-end;
+}

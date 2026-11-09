@@ -68,9 +68,10 @@ test("the profession page keeps tabs and filters in the URL, and a row opens the
   await expect(page).toHaveURL(/recipe=91001/);
   const drawer = page.getByRole("dialog", { name: "Robe of the Archmage" });
   await expect(drawer.getByText("Tailoring · Chest")).toBeVisible();
-  await expect(drawer.getByRole("listitem").filter({ hasText: "Bolt of Runecloth" })).toContainText("×12");
+  await expect(drawer.getByRole("listitem").filter({ hasText: "Bolt of Runecloth" }).first()).toContainText("×12");
   await expect(drawer.getByText("Drop · Blackrock Spire")).toBeVisible();
-  await expect(drawer).not.toContainText(/gold|sell/i);
+  // Never a price (WEB-98: "The vendor sells a few, then restocks." is no price).
+  await expect(drawer).not.toContainText(/gold|silver|copper|price/i);
   await page.keyboard.press("Escape");
   await expect(drawer).toBeHidden();
   await expect(page).toHaveURL(/\/professions\/tailoring$/);
@@ -117,4 +118,34 @@ test("on a phone a row opens the recipe as a sheet", async ({ page }) => {
   await expect(sheet).toBeVisible();
   await sheet.getByRole("button", { name: "Close" }).click();
   await expect(sheet).toBeHidden();
+});
+
+test("WEB-98: a reagent says where to get it; a crafted one opens its recipe, Back returns", async ({ page }) => {
+  await page.goto("/professions/tailoring?recipe=91001");
+  const drawer = page.getByRole("dialog", { name: "Robe of the Archmage" });
+  await expect(drawer).toBeVisible();
+  const thread = drawer.getByRole("listitem").filter({ hasText: "Rune Thread" });
+  await expect(thread.getByRole("list", { name: "Where to get it" })).toHaveText("Vendor · Orla Fenwick · Orgrimmar");
+  const essence = drawer.getByRole("listitem").filter({ hasText: "Essence of Water" });
+  await expect(essence.getByRole("listitem")).toHaveText([
+    /^Vendor · Ilsa Brightwater · Winterspring\s*limited stock/,
+    "Drop · Tidal Wraith 12% · Brine Lurker 4%",
+  ]);
+  // The crafted reagent swaps the drawer to its recipe, with a Back arrow.
+  await drawer.getByRole("link", { name: "Bolt of Runecloth ›" }).click();
+  await expect(page).toHaveURL(/recipe=91010&back=91001/);
+  const bolt = page.getByRole("dialog", { name: "Bolt of Runecloth" });
+  await expect(bolt.getByRole("heading", { name: "Bolt of Runecloth" })).toBeFocused();
+  await expect(bolt.getByText("Drop · Ashfang Raider 22% · Gravemoor Brute 18%")).toBeVisible();
+  await bolt.getByRole("button", { name: "Back to Robe of the Archmage" }).click();
+  await expect(page).toHaveURL(/recipe=91001$/);
+  await expect(page.getByRole("dialog", { name: "Robe of the Archmage" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Back to/ })).toHaveCount(0);
+  // A reagent nothing is known about.
+  await page.goto("/professions/tailoring?recipe=91006");
+  await expect(page.getByRole("dialog", { name: "Felcloth Pants" }).getByText("No known source")).toBeVisible();
+  // Closing clears the drill-in.
+  await page.goto("/professions/tailoring?recipe=91010&back=91001");
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page).toHaveURL(/\/professions\/tailoring$/);
 });
