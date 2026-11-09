@@ -8,6 +8,7 @@ import { openDatabase, type Db } from "@/server/db";
 import { adminLog, itemImport, recipes } from "@/server/db/schema";
 import { importItems, latestBuilds } from "@/server/itemImport";
 import { importFinished, importRunState, startItemImport } from "@/server/itemImportRun";
+import { classTalents } from "@/server/talentTrees";
 
 // WEB-91: the item import as the server runs it for the owner's "Import item data" (and `npm run import:items`),
 // against a fake wago.tools and GitHub serving the invented fixtures (tests/fixtures/items/).
@@ -114,6 +115,10 @@ describe("importItems", () => {
       `/db2/ItemSparse/csv?build=${FOREVER}&sort%5BID%5D=asc&filter%5BID%5D=%3E5003`,
     ]);
     expect(db.select().from(itemImport).get()).toMatchObject({ build: FOREVER, eraBuild: ERA, recipes: 10 });
+    // WEB-100: the talent trees, one row per class.
+    expect(classTalents(db, "WARLOCK")?.trees.map((t) => t.name)).toEqual(["Test Left", "Test Middle", "Test Right"]);
+    expect(classTalents(db, "MAGE")).toBeUndefined();
+    expect(classTalents(db, undefined)).toBeUndefined();
 
     // Again from the cache, nothing downloaded and nothing changed.
     asked = [];

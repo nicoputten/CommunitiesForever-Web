@@ -7,6 +7,7 @@ import type { FeedDay } from "@/core/feed";
 import type { Recap, RecapChar } from "@/core/recap/types";
 import type { Character, Dataset, Person } from "@/core/model";
 import type { ItemRecord, SourceKind } from "@/core/recipes/build";
+import type { ClassTalentsRecord } from "@/core/talents/build";
 
 // CLAUDE.md rule 5: every change here gets a new migration (`npm run db:generate -- --name <what>`); files in
 // drizzle/ that were released are never edited. docs/ARCHITECTURE.md "Storage".
@@ -809,6 +810,15 @@ export const bossDrops = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.bossId, t.itemId] })],
 );
+
+// --- WEB-100: the talent trees (src/core/talents/build.ts), written by the item import ----------------------------
+
+/** One class's three talent trees with every talent's position, ranks and texts (ClassTalentsRecord). */
+export const talentTrees = sqliteTable("talent_trees", {
+  /** The client's classFile token, e.g. "WARLOCK". */
+  classFile: text("class_file").primaryKey(),
+  data: text("data", { mode: "json" }).$type<ClassTalentsRecord>().notNull(),
+});
 
 // --- WEB-90: who knows what (derived from uploads, rebuilt with them; src/server/recipes.ts) ------------------------
 

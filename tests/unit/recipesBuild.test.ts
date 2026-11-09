@@ -178,3 +178,82 @@ describe("bosses (WEB-96)", () => {
     ]);
   });
 });
+
+describe("talent trees (WEB-100)", () => {
+  it("the item import builds each class's trees, the talents' texts from the same spell tables", () => {
+    expect(data.talents).toEqual([
+      {
+        classFile: "WARLOCK",
+        traitTreeId: 900,
+        columns: 2,
+        rows: 2,
+        trees: [
+          {
+            name: "Test Left",
+            talents: [
+              {
+                id: 1,
+                name: "Test Focus",
+                spellId: 9301,
+                maxRanks: 3,
+                row: 1,
+                column: 1,
+                posX: 1000,
+                posY: 2000,
+                texts: [
+                  "Increases your test damage by 2%.",
+                  "Increases your test damage by 4%.",
+                  "Increases your test damage by 6%.",
+                ],
+              },
+              {
+                id: 2,
+                name: "Test Spark",
+                spellId: 9302,
+                maxRanks: 1,
+                row: 2,
+                column: 2,
+                gate: 5,
+                posX: 1600,
+                posY: 2600,
+                texts: [undefined],
+              },
+            ],
+          },
+          {
+            name: "Test Middle",
+            talents: [
+              {
+                id: 3,
+                name: "Test Override",
+                spellId: 9303,
+                maxRanks: 2,
+                row: 1,
+                column: 1,
+                posX: 5000,
+                posY: 2000,
+                texts: ["Test spells cost 10 less.", "Test spells cost 20 less."],
+              },
+            ],
+          },
+          {
+            name: "Test Right",
+            talents: [
+              {
+                id: 4,
+                name: "Test Ember",
+                spellId: 9304,
+                maxRanks: 5,
+                row: 1,
+                column: 1,
+                posX: 9000,
+                posY: 2000,
+                texts: [undefined, undefined, undefined, undefined, undefined],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+});

@@ -114,3 +114,31 @@ test("phone: one column in the decided order", async ({ page }) => {
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
+
+// WEB-100 (board talent-tooltips): a tree's row opens its tooltip; Ves syncs the talents (B with the grid), Grom only
+// points per tree (A).
+test("a talent tree's row opens its tooltip: the talents and the grid, or the tree only", async ({ page }) => {
+  await page.goto(VES);
+  const destruction = region(page, "Talents").getByRole("button", { name: /^Destruction/ });
+  if (isPhone(page)) await destruction.click();
+  else await destruction.hover();
+  const tip = page.getByTestId("talent-tooltip");
+  await expect(tip).toContainText("Destruction20 points");
+  await expect(tip).toContainText(
+    "Ruin5/5Increases the critical strike damage bonus of your Destruction spells by 100%.",
+  );
+  await expect(tip.getByTestId("talent-grid").locator("[data-state]")).toHaveCount(16);
+  if (isPhone(page)) {
+    await expect(page.getByRole("dialog", { name: "Destruction" })).toBeVisible();
+    await page.keyboard.press("Escape");
+  } else {
+    await page.getByRole("heading", { level: 1 }).hover();
+  }
+  await expect(tip).toBeHidden();
+
+  await page.goto("/character/Player-1-0000A002");
+  const protection = region(page, "Talents").getByRole("button", { name: /^Protection/ });
+  if (isPhone(page)) await protection.click();
+  else await protection.focus();
+  await expect(tip).toHaveText("Protection10 points");
+});

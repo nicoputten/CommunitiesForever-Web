@@ -6,6 +6,7 @@ real game data and nothing copied from cmangos. Names, IDs and numbers are made 
 
 - `forever/*.csv`: DB2 tables as wago.tools exports them (CSV, first line the header), only the columns the import
   reads.
+  The talent tables (TraitNode ... TalentTab, WEB-100) hold one invented Warlock tree.
 - `era/*.csv`: the Classic Era client's SkillLineAbility and its learn-spell effects (SpellEffect, Effect 36).
 - `cmangos.sql`: a MySQL dump in cmangos classic-db's layout (`CREATE TABLE`, then `INSERT INTO ... VALUES`), only the
   tables and columns the import reads.

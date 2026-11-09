@@ -41,6 +41,9 @@ The site: the faction comes from the race (Skyborne: by raceID) and also from `C
 |---|---|---|
 | Still the nine Vanilla classes, `classFile` tokens as in Vanilla (`UnitClassBase` → `"PALADIN"`) | Confirmed (beta client) | API-FINDINGS |
 | Talents: one C_Traits tree per class holding the three Vanilla trees side by side; one specialization per class; Forever has new and changed talents | Confirmed (beta client) | API-FINDINGS V20, V29, V30 |
+| The talent trees (WEB-100): the class's TraitTree (SkillLineXTraitTree) holds three node groups without a condition, one per tree, left to right as TalentTab's OrderIndex (Warlock: Affliction, Demonology, Destruction); 4 columns × 7 rows of 600 units per tree, rows gated 5 points apart (TraitCond). Destruction has 16 talents, 3 columns used (Destructive Reach, Molten Skin, Bane of Havoc, Fire and Brimstone are new). The Vanilla `Talent` / `TalentTab` rows are still in the client (Vanilla's trees, rank spells that no longer exist): only the tree names are read from TalentTab. Hunter has 2 nodes and Priest 1 far off the grid (PosX 102800, PosY 39300 / 21300) | Found in game files, build 1.60.1.70790; same layout as everloot.app/tools/talents (build 70862) | wago.tools DB2 `wowf` 1.60.1.70790; [everloot.app talents](https://everloot.app/tools/talents/warlock) |
+| A talent has one spell for all its ranks (Improved Shadow Bolt's Vanilla rank 3 spell 17801 is gone from the client); the site shows a rank's numbers as the spell's effect points times the rank, as C_Traits ranks add up | Unconfirmed: check a multi-rank talent's tooltip in game | wago.tools DB2 `wowf` 1.60.1.70790 (Spell, SpellEffect) |
+| TalentTab has no tree descriptions (Description_lang empty) | Found in game files, build 1.60.1.70790 | wago.tools DB2 `wowf` |
 
 ## Professions
 | Change | Status | Source |

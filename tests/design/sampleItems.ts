@@ -1,5 +1,6 @@
 import type { BossDropRecord } from "@/core/recipes/bosses";
 import type { ItemDatabase, ItemRecord, RecipeRecord, SourceKind } from "@/core/recipes/build";
+import { SAMPLE_TALENTS } from "./sampleTalents";
 
 // The design checks' item database (WEB-92): example recipes and items for the recipe screens, as the boards draw
 // them (recipes-page, recipes-drawer: "Recipe names, numbers and sources on the boards are example data"). IDs are
@@ -432,6 +433,7 @@ const DM_BOSSES: { id: number; name: string; final?: true; optional?: true; drop
 const byItem = new Map(DEADMINES.map((d) => [d.id, d]));
 
 export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
+  talents: SAMPLE_TALENTS,
   bosses: DM_BOSSES.map((b, i) => ({
     id: b.id,
     name: b.name,

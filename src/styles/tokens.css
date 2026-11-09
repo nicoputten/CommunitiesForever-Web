@@ -1047,4 +1047,23 @@
   --boss-bar-fill: #7fd99a;
   --boss-killed: #3ba55d; /* the ✓ disc */
   --boss-open-ring: #3a4456; /* a boss not down yet */
+  /* The talent tooltips (WB100, WEB-100, board talent-tooltips): the tooltip itself is the game's (--*-game) */
+  --size-talent-row: 36px; /* a tree's row in the Talents box (hit area --size-touch on phone) */
+  --r-talent-row: 8px;
+  --tint-talent-row: rgba(212, 175, 106, 0.1); /* the row whose tooltip is open */
+  --ring-talent-row: inset 0 0 0 1px rgba(212, 175, 106, 0.35);
+  --size-talent-tooltip: 320px; /* A and B */
+  --size-talent-tooltip-grid: 460px; /* B with the tree's grid */
+  --opacity-talent-text: 0.85; /* a talent's text, in the game's yellow */
+  --size-talent-icon: 28px; /* a talent on the grid */
+  --r-talent-icon: 4px;
+  --line-talent-icon: #3a4456; /* a talent without points */
+  --talent-icon: linear-gradient(145deg, #2a2244, #0e0a18);
+  --talent-icon-taken: linear-gradient(145deg, #6b3a9a, #20103a); /* a talent with points (border gold or green) */
+  --talent-glyph: #e8c6ff;
+  --opacity-talent-glyph: 0.8;
+  --opacity-talent-locked: 0.35; /* a talent whose row the tree hasn't reached */
+  --fs-talent-rank: 9px; /* the rank badge on a grid talent */
+  --r-talent-rank: 3px;
+  --talent-rank-text: #f3ebda;
 }

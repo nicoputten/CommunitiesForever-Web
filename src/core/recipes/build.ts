@@ -9,7 +9,7 @@
 //   subclass, icon), ItemModifiedAppearance and ItemAppearance (the icon of items without one in Item), ItemSubClass
 //   (type names), ItemXItemEffect and ItemEffect (an item's spells; which recipe a
 //   recipe item teaches), ManifestInterfaceData (icon file names), Faction and Map (names), DungeonEncounter (WEB-96: the
-//   bosses, ./bosses.ts).
+//   bosses, ./bosses.ts), the talent tables of ../talents/build.ts (WEB-100).
 // - The Classic Era client (same export): its SkillLineAbility tells Forever's own recipes apart, and its learn-spell
 //   effects (SpellEffect 36) map cmangos' trainer and recipe-item spells, which Forever's client no longer has, to the
 //   recipe they teach.
@@ -26,6 +26,7 @@ import { float, int } from "./csv";
 import { n, s, type SqlRow } from "./sqlDump";
 import { type BossDropRecord, type BossRecord, buildBosses } from "./bosses";
 import { greenThreshold } from "./skill";
+import { buildTalentTrees, type ClassTalentsRecord, TALENT_TABLES } from "../talents/build";
 import { type SpellEffectInfo, type SpellInfo, type SpellLookup, spellText } from "./spellText";
 
 export const DB2_TABLES = [
@@ -50,6 +51,8 @@ export const DB2_TABLES = [
   "Faction",
   "Map",
   "DungeonEncounter",
+  // WEB-100: the talent trees (src/core/talents/build.ts).
+  ...TALENT_TABLES,
 ] as const;
 export type Db2Table = (typeof DB2_TABLES)[number];
 
@@ -183,6 +186,8 @@ export interface ItemDatabase {
   /** WEB-96: dungeon bosses in the client's order, and each boss's own loot (./bosses.ts). */
   bosses: BossRecord[];
   bossDrops: BossDropRecord[];
+  /** WEB-100: each class's talent trees (../talents/build.ts); undefined in data built before it. */
+  talents?: ClassTalentsRecord[];
 }
 
 /** Enum.InventoryType names as the game's tooltip shows them (GlobalStrings INVTYPE_*), for gear categories. */
@@ -667,7 +672,9 @@ export function buildItemDatabase(input: ImportInput): ItemDatabase {
 
   const sourceList: SourceRecord[] = [];
   for (const recipe of recipes) for (const src of sources.get(recipe.id) ?? []) sourceList.push(src);
-  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops };
+  // --- WEB-100: the talent trees, their texts from the same spell tables ---
+  const talents = buildTalentTrees(db2, spellLookup(db2, effects));
+  return { items, recipes, reagents, sources: sourceList, bosses, bossDrops, talents };
 }
 
 /**

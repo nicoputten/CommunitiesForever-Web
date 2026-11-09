@@ -232,6 +232,13 @@
       "when": 1794050787129,
       "tag": "0032_boss_kills",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1794256389230,
+      "tag": "0033_talent_trees",
+      "breakpoints": true
     }
   ]
 }

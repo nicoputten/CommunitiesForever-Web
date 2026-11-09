@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Character page: hover (or tap on a phone) a talent tree to see its tooltip: the tree and its points. Once the addon tells which talents a character took, the tooltip lists them with their rank and text next to a small picture of the tree. The talent trees come with "Import item data" (run it once after the release).
+
 ## v0.12.2 (2026-11-08)
 ### Changed
 - Roster: the thin level bar under each character (and next to the level in the table) is gone; the level stays on the disc and in the Level column.
