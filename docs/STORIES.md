@@ -443,23 +443,23 @@ Built (2026-11-07), board `design/boards/run-boss-progress` (DL05):
 - **Design needed:** the set block in the tooltip, desktop and phone sheet.
 - Done when: import tests; tooltip view-model tests; design checks; lint, tests and build pass.
 
-### WEB-100 Talent tooltips (board `talent-tooltips`, WB100: B with the grid, A as the fallback)
+### WEB-100 Talent tooltips and the talent tree (board `talent-tooltips-v2`, WB101; A as the fallback)
 - **Import:** the Forever client's talent trees (`src/core/talents/build.ts`, table `talent_trees`, with "Import item
   data"). Forever's talents are the class's C_Traits tree (TraitNode, TraitNodeEntry, TraitDefinition, TraitCond,
-  SkillLineXTraitTree), not the Vanilla `Talent` table the story first named: that one is still in the client but holds
-  Vanilla's trees. TalentTab gives the trees' names. Texts per rank through WEB-95's spell texts.
-- **What uploads tell:** points per tree only. The addon (CF-18) reads `{ posX, ranks }` per node in game, only to add
-  up the points; it saves no nodes, and `posX` alone couldn't name a talent (a column holds up to seven). The site
-  reads `Char.talentNodes = { { id, ranks } }` (TraitNode ID, or `posX` + `posY`) when an addon release sends it
-  (needs an addon story).
-- The character page's talent rows open a tooltip on hover or focus (desktop, right of the box) or tap (phone, bottom
-  sheet). **B with the grid** when the synced nodes name the talents and add up to the tree's points: every talent with
-  points in tree order (name, rank "3/5", its text), the tree's 4 × 7 grid (full, partial, open, not reached) left of
-  the list (above it on a phone), each grid talent's own tooltip on hover. **A** otherwise (every upload today): the
-  tree's name and points.
-- Done when: import tests; view-model tests (full, partial, unknown → A); design checks for A and B with the grid;
-  e2e; lint, tests and build pass. New screenshot baselines `talents-a`, `talents-b-grid`; `character` changes (36 px
-  tree rows): after Nico's OK. Deviations in docs/DESIGN.md (4 × 7 grid, no tree line in A): Nico's OK.
+  TraitEdge, SkillLineXTraitTree), not the Vanilla `Talent` table the story first named: that one is still in the
+  client but holds Vanilla's trees. TalentTab gives the trees' names and icons. Texts per rank through WEB-95's spell
+  texts with the rank curves (TraitDefinitionEffectPoints, CurvePoint); icons through the item icon cache.
+- **What uploads tell:** points per tree, and from the addon's CF-115 on `Char.talentNodes = { { id, ranks } }`
+  (TraitNode ID, or `posX` + `posY`).
+- The character page's talent rows: hover (desktop) shows the tree tooltip (the small tree, the talents with points:
+  icon, gold text, rank pill); a click opens the tree as the game's talent frame (icons in the game's states, rank
+  boxes, prerequisite arrows gold once the first talent has points), each talent's tooltip in the game's format
+  ("Rank 2/5", the text, "Next rank:", red "Requires ..."). Phone: a tap opens a sheet with the tree, a tapped talent's
+  tooltip under it. **A** for a character without talent nodes (or before the import): the tree's name and points.
+- Done when: import tests; view-model tests (full, partial, unknown → A; states, requirements, arrows); design checks;
+  e2e; lint, tests and build pass. New screenshot baselines `talents-tree-tooltip`, `talents-tree`,
+  `talents-talent-tooltip`, `talents-locked`, `talents-a`; `character` changes (36 px tree rows): after Nico's OK.
+  Deviations in docs/DESIGN.md: Nico's OK.
 
 ### WEB-103 Spike: Everloot as a boss loot source (investigation only)
 Done (2026-11-07), report: [docs/research/everloot-loot-source.md](research/everloot-loot-source.md). Nico asked

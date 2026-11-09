@@ -1,5 +1,5 @@
-ID,SpellID,OverrideName_lang,OverrideDescription_lang
-21,9301,,
-22,9302,,
-23,9303,"Test Override",
-24,9304,,
+ID,SpellID,OverrideName_lang,OverrideDescription_lang,OverrideIcon
+21,9301,,,0
+22,9302,,,0
+23,9303,"Test Override",,100021
+24,9304,,,0

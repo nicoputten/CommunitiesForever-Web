@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-- Character page: hover (or tap on a phone) a talent tree to see its tooltip: the tree and its points. Once the addon tells which talents a character took, the tooltip lists them with their rank and text next to a small picture of the tree. The talent trees come with "Import item data" (run it once after the release).
+- Character page: hover (or tap on a phone) a talent tree to see its tooltip: the tree and its points. Once the addon tells which talents a character took, the tooltip shows a small picture of the tree and the talents with their rank and text, and a click (or tap) opens the whole tree as in game: the spell icons, gold for full rank, green for some, greyed out where it can't be taken yet, arrows to the talents a talent opens, and each talent's tooltip with its next rank and what it requires. The talent trees come with "Import item data" (run it once after the release).
 
 ## v0.12.2 (2026-11-08)
 ### Changed

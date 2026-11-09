@@ -11,3 +11,6 @@ ID,FilePath,FileName
 100010,Interface\ICONS\,INV_Scroll_Test.blp
 100011,Interface\ICONS\,INV_Banner_Test.blp
 100012,Interface\Glues\,Not_An_Icon.blp
+100020,Interface\ICONS\,Spell_Test_Focus.blp
+100021,Interface\ICONS\,Spell_Test_Thrift.blp
+100022,Interface\ICONS\,Spell_Test_Tree.blp

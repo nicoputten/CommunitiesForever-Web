@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SpellInfo } from "@/core/recipes/spellText";
-import { buildTalentTrees, type TalentTable } from "@/core/talents/build";
+import { buildTalentTrees, type TalentInput } from "@/core/talents/build";
 
 // WEB-100: the talent tree import (src/core/talents/build.ts) on a small made-up class tree shaped like the Forever
 // client's (build 1.60.1: one TraitTree per class, three trees side by side on a 600-unit grid, rows gated 5 points
@@ -37,13 +37,20 @@ const NODES: NodeSpec[] = [
   { id: 8, tree: 1, col: 4, row: 7, ranks: 1, spell: 508 },
 ];
 
-function tables(over: Partial<Record<TalentTable, Rows>> = {}): Partial<Record<TalentTable, Rows>> {
-  const t: Partial<Record<TalentTable, Rows>> = {
+function tables(over: TalentInput = {}): TalentInput {
+  const t: TalentInput = {
     SkillRaceClassInfo: [row({ ID: 1, SkillID: 354, ClassMask: 256 })],
     SkillLineXTraitTree: [row({ ID: 1, SkillLineID: 354, TraitTreeID: TREE })],
     TalentTab: [
       row({ ID: 301, Name_lang: "Destruction", Description_lang: "", OrderIndex: 2, ClassMask: 256 }),
-      row({ ID: 302, Name_lang: "Affliction", Description_lang: "Curses.", OrderIndex: 0, ClassMask: 256 }),
+      row({
+        ID: 302,
+        Name_lang: "Affliction",
+        Description_lang: "Curses.",
+        OrderIndex: 0,
+        ClassMask: 256,
+        SpellIconID: 9004,
+      }),
       row({ ID: 303, Name_lang: "Demonology", Description_lang: "", OrderIndex: 1, ClassMask: 256 }),
     ],
     TraitNode: NODES.map((n) =>
@@ -64,6 +71,7 @@ function tables(over: Partial<Record<TalentTable, Rows>> = {}): Partial<Record<T
         SpellID: n.spell,
         OverrideName_lang: n.id === 6 ? "Renamed" : "",
         OverrideDescription_lang: "",
+        OverrideIcon: n.id === 6 ? 9003 : 0,
       }),
     ),
     // Trees: groups 10, 11, 12 (no condition); a smaller condition-less group inside tree 0; row gates per tree.
@@ -80,6 +88,39 @@ function tables(over: Partial<Record<TalentTable, Rows>> = {}): Partial<Record<T
       row({ ID: 2, TraitCondID: 31, TraitNodeGroupID: 21 }),
       row({ ID: 3, TraitCondID: 32, TraitNodeGroupID: 22 }),
       row({ ID: 4, TraitCondID: 36, TraitNodeGroupID: 23 }),
+    ],
+    TraitDefinitionEffectPoints: [
+      row({ ID: 1, TraitDefinitionID: 201, EffectIndex: 0, OperationType: 0, CurveID: 70 }),
+      // Another operation than "set" is not read.
+      row({ ID: 2, TraitDefinitionID: 202, EffectIndex: 0, OperationType: 1, CurveID: 70 }),
+    ],
+    CurvePoint: [
+      row({ ID: 1, CurveID: 70, Pos_0: 1, Pos_1: 1 }),
+      row({ ID: 3, CurveID: 70, Pos_0: 4, Pos_1: 6 }),
+      row({ ID: 2, CurveID: 70, Pos_0: 2, Pos_1: 3 }),
+      row({ ID: 4, CurveID: 70, Pos_0: 5, Pos_1: 8 }),
+    ],
+    // Prerequisites: 3 needs 8 (required, across... a different row: down); 6 needs 4 or 5; a visual-only line.
+    TraitEdge: [
+      row({ ID: 1, LeftTraitNodeID: 4, RightTraitNodeID: 6, Type: 2 }),
+      row({ ID: 2, LeftTraitNodeID: 5, RightTraitNodeID: 6, Type: 2 }),
+      row({ ID: 3, LeftTraitNodeID: 3, RightTraitNodeID: 8, Type: 3 }),
+      row({ ID: 4, LeftTraitNodeID: 6, RightTraitNodeID: 4, Type: 0 }),
+      // Across trees: left out.
+      row({ ID: 5, LeftTraitNodeID: 1, RightTraitNodeID: 4, Type: 2 }),
+    ],
+    // Icons: the tree's (TalentTab.SpellIconID), the spell's (SpellMisc, base difficulty first), an override.
+    ManifestInterfaceData: [
+      row({ ID: 9001, FilePath: "Interface\\ICONS\\", FileName: "Spell_Sample_Mind.blp" }),
+      row({ ID: 9002, FilePath: "Interface\\ICONS\\", FileName: "Spell_Sample_Heroic.blp" }),
+      row({ ID: 9003, FilePath: "Interface/Icons/", FileName: "Spell_Sample_Override.blp" }),
+      row({ ID: 9004, FilePath: "Interface\\ICONS\\", FileName: "Spell_Sample_Tree.blp" }),
+      row({ ID: 9005, FilePath: "Interface\\Glues\\", FileName: "Not_An_Icon.blp" }),
+    ],
+    SpellMisc: [
+      row({ ID: 1, SpellID: 501, DifficultyID: 1, SpellIconFileDataID: 9002 }),
+      row({ ID: 2, SpellID: 501, DifficultyID: 0, SpellIconFileDataID: 9001 }),
+      row({ ID: 3, SpellID: 502, DifficultyID: 0, SpellIconFileDataID: 9005 }),
     ],
     TraitCond: [
       row({ ID: 31, SpentAmountRequired: 5 }),
@@ -119,21 +160,24 @@ describe("talents: import (WEB-100)", () => {
       posX: 1000,
       posY: 2000,
       texts: [
-        "Increases your spell damage by 2%.",
-        "Increases your spell damage by 4%.",
+        // The rank curve (TraitDefinitionEffectPoints -> CurvePoint): 1, 3, 3 (no point at 3: the last before), 6, 8.
+        "Increases your spell damage by 1%.",
+        "Increases your spell damage by 3%.",
+        "Increases your spell damage by 3%.",
         "Increases your spell damage by 6%.",
         "Increases your spell damage by 8%.",
-        "Increases your spell damage by 10%.",
       ],
+      icon: "spell_sample_mind",
     });
     expect(quick).toMatchObject({
       row: 2,
       column: 2,
       gate: 5,
       texts: [
+        // No curve: the spell's own points on every rank.
         "Reduces the cast time by 0.1 sec.",
-        "Reduces the cast time by 0.2 sec.",
-        "Reduces the cast time by 0.3 sec.",
+        "Reduces the cast time by 0.1 sec.",
+        "Reduces the cast time by 0.1 sec.",
       ],
     });
   });
@@ -156,6 +200,27 @@ describe("talents: import (WEB-100)", () => {
       [3, 1, 1, undefined],
       [8, 7, 4, 30],
     ]);
+  });
+
+  it("sizes each tree's grid, names icons and reads the prerequisites (WB101)", () => {
+    const [warlock] = buildTalentTrees(tables(), spells);
+    expect(warlock!.trees.map((t) => [t.columns, t.rows, t.icon])).toEqual([
+      [2, 2, "spell_sample_tree"],
+      [4, 7, undefined],
+      [3, 3, undefined],
+    ]);
+    const all = warlock!.trees.flatMap((t) => t.talents);
+    const byId = (id: number) => all.find((t) => t.id === id)!;
+    // The spell's base difficulty icon; an icon that isn't in Interface\ICONS is none; the definition's override.
+    expect([byId(1).icon, byId(2).icon, byId(6).icon]).toEqual([
+      "spell_sample_mind",
+      undefined,
+      "spell_sample_override",
+    ]);
+    expect(byId(6).requires).toEqual([{ id: 4 }, { id: 5 }]);
+    expect(byId(8).requires).toEqual([{ id: 3, required: true }]);
+    // The visual-only line and the edge across trees are left out.
+    expect(byId(4)).not.toHaveProperty("requires");
   });
 
   it("skips a class whose trees it can't tell apart, and a tree of no known class", () => {

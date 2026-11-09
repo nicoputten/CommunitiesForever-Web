@@ -180,7 +180,7 @@ describe("bosses (WEB-96)", () => {
 });
 
 describe("talent trees (WEB-100)", () => {
-  it("the item import builds each class's trees, the talents' texts from the same spell tables", () => {
+  it("the item import builds each class's trees: icons, prerequisites, texts per rank from the rank curves", () => {
     expect(data.talents).toEqual([
       {
         classFile: "WARLOCK",
@@ -190,6 +190,9 @@ describe("talent trees (WEB-100)", () => {
         trees: [
           {
             name: "Test Left",
+            icon: "spell_test_tree",
+            columns: 2,
+            rows: 2,
             talents: [
               {
                 id: 1,
@@ -200,11 +203,14 @@ describe("talent trees (WEB-100)", () => {
                 column: 1,
                 posX: 1000,
                 posY: 2000,
+                // The curve's points per rank (3, 5, 9), not the spell's own 2.
                 texts: [
-                  "Increases your test damage by 2%.",
-                  "Increases your test damage by 4%.",
-                  "Increases your test damage by 6%.",
+                  "Increases your test damage by 3%.",
+                  "Increases your test damage by 5%.",
+                  "Increases your test damage by 9%.",
                 ],
+                // The base difficulty's SpellMisc icon.
+                icon: "spell_test_focus",
               },
               {
                 id: 2,
@@ -217,11 +223,15 @@ describe("talent trees (WEB-100)", () => {
                 posX: 1600,
                 posY: 2600,
                 texts: [undefined],
+                // The type 2 edge; the type 0 one back only draws a line.
+                requires: [{ id: 1 }],
               },
             ],
           },
           {
             name: "Test Middle",
+            columns: 1,
+            rows: 1,
             talents: [
               {
                 id: 3,
@@ -232,12 +242,17 @@ describe("talent trees (WEB-100)", () => {
                 column: 1,
                 posX: 5000,
                 posY: 2000,
-                texts: ["Test spells cost 10 less.", "Test spells cost 20 less."],
+                // No curve: the spell's own points on every rank.
+                texts: ["Test spells cost 10 less.", "Test spells cost 10 less."],
+                // TraitDefinition.OverrideIcon.
+                icon: "spell_test_thrift",
               },
             ],
           },
           {
             name: "Test Right",
+            columns: 1,
+            rows: 1,
             talents: [
               {
                 id: 4,

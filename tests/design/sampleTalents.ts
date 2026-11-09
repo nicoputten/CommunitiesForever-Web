@@ -3,7 +3,8 @@ import type { ClassTalentsRecord, TalentTreeRecord } from "@/core/talents/build"
 // WEB-100 (board talent-tooltips): the sample Warlock talent trees for the design checks and e2e, as the item import
 // writes them (src/core/talents/build.ts). The layout (node IDs, names, rows, columns, ranks, row gates) is the Forever
 // client's, build 1.60.1 (TraitNode, TraitNodeEntry, TraitCond; the same as everloot.app/tools/talents/warlock); the
-// texts are made up (the board's illustrative ones for Ves's Destruction talents), the client's would be longer.
+// texts and icons are made up (the board's illustrative texts for Ves's Destruction talents; painted squares as
+// icons); the prerequisites are the client's.
 
 /** [TraitNode ID, name, row, column, max ranks]. Gates: 5 points per row below the first. */
 type Spec = [number, string, number, number, number];
@@ -69,20 +70,41 @@ const DESTRUCTION: Spec[] = [
   [105874, "Incinerate", 7, 2, 1],
 ];
 
-/** The board's illustrative texts (made up, not the client's). */
-const TEXTS: Record<number, string> = {
-  105889: "Your Shadow Bolt critical strikes increase Shadow damage dealt to the target by 20% for 12 sec.",
-  105888: "Reduces the casting time of your Shadow Bolt and Immolate spells by 0.5 sec and your Soul Fire spell by 2 sec.",
-  105887: "Reduces the Mana cost of your Destruction spells by 3%.",
-  105886: "Gives your Destruction spells a 4% chance to daze the target for 5 sec.",
-  105883: "Increases the critical strike damage bonus of your Destruction spells by 100%.",
+/** Made-up texts per rank (the board's illustrative ones for Ves's Destruction talents; the client's are longer). */
+const TEXTS: Record<number, (rank: number) => string> = {
+  105889: (r) => `Your Shadow Bolt critical strikes increase Shadow damage dealt to the target by ${4 * r}% for 12 sec.`,
+  105888: (r) =>
+    `Reduces the casting time of your Shadow Bolt and Immolate spells by 0.${r} sec and your Soul Fire spell by ${(0.4 * r).toFixed(1)} sec.`,
+  105887: (r) => `Reduces the Mana cost of your Destruction spells by ${r}%.`,
+  105886: (r) => `Gives your Destruction spells a ${2 * r}% chance to daze the target for 5 sec.`,
+  105883: (r) => `Increases the critical strike damage bonus of your Destruction spells by ${20 * r}%.`,
+};
+
+/** Prerequisites (TraitEdge type 2 in build 1.60.1): talent -> the one it needs. */
+const REQUIRES: Record<number, number> = {
+  105913: 105916,
+  105909: 105912,
+  105895: 105898,
+  105892: 105900,
+  105890: 105892,
+  105878: 105882,
+  105877: 105880,
+  105874: 105876,
 };
 
 const LEFT = [1020, 5020, 9080];
 
+/** The sample's icon name for a talent or tree: the seed paints a square with its first letter (seedItems.ts). */
+export function sampleIcon(name: string): string {
+  return `sample_${name.toLowerCase().replace(/[^a-z]+/g, "_")}`;
+}
+
 function tree(name: string, specs: Spec[], index: number): TalentTreeRecord {
   return {
     name,
+    icon: sampleIcon(name),
+    columns: Math.max(...specs.map((s) => s[3])),
+    rows: Math.max(...specs.map((s) => s[2])),
     talents: specs.map(([id, talentName, row, column, maxRanks]) => ({
       id,
       name: talentName,
@@ -93,7 +115,9 @@ function tree(name: string, specs: Spec[], index: number): TalentTreeRecord {
       ...(row > 1 && { gate: (row - 1) * 5 }),
       posX: LEFT[index]! + (column - 1) * 600,
       posY: 2130 + (row - 1) * 600,
-      texts: Array.from({ length: maxRanks }, () => TEXTS[id] ?? `Made-up text for ${talentName}.`),
+      texts: Array.from({ length: maxRanks }, (_, i) => TEXTS[id]?.(i + 1) ?? `Made-up text for ${talentName}, rank ${i + 1}.`),
+      icon: sampleIcon(talentName),
+      ...(REQUIRES[id] !== undefined && { requires: [{ id: REQUIRES[id]! }] }),
     })),
   };
 }
@@ -107,6 +131,11 @@ export const SAMPLE_TALENTS: ClassTalentsRecord[] = [
     trees: [tree("Affliction", AFFLICTION, 0), tree("Demonology", DEMONOLOGY, 1), tree("Destruction", DESTRUCTION, 2)],
   },
 ];
+
+/** Every icon the sample trees use. */
+export const SAMPLE_TALENT_ICONS: string[] = SAMPLE_TALENTS.flatMap((c) =>
+  c.trees.flatMap((t) => [t.icon!, ...t.talents.map((x) => x.icon!)]),
+);
 
 /**
  * Ves Doombringer's talents (10 / 0 / 20), as an addon that syncs the nodes would send them: [TraitNode ID, ranks].

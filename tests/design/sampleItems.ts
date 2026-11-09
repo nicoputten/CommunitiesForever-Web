@@ -1,6 +1,6 @@
 import type { BossDropRecord } from "@/core/recipes/bosses";
 import type { ItemDatabase, ItemRecord, RecipeRecord, SourceKind } from "@/core/recipes/build";
-import { SAMPLE_TALENTS } from "./sampleTalents";
+import { SAMPLE_TALENT_ICONS, SAMPLE_TALENTS } from "./sampleTalents";
 
 // The design checks' item database (WEB-92): example recipes and items for the recipe screens, as the boards draw
 // them (recipes-page, recipes-drawer: "Recipe names, numbers and sources on the boards are example data"). IDs are
@@ -478,7 +478,11 @@ export const SAMPLE_ITEM_DATABASE: ItemDatabase = {
 
 /** The icon names the sample uses, and the question mark: the seed draws each (sampleIcons in seed.setup.ts). */
 export const SAMPLE_ICONS = [
-  ...new Set([...ITEMS.flatMap((i) => (i.iconName === undefined ? [] : [i.iconName])), "inv_misc_questionmark"]),
+  ...new Set([
+    ...ITEMS.flatMap((i) => (i.iconName === undefined ? [] : [i.iconName])),
+    "inv_misc_questionmark",
+    ...SAMPLE_TALENT_ICONS,
+  ]),
 ];
 
 /** Who knows which recipe in the design sample (recipe ID -> item ID, CF-38's shape), and when each scanned. */

@@ -1,0 +1,353 @@
+/* A talent tree as the game's talent frame, its talent tooltip and the tree tooltip (WEB-100, board
+   talent-tooltips-v2, WB101). Sizes per use: the frame (--size-talent, desktop and phone gaps), the tree tooltip's small
+   tree (--size-talent-mini). */
+
+/* A talent's tooltip over the tree's dialog (z 61, TalentTooltip.module.css); `[class]` outranks the item tooltip's
+   z-index whichever stylesheet the build puts last. */
+.overDialog[class] {
+  z-index: 62;
+}
+
+.frame {
+  box-sizing: border-box;
+  border: var(--border) solid var(--line-talent-frame);
+  border-radius: var(--r-talent-frame);
+  overflow: hidden;
+  background: var(--talent-frame);
+  box-shadow: var(--shadow-talent-frame);
+}
+
+.frame[data-size="full"] {
+  --s: var(--size-talent);
+  --gx: var(--s-talent-x);
+  --gy: var(--s-talent-y);
+  --pad: var(--s-talent-pad);
+}
+
+@media (max-width: 767px) {
+  .frame[data-size="full"] {
+    --gx: var(--s-talent-x-phone);
+    --gy: var(--s-talent-y-phone);
+    --pad: var(--s-talent-pad-phone);
+  }
+}
+
+.frame[data-size="mini"] {
+  --s: var(--size-talent-mini);
+  --gx: var(--s-talent-x-mini);
+  --gy: var(--s-talent-y-mini);
+  --pad: var(--s-talent-pad-mini);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: var(--s-2-5) var(--s-3);
+  border-bottom: var(--border) solid var(--line-talent-head);
+  background: var(--talent-frame-head);
+}
+
+.treeIcon {
+  width: var(--size-talent-tree-icon);
+  height: var(--size-talent-tree-icon);
+  border-radius: var(--r-pill);
+}
+
+.treeName {
+  font-family: var(--font-display);
+  font-size: var(--fs-talent-tree);
+  letter-spacing: var(--ls-section);
+  color: var(--gold-bright);
+}
+
+.treePoints {
+  margin-left: auto;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--game-yellow);
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--talent-columns), var(--s));
+  grid-template-rows: repeat(var(--talent-rows), var(--s));
+  column-gap: var(--gx);
+  row-gap: var(--gy);
+  width: max-content;
+  margin: 0 auto;
+  padding: var(--pad);
+}
+
+.cell {
+  display: block;
+  width: var(--s);
+  height: var(--s);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+button.cell {
+  cursor: pointer;
+}
+
+.cell:focus-visible {
+  outline: var(--border-strong) solid var(--gold-bright);
+  outline-offset: var(--border-strong);
+  border-radius: var(--r-talent);
+}
+
+/* A talent's icon in the game's states. */
+.icon {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: var(--s);
+  height: var(--s);
+  border-radius: var(--r-talent);
+  border: var(--border-strong) solid var(--line-talent);
+  background: var(--talent-empty);
+  box-shadow: var(--shadow-talent);
+}
+
+.icon[data-size="list"] {
+  --s: var(--size-talent-list);
+  border-width: var(--border);
+}
+
+.icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--r-talent) - var(--border-strong));
+}
+
+.icon[data-state="full"] {
+  border-color: var(--game-yellow);
+  box-shadow: var(--shadow-talent-full);
+}
+
+.icon[data-state="partial"] {
+  border-color: var(--game-green);
+  box-shadow: var(--shadow-talent-partial);
+}
+
+.icon[data-state="open"] {
+  border-color: var(--line-talent-open);
+}
+
+.icon[data-state="locked"] {
+  filter: var(--filter-talent-locked);
+}
+
+.cell[data-picked] .icon {
+  box-shadow: var(--ring-talent-picked);
+}
+
+/* The game's rank box, bottom right. */
+.rank {
+  position: absolute;
+  right: var(--s-talent-rank);
+  bottom: var(--s-talent-rank);
+  box-sizing: border-box;
+  min-width: var(--size-talent-rank);
+  height: var(--size-talent-rank-h);
+  padding: 0 var(--s-0-75);
+  border-radius: var(--r-talent-rank);
+  border: var(--border) solid var(--line-talent-rank);
+  background: var(--talent-rank-bg);
+  font-size: var(--fs-talent-rank);
+  font-weight: var(--fw-bold);
+  line-height: calc(var(--size-talent-rank-h) - 2 * var(--border));
+  text-align: center;
+  color: var(--talent-rank-text);
+}
+
+.icon[data-state="full"] .rank {
+  border-color: var(--line-talent-rank-full);
+  color: var(--game-yellow);
+}
+
+.icon[data-state="partial"] .rank {
+  border-color: var(--line-talent-rank-partial);
+  color: var(--game-green);
+}
+
+/* Prerequisite arrows, between the talents' edges: down a column or across a row. */
+.arrow {
+  position: absolute;
+  border-radius: var(--border-strong);
+  background: var(--talent-arrow);
+  color: var(--talent-arrow);
+}
+
+.arrow[data-active] {
+  background: var(--game-yellow);
+  color: var(--game-yellow);
+}
+
+.arrow::after {
+  content: "";
+  position: absolute;
+  border: var(--size-talent-arrow-head) solid transparent;
+}
+
+.arrow[data-dir="down"] {
+  left: calc(var(--pad) + (var(--c1) - 1) * (var(--s) + var(--gx)) + (var(--s) - var(--size-talent-arrow)) / 2);
+  top: calc(var(--pad) + var(--r1) * var(--s) + (var(--r1) - 1) * var(--gy) + var(--s-1));
+  width: var(--size-talent-arrow);
+  height: calc(
+    (var(--r2) - var(--r1)) * (var(--s) + var(--gy)) - var(--s) - 2 * var(--s-1) - var(--size-talent-arrow-head)
+  );
+}
+
+.arrow[data-dir="down"]::after {
+  left: calc(var(--size-talent-arrow) / 2 - var(--size-talent-arrow-head));
+  top: 100%;
+  border-top-color: currentColor;
+}
+
+.arrow[data-dir="across"] {
+  top: calc(var(--pad) + (var(--r1) - 1) * (var(--s) + var(--gy)) + (var(--s) - var(--size-talent-arrow)) / 2);
+  left: calc(var(--pad) + var(--c1) * var(--s) + (var(--c1) - 1) * var(--gx) + var(--s-1));
+  height: var(--size-talent-arrow);
+  width: calc(
+    (var(--c2) - var(--c1)) * (var(--s) + var(--gx)) - var(--s) - 2 * var(--s-1) - var(--size-talent-arrow-head)
+  );
+}
+
+.arrow[data-dir="across"]::after {
+  top: calc(var(--size-talent-arrow) / 2 - var(--size-talent-arrow-head));
+  left: 100%;
+  border-left-color: currentColor;
+}
+
+/* The talent tooltip, in the game's format. */
+.tip {
+  box-sizing: border-box;
+  width: var(--size-game-tooltip);
+  max-width: calc(100vw - var(--s-4));
+  padding: var(--s-2-25) var(--s-2-75);
+  border-radius: var(--r-talent-tip);
+  border: var(--border) solid var(--line-game);
+  background: var(--surface-talent-tip);
+  box-shadow: var(--shadow-game);
+  font-family: var(--font-ui);
+  font-size: var(--fs-game);
+  line-height: var(--lh-game);
+  color: var(--game-text);
+  overflow-wrap: anywhere;
+}
+
+.tip[data-width="full"] {
+  width: 100%;
+  max-width: none;
+}
+
+.tipName {
+  font-size: var(--fs-game-title);
+  font-weight: var(--fw-semibold);
+}
+
+.tipTree {
+  font-size: var(--fs-game-title);
+  font-weight: var(--fw-semibold);
+  color: var(--class-text, var(--game-text));
+}
+
+.gold {
+  color: var(--game-yellow);
+}
+
+.nextLabel {
+  margin-top: var(--s-2);
+}
+
+.red {
+  color: var(--game-red);
+}
+
+.muted {
+  color: var(--game-muted);
+}
+
+/* The tree tooltip: the small tree left, the talents with points right. */
+.treeTip {
+  display: grid;
+  grid-template-columns: var(--size-talent-tree-mini) minmax(0, 1fr);
+  box-sizing: border-box;
+  width: var(--size-talent-tree-tip);
+  max-width: calc(100vw - var(--s-4));
+  border-radius: var(--r-talent-tip);
+  border: var(--border) solid var(--line-game);
+  background: var(--surface-talent-tip);
+  box-shadow: var(--shadow-game);
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: var(--fs-game);
+  line-height: var(--lh-game);
+  color: var(--game-text);
+}
+
+.treeTipMini {
+  border-right: var(--border) solid var(--line-talent-split);
+}
+
+.treeTipMini .frame {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.treeTipList {
+  padding: var(--s-2-5) var(--s-3);
+}
+
+.treeTipPoints {
+  margin-left: var(--s-1-5);
+  font-size: var(--fs-game);
+  font-weight: var(--fw-medium);
+  color: var(--game-yellow);
+}
+
+.ranked {
+  display: grid;
+  grid-template-columns: var(--size-talent-list) minmax(0, 1fr) auto;
+  gap: var(--s-2-5);
+  align-items: start;
+  padding: var(--s-1-5) 0;
+}
+
+.ranked + .ranked {
+  border-top: var(--border) solid var(--line-talent-list);
+}
+
+.rankedName {
+  font-size: var(--fs-talent-name);
+  font-weight: var(--fw-semibold);
+}
+
+.rankedText {
+  font-size: var(--fs-talent-text);
+  line-height: var(--lh-talent-text);
+  color: var(--game-yellow);
+}
+
+.pill {
+  padding: var(--s-0-5) var(--s-1-5);
+  border-radius: var(--r-talent-rank);
+  border: var(--border) solid var(--line-talent-rank-full);
+  background: var(--talent-rank-bg);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  color: var(--game-yellow);
+}
+
+.pill[data-state="partial"] {
+  border-color: var(--line-talent-rank-partial);
+  color: var(--game-green);
+}

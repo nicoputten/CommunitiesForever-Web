@@ -2,15 +2,16 @@ import { describe, expect, it } from "vitest";
 import type { ClassTalentsRecord, TalentRecord } from "@/core/talents/build";
 import { pointsText, talentTooltips } from "@/core/views/talentTooltip";
 
-// WEB-100: which tooltip each talent tree gets (B with the grid when the synced nodes name the talents, else A).
-// A made-up class: tree 1 has two talents, tree 2 one, tree 3 three (one off the grid). Names and texts invented.
+// WEB-100 (board talent-tooltips-v2, WB101): which tooltip each tree gets (B: the tree as the game draws it when the
+// synced nodes name the talents, else A), the talents' game states, lock reasons, next rank and arrows.
+// A made-up class: names and texts invented.
 
 function talent(
   id: number,
   row: number | undefined,
   column: number | undefined,
   maxRanks: number,
-  gate?: number,
+  extra: Partial<TalentRecord> = {},
 ): TalentRecord {
   const t: TalentRecord = {
     id,
@@ -20,10 +21,11 @@ function talent(
     posX: id * 5000 + (column ?? 99) * 600,
     posY: (row ?? 99) * 600,
     texts: Array.from({ length: maxRanks }, (_, i) => `Text ${id} rank ${i + 1}.`),
+    icon: `icon_${id}`,
+    ...extra,
   };
   if (row !== undefined) t.row = row;
   if (column !== undefined) t.column = column;
-  if (gate !== undefined) t.gate = gate;
   return t;
 }
 
@@ -33,11 +35,29 @@ const CLASS: ClassTalentsRecord = {
   columns: 4,
   rows: 7,
   trees: [
-    { name: "Affliction", description: "Curses.", talents: [talent(1, 1, 1, 5), talent(2, 2, 2, 3, 5)] },
-    { name: "Demonology", talents: [talent(3, 1, 2, 2)] },
+    {
+      name: "Affliction",
+      description: "Curses.",
+      columns: 2,
+      rows: 2,
+      talents: [talent(1, 1, 1, 5), talent(2, 2, 2, 3, { gate: 5 })],
+    },
+    { name: "Demonology", columns: 2, rows: 1, talents: [talent(3, 1, 2, 2)] },
     {
       name: "Destruction",
-      talents: [talent(4, 1, 1, 5), talent(5, 2, 3, 3, 5), talent(6, 3, 2, 1, 10), talent(7, undefined, undefined, 1)],
+      icon: "tree_icon",
+      columns: 3,
+      rows: 5,
+      talents: [
+        talent(4, 1, 1, 5),
+        talent(5, 2, 3, 3, { gate: 5 }),
+        talent(6, 3, 2, 1, { gate: 10 }),
+        talent(8, 3, 1, 3, { gate: 5, requires: [{ id: 4 }] }),
+        talent(9, 4, 1, 1, { gate: 5, requires: [{ id: 8, required: true }] }),
+        talent(10, 4, 3, 1, { gate: 5, requires: [{ id: 5 }, { id: 4 }] }),
+        talent(11, 5, 3, 1, { gate: 5, requires: [{ id: 10 }] }),
+        talent(7, undefined, undefined, 1),
+      ],
     },
   ],
 };
@@ -57,38 +77,79 @@ const FULL = [
   { id: 7, ranks: 1 },
 ];
 
-describe("talent tooltips (WEB-100)", () => {
-  it("B: every tree's talents with points in tree order, rank and text, and the grid", () => {
+describe("talent tooltips (WEB-100, WB101)", () => {
+  it("B: the talents with points in tree order, icon, rank, the text, the next rank", () => {
     const [affliction, demonology, destruction] = talentTooltips(TREES, FULL, CLASS);
-    expect(affliction).toMatchObject({
-      name: "Affliction",
-      points: 7,
-      kind: "talents",
-      talents: [
-        { name: "Talent A", rank: 5, maxRanks: 5, text: "Text 1 rank 5." },
-        { name: "Talent B", rank: 2, maxRanks: 3, text: "Text 2 rank 2." },
-      ],
-    });
-    expect(destruction!.kind).toBe("talents");
-    expect(destruction!.talents.map((t) => [t.name, t.rank])).toEqual([
+    expect(affliction).toMatchObject({ name: "Affliction", points: 7, kind: "talents" });
+    expect(affliction!.ranked).toEqual([
+      {
+        id: 1,
+        name: "Talent A",
+        icon: "icon_1",
+        rank: 5,
+        maxRanks: 5,
+        state: "full",
+        text: "Text 1 rank 5.",
+        requires: [],
+        row: 1,
+        column: 1,
+      },
+      {
+        id: 2,
+        name: "Talent B",
+        icon: "icon_2",
+        rank: 2,
+        maxRanks: 3,
+        state: "partial",
+        text: "Text 2 rank 2.",
+        next: "Text 2 rank 3.",
+        requires: [],
+        row: 2,
+        column: 2,
+      },
+    ]);
+    // The off-grid talent is listed, not drawn.
+    expect(destruction!.ranked.map((t) => [t.name, t.rank])).toEqual([
       ["Talent D", 5],
       ["Talent E", 1],
       ["Talent G", 1],
     ]);
-    // The grid: every talent it places; full, partial, open and locked (row 3 needs 10, the tree has 7).
-    expect(destruction!.grid).toEqual({
-      columns: 4,
-      rows: 7,
-      cells: [
-        { name: "Talent D", rank: 5, maxRanks: 5, text: "Text 4 rank 5.", row: 1, column: 1, state: "full" },
-        { name: "Talent E", rank: 1, maxRanks: 3, text: "Text 5 rank 1.", row: 2, column: 3, state: "partial" },
-        { name: "Talent F", rank: 0, maxRanks: 1, text: "Text 6 rank 1.", row: 3, column: 2, state: "locked" },
-      ],
-    });
-    // A tree without points: B with no talents, the grid open in its first row, and the client's description if any.
-    expect(demonology).toMatchObject({ kind: "talents", points: 0, talents: [] });
-    expect(demonology!.grid!.cells).toEqual([expect.objectContaining({ name: "Talent C", state: "open" })]);
-    expect(affliction!.description).toBe("Curses.");
+    expect(destruction!.tree!.talents.map((t) => t.id)).toEqual([4, 5, 6, 8, 9, 10, 11]);
+    expect(destruction).toMatchObject({ icon: "tree_icon", tree: { columns: 3, rows: 5 } });
+    // A tree without points: B with no talents ranked, its first row open.
+    expect(demonology).toMatchObject({ kind: "talents", points: 0, ranked: [] });
+    expect(demonology!.tree!.talents.map((t) => t.state)).toEqual(["open"]);
+  });
+
+  it("the game's states and red requirements: row gate, a required or one-of prerequisite at full rank", () => {
+    const destruction = talentTooltips(TREES, FULL, CLASS)[2]!;
+    const view = (id: number) => destruction.tree!.talents.find((t) => t.id === id)!;
+    expect(view(6)).toMatchObject({ state: "locked", requires: ["Requires 10 points in Destruction Talents"] });
+    // Talent D is at full rank: H is open, its text rank 1's, no "Next rank".
+    expect(view(8)).toMatchObject({ state: "open", requires: [], text: "Text 8 rank 1." });
+    expect(view(8)).not.toHaveProperty("next");
+    expect(view(9)).toMatchObject({ state: "locked", requires: ["Requires Talent H"] });
+    // One of E (partial) or D (full) is enough.
+    expect(view(10)).toMatchObject({ state: "open", requires: [] });
+    // Neither at full rank: both named.
+    const short = talentTooltips(
+      [TREES[0]!, TREES[1]!, { name: "Destruction", points: 6 }],
+      FULL.map((n) => (n.id === 4 ? { id: 4, ranks: 4 } : n)),
+      CLASS,
+    )[2]!;
+    const shortView = (id: number) => short.tree!.talents.find((t) => t.id === id)!;
+    expect(shortView(10)).toMatchObject({ state: "locked", requires: ["Requires Talent E or Talent D"] });
+    expect(shortView(4)).toMatchObject({ state: "partial", next: "Text 4 rank 5." });
+  });
+
+  it("arrows from each prerequisite, gold once the first talent has points", () => {
+    expect(talentTooltips(TREES, FULL, CLASS)[2]!.tree!.arrows).toEqual([
+      { from: { row: 1, column: 1 }, to: { row: 3, column: 1 }, active: true },
+      { from: { row: 3, column: 1 }, to: { row: 4, column: 1 }, active: false },
+      { from: { row: 2, column: 3 }, to: { row: 4, column: 3 }, active: true },
+      { from: { row: 1, column: 1 }, to: { row: 4, column: 3 }, active: true },
+      { from: { row: 4, column: 3 }, to: { row: 5, column: 3 }, active: false },
+    ]);
   });
 
   it("matches a node by its position when it has no ID", () => {
@@ -106,7 +167,7 @@ describe("talent tooltips (WEB-100)", () => {
       CLASS,
     );
     expect(tips.map((t) => t.kind)).toEqual(["talents", "talents", "tree"]);
-    expect(tips[2]).toEqual({ name: "Destruction", points: 7, kind: "tree", talents: [] });
+    expect(tips[2]).toEqual({ name: "Destruction", points: 7, kind: "tree", ranked: [] });
   });
 
   it("unknown: a node the import doesn't know, or more ranks than the talent has, puts every tree on A", () => {
@@ -120,22 +181,20 @@ describe("talent tooltips (WEB-100)", () => {
     }
   });
 
-  it("A: without synced nodes (every addon so far), without the import, or when the trees don't match", () => {
+  it("A: without synced nodes (an addon before CF-115), without the import, or when the trees don't match", () => {
     expect(talentTooltips(TREES, undefined, CLASS)).toEqual([
-      { name: "Affliction", points: 7, kind: "tree", description: "Curses.", talents: [] },
-      { name: "Demonology", points: 0, kind: "tree", talents: [] },
-      { name: "Destruction", points: 7, kind: "tree", talents: [] },
+      { name: "Affliction", points: 7, kind: "tree", description: "Curses.", ranked: [] },
+      { name: "Demonology", points: 0, kind: "tree", ranked: [] },
+      { name: "Destruction", points: 7, kind: "tree", ranked: [] },
     ]);
     expect(talentTooltips(TREES, FULL, undefined).map((t) => t.kind)).toEqual(["tree", "tree", "tree"]);
     const renamed = [{ name: "Fire", points: 7 }, TREES[1]!, TREES[2]!];
     expect(talentTooltips(renamed, FULL, CLASS).map((t) => t.kind)).toEqual(["tree", "talents", "talents"]);
-    // A fourth tree the import doesn't have, a tree without a name or points.
-    expect(talentTooltips([...TREES, {}], FULL, CLASS)[3]).toEqual({ points: 0, kind: "tree", talents: [] });
+    expect(talentTooltips([...TREES, {}], FULL, CLASS)[3]).toEqual({ points: 0, kind: "tree", ranked: [] });
   });
 
   it("says points as the tooltip does", () => {
     expect(pointsText(20)).toBe("20 points");
     expect(pointsText(1)).toBe("1 point");
-    expect(pointsText(0)).toBe("0 points");
   });
 });

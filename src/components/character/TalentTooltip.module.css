@@ -1,7 +1,7 @@
-/* The talent tooltips (WEB-100, board talent-tooltips): the tree's row as the trigger and the tooltip in the game's
-   look (the item tooltip's card, ../recipes/ItemTooltip.module.css). */
+/* A talent tree's row in the Talents box (WEB-100, board talent-tooltips-v2): the panel row's grid
+   (Panel.module.css .row) as a button, outlined in gold while its tooltip or tree is open; the desktop dialog with the
+   whole tree and the phone sheet's content. */
 
-/* A tree's row: the panel row's grid (Panel.module.css .row) as a button, outlined in gold while its tooltip is open. */
 .row {
   display: grid;
   grid-template-columns: var(--size-character-label) minmax(0, 1fr) var(--size-character-value);
@@ -22,6 +22,10 @@
   cursor: default;
 }
 
+.row[aria-haspopup] {
+  cursor: pointer;
+}
+
 .row[data-open] {
   background: var(--tint-talent-row);
   box-shadow: var(--ring-talent-row);
@@ -39,121 +43,33 @@
   }
 }
 
-/* With the attribute: wins over the item card's width whichever stylesheet the build puts last. */
-.card[data-width="list"] {
-  width: var(--size-talent-tooltip);
+/* The phone sheet's content: the tree, a tapped talent's tooltip under it. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
 }
 
-.card[data-width="grid"] {
-  width: var(--size-talent-tooltip-grid);
+/* Desktop: the whole tree, centred over the page. */
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--s-4);
+  border-radius: var(--r-panel);
+  border: var(--border) solid var(--line-strong);
+  background: var(--surface-drawer);
+  box-shadow: var(--shadow-sheet-lg);
+  transform: translate(-50%, -50%);
 }
 
-.card[data-width="full"] {
-  width: 100%;
-  max-width: none;
-}
-
-.title {
-  font-size: var(--fs-section);
-  font-weight: var(--fw-semibold);
-  color: var(--class-text, var(--game-text));
-}
-
-.description {
-  color: var(--game-muted);
-}
-
-.talent {
-  margin-top: var(--s-2);
-}
-
-.name {
-  font-weight: var(--fw-semibold);
-}
-
-.rank {
-  margin-left: var(--s-1-5);
-  font-weight: var(--fw-medium);
-  color: var(--game-yellow);
-}
-
-.text {
-  color: var(--game-yellow);
-  opacity: var(--opacity-talent-text);
-}
-
-/* B with the grid: the grid left of the list on a desktop, above it on a phone. */
-.withGrid {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--s-4);
-}
-
-.gridColumn {
-  padding-top: var(--s-1);
-}
-
-.gridAbove {
-  margin-top: var(--s-2);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--talent-columns), var(--size-talent-icon));
-  grid-template-rows: repeat(var(--talent-rows), var(--size-talent-icon));
-  gap: var(--s-1-5);
-}
-
-.cell {
-  position: relative;
-  box-sizing: border-box;
-  width: var(--size-talent-icon);
-  height: var(--size-talent-icon);
-  border-radius: var(--r-talent-icon);
-  border: var(--border) solid var(--line-talent-icon);
-  background: var(--talent-icon);
-}
-
-.cell[data-state="full"] {
-  border-color: var(--gold-bright);
-  background: var(--talent-icon-taken);
-}
-
-.cell[data-state="partial"] {
-  border-color: var(--game-green);
-  background: var(--talent-icon-taken);
-}
-
-.cell[data-state="locked"] {
-  opacity: var(--opacity-talent-locked);
-}
-
-.cell:focus-visible {
-  outline: var(--border-strong) solid var(--gold-bright);
-  outline-offset: var(--border-strong);
-}
-
-.glyph {
-  position: absolute;
-  inset: var(--s-0-75);
-  fill: var(--talent-glyph);
-  opacity: var(--opacity-talent-glyph);
-}
-
-.badge {
-  position: absolute;
-  right: calc(-1 * var(--s-1));
-  bottom: calc(-1 * var(--s-1-25));
-  padding: var(--border) var(--s-0-5);
-  border-radius: var(--r-talent-rank);
-  background: var(--bg-night);
-  font-size: var(--fs-talent-rank);
-  font-weight: var(--fw-bold);
-  line-height: 1;
-  color: var(--talent-rank-text);
-}
-
-/* A grid talent's own small tooltip (name, rank, text). */
-.cellCard .talent {
-  margin-top: 0;
+.close {
+  align-self: flex-end;
 }

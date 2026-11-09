@@ -115,30 +115,47 @@ test("phone: one column in the decided order", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
-// WEB-100 (board talent-tooltips): a tree's row opens its tooltip; Ves syncs the talents (B with the grid), Grom only
-// points per tree (A).
-test("a talent tree's row opens its tooltip: the talents and the grid, or the tree only", async ({ page }) => {
+// WEB-100 (board talent-tooltips-v2, WB101): a tree's row opens its tooltip, a click or tap the tree as the game's
+// talent frame with each talent's tooltip. Ves syncs the talents (B), Grom only points per tree (A).
+test("a talent tree's row opens its tooltip and its tree, a talent its game tooltip", async ({ page }) => {
   await page.goto(VES);
   const destruction = region(page, "Talents").getByRole("button", { name: /^Destruction/ });
-  if (isPhone(page)) await destruction.click();
-  else await destruction.hover();
-  const tip = page.getByTestId("talent-tooltip");
-  await expect(tip).toContainText("Destruction20 points");
-  await expect(tip).toContainText(
-    "Ruin5/5Increases the critical strike damage bonus of your Destruction spells by 100%.",
-  );
-  await expect(tip.getByTestId("talent-grid").locator("[data-state]")).toHaveCount(16);
-  if (isPhone(page)) {
-    await expect(page.getByRole("dialog", { name: "Destruction" })).toBeVisible();
-    await page.keyboard.press("Escape");
-  } else {
-    await page.getByRole("heading", { level: 1 }).hover();
+  if (!isPhone(page)) {
+    // The tree tooltip: the small tree and the talents with points.
+    await destruction.hover();
+    const tip = page.getByTestId("talent-tooltip");
+    await expect(tip).toContainText("Destruction 20 points");
+    await expect(tip).toContainText(
+      "Ruin" + "Increases the critical strike damage bonus of your Destruction spells by 100%.5/5",
+    );
+    await expect(tip.getByTestId("talent-tree-mini")).toBeVisible();
   }
-  await expect(tip).toBeHidden();
+  await destruction.click();
+  const tree = page.getByTestId("talent-tree");
+  await expect(page.getByRole("dialog", { name: "Destruction" })).toBeVisible();
+  await expect(tree).toContainText("Destruction20 points");
+  const talent = (name: RegExp) => tree.getByRole(isPhone(page) ? "button" : "img", { name });
+  await expect(talent(/ \d\/\d/)).toHaveCount(16);
+  for (const [name, lines] of [
+    [
+      /^Aftermath 2\/5$/,
+      ["Aftermath", "Rank 2/5", "Gives your Destruction spells a 4% chance", "Next rank:", "6% chance"],
+    ],
+    [/^Pyroclasm 0\/2, locked$/, ["Pyroclasm", "Rank 0/2", "Requires Intensity"]],
+  ] as const) {
+    if (isPhone(page)) await talent(name).click();
+    else await talent(name).hover();
+    const game = page.getByTestId("talent-tip").last();
+    for (const line of lines) await expect(game).toContainText(line);
+    if (!isPhone(page)) await page.mouse.move(1, 1);
+  }
+  if (isPhone(page)) await page.keyboard.press("Escape");
+  else await page.getByRole("button", { name: "Close" }).click();
+  await expect(tree).toBeHidden();
 
   await page.goto("/character/Player-1-0000A002");
   const protection = region(page, "Talents").getByRole("button", { name: /^Protection/ });
   if (isPhone(page)) await protection.click();
   else await protection.focus();
-  await expect(tip).toHaveText("Protection10 points");
+  await expect(page.getByTestId("talent-tooltip")).toHaveText("Protection10 points");
 });
