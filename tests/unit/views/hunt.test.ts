@@ -53,6 +53,24 @@ describe("the quarry", () => {
     expect(dayTarget(day(TODAY))).toBeUndefined();
   });
 
+  it("WEB-112: one faction, no other box; the Alliance's own side when the group plays only Alliance", () => {
+    const days = [day(TODAY, [7, 8], [5, 4]), day(TODAY + 1, [1, 1], [2, 1])];
+    const both = {
+      Alliance: { n: TODAY, target: target("Alliance", 7, 8), points: 5 },
+      Horde: { n: TODAY, target: target("Horde", 5, 4), points: 5 },
+    };
+    const horde = quarry({ Alliance: both.Alliance }, days, TODAY, ["Horde"]);
+    expect(horde).toMatchObject({ hunter: "Horde hunts", target: { name: "Gnome Mage" } });
+    expect(horde.other).toBeUndefined();
+    const alliance = quarry({ Horde: both.Horde }, days, TODAY, ["Alliance"]);
+    expect(alliance).toMatchObject({ hunter: "Alliance hunts", target: { name: "Undead Rogue" } });
+    expect(alliance.other).toBeUndefined();
+    expect(alliance.next.map((d) => d.name)).toEqual(["Orc Warrior"]);
+    expect(dayTarget(days[0], "Alliance")).toBe("Undead Rogue");
+    // Both (or none known): as before.
+    expect(quarry(both, days, TODAY, ["Horde", "Alliance"]).other?.hunter).toBe("Alliance hunts");
+  });
+
   it("no Hunt drawn: no target, no stats, no days", () => {
     const q = quarry({}, [], TODAY);
     expect(q.target).toBeUndefined();
@@ -69,6 +87,11 @@ describe("Hunt targets", () => {
     ).toEqual(["Hu", "Dw", "NE", "Gn", "Sk", "Or", "Ud", "Ta", "Tr"]);
     expect(targetNameOf(4, 11)).toBe("Night Elf Druid");
     expect(targetNameOf(96, 7)).toBe("Skyborne Shaman");
+  });
+
+  it("WEB-112: one tab for a group of one faction (the page then shows none)", () => {
+    expect(tabs(targetsView(), ["Horde"]).map((t) => t.label)).toEqual(["Horde hunts · Alliance targets"]);
+    expect(tabs(targetsView(), ["Alliance"]).map((t) => t.label)).toEqual(["Alliance hunts · Horde targets"]);
   });
 
   it("tabs per hunting faction, Horde first, with the targets in the draw", () => {

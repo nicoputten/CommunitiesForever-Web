@@ -247,8 +247,12 @@ export function huntToday(
     }),
   };
   if (rows.length > TODAY_FRIENDS) view.more = { text: `+ ${rows.length - TODAY_FRIENDS} more`, href: BOARD_HUNT_HREF };
+  // The viewer's faction's; else the first the group hunts (the server gives only those, WEB-112).
   const hunted = viewerKey === undefined ? undefined : friendOf(data, viewerKey)?.hunts[0];
-  const tomorrow = data.hunt.tomorrow[hunted ?? "Alliance"];
+  const tomorrow =
+    (hunted === undefined ? undefined : data.hunt.tomorrow[hunted]) ??
+    data.hunt.tomorrow.Alliance ??
+    data.hunt.tomorrow.Horde;
   if (tomorrow !== undefined) view.tomorrow = quarryView(tomorrow);
   return view;
 }

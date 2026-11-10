@@ -11,6 +11,7 @@ import {
   MAX_PVP_RANK,
   PVP_RANKS,
 } from "./feats";
+import { groupHunted } from "./hunt";
 import type { GoalRecord } from "./record";
 import {
   crown as crownOf,
@@ -400,15 +401,18 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     c === undefined
       ? undefined
       : { id: `hunt:${c.race}:${c.class}`, track: "pvp", slot: "hunt", title: huntTitle(c), known: true };
+  // Only the factions the group hunts (WEB-112): the board's Hunt column and the bot's title never show the other.
+  const group = groupHunted(input.data);
   const hunts: DoomsdaySnapshot["hunts"] = {};
   const allianceHunt = huntRef(dayDraw.hunt?.Horde);
   const hordeHunt = huntRef(dayDraw.hunt?.Alliance);
-  if (allianceHunt !== undefined) hunts.alliance = allianceHunt;
-  if (hordeHunt !== undefined) hunts.horde = hordeHunt;
+  if (allianceHunt !== undefined && group.includes("Alliance")) hunts.alliance = allianceHunt;
+  if (hordeHunt !== undefined && group.includes("Horde")) hunts.horde = hordeHunt;
   /**
-   * A friend's Hunts: one per faction of their characters (Horde first), the board's Alliance Hunt when none is known
-   * (the group plays Horde, Nico 2026-10-28). Empty when today has no Hunt. The Hunts of the friend's recorded pool
-   * version: a day an older addon drew keeps its own combination (pool 4 draws Vanilla's 20, WEB-106).
+   * A friend's Hunts: one per faction of their characters (Horde first); when none is known, the group's first hunted
+   * faction (`groupHunted`: Alliance unless the group plays only Alliance). Empty when today has no Hunt. The Hunts of
+   * the friend's recorded pool version: a day an older addon drew keeps its own combination (pool 4 draws Vanilla's 20,
+   * WEB-106).
    */
   const huntsOf = (f: Friend, version: number): { ref: GoalRef; column: string }[] => {
     const own =
@@ -416,10 +420,12 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
         ? hunts
         : { alliance: huntRef(draw(today, version).hunt?.Horde), horde: huntRef(draw(today, version).hunt?.Alliance) };
     const factions = new Set(f.chars.map((c) => c.faction));
+    const none = !factions.has("Horde") && !factions.has("Alliance");
     const out: { ref: GoalRef; column: string }[] = [];
-    if (own.alliance !== undefined && (factions.has("Horde") || !factions.has("Alliance")))
+    if (own.alliance !== undefined && (factions.has("Horde") || (none && group[0] === "Alliance")))
       out.push({ ref: own.alliance, column: "hunt:alliance" });
-    if (own.horde !== undefined && factions.has("Alliance")) out.push({ ref: own.horde, column: "hunt:horde" });
+    if (own.horde !== undefined && (factions.has("Alliance") || (none && group[0] === "Horde")))
+      out.push({ ref: own.horde, column: "hunt:horde" });
     return out;
   };
 

@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { beforeRosters } from "./beforeRosters";
 import { targetOf } from "@/core/doomsday/hunt";
@@ -8,7 +9,7 @@ import { dayStart } from "@/core/doomsday/rules";
 import { logParts } from "@/core/views/admin";
 import { listLog, OwnerOnlyError } from "@/server/admins";
 import { openDatabase, type Db } from "@/server/db";
-import { feats, huntCensusFetch, missionSettings } from "@/server/db/schema";
+import { characters, feats, huntCensusFetch, missionSettings } from "@/server/db/schema";
 import {
   doomsdayHunt,
   type Fetch,
@@ -252,5 +253,46 @@ describe("the Mission pool page v2", () => {
     expect(page.quarry.Alliance!.target.key).toBe(page.days[0]!.hunt.targets.Alliance!.key);
     expect(page.next).toHaveLength(7);
     expect(page.targets.factions.Horde.total).toBe(28);
+  });
+});
+
+describe("the group's factions (WEB-112)", () => {
+  const factionsAsked = (calls: { url: string }[]) => [
+    ...new Set(calls.map((c) => new URL(c.url).searchParams.get("faction"))),
+  ];
+
+  it("both factions (Ves Horde, Mira Alliance): both Hunts, 18 census calls", async () => {
+    const calls: { url: string }[] = [];
+    await runDueCensus(db, NOW, everloot(100, calls), KEY);
+    expect(calls).toHaveLength(18);
+    expect(factionsAsked(calls)).toEqual(["Alliance", "Horde"]);
+    const page = missionPoolPage(db, OWNER, NOW, OWNER);
+    expect(page.hunters).toEqual(["Horde", "Alliance"]);
+    expect(Object.keys(page.quarry).sort()).toEqual(["Alliance", "Horde"]);
+    expect(doomsdayHunt(db, NOW).hunters).toEqual(["Horde", "Alliance"]);
+  });
+
+  it("one faction (only Ves, Horde): only the Alliance targets, 9 census calls, both still drawn", async () => {
+    db.delete(characters).where(eq(characters.guid, "M")).run();
+    const calls: { url: string }[] = [];
+    await runDueCensus(db, NOW, everloot(100, calls), KEY);
+    expect(calls).toHaveLength(9);
+    expect(factionsAsked(calls)).toEqual(["Alliance"]);
+    const page = missionPoolPage(db, OWNER, NOW, OWNER);
+    expect(page.hunters).toEqual(["Horde"]);
+    expect(Object.keys(page.quarry)).toEqual(["Alliance"]);
+    const hunt = doomsdayHunt(db, NOW);
+    expect(Object.keys(hunt.hunt.quarry)).toEqual(["Alliance"]);
+    expect(Object.keys(hunt.hunt.tomorrow)).toEqual(["Alliance"]);
+    // The addon's schedule keeps both Hunts: the unused faction is drawn without a census, every target alike.
+    expect(huntPlanAt(db, NOW).every((d) => d.pick.Alliance !== undefined && d.pick.Horde !== undefined)).toBe(true);
+  });
+
+  it("no character known: both, as before", async () => {
+    db.delete(characters).run();
+    const calls: { url: string }[] = [];
+    await runDueCensus(db, NOW, everloot(100, calls), KEY);
+    expect(calls).toHaveLength(18);
+    expect(missionPoolPage(db, OWNER, NOW, OWNER).hunters).toEqual(["Horde", "Alliance"]);
   });
 });

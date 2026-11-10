@@ -7,6 +7,8 @@ import {
   comboIds,
   FACTIONS,
   friendHunt,
+  groupHunted,
+  groupHunters,
   type HuntEntry,
   type HuntFriend,
   huntDay,
@@ -33,7 +35,7 @@ import {
 import { CALENDAR_DAYS, PLAN_DAYS, type ScheduleHunt } from "@/core/doomsday/missionPool";
 import { dayRecipes, recipeTiles, themeCards } from "@/core/views/pool6Page";
 import type { GoalRecord } from "@/core/doomsday/record";
-import { dayOf, dayStart, draw, type Faction, POOL_VERSION, type Schedule } from "@/core/doomsday/rules";
+import { dayOf, dayStart, draw, enemyOf, type Faction, POOL_VERSION, type Schedule } from "@/core/doomsday/rules";
 import type {
   DayRecipeView,
   FriendHuntView,
@@ -70,7 +72,10 @@ export function populationUrl(): string {
   const base = process.env.EVERLOOT_API_URL;
   return `${base !== undefined && base !== "" ? base.replace(/\/$/, "") : "https://everloot.app"}/api/tools/population`;
 }
-/** The classes the census is asked for, one call per hunted faction and class: 18 calls a day. */
+/**
+ * The classes the census is asked for, one call per hunted faction and class: 18 calls a day, 9 when the group hunts
+ * one faction (WEB-112).
+ */
 const CENSUS_CLASSES = ["Warrior", "Paladin", "Hunter", "Rogue", "Priest", "Shaman", "Mage", "Warlock", "Druid"];
 /** One call's time limit. */
 const FETCH_TIMEOUT_MS = 15_000;
@@ -106,14 +111,20 @@ export type Fetch = (
 
 /**
  * Everloot's census: the population tool's race-and-class counts (window: active in the last 7 days), one call per
- * hunted faction and class, with the API key as a Bearer token (never logged, never sent elsewhere). Sequential, and it
- * stops at the first refusal (429: Everloot's limit; the next day tries again). Throws when no part came back.
+ * hunted faction and class, with the API key as a Bearer token (never logged, never sent elsewhere). Only the factions
+ * the group hunts (`groupHunted`, WEB-112): the other's targets have no counts then, and its draw (still made, the
+ * addon's schedule has both) takes every target alike. Sequential, and it stops at the first refusal (429: Everloot's
+ * limit; the next day tries again). Throws when no part came back.
  */
-export async function fetchCensus(fetchImpl: Fetch, apiKey: string | undefined): Promise<Census> {
+export async function fetchCensus(
+  fetchImpl: Fetch,
+  apiKey: string | undefined,
+  hunted: readonly Faction[] = FACTIONS,
+): Promise<Census> {
   const headers: Record<string, string> = { accept: "application/json" };
   if (apiKey !== undefined && apiKey !== "") headers.authorization = `Bearer ${apiKey}`;
   const parts: Census[] = [];
-  for (const faction of FACTIONS) {
+  for (const faction of FACTIONS.filter((f) => hunted.includes(f))) {
     for (const cls of CENSUS_CLASSES) {
       const url = `${populationUrl()}?${new URLSearchParams({ faction, class: cls, window: "week" })}`;
       const res = await fetchImpl(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
@@ -157,7 +168,7 @@ export async function runDueCensus(
     let census: Census | undefined;
     let error: string | undefined;
     try {
-      census = await fetchCensus(fetchImpl, apiKey);
+      census = await fetchCensus(fetchImpl, apiKey, groupHunted(loadUploads(db)?.data));
     } catch (e) {
       error = e instanceof Error ? e.message.slice(0, 200) : "failed";
     }
@@ -409,6 +420,8 @@ export interface DoomsdayHuntData {
   week: HuntWeekRow[];
   /** The next 7 days' quarries (MP05's strip), from tomorrow. */
   next: HuntPlannedDay[];
+  /** The factions the group hunts with (`groupHunters`, WEB-112): the pages show only their Hunts. */
+  hunters: Faction[];
 }
 
 /** What the Doomsday pages show of the Hunt (WEB-110). Every logged-in viewer. Stores days new to the plan. */
@@ -417,13 +430,17 @@ export function doomsdayHunt(db: Db, now: number): DoomsdayHuntData {
   const plan = storeHuntPlan(db, now);
   const stored = picks(db.select().from(huntPlan).all());
   const latest = latestCensus(db);
-  const kills = allHuntKills(db, now);
+  const data = loadUploads(db)?.data;
+  const kills = allHuntKills(db, now, data);
   const done = doneDays(db);
-  const friends = huntFriends(db).map((friend) =>
+  const hunters = groupHunters(data);
+  const group = groupHunted(data);
+  const friends = huntFriends(db, data).map((friend) =>
     friendHunt({
       friend,
       kills,
       today,
+      group,
       ...(latest !== undefined ? { census: latest.census, censusAt: latest.at } : {}),
       ...(done.has(friend.owner) ? { doneDays: done.get(friend.owner)! } : {}),
     }),
@@ -431,10 +448,11 @@ export function doomsdayHunt(db: Db, now: number): DoomsdayHuntData {
   return {
     today,
     todayStart: dayStart(today, s),
-    hunt: huntToday(today, stored, friends, latest?.census, latest?.at),
+    hunt: huntToday(today, stored, friends, latest?.census, latest?.at, group),
     friends,
     week: huntWeek(friends),
     next: plan.filter((d) => d.n > today && d.n <= today + 7),
+    hunters,
   };
 }
 
@@ -479,10 +497,11 @@ export function huntFeatsByOwner(tx: Db | Tx, now: number, data: Dataset): Recor
   const kills = allHuntKills(tx, now, data);
   if (kills.length === 0) return {};
   const rare = new Set(rareTargets(latestCensus(tx)?.census));
+  const group = groupHunted(data);
   const out: Record<string, HuntFeatProgress[]> = {};
   for (const f of huntFriends(tx, data)) {
     const mine = kills.filter((k) => k.owner === f.owner);
-    if (mine.length > 0) out[f.owner] = huntFeats(mine, huntedBy(f), rare);
+    if (mine.length > 0) out[f.owner] = huntFeats(mine, huntedBy(f, group), rare);
   }
   return out;
 }
@@ -498,6 +517,8 @@ export interface MissionPoolPage {
   quarry: HuntTodayView["quarry"];
   next: HuntDay[];
   targets: HuntTargetsView;
+  /** The factions the group hunts with (WEB-112): the quarry card's sides, the grid's tabs, the days' Hunt line. */
+  hunters: Faction[];
 }
 
 /** Everything the Mission pool page v2 shows (WEB-109, boards MP05–MP07). Owner only. Stores days new to the plan. */
@@ -505,7 +526,9 @@ export function missionPoolPage(db: Db, by: string, now: number, owner?: string)
   const data = missionPool(db, by, now, owner);
   const { view, plan } = huntTargetsFor(db, by, now, owner);
   const today = doomsdayHunt(db, now);
-  const inDraw = Math.round((view.factions.Alliance.inDraw + view.factions.Horde.inDraw) / 2);
+  // The recipe tile's "in the draw": the factions the group hunts (the other has no census since WEB-112).
+  const hunted = today.hunters.map(enemyOf);
+  const inDraw = Math.round(hunted.reduce((a, f) => a + view.factions[f].inDraw, 0) / hunted.length);
   return {
     pool: data,
     tiles: recipeTiles(data.settings, inDraw),
@@ -517,5 +540,6 @@ export function missionPoolPage(db: Db, by: string, now: number, owner?: string)
     quarry: today.hunt.quarry,
     next: today.next.map(huntDay),
     targets: view,
+    hunters: today.hunters,
   };
 }

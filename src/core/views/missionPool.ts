@@ -17,6 +17,7 @@ import {
   dayLabel,
   dayStart,
   DAY,
+  type Faction,
   goal,
   goalPoints,
   partOfDay,
@@ -45,6 +46,8 @@ export interface PoolData {
   quarry: Partial<Record<"Alliance" | "Horde", QuarryView>>;
   cards: readonly ThemeCardView[];
   targets: HuntTargetsView;
+  /** The factions the group hunts with (`groupHunters`, WEB-112), Horde first; both when not given. */
+  hunters?: readonly Faction[];
   /** A new PvP mission's MP07 tag: true "check", false "easy"; undefined: no tag (default: the catalogue's). */
   check?: (id: string) => boolean | undefined;
 }
@@ -316,7 +319,7 @@ function row(
   return r;
 }
 
-function tile(p: PlannedPeriod, today: number, d: DayRecipeView | undefined): DayTile {
+function tile(p: PlannedPeriod, today: number, d: DayRecipeView | undefined, hunter?: Faction): DayTile {
   // WEB-108's slots when it has the day, else the plan's (3 PvE, then the PvP slots).
   const pve = d?.pve ?? p.plan.filter((id) => !isPvp(id));
   const pvp = d !== undefined ? [d.skirmish, d.duel].filter((x) => x !== undefined) : p.plan.filter(isPvp);
@@ -328,7 +331,7 @@ function tile(p: PlannedPeriod, today: number, d: DayRecipeView | undefined): Da
     pve: pve.map(shortLabel),
     pvp: pvp.map(shortLabel),
   };
-  const hunt = dayTarget(d);
+  const hunt = dayTarget(d, hunter);
   if (hunt !== undefined) t.hunt = hunt;
   if (p.n === today) t.note = "today";
   else if (p.n === today + 1) t.note = "tomorrow";
@@ -513,8 +516,8 @@ export function missionPoolView(
   const view: MissionPoolView = {
     recipe: { day: "3 PvE + the Hunt + 2 PvP", week: "3 Weekly + a Bounty" },
     tiles: recipe(input.data.recipe),
-    quarry: quarry(input.data.quarry, input.data.days, input.today),
-    days: days.map((d) => tile(d, input.today, byDay.get(d.n))),
+    quarry: quarry(input.data.quarry, input.data.days, input.today, input.data.hunters),
+    days: days.map((d) => tile(d, input.today, byDay.get(d.n), input.data.hunters?.[0])),
     weeks: weeks.map((w) => weekTile(w, input.s, timeZone)),
     since: `since launch · ${Math.max(0, input.today - input.fromDay)} days`,
     filters,

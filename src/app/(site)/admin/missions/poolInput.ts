@@ -11,6 +11,7 @@ export function poolInput(page: MissionPoolPage): MissionPoolInput {
       quarry: page.quarry,
       cards: page.cards,
       targets: page.targets,
+      hunters: page.hunters,
     },
   };
 }
