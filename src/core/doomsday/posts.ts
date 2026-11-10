@@ -76,8 +76,13 @@ function dayOfBoard(snap: DoomsdaySnapshot): { label: string; span: string } {
 }
 const WEEK_SLOTS = ["week1", "week2", "week3", "bounty"];
 
+/** BOT-API promises at most 10 characters; pool version 6's PvP dailies have up to 13 (CF-118): cut for the bot. */
+const BOT_SHORT = 10;
+
 function botGoal(ref: GoalRef, slot: string, points: number): BotGoal {
-  const g: BotGoal = { slot, id: ref.id, title: ref.title, track: ref.track, points, shortLabel: shortLabel(ref.id) };
+  const short = shortLabel(ref.id);
+  const label = short.length > BOT_SHORT ? `${short.slice(0, BOT_SHORT - 1).trimEnd()}.` : short;
+  const g: BotGoal = { slot, id: ref.id, title: ref.title, track: ref.track, points, shortLabel: label };
   if (!ref.known) g.unknown = true;
   return g;
 }

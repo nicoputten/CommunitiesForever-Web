@@ -19,6 +19,13 @@ import { ADMIN } from "./sample";
 
 test.beforeEach(async ({ context, baseURL }) => signInAs(context, baseURL!, ADMIN));
 
+/**
+ * Dimmed by design, below AA contrast: today's and tomorrow's tiles and Off missions' rows (Nico 2026-11-10, WEB-109's
+ * docs/DESIGN.md "Deviations"), left out of the contrast check. The last selector is the current page's Off rows
+ * (pool 6's check missions start Off, WEB-108) until WEB-109's page replaces it.
+ */
+const DIMMED_BY_DESIGN = ['[data-testid="mission-day"][data-locked]', '[data-testid="theme-list"] [data-off]', "[data-off]"];
+
 /** The fourth day shown: free (today and tomorrow are locked). */
 async function freeDay(page: import("@playwright/test").Page): Promise<string> {
   await openScreen(page, "/admin/missions");
@@ -64,7 +71,7 @@ test("missions: touch targets", async ({ page }) => {
 
 test("missions: accessibility", async ({ page }) => {
   await openScreen(page, await freeDay(page));
-  await expectAccessible(page);
+  await expectAccessible(page, [], DIMMED_BY_DESIGN);
 });
 
 test("missions: reduced motion", async ({ page }) => {

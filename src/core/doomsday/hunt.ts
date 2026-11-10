@@ -574,7 +574,7 @@ export const HUNT_FEATS: readonly { id: HuntFeatId; name: string; text: string }
   { id: "f.huntClasses", name: "Every class", text: "Bag every class of the other faction" },
   { id: "f.huntAll", name: "Big game", text: "Bag all 28 race and class targets" },
   { id: "f.huntRare", name: "Rare quarry", text: "Bag a target under 1% of the census" },
-  { id: "f.huntWeek", name: "Hunter's week", text: "Bag the quarry 7 days in a row" },
+  { id: "f.huntWeek", name: "Hunter’s week", text: "Bag the quarry 7 days in a row" },
 ];
 
 /** A kill's time for a feat: its own, else the day's number as a stand-in order (never shown as a time). */

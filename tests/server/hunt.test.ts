@@ -18,6 +18,7 @@ import {
   huntTargetsFor,
   importCensus,
   latestCensus,
+  missionPoolPage,
   pinHunt,
   runDueCensus,
 } from "@/server/hunt";
@@ -236,5 +237,20 @@ describe("Hunt kills from an upload", () => {
   it("an older addon's feed without pvpKills still reads, and has no Hunt kills", () => {
     expect(upload(db, file(NOW + 120, "quests = { Durotar = 2 }"), OWNER, NOW + 120, OWNER).status).toBe("ok");
     expect(doomsdayHunt(db, NOW + 180).friends.every((f) => !f.todayDone && f.bagged.length === 0)).toBe(true);
+  });
+});
+
+describe("the Mission pool page v2", () => {
+  it("one call fills it for the owner: tiles, cards, 14 days with their Hunt, the quarry, the targets", () => {
+    expect(() => missionPoolPage(db, "Ada#1001", NOW, OWNER)).toThrow(OwnerOnlyError);
+    const page = missionPoolPage(db, OWNER, NOW, OWNER);
+    expect(page.tiles).toHaveLength(6);
+    expect(page.cards).toHaveLength(10);
+    expect(page.days).toHaveLength(14);
+    expect(page.days[0]!.n).toBe(TODAY);
+    expect(page.days[0]!.hunt.targets.Alliance).toBeDefined();
+    expect(page.quarry.Alliance!.target.key).toBe(page.days[0]!.hunt.targets.Alliance!.key);
+    expect(page.next).toHaveLength(7);
+    expect(page.targets.factions.Horde.total).toBe(28);
   });
 });

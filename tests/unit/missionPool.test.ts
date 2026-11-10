@@ -98,13 +98,14 @@ describe("the plan", () => {
 
   it("Often comes up more and Rare less than Normal inside its theme, always with the draw's rules", () => {
     // Pool version 6: a weighted day draws a theme first, then a mission of it by weight. A Social mission set to
-    // Often makes every daily slot weighted, so d.dungeon (Combat & character) is compared inside the same draw.
-    const base: Settings = { "d.trade": { off: false, often: "often" } };
+    // Often makes every daily slot weighted, so d.reward (Loot & gold) is compared inside the same draw.
+    expect([dailyKind("d.chars2"), dailyKind("d.reward")]).toEqual(["social", "loot"]);
+    const base: Settings = { "d.chars2": { off: false, often: "often" } };
     const count = (settings: Settings, id: string) =>
-      chain(21000, 1000, { ...base, ...settings }).filter((p) => p.includes(id)).length;
-    const normal = count({}, "d.dungeon");
-    const often = count({ "d.dungeon": { off: false, often: "often" } }, "d.dungeon");
-    const rare = count({ "d.dungeon": { off: false, often: "rare" } }, "d.dungeon");
+      chain(21000, 3000, { ...base, ...settings }).filter((p) => p.includes(id)).length;
+    const normal = count({}, "d.reward");
+    const often = count({ "d.reward": { off: false, often: "often" } }, "d.reward");
+    const rare = count({ "d.reward": { off: false, often: "rare" } }, "d.reward");
     expect(often).toBeGreaterThan(normal * 1.3);
     expect(rare).toBeLessThan(normal * 0.8);
     expectDrawRules(chain(21000, 400, { "d.dungeon": { off: false, often: "often" } }));

@@ -1,5 +1,5 @@
 import { classInfo } from "../gamedata/classes";
-import { NEW_GOALS, REUSED, THEME_OF_CATEGORY } from "./catalogue6";
+import { NEW_GOALS, PLACE_BEFORE, REUSED, THEME_OF } from "./catalogue6";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 // Doomsday: the rules of the addon repo's docs/DOOMSDAY.md (WEB-58), the TypeScript copy of the addon's
 // src/core/Doomsday.lua (CF-55). Both pass tests/fixtures/doomsday/doomsday-cases.json, the golden cases, unchanged;
@@ -177,6 +177,7 @@ type Can =
   | "below60"
   | "below60Dungeon"
   | "below20"
+  | "below30"
   | "anyProfession"
   | "hasCooking"
   | "hasFirstAid"
@@ -184,6 +185,7 @@ type Can =
   | "riding"
   | "canBuff"
   | "friends1"
+  | "friends2"
   | "friends3"
   | "idle7"
   | "level30"
@@ -201,7 +203,7 @@ type Can =
   | "level15";
 
 /** What a PvP goal takes (CF-79): kill, duel and bg are a real fight (CF-78), emote and flag aren't. */
-export type Needs = "kill" | "duel" | "bg" | "emote" | "flag";
+export type Needs = "kill" | "duel" | "bg" | "emote" | "flag" | "visit";
 
 export interface Goal {
   id: string;
@@ -2875,10 +2877,10 @@ const BASE_GOALS: readonly Goal[] = [
  * Every goal: the catalogue above (pool versions 1 to 5, with the ids pool version 6 takes up, catalogue6.ts REUSED),
  * then pool version 6's new goals (catalogue6.ts).
  */
-export const GOALS: readonly Goal[] = [
-  ...BASE_GOALS.map((g) => (REUSED[g.id] !== undefined ? { ...g, ...REUSED[g.id] } : g)),
-  ...NEW_GOALS,
-];
+export const GOALS: readonly Goal[] = BASE_GOALS.flatMap((g) => [
+  ...NEW_GOALS.filter((n) => PLACE_BEFORE[n.id] === g.id),
+  REUSED[g.id] !== undefined ? { ...g, ...REUSED[g.id] } : g,
+]).concat(NEW_GOALS.filter((n) => PLACE_BEFORE[n.id] === undefined));
 
 const BY_ID = new Map(GOALS.map((g) => [g.id, g]));
 
@@ -2886,7 +2888,7 @@ const BY_ID = new Map(GOALS.map((g) => [g.id, g]));
 export function themeOf(id: string): Theme | undefined {
   const g = BY_ID.get(id);
   if (g === undefined || g.slot !== "daily") return undefined;
-  return g.theme ?? (THEME_OF_CATEGORY[g.category ?? ""] as Theme | undefined);
+  return g.theme ?? (THEME_OF[id] as Theme | undefined);
 }
 
 /**
@@ -3135,13 +3137,13 @@ function drawDailies(list: readonly string[], n: number, previous: readonly stri
 }
 
 /**
- * The Duel slot (pool version 6, Nico 2026-11-10 "rotates"): the Duel pool in order, one a day from the epoch:
- * `pool("duel")[(n - EPOCH) mod #pool]`. Pool versions 1 to 5 have the fixed Duel slot (first duel with each friend).
+ * The Duel slot (pool version 6, Nico 2026-11-10 "rotates"; CF-118): the Duel pool in order, one a day:
+ * `duel[n % #duel + 1]` (Lua, 1-based). Pool versions 1 to 5 have the fixed Duel slot (first duel with each friend).
  */
 export function drawDuel(n: number, version = POOL_VERSION): string | undefined {
   const list = pool("duel", version);
   if (list.length === 0) return undefined;
-  return list[(((n - EPOCH) % list.length) + list.length) % list.length];
+  return list[((n % list.length) + list.length) % list.length];
 }
 
 function drawWeeklies(list: readonly string[], week: number, previous: readonly string[], version: number): string[] {
@@ -3158,11 +3160,14 @@ function drawWeeklies(list: readonly string[], week: number, previous: readonly 
 
 const comboKey = (c: Combo) => `${c.race}:${c.class}`;
 
-function drawHunt(faction: Faction, n: number, previous: Combo | undefined, version: number): Combo | undefined {
-  const key = drawOne(combos(faction, version).map(comboKey), n, SALT.hunt, previous ? [comboKey(previous)] : []);
+/** From pool version 6 the addon's own Hunt draw skips the targets of the 6 days before (CF-118 HUNT_GAP). */
+export const HUNT_GAP = 6;
+
+function drawHunt(faction: Faction, n: number, previous: readonly Combo[], version: number): Combo | undefined {
+  const key = drawOne(combos(faction, version).map(comboKey), n, SALT.hunt, previous.map(comboKey));
   if (key === undefined) return undefined;
   const [race, cls] = key.split(":") as [string, string];
-  return { race, class: cls };
+  return combos(faction, version).find((c) => c.race === race && c.class === cls) ?? { race, class: cls };
 }
 
 export interface DayDraw {
@@ -3194,11 +3199,15 @@ export function draw(n: number, version = POOL_VERSION, hunt = HUNT_SINCE !== un
   const dailyPool = drawPool("daily", version);
   const skirmishPool = drawPool("skirmish", version);
   const first = n < EPOCH ? n : EPOCH;
-  let previous: DayDraw | undefined;
+  // The days before, newest last: the Hunt excludes the day before, from pool version 6 the 6 days before (CF-118
+  // HUNT_GAP: a target never comes back within 7 days).
+  const gap = version >= THEMES_SINCE ? HUNT_GAP : 1;
+  const recent: DayDraw[] = [];
   for (let day = first; day <= n; day++) {
     let result = dayCache.get(prefix + day);
     if (result === undefined) {
-      const prev = previous ?? { dailies: [] };
+      const prev = recent[recent.length - 1] ?? { dailies: [] };
+      const before = (f: Faction) => recent.flatMap((r) => (r.hunt?.[f] !== undefined ? [r.hunt[f]!] : []));
       result = {
         dailies: drawDailies(dailyPool, day, prev.dailies, version),
         skirmish: drawOne(skirmishPool, day, SALT.skirmish, prev.skirmish !== undefined ? [prev.skirmish] : []),
@@ -3207,13 +3216,14 @@ export function draw(n: number, version = POOL_VERSION, hunt = HUNT_SINCE !== un
       if (duel !== undefined) result.duel = duel;
       if (hunt) {
         result.hunt = {
-          Horde: drawHunt("Horde", day, prev.hunt?.Horde, version),
-          Alliance: drawHunt("Alliance", day, prev.hunt?.Alliance, version),
+          Horde: drawHunt("Horde", day, before("Horde"), version),
+          Alliance: drawHunt("Alliance", day, before("Alliance"), version),
         };
       }
       dayCache.set(prefix + day, result);
     }
-    previous = result;
+    recent.push(result);
+    if (recent.length > gap) recent.shift();
   }
   return dayCache.get(prefix + n)!;
 }
@@ -3263,6 +3273,8 @@ export interface Situation {
   friendQuestLog?: boolean;
   /** Characters below 20. */
   below20?: number;
+  /** Characters below 30 (CF-118). */
+  below30?: number;
   hasCooking?: boolean;
   hasFirstAid?: boolean;
   hasGathering?: boolean;
@@ -3281,6 +3293,8 @@ const CAN: Record<Can, (s: Situation) => boolean> = {
   below60: (s) => s.below60 === undefined || s.below60 > 0,
   below60Dungeon: (s) => (s.below60 === undefined || s.below60 > 0) && s.dungeonInRange !== false,
   below20: (s) => s.below20 === undefined || s.below20 > 0,
+  // CF-118: p.youngBlood.
+  below30: (s) => s.below30 === undefined || s.below30 > 0,
   // Any profession, secondary ones included.
   anyProfession: (s) =>
     s.hasProfession !== false || s.hasCooking !== false || s.hasFirstAid !== false || s.hasFishing !== false,
@@ -3290,6 +3304,7 @@ const CAN: Record<Can, (s: Situation) => boolean> = {
   riding: (s) => s.riding !== false,
   canBuff: (s) => s.canBuff !== false,
   friends1: (s) => atLeast(s.friends, 1),
+  friends2: (s) => atLeast(s.friends, 2),
   friends3: (s) => atLeast(s.friends, 3),
   idle7: (s) => atLeast(s.idle7, 1),
   level30: (s) => atLeast(s.highest, 30),
@@ -3491,7 +3506,9 @@ export function checkSchedule(raw: unknown, day: number, week: number): MissionS
   if (days !== undefined && Object.keys(days).length > 0) out.days = days;
   if (weeks !== undefined && Object.keys(weeks).length > 0) out.weeks = weeks;
   if (Array.isArray(raw.rare)) {
-    const rare = raw.rare.filter((x): x is string => typeof x === "string" && /^\d{1,3}:\d{1,3}$/.test(x));
+    const rare = [
+      ...new Set(raw.rare.filter((x): x is string => typeof x === "string" && /^\d{1,3}:\d{1,3}$/.test(x))),
+    ];
     if (rare.length > 0) out.rare = rare.slice(0, 100);
   }
   if (isTable(raw.census) && typeof raw.census.at === "number" && Number.isInteger(raw.census.at)) {
