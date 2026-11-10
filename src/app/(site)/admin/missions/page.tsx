@@ -4,6 +4,7 @@ import { nowSeconds } from "@/app/clock";
 import { getViewer } from "@/app/viewer";
 import { RefusedLine, WhoTag } from "@/components/admin/CoAdmins";
 import { DayEditor } from "@/components/missions/DayEditor";
+import { DayLines, QuarryCard, RecipeBar } from "@/components/missions/Overview";
 import { PoolControls } from "@/components/missions/PoolControls";
 import styles from "@/components/missions/MissionPool.module.css";
 import { InfoTip } from "@/components/ui/InfoTip";
@@ -31,8 +32,9 @@ function selected(params: Record<string, string | string[] | undefined>): { peri
 }
 
 /**
- * The owner's Mission pool (WEB-79, boards `mission-pool`, `mission-pool-steering`, `mission-pool-states`): the counts,
- * the next 14 days and 2 weeks, the open day's editor and the pool with its stats and settings. The owner only: the
+ * The owner's Mission pool (WEB-79, boards `mission-pool`, `mission-pool-steering`, `mission-pool-states`; v2 WEB-109,
+ * board `mission-pool-v2-overview`): the recipe bar, today's quarry, the next 14 days and 2 weeks, the open day's editor
+ * and the pool as themes with its stats and settings. The owner only: the
  * admin layout lets admins through, so an admin gets the refusal line here; the actions check again.
  */
 export default async function MissionPoolPage({
@@ -76,14 +78,8 @@ export default async function MissionPoolPage({
         <WhoTag owner />
       </div>
       {refused !== undefined && <RefusedLine>{refused}</RefusedLine>}
-      <ul className={styles.sum} aria-label="Missions">
-        {view.counts.map((c) => (
-          <li key={c.label}>
-            <b>{c.count}</b>
-            {c.label}
-          </li>
-        ))}
-      </ul>
+      <RecipeBar view={view} />
+      <QuarryCard q={view.quarry} targetsHref="/admin/missions/hunt" />
       <div className={styles.top} data-editor={open !== undefined || undefined}>
         <section className={styles.box} aria-labelledby="mission-days">
           <div className={styles.head}>
@@ -109,19 +105,7 @@ export default async function MissionPoolPage({
                   aria-current={open?.period === "day" && open.n === d.n ? "true" : undefined}
                   data-testid="mission-day"
                 >
-                  <span className={styles.dayHead}>
-                    {d.label}
-                    {d.locked && (
-                      <LockIcon className={styles.lock} aria-label="Locked" role="img" aria-hidden={undefined} />
-                    )}
-                    {d.changed && <span className={styles.badge}>changed</span>}
-                  </span>
-                  {d.note !== undefined && <span className={styles.note}>{d.note}</span>}
-                  {d.missions.map((m, i) => (
-                    <span key={i} className={styles.mission} data-pvp={m.pvp || undefined}>
-                      {m.short}
-                    </span>
-                  ))}
+                  <DayLines d={d} />
                 </Link>
               </li>
             ))}
@@ -180,8 +164,8 @@ export default async function MissionPoolPage({
           <span className={styles.aside}>{view.since}</span>
         </div>
         <PoolControls
-          groups={view.groups}
-          hunt={view.hunt}
+          cards={view.cards}
+          filters={view.filters}
           offFrom={view.offFrom}
           setOff={setOffAction}
           setOften={setOftenAction}

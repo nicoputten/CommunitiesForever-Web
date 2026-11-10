@@ -1116,4 +1116,67 @@
   --fs-talent-name: 13.5px;
   --fs-talent-text: 12.5px;
   --lh-talent-text: 1.4;
+  /* Mission pool v2 and the Hunt (WEB-109, boards mission-pool-v2-overview, mission-pool-v2-hunt, mission-pool-v2-pvp) */
+  --class-icon-ink: #0b1322; /* a class icon's shape (the BotClassIcons artwork) */
+  --class-icon-shine: radial-gradient(
+    circle at 35% 28%,
+    rgba(255, 255, 255, 0.38),
+    rgba(255, 255, 255, 0) 39%
+  ); /* a class icon's highlight */
+  --hunt: #e0625a; /* the Hunt's red (card borders, tints) */
+  --hunt-text: #ffb4a8; /* the Hunt line on a day, a bagged time */
+  --line-hunt: rgba(224, 98, 90, 0.55); /* the quarry card, the Hunt's recipe tile */
+  --surface-quarry:
+    radial-gradient(500px 220px at 18% 30%, rgba(224, 98, 90, 0.22), rgba(0, 0, 0, 0) 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 10px, rgba(0, 0, 0, 0) 10px 20px), #0b0f18;
+  --surface-hunt-tile: linear-gradient(135deg, rgba(224, 98, 90, 0.14), #0e1626 60%);
+  --r-quarry: 16px;
+  --opacity-watermark: 0.12; /* the quarry card's crosshair */
+  --size-watermark: 220px;
+  --fs-kicker: 11px; /* "TODAY'S QUARRY · THU 19" */
+  --ls-kicker: 0.2em;
+  --fs-mini: 10.5px; /* a portrait's day, race and class; a target cell's "% of draws" */
+  --surface-race-ring: radial-gradient(circle at 35% 30%, #3a4a6a, #121a2a); /* the race initials, large */
+  --surface-race-ring-sm: #162034; /* the race initials, small */
+  --line-race-ring-sm: rgba(240, 208, 142, 0.6);
+  --ring-portrait: 0 0 0 3px #0b0f18; /* the class icon on the race ring */
+  --ring-portrait-sm: 0 0 0 2px #0b0f18;
+  --size-portrait-lg: 96px; /* the quarry: ring 76, class icon 40 */
+  --size-ring-lg: 76px;
+  --size-class-lg: 40px;
+  --fs-ring-lg: 28px;
+  --size-portrait-md: 56px; /* doomsday Hunt card: ring 46, class icon 24 */
+  --size-ring-md: 46px;
+  --size-class-md: 24px;
+  --fs-ring-md: 17px;
+  --size-portrait-sm: 40px; /* the next 7 days: ring 32, class icon 20 */
+  --size-ring-sm: 32px;
+  --size-class-sm: 20px;
+  --size-mini: 66px; /* a next-7-days portrait's column */
+  --surface-quiet: rgba(0, 0, 0, 0.25); /* the other faction's target */
+  --warn-tile-line: rgba(240, 167, 116, 0.5); /* a recipe tile whose missions come back within ~6 weeks */
+  --warn-tile-bg: rgba(240, 167, 116, 0.06);
+  --tint-pve-tag: rgba(127, 217, 154, 0.14); /* theme card tags */
+  --tint-pvp-tag: rgba(240, 138, 128, 0.16);
+  --tint-weekly-tag: rgba(157, 180, 255, 0.14);
+  --weekly-tag-text: #c3d0ff;
+  --tint-check-tag: rgba(240, 167, 116, 0.14); /* mission-pool-v2-pvp: "check" */
+  --tint-easy-tag: rgba(127, 217, 154, 0.12);
+  --size-pool-list: 330px; /* the open theme's list: about 7 rows, then it scrolls */
+  --size-col-short: 110px; /* the open theme's columns */
+  --size-col-pts: 46px;
+  --size-col-history: 200px;
+  --size-col-often: 150px;
+  --size-search: 220px;
+  --size-cell-w: 96px; /* a Hunt target cell */
+  --size-cell-h: 58px;
+  --size-cell-bar: 4px;
+  --line-cell: rgba(212, 175, 106, 0.55);
+  --tint-cell: rgba(212, 175, 106, 0.07);
+  --line-cell-skip: rgba(174, 182, 195, 0.3);
+  --new-race: #9db4ff; /* a Forever race new to the list */
+  --ring-cell-today: 0 0 0 2px #f08a80;
+  --fs-cell-na: 18px;
+  --size-swatch: 12px;
+  --r-swatch: 3px;
 }

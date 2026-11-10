@@ -330,20 +330,31 @@ Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (t
 - Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
   checks follow; screenshot baselines change only after Nico's OK.
 
-### WEB-107 The Hunt on the Mission pool page (board `mission-pool`)
-Nico (2026-11-10): the Mission pool page lists every kind but the Hunt, which joined in pool version 4 (WEB-101).
-- **Its own group** "The Hunt · PvP" between the dailies and the Skirmish (where the Doomsday board puts it), in the
-  page's group look: one row "Kill an enemy player of the day's race and class", short "Hunt", +5, its stats (Came up,
-  Swapped, Done, Last from the recorded `hunt` id) and "Every day" instead of How often: the owner doesn't steer it.
-- **What it is:** "Target or mouse over them so the kill knows who it was."
-- **Today:** the day's combination per hunting faction: "Horde hunts: Gnome Priest", "Alliance hunts: Orc Mage".
-- **The pool:** every combination the site's pool version draws from, per hunting faction and grouped by race
-  ("Horde hunts · 23", "Night Elf: Warrior, Hunter, …"), with the pool version: "Pool version 5 draws from 23
-  combinations per faction." Pool versions before 4 (HUNT_SINCE) have no Hunt and no group.
-- **Counts:** the counts line gets "1 Hunt" after Daily PvE; the Admin page's box counts the Hunt as one mission.
-- **Phone:** one block after the dailies, the lists one under the other; counted in "Show all".
-- Done when: view-model tests (the group, today, pool 5's 23 and pool 4's 20, none before 4, the counts); design
-  checks of the group on desktop and phone; e2e sees the group; lint, unit, build pass.
+### WEB-109 Mission pool v2 and the Hunt targets (boards `mission-pool-v2-overview`, `mission-pool-v2-hunt`, `mission-pool-v2-pvp`)
+Nico (2026-11-10): "Mission pool v2 + the Hunt", pool version 6, built with WEB-108 (draw, census), WEB-110 (Doomsday
+pages) and the addon's CF-118. Supersedes WEB-107 (PR #226). Only the boards' visible strings in the UI.
+- **Recipe bar** instead of the count chips: "Every day 3 PvE + the Hunt + 2 PvP · Every week 3 Weekly + a Bounty";
+  six tiles Daily PvE, The Hunt, Daily PvP, Weekly, Bounty, Off with per day or week, the pool and "every ~N d/wk"
+  (pool ÷ slots); a weekly slot whose missions come back within ~6 weeks is orange (Bounty).
+- **Today's quarry:** the red card with the reticle: race initials in a gold ring with the class icon, the name, the
+  hunting faction, +5 points, done today, seen this week (Everloot census, ⓘ), the other faction's target, the next 7
+  days and "Hunt targets ›".
+- **Days:** 6 lines: 3 PvE, the Hunt (crosshair, race and class), the PvP slots. Locks, "changed", the day editor and
+  Next 2 weeks as before.
+- **The pool as themes:** Search, All, Never came up, Hard (under 30 % done), Off with counts; nine cards with kind tag,
+  count and "N came up · N% done" (Skirmish "N new"); one card open below (gold border) with Mission, Short, Pts,
+  History ("came up 2× · 75% · Tue"), How often and the switch; about 7 rows, then it scrolls. A search or filter lists
+  the matches of every card. The new PvP missions carry their easy / check tag. Phone: one column, tiles 2 wide, rows
+  in two lines.
+- **Hunt targets** (`/admin/missions/hunt`): tabs per hunting faction with the targets in the draw, the legend, races ×
+  the 9 classes: count, weight bar and "% of draws", "too rare" under 30, "off", "—" for no valid combination, blue for
+  a Forever race new to the list, red ring for today; hover: seen, share, last hunted, done; a click switches a target
+  off or on (stored as the setting `hunt:<race>:<class>`, logged in Admin changes). The census line with its window,
+  characters and installs links everloot.app/census. Phone: one list per race.
+- **Shared with WEB-110:** `ClassIcon`, `HuntPortrait`, `CrosshairIcon`.
+- **Data:** the page reads WEB-108's pool version 6 data (`PoolData`, `HuntData`); until it lands, a stand-in
+  (`src/server/pool6Sample.ts`) that is replaced before this merges.
+- Done when: view-model tests; design checks desktop and phone, the Hunt targets grid included; e2e; lint, unit, build.
 
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.

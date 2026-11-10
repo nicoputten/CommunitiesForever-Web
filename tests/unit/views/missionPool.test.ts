@@ -1,19 +1,72 @@
 import { describe, expect, it } from "vitest";
 import { fullPlan, type PlanInput } from "@/core/doomsday/missionPool";
-import { dayStart } from "@/core/doomsday/rules";
+import { dayStart, goal, pool } from "@/core/doomsday/rules";
+import type { HuntData } from "@/core/views/hunt";
 import {
-  huntGroup,
+  matches,
   type MissionPoolInput,
   missionPoolBox,
   missionPoolView,
-  weekNumber,
+  type PoolData,
+  type Theme,
 } from "@/core/views/missionPool";
 
-// WEB-79: the Mission pool page's view on WEB-78's plan. Day 20766 is Mon 9 Nov 2026; the realm is CET, reset 19:00.
+// WEB-79: the Mission pool page's view on WEB-78's plan; v2 (WEB-109, board `mission-pool-v2-overview`): the recipe
+// bar, the quarry, 6-line days, the pool as themes. Day 20766 is Mon 9 Nov 2026; the realm is CET, reset 19:00.
 
 const S = { offset: 3600, reset: 68400 };
 const TODAY = 20766;
 const NOW = dayStart(TODAY, S) + 3600;
+
+/** Made-up pool version 6 data: themes by the draw's category, a Gnome Mage day, a small census. */
+const THEME: Record<string, Theme> = { quests: "questing", loot: "loot", social: "social", crafts: "professions" };
+
+export function huntData(over: Partial<HuntData> = {}): HuntData {
+  const days = new Map<number, HuntData["days"] extends ReadonlyMap<number, infer V> ? V : never>();
+  for (let n = TODAY; n < TODAY + 16; n++)
+    days.set(n, { Alliance: { race: 1, class: 2 }, Horde: { race: 2, class: 1 } });
+  days.set(TODAY, { Alliance: { race: 7, class: 8 }, Horde: { race: 5, class: 4 } });
+  days.set(TODAY + 1, { Alliance: { race: 4, class: 11 } });
+  return {
+    targets: {
+      Alliance: [
+        { race: 1, class: 2, count: 435 },
+        { race: 7, class: 8, count: 235, lastHunted: TODAY - 7, donePct: 41 },
+        { race: 4, class: 11, count: 255 },
+        { race: 3, class: 4, count: 20 },
+        { race: 95, class: 11, count: 75 },
+        { race: 1, class: 1, count: 205, off: true },
+      ],
+      Horde: [
+        { race: 5, class: 4, count: 690 },
+        { race: 2, class: 1, count: 625 },
+      ],
+    },
+    newRaces: [95, 96],
+    census: {
+      from: Date.UTC(2026, 10, 4, 23) / 1000,
+      to: Date.UTC(2026, 10, 10, 15) / 1000,
+      characters: 16400,
+      installs: 13,
+    },
+    days,
+    donePct: 9,
+    points: 5,
+    ...over,
+  };
+}
+
+export function poolData(over: Partial<PoolData> = {}): PoolData {
+  return {
+    themeOf: (id) => (goal(id)?.slot === "daily" ? (THEME[goal(id)?.category ?? ""] ?? "combat") : undefined),
+    duel: [],
+    isNew: () => false,
+    check: () => undefined,
+    duels: new Map(),
+    hunt: huntData(),
+    ...over,
+  };
+}
 
 function input(over: Partial<PlanInput> = {}, extra: Partial<MissionPoolInput> = {}): MissionPoolInput {
   const plan: PlanInput = {
@@ -37,51 +90,163 @@ function input(over: Partial<PlanInput> = {}, extra: Partial<MissionPoolInput> =
     overrides: plan.overrides,
     stats: new Map(),
     sawNormal: [],
+    data: poolData(),
     ...extra,
   };
 }
 
 describe("the Mission pool page", () => {
-  it("counts, 14 days from today with today and tomorrow locked, the next 2 weeks", () => {
+  it("the recipe bar: per slot its pool and how often a mission comes back; Bounty within 6 weeks is orange", () => {
+    const v = missionPoolView(input({ settings: { "d.quests10": { off: true, often: "normal" } } }), "UTC");
+    expect(v.recipe).toEqual({ day: "3 PvE + the Hunt + 2 PvP", week: "3 Weekly + a Bounty" });
+    expect(v.tiles).toEqual([
+      {
+        label: "Daily PvE",
+        count: "3",
+        per: "a day",
+        line: "107 in pool · back every ~36 d",
+        warn: false,
+        hunt: false,
+      },
+      { label: "The Hunt", count: "1", per: "a day", line: "4 targets · weighted", warn: false, hunt: true },
+      { label: "Daily PvP", count: "2", per: "a day", line: "6 in pool · every ~3 d", warn: false, hunt: false },
+      { label: "Weekly", count: "3", per: "a week", line: "49 in pool · every ~16 wk", warn: false, hunt: false },
+      { label: "Bounty", count: "1", per: "a week", line: "6 in pool · every 6 wk", warn: true, hunt: false },
+      { label: "Off", count: "1", per: "", line: "switched off", warn: false, hunt: false },
+    ]);
+  });
+
+  it("the Duel slot's missions count in Daily PvP", () => {
+    const v = missionPoolView(input({}, { data: poolData({ duel: ["p.duelWin", "p.duels3"] }) }), "UTC");
+    expect(v.tiles[2]!.line).toBe(
+      `${new Set([...pool("skirmish"), "p.duelWin", "p.duels3"]).size} in pool · every ~4 d`,
+    );
+  });
+
+  it("14 days from today with today and tomorrow locked; a day's 6 lines: 3 PvE, the Hunt, the PvP slots", () => {
     const v = missionPoolView(
-      input({ settings: { "d.quests10": { off: true, often: "normal" } } }),
+      input({}, { data: poolData({ duels: new Map([[TODAY, "d.quests10"]]) }) }),
       "Europe/Amsterdam",
     );
-    expect(v.counts).toEqual([
-      { label: "Daily PvE", count: 107 },
-      { label: "Hunt", count: 1 },
-      { label: "Skirmish", count: 6 },
-      { label: "Weekly", count: 49 },
-      { label: "Bounty", count: 6 },
-      { label: "Off", count: 1 },
-    ]);
     expect(v.days).toHaveLength(14);
-    expect(v.days[0]).toMatchObject({ label: "Mon 9", note: "today", locked: true });
-    expect(v.days[1]).toMatchObject({ label: "Tue 10", note: "tomorrow", locked: true });
-    expect(v.days[2]).toMatchObject({ label: "Wed 11", locked: false });
-    expect(v.days[0]!.missions.at(-1)).toMatchObject({ pvp: true });
+    expect(v.days[0]).toMatchObject({ label: "Mon 9", note: "today", locked: true, hunt: "Gnome Mage" });
+    expect(v.days[1]).toMatchObject({ label: "Tue 10", note: "tomorrow", locked: true, hunt: "Night Elf Druid" });
+    expect(v.days[2]).toMatchObject({ label: "Wed 11", locked: false, hunt: "Human Paladin" });
+    expect(v.days[0]!.pve).toHaveLength(3);
+    // The Skirmish from the plan, then the Duel slot's mission.
+    expect(v.days[0]!.pvp).toHaveLength(2);
+    expect(v.days[0]!.pvp[1]).toBe("10 quests");
+    expect(v.days[3]!.pvp).toHaveLength(1);
     expect(v.weeks.map((w) => w.title)).toEqual(["Week 47 · from Sun 15 19:00", "Week 48 · from Sun 22 19:00"]);
     expect(v.since).toBe("since launch · 5 days");
     expect(v.offFrom).toBe("Won’t come up from Wed 11.");
-    expect(v.groups.map((g) => g.title)).toEqual([
-      "Daily · PvE · 108",
-      "Skirmish · PvP · 6",
-      "Weekly · 49",
-      "Bounty · PvP · 6",
-    ]);
-    expect(v.groups[0]!.rows[0]).toMatchObject({ text: "Finish 10 quests", off: true, cameUp: "—", done: "—" });
   });
 
-  it("stats: done share, last day or week, the phone's line", () => {
-    const stats = new Map([
-      ["d.level", { cameUp: 18, swapped: 2, had: 14, done: 10, last: TODAY - 1 }],
-      ["w.days3", { cameUp: 3, swapped: 0, had: 4, done: 2, last: 2966 }],
+  it("today's quarry: the Horde's target with census and done, the Alliance's, the next 7 days", () => {
+    const q = missionPoolView(input(), "UTC").quarry;
+    expect(q).toMatchObject({
+      kicker: "Today’s quarry · Mon 9",
+      hunter: "Horde hunts",
+      points: "+5",
+      done: "9%",
+      seen: "235",
+      target: { short: "Gn", name: "Gnome Mage", classFile: "MAGE", raceName: "Gnome", className: "Mage" },
+      other: { hunter: "Alliance hunts", target: { short: "Ud", name: "Undead Rogue" } },
+    });
+    expect(q.next.map((d) => `${d.weekday} ${d.short} ${d.className}`)).toEqual([
+      "Tue NE Druid",
+      "Wed Hu Paladin",
+      "Thu Hu Paladin",
+      "Fri Hu Paladin",
+      "Sat Hu Paladin",
+      "Sun Hu Paladin",
+      "Mon Hu Paladin",
     ]);
+  });
+
+  it("no Hunt drawn: no target, no Hunt line", () => {
+    const v = missionPoolView(
+      input({}, { data: poolData({ hunt: huntData({ days: new Map(), donePct: undefined }) }) }),
+      "UTC",
+    );
+    expect(v.quarry.target).toBeUndefined();
+    expect(v.quarry.done).toBeUndefined();
+    expect(v.quarry.next).toEqual([]);
+    expect(v.days[0]!.hunt).toBeUndefined();
+  });
+
+  it("nine cards: six PvE themes, Skirmish with the Duel slot and its new missions, Weekly, Bounty", () => {
+    const stats = new Map([
+      ["d.quests10", { cameUp: 2, swapped: 0, had: 4, done: 3, last: TODAY - 6 }],
+      ["d.quests20", { cameUp: 1, swapped: 1, had: 2, done: 0, last: TODAY - 9 }],
+    ]);
+    const v = missionPoolView(
+      input({}, { stats, data: poolData({ duel: ["p.duelWin"], isNew: (id) => id === "p.duelWin" }) }),
+      "UTC",
+    );
+    expect(v.cards.map((c) => `${c.name} · ${c.tag}`)).toEqual([
+      "Questing · Daily PvE",
+      "Loot & gold · Daily PvE",
+      "Social · Daily PvE",
+      "Professions · Daily PvE",
+      "Exploration · Daily PvE",
+      "Combat & character · Daily PvE",
+      "Skirmish · PvP",
+      "Weekly · Weekly",
+      "Bounty · PvP",
+    ]);
+    const questing = v.cards[0]!;
+    expect(questing.history).toBe("3 came up · 50% done");
+    expect(questing.rows[0]).toMatchObject({
+      text: "Finish 10 quests",
+      short: "10 quests",
+      points: "+3",
+      history: "came up 2× · 75% · Tue",
+      line: "+3 · came up 2× · 75% · Tue",
+      donePct: 75,
+    });
+    expect(questing.rows.find((r) => r.id === "d.zone5")!.history).toBe("—");
+    expect(v.cards[4]!.history).toBe("0 came up");
+    const skirmish = v.cards[6]!;
+    expect(skirmish.fresh).toBe("1 new");
+    expect(skirmish.count).toBe(new Set([...pool("skirmish"), "p.duelWin"]).size);
+    expect(skirmish.rows.at(-1)!.text).toBe("Win a duel");
+    // Every daily PvE mission is on one card.
+    expect(v.cards.slice(0, 6).reduce((a, c) => a + c.count, 0)).toBe(108);
+  });
+
+  it("the new PvP missions carry their easy or check tag", () => {
+    const v = missionPoolView(
+      input({}, { data: poolData({ check: (id) => (id.startsWith("p.") ? id === "p.loneWolf" : undefined) }) }),
+      "UTC",
+    );
+    const tags = v.cards[6]!.rows.map((r) => r.tag);
+    expect(tags).toContain("easy");
+    expect(v.cards[6]!.rows.find((r) => r.id === "p.loneWolf")!.tag).toBe("check");
+    expect(v.cards[0]!.rows[0]!.tag).toBeUndefined();
+  });
+
+  it("filters: never came up, hard (under 30 % done), off; their counts", () => {
+    const stats = new Map([
+      ["d.quests10", { cameUp: 2, swapped: 0, had: 4, done: 3, last: TODAY - 1 }],
+      ["d.quests20", { cameUp: 1, swapped: 1, had: 5, done: 1, last: TODAY - 2 }],
+    ]);
+    const v = missionPoolView(input({ settings: { "d.zone5": { off: true, often: "normal" } } }, { stats }), "UTC");
+    expect(v.filters).toEqual([
+      { filter: "all", label: "All", count: 169 },
+      { filter: "never", label: "Never came up", count: 167 },
+      { filter: "hard", label: "Hard", count: 1 },
+      { filter: "off", label: "Off", count: 1 },
+    ]);
+    const rows = v.cards.flatMap((c) => c.rows);
+    expect(rows.filter((r) => matches(r, "hard")).map((r) => r.id)).toEqual(["d.quests20"]);
+    expect(rows.find((r) => r.id === "d.zone5")).toMatchObject({ off: true });
+  });
+
+  it("weeks: last as the week number", () => {
+    const stats = new Map([["w.days3", { cameUp: 3, swapped: 0, had: 4, done: 2, last: 2966 }]]);
     const v = missionPoolView(input({}, { stats }), "UTC");
-    const level = v.groups[0]!.rows.find((r) => r.id === "d.level")!;
-    expect(level).toMatchObject({ cameUp: "18", swapped: "2", donePct: 71, done: "71%", last: "Sun" });
-    expect(level.line).toBe("Came up 18 · done 71% · last Sun");
-    expect(v.groups[2]!.rows.find((r) => r.id === "w.days3")!.last).toBe(`wk ${weekNumber(2966)}`);
+    expect(v.cards[7]!.rows.find((r) => r.id === "w.days3")!.history).toBe("came up 3× · 50% · wk 45");
   });
 
   it("a free day's editor: slots, pinned, the Duel stays, a mission also on the day before", () => {
@@ -114,7 +279,6 @@ describe("the Mission pool page", () => {
     const week = missionPoolView(input(), "Europe/Amsterdam", undefined, { period: "week", n: 2968 }).editor!;
     expect(week.slots.map((s) => s.name)).toEqual(["Weekly 1", "Weekly 2", "Weekly 3", "Bounty"]);
     expect(week.locks).toBe("Locks Sat 14 19:00");
-    // A day before today or this week doesn't open.
     expect(missionPoolView(input(), "UTC", undefined, { period: "week", n: 2967 }).editor).toBeUndefined();
   });
 
@@ -128,65 +292,8 @@ describe("the Mission pool page", () => {
     expect(v.editor!.sawNormal).toEqual(["Bob"]);
   });
 
-  it("the Admin page's box", () => {
-    // The 169 missions of the four kinds and the Hunt.
-    expect(missionPoolBox(input())).toEqual({ missions: 170, changed: 0, today: "Mon 9" });
-    expect(missionPoolView(input(), "UTC").missionCount).toBe(170);
-  });
-});
-
-describe("the Hunt on the Mission pool page (WEB-107)", () => {
-  it("its own group after the dailies: a daily PvP mission of 5 points, with stats, not steered", () => {
-    const stats = new Map([["hunt", { cameUp: 6, swapped: 0, had: 10, done: 3, last: TODAY - 1 }]]);
-    const v = missionPoolView(input({}, { stats }), "UTC");
-    expect(v.hunt).toMatchObject({
-      title: "The Hunt · PvP",
-      row: {
-        text: "Kill an enemy player of the day’s race and class",
-        short: "Hunt",
-        points: "+5",
-        cameUp: "6",
-        done: "30%",
-        donePct: 30,
-        last: "Sun",
-        line: "Came up 6 · done 30% · last Sun",
-      },
-      often: "Every day",
-      about: "Target or mouse over them so the kill knows who it was.",
-    });
-    expect(v.hunt!.row).not.toHaveProperty("off");
-    // Not one of the steered kinds.
-    expect(v.groups.map((g) => g.kind)).toEqual(["daily", "skirmish", "weekly", "bounty"]);
-  });
-
-  it("today's Hunt per hunting faction: the day's draw", () => {
-    expect(huntGroup(new Map(), TODAY)!.today).toEqual([
-      { label: "Horde hunts", combo: "Night Elf Rogue" },
-      { label: "Alliance hunts", combo: "Tauren Druid" },
-    ]);
-  });
-
-  it("pool version 5: Forever's 23 combinations per faction, by race", () => {
-    const h = huntGroup(new Map(), TODAY, 5)!;
-    expect(h.drawsFrom).toBe("Pool version 5 draws from 23 combinations per faction.");
-    expect(h.factions.map((f) => f.title)).toEqual(["Horde hunts · 23", "Alliance hunts · 23"]);
-    expect(h.factions[0]!.races).toEqual([
-      { race: "Human", classes: "Warrior, Paladin, Hunter, Rogue, Priest, Mage, Warlock" },
-      { race: "Dwarf", classes: "Warrior, Paladin, Hunter, Rogue, Priest, Shaman" },
-      { race: "Night Elf", classes: "Warrior, Hunter, Rogue, Priest, Druid" },
-      { race: "Gnome", classes: "Warrior, Rogue, Priest, Mage, Warlock" },
-    ]);
-    expect(h.factions[1]!.races.map((r) => r.race)).toEqual(["Orc", "Undead", "Tauren", "Troll"]);
-  });
-
-  it("pool version 4: Vanilla's 20; before 4 there is no Hunt", () => {
-    const h = huntGroup(new Map(), TODAY, 4)!;
-    expect(h.drawsFrom).toBe("Pool version 4 draws from 20 combinations per faction.");
-    expect(h.factions.map((f) => f.title)).toEqual(["Horde hunts · 20", "Alliance hunts · 20"]);
-    expect(h.factions[0]!.races[0]).toEqual({
-      race: "Human",
-      classes: "Warrior, Paladin, Rogue, Priest, Mage, Warlock",
-    });
-    for (const version of [1, 2, 3]) expect(huntGroup(new Map(), TODAY, version)).toBeUndefined();
+  it("the Admin page's box: the 169 missions of the four kinds", () => {
+    expect(missionPoolBox(input())).toEqual({ missions: 169, changed: 0, today: "Mon 9" });
+    expect(missionPoolView(input(), "UTC").missionCount).toBe(169);
   });
 });

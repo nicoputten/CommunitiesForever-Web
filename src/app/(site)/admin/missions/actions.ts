@@ -15,8 +15,10 @@ import {
   pinMission,
   rerollDay,
   rerollMission,
+  setHuntTarget,
   setMission,
 } from "@/server/missionPool";
+import { sampleValidTarget } from "@/server/pool6Sample";
 
 // The Mission pool page's actions (WEB-79): the owner only. Each checks again who the caller is (CLAUDE.md rule 6);
 // the server functions (WEB-78) check the owner and the lock window once more. A refusal goes back to the page as a
@@ -90,4 +92,13 @@ export async function rerollDayAction(form: FormData): Promise<void> {
 export async function backToNormalAction(form: FormData): Promise<void> {
   const t = target(form);
   await asOwner(form, (db, by, now) => backToNormal(db, by, t.period, t.n, now));
+}
+
+/** A Hunt target off or back on (WEB-109): the form sends race, class and the new state. */
+export async function setTargetAction(form: FormData): Promise<void> {
+  const race = Number(form.get("race"));
+  const cls = Number(form.get("class"));
+  const off = form.get("off") === "true";
+  await asOwner(form, (db, by, now) => setHuntTarget(db, by, race, cls, off, now, sampleValidTarget));
+  revalidatePath(`${PAGE}/hunt`);
 }

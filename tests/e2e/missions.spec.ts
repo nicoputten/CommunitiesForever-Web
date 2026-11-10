@@ -77,31 +77,57 @@ test("the owner opens the pool from the Admin page, steers a day and switches a 
   await expect(log).toContainText(`pinned ${picked}`);
 });
 
-test("the pool shows the Hunt after the dailies: today's Hunt per faction and its combinations (WEB-107)", async ({
+test("the recipe bar, today's quarry, the Hunt targets and a theme (WEB-109)", async ({
   page,
   context,
   baseURL,
 }, info) => {
+  // Each project switches its own target, and puts it back.
+  const target = info.project.name === "phone" ? "Dwarf Hunter" : "Human Rogue";
   await signInAs(context, baseURL!, E2E.admin);
   await page.goto("/admin/missions");
-  await expect(page.getByRole("list", { name: "Missions" })).toContainText("1Hunt");
+  const tiles = page.getByRole("list", { name: "Missions" }).getByRole("listitem");
+  await expect(tiles).toHaveCount(6);
+  await expect(tiles.nth(1)).toContainText("The Hunt");
+  await expect(tiles.nth(1)).toContainText("targets · weighted");
+  const quarry = page.getByTestId("quarry");
+  await expect(quarry).toContainText("Today’s quarry");
+  await expect(quarry).toContainText("Alliance hunts");
+  // Today's tile carries today's quarry.
+  const name = (await quarry.locator("p").first().textContent())!;
+  await expect(page.getByTestId("mission-day").first()).toContainText(name);
+
+  // The pool: Questing open; another card opens below, one at a time.
   const pool = region(page, "The pool");
-  const phone = info.project.name === "phone";
-  if (phone) await pool.getByRole("button", { name: /^Show all/ }).click();
-  const hunt = pool.getByTestId(phone ? "hunt-lines" : "hunt-group");
-  await expect(hunt).toBeVisible();
-  await expect(hunt).toContainText("The Hunt · PvP");
-  const today = hunt.getByRole("list", { name: "Today’s Hunt" }).getByRole("listitem");
-  await expect(today.nth(0)).toHaveText(/^Horde hunts: \S/);
-  await expect(today.nth(1)).toHaveText(/^Alliance hunts: \S/);
-  await expect(hunt).toContainText("Horde hunts · 23");
-  await expect(hunt).toContainText("Alliance hunts · 23");
-  // After the dailies, before the Skirmish.
-  const titles = await pool
-    .locator(phone ? "h3" : "th[scope=colgroup]")
-    .locator("visible=true")
-    .allTextContents();
-  const at = (t: string) => titles.findIndex((x) => x.startsWith(t));
-  expect(at("Daily · PvE")).toBeLessThan(at("The Hunt · PvP"));
-  expect(at("The Hunt · PvP")).toBeLessThan(at("Skirmish · PvP"));
+  const cards = pool.getByTestId("theme-card");
+  await expect(cards).toHaveCount(9);
+  await expect(cards.first()).toHaveAttribute("aria-expanded", "true");
+  await cards.filter({ hasText: "Weekly" }).first().click();
+  await expect(cards.first()).toHaveAttribute("aria-expanded", "false");
+  await expect(pool.getByTestId("theme-list").getByRole("heading", { level: 3 })).toHaveText(/^Weekly · \d+$/);
+  // A filter lists the matches of every card.
+  await pool.getByRole("button", { name: /^Never came up/ }).click();
+  await expect(pool.getByTestId("theme-list").getByRole("heading", { level: 3 })).toHaveText(/^Never came up · \d+$/);
+  await pool.getByRole("searchbox", { name: "Search missions" }).fill("quests");
+  await expect(pool.getByTestId("theme-list")).toContainText("Finish 10 quests");
+
+  // The Hunt targets: a click switches a target off, and back on.
+  await quarry.getByRole("link", { name: "Hunt targets ›" }).click();
+  const box = region(page, "Hunt targets");
+  await expect(box.getByRole("button", { name: /^Horde hunts · Alliance targets/, pressed: true })).toBeVisible();
+  const cell = box.getByRole("switch", { name: target, exact: true }).locator("visible=true");
+  await expect(cell).toHaveAttribute("aria-checked", "true");
+  await cell.click();
+  await expect(cell).toHaveAttribute("aria-checked", "false");
+  await page.reload();
+  await expect(cell).toHaveAttribute("aria-checked", "false");
+  await cell.click();
+  await expect(cell).toHaveAttribute("aria-checked", "true");
+  await box.getByRole("button", { name: "Alliance hunts · Horde targets" }).click();
+  await expect(box.getByRole("switch", { name: "Undead Rogue", exact: true }).locator("visible=true")).toBeVisible();
+
+  await page.goto("/admin");
+  const log = region(page, "Admin changes");
+  await expect(log).toContainText(`switched off ${target}`);
+  await expect(log).toContainText(`switched on ${target}`);
 });

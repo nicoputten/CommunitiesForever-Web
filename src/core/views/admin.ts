@@ -1,6 +1,13 @@
 import { battleTagKey, battleTagName, sameBattleTag } from "../access";
 import { missionName, missionPlace, missionSlot } from "../doomsday/missionPool";
 import { timeAgo } from "./age";
+import { targetName } from "./hunt";
+
+/** A mission's name, or a Hunt target's ("hunt:7:8" → "Gnome Mage", WEB-109). */
+function settingName(id: string): string {
+  const m = /^hunt:(\d+):(\d+)$/.exec(id);
+  return m === null ? missionName(id) : targetName({ race: Number(m[1]), class: Number(m[2]) });
+}
 
 // The admin page (WEB-18, no board; layout decided with Nico): members from the data, the guest list, blocks, and when
 // each BattleTag was last seen on the site. Co-admins (WEB-64, boards `admin-coadmins`, `admin-as-admin`): the Admins
@@ -228,9 +235,9 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
         ...(entry.detail !== undefined ? [t(` of ${nameOf(entry.detail)}`)] : []),
       ];
     case "missionOff":
-      return [t("switched off "), b(missionName(target))];
+      return [t("switched off "), b(settingName(target))];
     case "missionOn":
-      return [t("switched on "), b(missionName(target))];
+      return [t("switched on "), b(settingName(target))];
     case "missionOften":
       return [t("set "), b(missionName(target)), t(" to "), b(OFTEN_NAME[entry.detail ?? ""] ?? "Normal")];
     case "missionPinned":
