@@ -150,7 +150,8 @@ describe("the Mission pool page", () => {
     expect(v.days[2]).toMatchObject({ label: "Wed 11", locked: false });
     expect(v.days[2]!.hunt).toBeUndefined();
     expect(v.days[2]!.pve).toHaveLength(3);
-    expect(v.days[2]!.pvp).toHaveLength(1);
+    // The plan's Skirmish and Duel slots (pool version 6, WEB-108).
+    expect(v.days[2]!.pvp).toHaveLength(2);
     expect(v.weeks.map((w) => w.title)).toEqual(["Week 47 · from Sun 15 19:00", "Week 48 · from Sun 22 19:00"]);
     expect(v.since).toBe("since launch · 5 days");
     expect(v.offFrom).toBe("Won’t come up from Wed 11.");
@@ -219,7 +220,8 @@ describe("the Mission pool page", () => {
       { filter: "all", label: "All", count: all },
       { filter: "never", label: "Never came up", count: all - 2 },
       { filter: "hard", label: "Hard", count: 1 },
-      { filter: "off", label: "Off", count: 1 },
+      // d.zone5 and the 9 "check" missions, Off until tested (WEB-108).
+      { filter: "off", label: "Off", count: 10 },
     ]);
     const rows = v.cards.flatMap((c) => c.rows);
     expect(rows.filter((r) => matches(r, "hard")).map((r) => r.id)).toEqual(["d.quests20"]);
@@ -245,7 +247,7 @@ describe("the Mission pool page", () => {
     expect(e.span).toBe("Thu 19:00 → Fri 19:00");
     expect(e.changed).toBe(true);
     expect(e.canReset).toBe(true);
-    expect(e.slots.map((s) => s.name)).toEqual(["Daily 1", "Daily 2", "Daily 3", "Skirmish"]);
+    expect(e.slots.map((s) => s.name)).toEqual(["Daily 1", "Daily 2", "Daily 3", "Skirmish", "Duel"]);
     expect(e.slots[0]).toMatchObject({ text: "Raise Cooking, First Aid or Fishing", tag: "pinned" });
     expect(e.slots[0]!.options.some((o) => o.id === "d.secondary")).toBe(false);
     expect(e.slots[0]!.options.find((o) => o.id === prev)?.also).toBe(
@@ -274,8 +276,11 @@ describe("the Mission pool page", () => {
     expect(v.editor!.sawNormal).toEqual(["Bob"]);
   });
 
-  it("the Admin page's box: the 169 missions of the four kinds", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 169, changed: 0, today: "Mon 9" });
-    expect(missionPoolView(input(), "UTC").missionCount).toBe(171); // with the fixture's 2 Duel-pool missions
+  it("the Admin page's box: the 217 missions of pool version 6", () => {
+    expect(missionPoolBox(input())).toEqual({ missions: 217, changed: 0, today: "Mon 9" });
+    // The page counts its cards' missions (the fixture's cards).
+    expect(missionPoolView(input(), "UTC").missionCount).toBe(
+      new Set(poolData().cards.flatMap((c) => c.missions)).size,
+    );
   });
 });

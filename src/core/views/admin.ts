@@ -1,5 +1,6 @@
 import { battleTagKey, battleTagName, sameBattleTag } from "../access";
 import { missionName, missionPlace, missionSlot } from "../doomsday/missionPool";
+import { targetOf } from "../doomsday/hunt";
 import { timeAgo } from "./age";
 import { targetNameOf } from "./hunt";
 
@@ -47,7 +48,11 @@ export type LogAction =
   | "missionDayRerolled"
   | "missionDayNormal"
   // WEB-91: Import item data (detail: the Forever build).
-  | "itemImport";
+  | "itemImport"
+  // WEB-108: the Hunt (target: "<raceId>:<classId>"; detail of a pin: "day:<n>"). Target on/off: WEB-109.
+  | "huntPinned"
+  | "huntUnpinned"
+  | "censusImported";
 
 /** The changes only the owner can make: their log lines carry the crown. */
 const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
@@ -67,6 +72,9 @@ const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
   "missionDayRerolled",
   "missionDayNormal",
   "itemImport",
+  "huntPinned",
+  "huntUnpinned",
+  "censusImported",
 ]);
 
 export interface LogInput {
@@ -250,6 +258,16 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
       return [t("set "), b(missionPlace(entry.detail)), t(" back to the normal draw")];
     case "itemImport":
       return [t("imported item data"), ...(entry.detail !== undefined ? [t(" of build "), b(entry.detail)] : [])];
+    case "huntPinned":
+      return [
+        t("pinned "),
+        b(targetOf(target)?.name ?? "a target"),
+        t(` as the quarry on ${missionPlace(entry.detail)}`),
+      ];
+    case "huntUnpinned":
+      return [t("unpinned the quarry on "), b(missionPlace(entry.detail))];
+    case "censusImported":
+      return [t("imported the Everloot census")];
     case "discordSetting":
     case "botToken":
       return [t(entry.detail ?? "changed a Discord setting")];

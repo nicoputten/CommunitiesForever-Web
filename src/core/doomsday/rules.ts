@@ -1,10 +1,11 @@
 import { classInfo } from "../gamedata/classes";
+import { NEW_GOALS, PLACE_BEFORE, REUSED, THEME_OF } from "./catalogue6";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 // Doomsday: the rules of the addon repo's docs/DOOMSDAY.md (WEB-58), the TypeScript copy of the addon's
 // src/core/Doomsday.lua (CF-55). Both pass tests/fixtures/doomsday/doomsday-cases.json, the golden cases, unchanged;
 // a rule change updates DOOMSDAY.md, the golden file and both copies in the same release. Pure.
 
-export const POOL_VERSION = 5;
+export const POOL_VERSION = 6;
 /** 19:00 realm time, seconds after midnight. */
 export const DEFAULT_RESET = 68400;
 export const DAY = 86400;
@@ -142,15 +143,22 @@ export function resetsText(nextReset: number, now: number, timeZone: string): st
  * plus the Duel slot, done after its first duel. The Duel slot still never counts for crossing out or the streak.
  */
 export function gridCount(
-  goals: readonly { doneAt?: number; goal?: { slot: string } }[],
+  goals: readonly { doneAt?: number; goal?: { slot: string; id?: string } }[],
   duels: number,
 ): { done: number; total: number } {
   // A friend with characters of both factions has a Hunt per faction (pool version 4): one grid slot, done by either.
   const hunts = goals.filter((g) => g.goal?.slot === "hunt");
-  const rest = goals.filter((g) => g.goal?.slot !== "hunt");
+  // Pool version 6: the Duel slot's mission is in the set; it is the Duel slot (the first duel with each friend is
+  // done after its first duel, as before).
+  const duel = goals.find((g) => g.goal?.slot === "duel");
+  const rest = goals.filter((g) => g.goal?.slot !== "hunt" && g.goal?.slot !== "duel");
   const huntDone = hunts.some((g) => g.doneAt !== undefined);
+  const duelDone =
+    duel === undefined || duel.goal?.id === "p.duelFirst"
+      ? duels > 0 || duel?.doneAt !== undefined
+      : duel.doneAt !== undefined;
   return {
-    done: rest.filter((g) => g.doneAt !== undefined).length + (huntDone ? 1 : 0) + (duels > 0 ? 1 : 0),
+    done: rest.filter((g) => g.doneAt !== undefined).length + (huntDone ? 1 : 0) + (duelDone ? 1 : 0),
     total: rest.length + (hunts.length > 0 ? 1 : 0) + 1,
   };
 }
@@ -163,12 +171,13 @@ export function duration(seconds: number): string {
 
 // ===== Catalogue =====
 
-export type GoalSlot = "daily" | "weekly" | "skirmish" | "bounty";
+export type GoalSlot = "daily" | "weekly" | "skirmish" | "bounty" | "duel";
 type Can =
   | "friendQuestLog"
   | "below60"
   | "below60Dungeon"
   | "below20"
+  | "below30"
   | "anyProfession"
   | "hasCooking"
   | "hasFirstAid"
@@ -176,6 +185,7 @@ type Can =
   | "riding"
   | "canBuff"
   | "friends1"
+  | "friends2"
   | "friends3"
   | "idle7"
   | "level30"
@@ -193,7 +203,7 @@ type Can =
   | "level15";
 
 /** What a PvP goal takes (CF-79): kill, duel and bg are a real fight (CF-78), emote and flag aren't. */
-export type Needs = "kill" | "duel" | "bg" | "emote" | "flag";
+export type Needs = "kill" | "duel" | "bg" | "emote" | "flag" | "visit";
 
 export interface Goal {
   id: string;
@@ -214,14 +224,32 @@ export interface Goal {
   fallback?: string[];
   /** The pool version the `can` check applies from; undefined: every version. */
   canFrom?: number;
+  /** A daily PvE mission's theme (pool version 6); undefined: from its category (THEME_OF_CATEGORY). */
+  theme?: Theme;
+  /** Pool version 6: needs a test on Forever first, so it is Off until the owner switches it on (CF-118 `check`). */
+  check?: boolean;
 }
+
+/** The daily PvE themes of pool version 6 (CF-118): the draw takes 3 PvE dailies from 3 different themes. */
+export type Theme = "questing" | "loot" | "social" | "professions" | "exploration" | "combat";
+export const THEMES: readonly Theme[] = ["questing", "loot", "social", "professions", "exploration", "combat"];
+export const THEME_LABEL: Readonly<Record<Theme, string>> = {
+  questing: "Questing",
+  loot: "Loot & gold",
+  social: "Social",
+  professions: "Professions",
+  exploration: "Exploration",
+  combat: "Combat & character",
+};
+/** The pool version from which the PvE dailies are drawn by theme, and the day has a Duel slot mission. */
+export const THEMES_SINCE = 6;
 
 /**
  * Every goal, in pool order: the addon's `Doomsday.GOALS` (src/core/Doomsday.lua, CF-70), pinned by the golden
  * `pools.catalogue`: the PvE dailies of CF-70, the weeklies, Skirmish and Bounty goals of CF-79 (the pool-1 goals keep
  * their place, so pool version 1 draws as before). Ids are never reused or renamed.
  */
-export const GOALS: readonly Goal[] = [
+const BASE_GOALS: readonly Goal[] = [
   // quests
   {
     id: "d.quests10",
@@ -2845,7 +2873,23 @@ export const GOALS: readonly Goal[] = [
   },
 ];
 
+/**
+ * Every goal: the catalogue above (pool versions 1 to 5, with the ids pool version 6 takes up, catalogue6.ts REUSED),
+ * then pool version 6's new goals (catalogue6.ts).
+ */
+export const GOALS: readonly Goal[] = BASE_GOALS.flatMap((g) => [
+  ...NEW_GOALS.filter((n) => PLACE_BEFORE[n.id] === g.id),
+  REUSED[g.id] !== undefined ? { ...g, ...REUSED[g.id] } : g,
+]).concat(NEW_GOALS.filter((n) => PLACE_BEFORE[n.id] === undefined));
+
 const BY_ID = new Map(GOALS.map((g) => [g.id, g]));
+
+/** A daily PvE mission's theme (pool version 6); undefined for other goals. */
+export function themeOf(id: string): Theme | undefined {
+  const g = BY_ID.get(id);
+  if (g === undefined || g.slot !== "daily") return undefined;
+  return g.theme ?? (THEME_OF[id] as Theme | undefined);
+}
 
 /**
  * The Hunt joins with the pool version that verifies victim race and class (CF-54): pool version 4 (addon CF-104, Nico
@@ -2866,6 +2910,11 @@ export function pool(slot: GoalSlot, version = POOL_VERSION): string[] {
       g.since <= version &&
       (g.retired === undefined || version < g.retired),
   ).map((g) => g.id);
+}
+
+/** The goals the draw takes for a slot: the pool without the `check` ones (Off until tested, CF-118). */
+export function drawPool(slot: GoalSlot, version = POOL_VERSION): string[] {
+  return pool(slot, version).filter((id) => BY_ID.get(id)!.check !== true);
 }
 
 // ===== Lists =====
@@ -2909,18 +2958,71 @@ const COMBOS_V5: Record<Faction, [string, string[]][]> = {
   ],
 };
 
+/**
+ * From pool version 6 (WEB-108, addon CF-118, Nico 2026-11-10): with the Skyborne, 28 per faction. Source: the game
+ * files of build 1.60.1.70862 as Everloot's class_races lists them (https://everloot.app/classes, checked 2026-11-10):
+ * High Order Skyborne (raceID 95, Alliance) Warrior Hunter Rogue Mage Druid; Windshaper Skyborne (96, Horde) Warrior
+ * Hunter Rogue Shaman Druid. Their race token "Skyborne" is unverified (docs/WOW-FOREVER.md "Races"); the Hunt from
+ * pool 6 goes by race and class ids (RACE_IDS, CLASS_IDS).
+ */
+const COMBOS_V6: Record<Faction, [string, string[]][]> = {
+  Horde: [...COMBOS_V5.Horde, ["Skyborne", ["WARRIOR", "HUNTER", "ROGUE", "MAGE", "DRUID"]]],
+  Alliance: [...COMBOS_V5.Alliance, ["Skyborne", ["WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID"]]],
+};
+
 /** The pool version from which the Hunt draws Forever's combinations (addon CF-116). */
 export const FOREVER_COMBOS_SINCE = 5;
+/** The pool version from which the Hunt has the Skyborne and goes by race and class ids (CF-118). */
+export const SKYBORNE_SINCE = 6;
+
+/**
+ * Race ids (ChrRaces; UnitRace's third value) by hunted faction and race token, and class ids (ChrClasses; UnitClass's
+ * third value) by class token. Source: the client's ChrRaces / ChrClasses (src/core/gamedata/races.ts; the class ids
+ * from warcraft.wiki.gg "ClassId", https://warcraft.wiki.gg/wiki/ClassId), as the pool-6 contract lists them.
+ */
+export const RACE_IDS: Readonly<Record<Faction, Readonly<Record<string, number>>>> = {
+  Alliance: { Human: 1, Dwarf: 3, NightElf: 4, Gnome: 7, Skyborne: 95 },
+  Horde: { Orc: 2, Scourge: 5, Tauren: 6, Troll: 8, Skyborne: 96 },
+};
+export const CLASS_IDS: Readonly<Record<string, number>> = {
+  WARRIOR: 1,
+  PALADIN: 2,
+  HUNTER: 3,
+  ROGUE: 4,
+  PRIEST: 5,
+  SHAMAN: 7,
+  MAGE: 8,
+  WARLOCK: 9,
+  DRUID: 11,
+};
+
+/** The other faction: the one a faction hunts. */
+export function enemyOf(faction: Faction): Faction {
+  return faction === "Horde" ? "Alliance" : "Horde";
+}
 
 export interface Combo {
   race: string;
   class: string;
+  /** From pool version 6: the race and class ids (ChrRaces / ChrClasses). */
+  raceId?: number;
+  classId?: number;
 }
 
-/** The combinations a faction hunts in a pool version, in list order: 20 each in versions 1 to 4, 23 from 5. */
+/** The combinations a faction hunts in a pool version, in list order: 20 each in versions 1 to 4, 23 in 5, 28 from 6. */
 export function combos(faction: Faction, version = POOL_VERSION): Combo[] {
-  const list = version >= FOREVER_COMBOS_SINCE ? COMBOS_V5 : COMBOS_V1;
-  return list[faction].flatMap(([race, classes]) => classes.map((c) => ({ race, class: c })));
+  const list = version >= SKYBORNE_SINCE ? COMBOS_V6 : version >= FOREVER_COMBOS_SINCE ? COMBOS_V5 : COMBOS_V1;
+  const ids = version >= SKYBORNE_SINCE ? RACE_IDS[enemyOf(faction)] : undefined;
+  return list[faction].flatMap(([race, classes]) =>
+    classes.map((c) =>
+      ids !== undefined ? { race, class: c, raceId: ids[race]!, classId: CLASS_IDS[c]! } : { race, class: c },
+    ),
+  );
+}
+
+/** A pool-6 combination by its hunted faction and ids; undefined when it isn't a valid target. */
+export function comboById(hunted: Faction, raceId: number, classId: number, version = POOL_VERSION): Combo | undefined {
+  return combos(enemyOf(hunted), version).find((c) => c.raceId === raceId && c.classId === classId);
 }
 
 /**
@@ -2936,21 +3038,17 @@ const RACE_NAMES: Readonly<Record<string, string>> = {
   Scourge: "Undead",
   Tauren: "Tauren",
   Troll: "Troll",
+  Skyborne: "Skyborne",
 };
 
-/** "Night Elf": a race token of COMBOS in words. */
-export function huntRace(race: string): string {
-  return RACE_NAMES[race] ?? race;
-}
-
-/** "Druid": a class token of COMBOS in words. */
-export function huntClass(cls: string): string {
-  return classInfo(cls)?.name ?? cls;
+/** "Night Elf": a race token's English name. */
+export function raceName(token: string): string {
+  return RACE_NAMES[token] ?? token;
 }
 
 /** "Night Elf Druid": a Hunt combination in words (BOT-API "Goals"). */
 export function huntName(c: Combo): string {
-  return `${huntRace(c.race)} ${huntClass(c.class)}`;
+  return `${RACE_NAMES[c.race] ?? c.race} ${classInfo(c.class)?.name ?? c.class}`;
 }
 
 /** "Hunt: Night Elf Druids": a Hunt's title on the site's board (board `doomsday-today`). */
@@ -3007,24 +3105,45 @@ export function distinctCategories(slot: GoalSlot, version = POOL_VERSION): bool
  * 3 goals of 3 different categories: slot k takes `candidates[pick(n, salts[k], #candidates)]` from the list minus
  * the categories taken and minus `previous`; if none is left, `previous` is allowed again (categories still differ).
  */
-function drawByCategory(list: readonly string[], n: number, previous: readonly string[], salts: readonly number[]) {
+function drawByCategory(
+  list: readonly string[],
+  n: number,
+  previous: readonly string[],
+  salts: readonly number[],
+  key: (id: string) => string = (id) => BY_ID.get(id)!.category!,
+) {
   const chosen: string[] = [];
   const categories = new Set<string>();
   for (let slot = 0; slot < 3; slot++) {
     const candidates = (skipPrevious: boolean) =>
-      list.filter((id) => !categories.has(BY_ID.get(id)!.category!) && !(skipPrevious && previous.includes(id)));
+      list.filter((id) => !categories.has(key(id)) && !(skipPrevious && previous.includes(id)));
     let c = candidates(true);
     if (c.length === 0) c = candidates(false);
     if (c.length === 0) break;
     const id = c[pick(n, salts[slot]!, c.length) - 1]!;
     chosen.push(id);
-    categories.add(BY_ID.get(id)!.category!);
+    categories.add(key(id));
   }
   return chosen;
 }
 
-function drawDailies(list: readonly string[], n: number, previous: readonly string[]): string[] {
-  return drawByCategory(list, n, previous, SALT.dailies);
+/** What makes 2 PvE dailies "the same kind" in a pool version: the category, from version 6 the theme. */
+export function dailyKind(id: string, version = POOL_VERSION): string | undefined {
+  return version >= THEMES_SINCE ? themeOf(id) : goal(id)?.category;
+}
+
+function drawDailies(list: readonly string[], n: number, previous: readonly string[], version: number): string[] {
+  return drawByCategory(list, n, previous, SALT.dailies, (id) => dailyKind(id, version) ?? id);
+}
+
+/**
+ * The Duel slot (pool version 6, Nico 2026-11-10 "rotates"; CF-118): the Duel pool in order, one a day:
+ * `duel[n % #duel + 1]` (Lua, 1-based). Pool versions 1 to 5 have the fixed Duel slot (first duel with each friend).
+ */
+export function drawDuel(n: number, version = POOL_VERSION): string | undefined {
+  const list = pool("duel", version);
+  if (list.length === 0) return undefined;
+  return list[((n % list.length) + list.length) % list.length];
 }
 
 function drawWeeklies(list: readonly string[], week: number, previous: readonly string[], version: number): string[] {
@@ -3041,16 +3160,21 @@ function drawWeeklies(list: readonly string[], week: number, previous: readonly 
 
 const comboKey = (c: Combo) => `${c.race}:${c.class}`;
 
-function drawHunt(faction: Faction, n: number, previous: Combo | undefined, version: number): Combo | undefined {
-  const key = drawOne(combos(faction, version).map(comboKey), n, SALT.hunt, previous ? [comboKey(previous)] : []);
+/** From pool version 6 the addon's own Hunt draw skips the targets of the 6 days before (CF-118 HUNT_GAP). */
+export const HUNT_GAP = 6;
+
+function drawHunt(faction: Faction, n: number, previous: readonly Combo[], version: number): Combo | undefined {
+  const key = drawOne(combos(faction, version).map(comboKey), n, SALT.hunt, previous.map(comboKey));
   if (key === undefined) return undefined;
   const [race, cls] = key.split(":") as [string, string];
-  return { race, class: cls };
+  return combos(faction, version).find((c) => c.race === race && c.class === cls) ?? { race, class: cls };
 }
 
 export interface DayDraw {
   dailies: string[];
   skirmish?: string;
+  /** Pool version 6: the Duel slot's mission. */
+  duel?: string;
   /** The combination per hunting faction; undefined until the Hunt is in the pool. */
   hunt?: Record<Faction, Combo | undefined>;
 }
@@ -3072,27 +3196,34 @@ export function draw(n: number, version = POOL_VERSION, hunt = HUNT_SINCE !== un
   const prefix = `${version}${hunt ? "h" : ""}:`;
   const cached = dayCache.get(prefix + n);
   if (cached !== undefined) return cached;
-  const dailyPool = pool("daily", version);
-  const skirmishPool = pool("skirmish", version);
+  const dailyPool = drawPool("daily", version);
+  const skirmishPool = drawPool("skirmish", version);
   const first = n < EPOCH ? n : EPOCH;
-  let previous: DayDraw | undefined;
+  // The days before, newest last: the Hunt excludes the day before, from pool version 6 the 6 days before (CF-118
+  // HUNT_GAP: a target never comes back within 7 days).
+  const gap = version >= THEMES_SINCE ? HUNT_GAP : 1;
+  const recent: DayDraw[] = [];
   for (let day = first; day <= n; day++) {
     let result = dayCache.get(prefix + day);
     if (result === undefined) {
-      const prev = previous ?? { dailies: [] };
+      const prev = recent[recent.length - 1] ?? { dailies: [] };
+      const before = (f: Faction) => recent.flatMap((r) => (r.hunt?.[f] !== undefined ? [r.hunt[f]!] : []));
       result = {
-        dailies: drawDailies(dailyPool, day, prev.dailies),
+        dailies: drawDailies(dailyPool, day, prev.dailies, version),
         skirmish: drawOne(skirmishPool, day, SALT.skirmish, prev.skirmish !== undefined ? [prev.skirmish] : []),
       };
+      const duel = drawDuel(day, version);
+      if (duel !== undefined) result.duel = duel;
       if (hunt) {
         result.hunt = {
-          Horde: drawHunt("Horde", day, prev.hunt?.Horde, version),
-          Alliance: drawHunt("Alliance", day, prev.hunt?.Alliance, version),
+          Horde: drawHunt("Horde", day, before("Horde"), version),
+          Alliance: drawHunt("Alliance", day, before("Alliance"), version),
         };
       }
       dayCache.set(prefix + day, result);
     }
-    previous = result;
+    recent.push(result);
+    if (recent.length > gap) recent.shift();
   }
   return dayCache.get(prefix + n)!;
 }
@@ -3142,6 +3273,8 @@ export interface Situation {
   friendQuestLog?: boolean;
   /** Characters below 20. */
   below20?: number;
+  /** Characters below 30 (CF-118). */
+  below30?: number;
   hasCooking?: boolean;
   hasFirstAid?: boolean;
   hasGathering?: boolean;
@@ -3160,6 +3293,8 @@ const CAN: Record<Can, (s: Situation) => boolean> = {
   below60: (s) => s.below60 === undefined || s.below60 > 0,
   below60Dungeon: (s) => (s.below60 === undefined || s.below60 > 0) && s.dungeonInRange !== false,
   below20: (s) => s.below20 === undefined || s.below20 > 0,
+  // CF-118: p.youngBlood.
+  below30: (s) => s.below30 === undefined || s.below30 > 0,
   // Any profession, secondary ones included.
   anyProfession: (s) =>
     s.hasProfession !== false || s.hasCooking !== false || s.hasFirstAid !== false || s.hasFishing !== false,
@@ -3169,6 +3304,7 @@ const CAN: Record<Can, (s: Situation) => boolean> = {
   riding: (s) => s.riding !== false,
   canBuff: (s) => s.canBuff !== false,
   friends1: (s) => atLeast(s.friends, 1),
+  friends2: (s) => atLeast(s.friends, 2),
   friends3: (s) => atLeast(s.friends, 3),
   idle7: (s) => atLeast(s.idle7, 1),
   level30: (s) => atLeast(s.highest, 30),
@@ -3242,8 +3378,29 @@ export interface FriendSet {
  */
 export interface MissionSchedule {
   v: number;
-  days?: Record<string, { daily?: string[]; skirmish?: string }>;
+  days?: Record<string, ScheduledDay>;
   weeks?: Record<string, { weekly?: string[]; bounty?: string }>;
+  /** Pool version 6 (WEB-108): the Hunt targets under 1% of the census, as "<raceId>:<classId>" (p.rareQuarry). */
+  rare?: string[];
+  /** Pool version 6: the census the Hunt was weighted by (display only). */
+  census?: { at: number; characters?: number };
+}
+
+/** A race and class by ids (ChrRaces / ChrClasses). */
+export interface TargetIds {
+  race: number;
+  class: number;
+}
+
+export interface ScheduledDay {
+  daily?: string[];
+  skirmish?: string;
+  /** Pool version 6: the Duel slot's mission. */
+  duel?: string;
+  /** Pool version 6: the Hunt, keyed by the hunted faction (Alliance = the target Horde characters hunt). */
+  hunt?: Partial<Record<Faction, TargetIds>>;
+  /** The pool version the site drew the day with. */
+  pool?: number;
 }
 
 /** Days from yesterday to 16 ahead, weeks from last week to 3 ahead: what a schedule may hold. */
@@ -3273,12 +3430,35 @@ function scheduleKey(key: string, low: number, high: number): number | undefined
   return n >= low && n <= high ? n : undefined;
 }
 
+function targetIds(x: unknown): TargetIds | undefined {
+  if (!isTable(x)) return undefined;
+  const ok = (v: unknown) => typeof v === "number" && Number.isInteger(v) && v > 0 && v < 1000;
+  return ok(x.race) && ok(x.class) ? { race: x.race as number, class: x.class as number } : undefined;
+}
+
+/** Pool version 6's optional day fields (CF-118): duel, hunt, pool; a broken one is dropped on its own. */
+function checkDayExtras(value: Record<string, unknown>, entry: Record<string, unknown>): void {
+  const duel = scheduleId(value.duel);
+  if (duel !== undefined) entry.duel = duel;
+  if (isTable(value.hunt)) {
+    const hunt: Partial<Record<Faction, TargetIds>> = {};
+    for (const f of ["Alliance", "Horde"] as const) {
+      const t = targetIds(value.hunt[f]);
+      if (t !== undefined) hunt[f] = t;
+    }
+    if (Object.keys(hunt).length > 0) entry.hunt = hunt;
+  }
+  const v = value.pool;
+  if (typeof v === "number" && Number.isInteger(v) && v > 0 && Object.keys(entry).length > 0) entry.pool = v;
+}
+
 function checkPart<T extends object>(
   raw: unknown,
   low: number,
   high: number,
   list: string,
   single: string,
+  extras?: (value: Record<string, unknown>, entry: Record<string, unknown>) => void,
 ): Record<string, T> | undefined | null {
   if (raw === undefined) return undefined;
   if (!isTable(raw)) return null;
@@ -3291,6 +3471,7 @@ function checkPart<T extends object>(
     if (ids !== undefined) entry[list] = ids;
     const id = scheduleId(value[single]);
     if (id !== undefined) entry[single] = id;
+    extras?.(value, entry);
     if (Object.keys(entry).length > 0) out[String(n)] = entry as T;
   }
   return out;
@@ -3305,12 +3486,13 @@ export function checkSchedule(raw: unknown, day: number, week: number): MissionS
   if (!isTable(raw)) return undefined;
   const v = raw.v;
   if (typeof v !== "number" || !Number.isInteger(v) || v <= 0) return undefined;
-  const days = checkPart<{ daily?: string[]; skirmish?: string }>(
+  const days = checkPart<ScheduledDay>(
     raw.days,
     day - SCHEDULE_DAYS.before,
     day + SCHEDULE_DAYS.after,
     "daily",
     "skirmish",
+    checkDayExtras,
   );
   const weeks = checkPart<{ weekly?: string[]; bounty?: string }>(
     raw.weeks,
@@ -3323,6 +3505,18 @@ export function checkSchedule(raw: unknown, day: number, week: number): MissionS
   const out: MissionSchedule = { v };
   if (days !== undefined && Object.keys(days).length > 0) out.days = days;
   if (weeks !== undefined && Object.keys(weeks).length > 0) out.weeks = weeks;
+  if (Array.isArray(raw.rare)) {
+    const rare = [
+      ...new Set(raw.rare.filter((x): x is string => typeof x === "string" && /^\d{1,3}:\d{1,3}$/.test(x))),
+    ];
+    if (rare.length > 0) out.rare = rare.slice(0, 100);
+  }
+  if (isTable(raw.census) && typeof raw.census.at === "number" && Number.isInteger(raw.census.at)) {
+    const census: { at: number; characters?: number } = { at: raw.census.at };
+    if (typeof raw.census.characters === "number" && Number.isInteger(raw.census.characters))
+      census.characters = raw.census.characters;
+    out.census = census;
+  }
   return out;
 }
 
@@ -3342,6 +3536,18 @@ export function scheduledDraw(n: number, schedule?: MissionSchedule, version = P
   if (s === undefined) return d;
   const out: DayDraw = { ...d, dailies: inPool(s.daily, "daily", version) ? [...s.daily] : d.dailies };
   if (s.skirmish !== undefined && inPool([s.skirmish], "skirmish", version)) out.skirmish = s.skirmish;
+  if (s.duel !== undefined && inPool([s.duel], "duel", version)) out.duel = s.duel;
+  // The Hunt, keyed by the hunted faction in the schedule and by the hunting one in the draw; a target that isn't
+  // valid in this version keeps the draw's.
+  if (s.hunt !== undefined && d.hunt !== undefined) {
+    const hunt = { ...d.hunt };
+    for (const hunted of ["Alliance", "Horde"] as const) {
+      const t = s.hunt[hunted];
+      const c = t !== undefined ? comboById(hunted, t.race, t.class, version) : undefined;
+      if (c !== undefined) hunt[enemyOf(hunted)] = c;
+    }
+    out.hunt = hunt;
+  }
   return out;
 }
 
@@ -3525,7 +3731,7 @@ function cmp(a: string, b: string): number {
 
 // ===== Points, crossing out, the crown, the streak =====
 
-const TRACK: Record<GoalSlot, Track> = { daily: "pve", weekly: "pve", skirmish: "pvp", bounty: "pvp" };
+const TRACK: Record<GoalSlot, Track> = { daily: "pve", weekly: "pve", skirmish: "pvp", bounty: "pvp", duel: "pvp" };
 
 /**
  * CF-69: the pool version a day's or week's points count in: the entry's own `pool` (recorded with its set), else the

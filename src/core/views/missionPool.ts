@@ -10,6 +10,7 @@ import {
   settingOf,
   shortDay,
   SLOTS,
+  CALENDAR_DAYS,
   slotName,
 } from "../doomsday/missionPool";
 import {
@@ -202,8 +203,8 @@ export interface Editor {
   sawNormal: string[];
 }
 
-/** The kinds of the pool's non-theme cards. */
-const KINDS = ["daily", "skirmish", "weekly", "bounty"] as const;
+/** The kinds of the pool's non-theme cards; the Duel slot's pool from pool version 6 (WEB-108). */
+const KINDS = ["daily", "skirmish", "duel", "weekly", "bounty"] as const;
 
 interface Clock {
   weekday: string;
@@ -488,7 +489,7 @@ export function missionPoolView(
   nameOf: (owner: string) => string = (o) => o.split("#")[0]!,
   select?: { period: Period; n: number },
 ): MissionPoolView {
-  const days = input.plan.days.filter((d) => d.n >= input.today);
+  const days = input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS);
   const weeks = input.plan.weeks.filter((w) => w.n > input.week);
   const changed = days.filter((d) => d.changed).length;
   const all = cards(input);
@@ -529,7 +530,7 @@ export function missionPoolBox(input: MissionPoolInput): {
 } {
   return {
     missions: KINDS.reduce((a, k) => a + pool(k).length, 0),
-    changed: input.plan.days.filter((d) => d.n >= input.today && d.changed).length,
+    changed: input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS && d.changed).length,
     today: shortDay(input.today),
   };
 }

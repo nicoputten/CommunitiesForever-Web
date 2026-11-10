@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { beforeRosters } from "./beforeRosters";
 import { normalPlan } from "@/core/doomsday/missionPool";
-import { dayStart, goal, pool, weekStart } from "@/core/doomsday/rules";
+import { dailyKind, dayStart, goal, pool, weekStart } from "@/core/doomsday/rules";
 import { logParts } from "@/core/views/admin";
 import { touchLastSeen } from "@/server/access";
 import { appointAdmin, listLog, OwnerOnlyError } from "@/server/admins";
@@ -64,7 +64,10 @@ describe("owner only", () => {
       expect(() => missionPool(db, by, NOW, OWNER)).toThrow(OwnerOnlyError);
     }
     expect(new OwnerOnlyError().message).toMatch(/^Only the owner can do this/);
-    expect(doomsdaySchedule(db, NOW)).toBeUndefined();
+    // Pool version 6 (WEB-108): the site decides every day, so there is always a schedule, from yesterday to 16 ahead.
+    const schedule = doomsdaySchedule(db, NOW)!;
+    expect(Object.keys(schedule.days!).map(Number)).toEqual(Array.from({ length: 18 }, (_, i) => TODAY - 1 + i));
+    expect(listLog(db)).toHaveLength(1); // only the appointment
   });
 });
 
@@ -96,18 +99,18 @@ describe("steering and the schedule", () => {
   it("a pin goes into the schedule, every slot of the day; back to normal leaves { v }", () => {
     const n = TODAY + 3;
     const normal = normalPlan("day", n);
-    // A daily of a category the day doesn't have, and on neither day next to it.
+    // A daily of a theme the day doesn't have, and on neither day next to it.
     const near = [...normalPlan("day", n - 1), ...normal, ...normalPlan("day", n + 1)];
-    const pin = pool("daily").find(
-      (id) => !near.includes(id) && !normal.some((x) => goal(x)?.category === goal(id)?.category),
-    )!;
+    const pin = pool("daily").find((id) => !near.includes(id) && !normal.some((x) => dailyKind(x) === dailyKind(id)))!;
     pinMission(db, OWNER, "day", n, 1, pin, NOW, OWNER);
-    expect(doomsdaySchedule(db, NOW + 5)).toEqual({
-      v: NOW,
-      days: { [String(n)]: { daily: [normal[0], pin, normal[2]], skirmish: normal[3] } },
-    });
+    const day = doomsdaySchedule(db, NOW + 5)!.days![String(n)]!;
+    expect(day).toMatchObject({ daily: [normal[0], pin, normal[2]], skirmish: normal[3], duel: normal[4], pool: 6 });
+    expect(Object.keys(day.hunt!).sort()).toEqual(["Alliance", "Horde"]);
+    expect(doomsdaySchedule(db, NOW + 5)!.v).toBe(NOW);
     backToNormal(db, OWNER, "day", n, NOW + 10, OWNER);
-    expect(doomsdaySchedule(db, NOW + 20)).toEqual({ v: NOW + 10 });
+    const back = doomsdaySchedule(db, NOW + 20)!;
+    expect(back.v).toBe(NOW + 10);
+    expect(back.days![String(n)]!.daily).toEqual(normal.slice(0, 3));
     expect(logText()).toEqual([
       `${OWNER}set Thu 12 back to the normal draw`,
       `${OWNER}pinned ${goal(pin)!.text} on Thu 12`,

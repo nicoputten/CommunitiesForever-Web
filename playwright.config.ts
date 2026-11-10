@@ -67,6 +67,8 @@ export default defineConfig({
       DATA_DIR: process.env.E2E_DATA_DIR,
       // Item icons (WEB-92): the seed draws the sample's; nothing is ever fetched from a CDN.
       ICON_CDN_URL: "http://127.0.0.1:9/{icon}.jpg",
+      // The Hunt's census (WEB-108): never fetched from Everloot in tests.
+      EVERLOOT_API_URL: "http://127.0.0.1:9",
       AUTH_SECRET: E2E.secret,
       AUTH_URL: `http://localhost:${port}`,
       ADMIN_BATTLETAG: E2E.admin,

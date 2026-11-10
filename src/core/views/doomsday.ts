@@ -221,6 +221,7 @@ const KIND: Record<GoalSlot, string> = {
   pveDaily: "PvE daily",
   hunt: "PvP · the Hunt",
   skirmish: "PvP · Skirmish",
+  duel: "PvP · Duel",
   pveWeekly: "PvE weekly",
   bounty: "PvP bounty",
 };

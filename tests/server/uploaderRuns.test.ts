@@ -119,6 +119,8 @@ describe("runs for the uploader", () => {
       "level",
       "realm",
       "seenAt",
+      // WEB-78 / WEB-108: the Mission pool's schedule (its own shape: docs/UPLOADER-API.md, tests/server/hunt.test.ts).
+      "schedule",
     ]);
     // WEB-66 (addon CF-62): the site's URL and the group's friends, the token's owner left out, never a BattleTag.
     const extra = body as unknown as {
