@@ -45,7 +45,7 @@ export interface PoolData {
   quarry: Partial<Record<"Alliance" | "Horde", QuarryView>>;
   cards: readonly ThemeCardView[];
   targets: HuntTargetsView;
-  /** A new PvP mission's MP07 tag: true "check", false "easy"; undefined: no tag. */
+  /** A new PvP mission's MP07 tag: true "check", false "easy"; undefined: no tag (default: the catalogue's). */
   check?: (id: string) => boolean | undefined;
 }
 
@@ -203,6 +203,14 @@ export interface Editor {
   sawNormal: string[];
 }
 
+/** A pool version 6 PvP mission's tag from the catalogue (CF-118): check, easy; none for the older missions. */
+function catalogueCheck(id: string): boolean | undefined {
+  const g = goal(id);
+  return g !== undefined && (g.slot === "skirmish" || g.slot === "duel") && g.since === 6
+    ? g.check === true
+    : undefined;
+}
+
 /** The kinds of the pool's non-theme cards; the Duel slot's pool from pool version 6 (WEB-108). */
 const KINDS = ["daily", "skirmish", "duel", "weekly", "bounty"] as const;
 
@@ -303,7 +311,7 @@ function row(
     often: setting.often,
   };
   if (h.pct !== undefined) r.donePct = h.pct;
-  const check = data.check?.(id);
+  const check = data.check !== undefined ? data.check(id) : catalogueCheck(id);
   if (check !== undefined) r.tag = check ? "check" : "easy";
   return r;
 }
@@ -353,7 +361,8 @@ function recipe(tiles: readonly RecipeTileView[]): RecipeTile[] {
       count: String(t.id === "off" ? t.pool : t.perPeriod),
       per,
       line,
-      warn: t.soon,
+      // Orange only for a weekly slot (board: Bounty); a daily slot's ~4–5 weeks is fine.
+      warn: t.soon && t.period === "week",
       hunt: t.id === "hunt",
     };
   });
@@ -523,7 +532,7 @@ export function missionPoolView(
 }
 
 /** The Admin page's box: missions, changed days in the next 14 days, today. */
-export function missionPoolBox(input: MissionPoolInput): {
+export function missionPoolBox(input: Omit<MissionPoolInput, "data">): {
   missions: number;
   changed: number;
   today: string;

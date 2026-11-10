@@ -18,7 +18,8 @@ import {
   setHuntTarget,
   setMission,
 } from "@/server/missionPool";
-import { sampleValidTarget } from "@/server/pool6Sample";
+import { validTarget } from "@/core/views/hunt";
+import { huntTargetsFor } from "@/server/hunt";
 
 // The Mission pool page's actions (WEB-79): the owner only. Each checks again who the caller is (CLAUDE.md rule 6);
 // the server functions (WEB-78) check the owner and the lock window once more. A refusal goes back to the page as a
@@ -99,6 +100,8 @@ export async function setTargetAction(form: FormData): Promise<void> {
   const race = Number(form.get("race"));
   const cls = Number(form.get("class"));
   const off = form.get("off") === "true";
-  await asOwner(form, (db, by, now) => setHuntTarget(db, by, race, cls, off, now, sampleValidTarget));
+  await asOwner(form, (db, by, now) =>
+    setHuntTarget(db, by, race, cls, off, now, (r, c) => validTarget(huntTargetsFor(db, by, now).view, r, c)),
+  );
   revalidatePath(`${PAGE}/hunt`);
 }

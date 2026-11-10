@@ -11,7 +11,8 @@ import { refusedText } from "@/core/views/admin";
 import { censusLine, HUNTERS, quarry, tabs, targetRows } from "@/core/views/hunt";
 import { CENSUS_URL } from "@/core/views/pool6";
 import { getDb } from "@/server/db";
-import { missionPool } from "@/server/missionPool";
+import { missionPoolPage } from "@/server/hunt";
+import { poolInput } from "../poolInput";
 import { setTargetAction } from "../actions";
 
 export const metadata: Metadata = { title: "Hunt targets" };
@@ -37,7 +38,7 @@ export default async function HuntTargetsPage() {
       </div>
     );
   }
-  const input = missionPool(getDb(), viewer.battleTag, nowSeconds());
+  const input = poolInput(missionPoolPage(getDb(), viewer.battleTag, nowSeconds()));
   const { targets } = input.data;
   const q = quarry(input.data.quarry, input.data.days, input.today);
   const census = targets.census === undefined ? undefined : censusLine(targets.census);

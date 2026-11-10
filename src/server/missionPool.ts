@@ -1,5 +1,3 @@
-import type { PoolData } from "@/core/views/missionPool";
-import { samplePoolData } from "./pool6Sample";
 import { and, eq, max } from "drizzle-orm";
 import { scheduleAt } from "@/core/doomsday/engine";
 import {
@@ -337,8 +335,6 @@ export interface MissionPoolData {
   stats: Map<string, MissionStats>;
   /** Per changed day or week that has records: the friends (person keys) who saw the normal draw. */
   sawNormal: { period: Period; n: number; owners: string[] }[];
-  /** Pool version 6's themes, Duel slot and Hunt (WEB-108). */
-  data: PoolData;
 }
 
 /** Everything the page shows (WEB-79). Owner only. */
@@ -376,6 +372,5 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
     overrides: state.overrides,
     stats,
     sawNormal,
-    data: samplePoolData(c.today, state.settings, plan.days, stats),
   };
 }

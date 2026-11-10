@@ -108,6 +108,7 @@ test("the recipe bar, today's quarry, the Hunt targets and a theme (WEB-109)", a
   // A filter lists the matches of every card.
   await pool.getByRole("button", { name: /^Never came up/ }).click();
   await expect(pool.getByTestId("theme-list").getByRole("heading", { level: 3 })).toHaveText(/^Never came up · \d+$/);
+  await pool.getByRole("button", { name: /^All/ }).click();
   await pool.getByRole("searchbox", { name: "Search missions" }).fill("quests");
   await expect(pool.getByTestId("theme-list")).toContainText("Finish 10 quests");
 

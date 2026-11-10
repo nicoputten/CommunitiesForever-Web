@@ -13,9 +13,10 @@ import { battleTagKey } from "@/core/access";
 import type { Period } from "@/core/doomsday/missionPool";
 import { refusedText } from "@/core/views/admin";
 import { missionPoolView } from "@/core/views/missionPool";
+import { poolInput } from "./poolInput";
 import { getDb } from "@/server/db";
 import { effectiveTimeZone } from "@/server/discord";
-import { missionPool } from "@/server/missionPool";
+import { missionPoolPage } from "@/server/hunt";
 import { displayNames } from "@/server/uploads";
 import { backToNormalAction, pinAction, rerollAction, rerollDayAction, setOffAction, setOftenAction } from "./actions";
 
@@ -62,7 +63,7 @@ export default async function MissionPoolPage({
   const names = displayNames(db);
   const select = selected(params);
   const view = missionPoolView(
-    missionPool(db, viewer.battleTag, nowSeconds()),
+    poolInput(missionPoolPage(db, viewer.battleTag, nowSeconds())),
     effectiveTimeZone(db, viewer.battleTag),
     (owner) => names.get(battleTagKey(owner)) ?? owner.split("#")[0]!,
     select,
