@@ -6,7 +6,7 @@ import { classInfo } from "@/core/gamedata/classes";
 import { ClassIcon } from "@/components/ui/ClassIcon";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { QuarryPortrait } from "@/components/ui/QuarryPortrait";
-import { CrosshairIcon, CrosshairMark } from "@/components/ui/icons";
+import { CrosshairIcon, ReticleIcon } from "@/components/ui/icons";
 import base from "./Doomsday.module.css";
 import styles from "./Hunt.module.css";
 
@@ -41,7 +41,7 @@ export function HuntCard({ goal }: { goal: GoalCardView & { hunt: NonNullable<Go
       data-testid="goal"
       title={goal.done ? undefined : HOW}
     >
-      <CrosshairMark className={styles.watermark} />
+      <ReticleIcon className={styles.watermark} />
       <span className={`${base.kind} ${base.pvp} ${styles.kind}`}>
         <CrosshairIcon className={styles.kindIcon} /> PvP · The Hunt
       </span>
