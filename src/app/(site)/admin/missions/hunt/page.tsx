@@ -8,14 +8,13 @@ import { QuarryCard } from "@/components/missions/Overview";
 import styles from "@/components/missions/MissionPool.module.css";
 import targetStyles from "@/components/missions/HuntTargets.module.css";
 import { refusedText } from "@/core/views/admin";
-import { HUNTERS, targetsView } from "@/core/views/hunt";
+import { censusLine, HUNTERS, quarry, tabs, targetRows } from "@/core/views/hunt";
+import { CENSUS_URL } from "@/core/views/pool6";
 import { getDb } from "@/server/db";
 import { missionPool } from "@/server/missionPool";
 import { setTargetAction } from "../actions";
 
 export const metadata: Metadata = { title: "Hunt targets" };
-
-const CENSUS_URL = "https://everloot.app/census";
 
 /**
  * The Hunt targets (WEB-109, board `mission-pool-v2-hunt`): today's quarry, then every valid race × class of each
@@ -39,11 +38,9 @@ export default async function HuntTargetsPage() {
     );
   }
   const input = missionPool(getDb(), viewer.battleTag, nowSeconds());
-  const views = {
-    Horde: targetsView(input.data.hunt, input.today, "Horde"),
-    Alliance: targetsView(input.data.hunt, input.today, "Alliance"),
-  };
-  const a = views[HUNTERS[0]!];
+  const { targets } = input.data;
+  const q = quarry(input.data.quarry, input.data.days, input.today);
+  const census = targets.census === undefined ? undefined : censusLine(targets.census);
   return (
     <div className={styles.page}>
       {crumbs}
@@ -51,7 +48,7 @@ export default async function HuntTargetsPage() {
         <h1 className={styles.title}>Mission pool</h1>
         <WhoTag owner />
       </div>
-      <QuarryCard q={a.quarry} targetsHref="#hunt-targets" />
+      <QuarryCard q={q} targetsHref="#hunt-targets" />
       <section className={styles.box} aria-labelledby="hunt-targets">
         <div className={styles.head}>
           <h2 id="hunt-targets" className={styles.boxTitle}>
@@ -62,14 +59,14 @@ export default async function HuntTargetsPage() {
           </span>
         </div>
         <HuntTargets
-          tabs={a.tabs}
-          grids={{ Horde: views.Horde.rows, Alliance: views.Alliance.rows }}
-          first={a.hunter}
+          tabs={tabs(targets)}
+          grids={{ Horde: targetRows(targets, "Horde"), Alliance: targetRows(targets, "Alliance") }}
+          first={HUNTERS[0]!}
           setTarget={setTargetAction}
         />
-        {a.census !== undefined && (
+        {census !== undefined && (
           <p className={targetStyles.census}>
-            {a.census} ·{" "}
+            {census} ·{" "}
             <a href={CENSUS_URL} target="_blank" rel="noreferrer">
               everloot.app/census
             </a>

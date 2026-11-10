@@ -64,6 +64,11 @@
   color: var(--text-faint);
 }
 
+.icon {
+  width: var(--size-class-icon-grid);
+  height: var(--size-class-icon-grid);
+}
+
 .className {
   display: block;
   margin-top: var(--s-1);

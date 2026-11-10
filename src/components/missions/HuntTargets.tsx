@@ -15,7 +15,7 @@ function Cell({ cell, action, phone }: { cell: TargetCell; action: Action; phone
   const [off, setOff] = useOptimistic(cell.state === "off");
   const [, start] = useTransition();
   const tip = useId();
-  const name = cell.tip?.split(" · ")[0] ?? "";
+  const name = cell.name ?? "";
   const state = off ? "off" : cell.state === "off" ? "skip" : cell.state;
   const label = off ? "off" : cell.state === "off" ? "" : cell.label;
   const submit = (form: FormData) =>
@@ -26,8 +26,8 @@ function Cell({ cell, action, phone }: { cell: TargetCell; action: Action; phone
   const color = { "--class-text": `var(${CLASSES[cell.classFile].textToken})` } as CSSProperties;
   return (
     <form action={submit} className={styles.form}>
-      <input type="hidden" name="race" value={cell.race} />
-      <input type="hidden" name="class" value={cell.class} />
+      <input type="hidden" name="race" value={cell.raceId} />
+      <input type="hidden" name="class" value={cell.classId} />
       <input type="hidden" name="off" value={String(!off)} />
       <button
         type="submit"
@@ -45,7 +45,7 @@ function Cell({ cell, action, phone }: { cell: TargetCell; action: Action; phone
         {phone ? (
           <>
             <span className={styles.lineClass}>
-              <ClassIcon classFile={cell.classFile} decorative />
+              <ClassIcon classFile={cell.classFile} className={styles.icon} decorative />
               {CLASSES[cell.classFile].name}
             </span>
             <span className={styles.lineCount}>{off ? `${cell.count ?? "—"} · off` : cell.line}</span>
@@ -120,7 +120,7 @@ export function HuntTargets({
               <td />
               {CLASS_ORDER.map((c) => (
                 <th key={c} scope="col">
-                  <ClassIcon classFile={c} decorative />
+                  <ClassIcon classFile={c} className={styles.icon} decorative />
                   <span className={styles.className}>{CLASSES[c].name}</span>
                 </th>
               ))}
@@ -128,7 +128,7 @@ export function HuntTargets({
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.race}>
+              <tr key={r.raceId}>
                 <th scope="row" className={styles.race}>
                   {r.name}
                   {r.fresh && <span className={styles.fresh}>NEW</span>}
@@ -151,7 +151,7 @@ export function HuntTargets({
       </div>
       <div className={styles.lists}>
         {rows.map((r) => (
-          <div key={r.race} className={styles.list}>
+          <div key={r.raceId} className={styles.list}>
             <h3 className={styles.listRace}>{r.name}</h3>
             {r.cells
               .filter((c) => c.state !== "invalid")

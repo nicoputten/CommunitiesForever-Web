@@ -146,7 +146,9 @@ export function censusWindow(c: HuntCensus, timeZone: string): string {
   };
   const from = part(c.at - 6 * 86400);
   const to = part(c.at);
-  return from.month === to.month ? `${from.day}–${to.day} ${to.month}` : `${from.day} ${from.month}–${to.day} ${to.month}`;
+  return from.month === to.month
+    ? `${from.day}–${to.day} ${to.month}`
+    : `${from.day} ${from.month}–${to.day} ${to.month}`;
 }
 
 function seenOf(t: HuntTarget, census: HuntCensus | undefined, timeZone: string): SeenView | undefined {
@@ -300,7 +302,13 @@ export function huntTrophies(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: s
         ]
           .filter((x) => x !== undefined)
           .join(" · ");
-        return { kind: "target", key: targetKey(t), count: mine.length, rare: seen !== undefined && seen < RARE_SEEN, label };
+        return {
+          kind: "target",
+          key: targetKey(t),
+          count: mine.length,
+          rare: seen !== undefined && seen < RARE_SEEN,
+          label,
+        };
       }),
     })),
   };
@@ -320,7 +328,10 @@ export function huntTrophies(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: s
 export function huntWeek(s: DoomsdaySnapshot): HuntWeekView {
   const ranked = s.friends
     .filter((f) => f.status === "active")
-    .map((f) => ({ f, days: new Set((f.huntKills ?? []).filter((k) => weekOf(k.day) === s.schedule.week).map((k) => k.day)).size }))
+    .map((f) => ({
+      f,
+      days: new Set((f.huntKills ?? []).filter((k) => weekOf(k.day) === s.schedule.week).map((k) => k.day)).size,
+    }))
     .filter((r) => r.days > 0)
     .sort((a, b) => b.days - a.days || compareText(a.f.name, b.f.name));
   return {

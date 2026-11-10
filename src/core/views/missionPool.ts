@@ -26,38 +26,26 @@ import {
   weekStart,
 } from "../doomsday/rules";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
-import { dayTarget, type HuntData, HUNTERS, hunted, inDrawCount, type Quarry, quarry } from "./hunt";
+import { dayTarget, type Quarry, quarry } from "./hunt";
+import type { DayRecipeView, HuntTargetsView, QuarryView, RecipeTileView, ThemeCardView } from "./pool6";
 
 // The Mission pool page (WEB-79, boards `mission-pool`, `mission-pool-steering`, `mission-pool-states`; v2 WEB-109,
 // boards `mission-pool-v2-overview`, `mission-pool-v2-pvp`) and the Admin page's box (`mission-pool-admin-entry`), from
 // WEB-78's and WEB-108's data. Times in the viewer's zone; day names ("Fri 7") are the
 // Doomsday day's, the realm date it starts on. Pure.
 
-export type Theme = "questing" | "loot" | "social" | "professions" | "exploration" | "combat";
-
-/** The PvE themes in the boards' order, with their labels (pool version 6 contract). */
-export const THEMES: readonly { theme: Theme; name: string }[] = [
-  { theme: "questing", name: "Questing" },
-  { theme: "loot", name: "Loot & gold" },
-  { theme: "social", name: "Social" },
-  { theme: "professions", name: "Professions" },
-  { theme: "exploration", name: "Exploration" },
-  { theme: "combat", name: "Combat & character" },
-];
-
-/** Pool version 6's catalogue and draw as the site has them (WEB-108). */
+/**
+ * Pool version 6 as WEB-108 gives it (src/core/views/pool6.ts): the recipe, the days' slots and Hunt, today's quarry
+ * per hunted faction, the theme cards and the Hunt targets.
+ */
 export interface PoolData {
-  /** A daily PvE mission's theme. */
-  themeOf: (id: string) => Theme | undefined;
-  /** The Duel slot's missions (they rotate). */
-  duel: readonly string[];
-  /** New in pool version 6: the Skirmish card's "50 new". */
-  isNew: (id: string) => boolean;
-  /** Needs a test on Forever first ("check"), else "easy"; undefined: no tag (the older missions). */
-  check: (id: string) => boolean | undefined;
-  /** The Duel slot's mission per day, when the plan doesn't carry it. */
-  duels: ReadonlyMap<number, string>;
-  hunt: HuntData;
+  recipe: readonly RecipeTileView[];
+  days: readonly DayRecipeView[];
+  quarry: Partial<Record<"Alliance" | "Horde", QuarryView>>;
+  cards: readonly ThemeCardView[];
+  targets: HuntTargetsView;
+  /** A new PvP mission's MP07 tag: true "check", false "easy"; undefined: no tag. */
+  check?: (id: string) => boolean | undefined;
 }
 
 export interface MissionPoolInput {
@@ -314,106 +302,94 @@ function row(
     often: setting.often,
   };
   if (h.pct !== undefined) r.donePct = h.pct;
-  const check = data.check(id);
+  const check = data.check?.(id);
   if (check !== undefined) r.tag = check ? "check" : "easy";
   return r;
 }
 
-function tile(p: PlannedPeriod, today: number, data: PoolData): DayTile {
-  const pvp = p.plan.filter(isPvp);
-  const duel = data.duels.get(p.n);
-  if (duel !== undefined && !pvp.includes(duel)) pvp.push(duel);
+function tile(p: PlannedPeriod, today: number, d: DayRecipeView | undefined): DayTile {
+  // WEB-108's slots when it has the day, else the plan's (3 PvE, then the PvP slots).
+  const pve = d?.pve ?? p.plan.filter((id) => !isPvp(id));
+  const pvp = d !== undefined ? [d.skirmish, d.duel].filter((x) => x !== undefined) : p.plan.filter(isPvp);
   const t: DayTile = {
     n: p.n,
     label: shortDay(p.n),
     locked: p.locked,
     changed: p.changed,
-    pve: p.plan.filter((id) => !isPvp(id)).map(shortLabel),
+    pve: pve.map(shortLabel),
     pvp: pvp.map(shortLabel),
   };
-  const hunt = dayTarget(data.hunt, p.n);
+  const hunt = dayTarget(d);
   if (hunt !== undefined) t.hunt = hunt;
   if (p.n === today) t.note = "today";
   else if (p.n === today + 1) t.note = "tomorrow";
   return t;
 }
 
-/** "every ~36 d", "every 6 wk": how often a mission of a slot comes back (pool ÷ slots). */
-function backEvery(pool: number, slots: number, unit: "d" | "wk"): { text: string; days: number } {
-  const every = slots > 0 && pool > 0 ? pool / slots : 0;
-  const approx = Number.isInteger(every) && slots === 1 ? "" : "~";
-  return { text: `every ${approx}${Math.round(every)} ${unit}`, days: every * (unit === "wk" ? 7 : 1) };
+/** "~36 d", "6 wk": how often a mission comes back. */
+function every(days: number | undefined, weeks: boolean, slots: number): string {
+  if (days === undefined) return "—";
+  const n = weeks ? days / 7 : days;
+  const approx = Number.isInteger(n) && slots === 1 ? "" : "~";
+  return `${approx}${Math.round(n)} ${weeks ? "wk" : "d"}`;
 }
 
-/** A weekly slot whose missions come back within ~6 weeks turns orange (board `mission-pool-v2-overview`). */
-const WARN_DAYS = 42;
-
-function recipe(onCount: (ids: readonly string[]) => number, data: PoolData, offCount: number): RecipeTile[] {
-  const pve = onCount(pool("daily"));
-  const pvp = onCount([...new Set([...pool("skirmish"), ...data.duel])]);
-  const weekly = onCount(pool("weekly"));
-  const bounty = onCount(pool("bounty"));
-  const tiles: RecipeTile[] = [];
-  const add = (label: string, count: number, per: string, line: string, warn = false, hunt = false) =>
-    tiles.push({ label, count: String(count), per, line, warn, hunt });
-  add("Daily PvE", 3, "a day", `${pve} in pool · back ${backEvery(pve, 3, "d").text}`);
-  const targets = inDrawCount(data.hunt.targets[hunted(HUNTERS[0]!)]);
-  add("The Hunt", 1, "a day", `${targets} targets · weighted`, false, true);
-  add("Daily PvP", 2, "a day", `${pvp} in pool · ${backEvery(pvp, 2, "d").text}`);
-  const w = backEvery(weekly, 3, "wk");
-  add("Weekly", 3, "a week", `${weekly} in pool · ${w.text}`, w.days <= WARN_DAYS);
-  const b = backEvery(bounty, 1, "wk");
-  add("Bounty", 1, "a week", `${bounty} in pool · ${b.text}`, b.days <= WARN_DAYS);
-  add("Off", offCount, "", "switched off");
-  return tiles;
+/** The recipe bar's tiles from WEB-108's (board `mission-pool-v2-overview`). */
+function recipe(tiles: readonly RecipeTileView[]): RecipeTile[] {
+  return tiles.map((t) => {
+    const per = t.id === "off" ? "" : t.period === "day" ? "a day" : "a week";
+    const back = every(t.backEveryDays, t.period === "week", t.perPeriod);
+    const line =
+      t.id === "off"
+        ? "switched off"
+        : t.id === "hunt"
+          ? `${t.pool} targets · weighted`
+          : t.id === "pve"
+            ? `${t.pool} in pool · back every ${back}`
+            : `${t.pool} in pool · every ${back}`;
+    return {
+      label: t.label,
+      count: String(t.id === "off" ? t.pool : t.perPeriod),
+      per,
+      line,
+      warn: t.soon,
+      hunt: t.id === "hunt",
+    };
+  });
 }
 
-/** "64 came up · 71% done": a card's history over its missions. */
-function cardHistory(rows: readonly PoolRow[], stats: ReadonlyMap<string, MissionStats>): string {
-  let cameUp = 0;
-  let had = 0;
-  let done = 0;
-  for (const r of rows) {
-    const s = stats.get(r.id);
-    if (s === undefined) continue;
-    cameUp += s.cameUp;
-    had += s.had;
-    done += s.done;
-  }
-  return had > 0 ? `${cameUp} came up · ${Math.round((done / had) * 100)}% done` : `${cameUp} came up`;
-}
+const TAGS: Readonly<Record<ThemeCardView["kind"], { tag: string; kind: CardKind }>> = {
+  "Daily PvE": { tag: "Daily PvE", kind: "pve" },
+  PvP: { tag: "PvP", kind: "pvp" },
+  Weekly: { tag: "Weekly", kind: "weekly" },
+};
 
-/** The nine cards: the six PvE themes, Skirmish (with the Duel slot's missions), Weekly, Bounty. */
+/** The nine cards from WEB-108's: the six PvE themes, Skirmish (the Duel pool shows under it), Weekly, Bounty. */
 function cards(input: MissionPoolInput): ThemeCard[] {
   const { data, settings, stats, today } = input;
-  const card = (key: string, name: string, kind: CardKind, slot: string, ids: readonly string[]): ThemeCard => {
-    const rows = ids.map((id) => row(id, slot, settingOf(settings, id), stats.get(id), today, data));
-    return {
-      key,
-      name,
-      tag: kind === "pve" ? "Daily PvE" : kind === "pvp" ? "PvP" : "Weekly",
-      kind,
-      count: rows.length,
-      history: cardHistory(rows, stats),
-      rows,
-    };
-  };
-  const daily = pool("daily");
-  const out = THEMES.map((t) =>
-    card(
-      t.theme,
-      t.name,
-      "pve",
-      "daily",
-      daily.filter((id) => data.themeOf(id) === t.theme),
-    ),
-  );
-  const skirmish = card("skirmish", "Skirmish", "pvp", "skirmish", [...new Set([...pool("skirmish"), ...data.duel])]);
-  const fresh = skirmish.rows.filter((r) => data.isNew(r.id)).length;
-  if (fresh > 0) skirmish.fresh = `${fresh} new`;
-  out.push(skirmish, card("weekly", "Weekly", "weekly", "weekly", pool("weekly")));
-  out.push(card("bounty", "Bounty", "pvp", "bounty", pool("bounty")));
-  return out;
+  const duel = data.cards.find((c) => c.id === "duel");
+  return data.cards
+    .filter((c) => c.id !== "duel")
+    .map((c) => {
+      const slot =
+        c.kind === "Daily PvE" ? "daily" : c.id === "weekly" ? "weekly" : c.id === "bounty" ? "bounty" : "skirmish";
+      const ids =
+        c.id === "skirmish" && duel !== undefined ? [...new Set([...c.missions, ...duel.missions])] : c.missions;
+      const rows = ids.map((id) => row(id, slot, settingOf(settings, id), stats.get(id), today, data));
+      const cameUp = c.cameUp + (c.id === "skirmish" ? (duel?.cameUp ?? 0) : 0);
+      const fresh = c.fresh + (c.id === "skirmish" ? (duel?.fresh ?? 0) : 0);
+      const card: ThemeCard = {
+        key: c.id,
+        name: c.label,
+        ...TAGS[c.kind],
+        count: rows.length,
+        history:
+          c.donePct !== undefined ? `${cameUp} came up · ${Math.round(c.donePct * 100)}% done` : `${cameUp} came up`,
+        rows,
+      };
+      if (fresh > 0) card.fresh = `${fresh} new`;
+      return card;
+    });
 }
 
 /** Hard: done by under 30 % of the friends who had it. */
@@ -517,8 +493,8 @@ export function missionPoolView(
   const changed = days.filter((d) => d.changed).length;
   const all = cards(input);
   const rows = [...new Map(all.flatMap((c) => c.rows).map((r) => [r.id, r])).values()];
-  const on = (ids: readonly string[]) => ids.filter((id) => !settingOf(input.settings, id).off).length;
   const off = rows.filter((r) => r.off).length;
+  const byDay = new Map(input.data.days.map((d) => [d.n, d]));
   const filters: FilterChipView[] = [
     { filter: "all", label: "All", count: rows.length },
     { filter: "never", label: "Never came up", count: rows.filter((r) => matches(r, "never")).length },
@@ -527,9 +503,9 @@ export function missionPoolView(
   ];
   const view: MissionPoolView = {
     recipe: { day: "3 PvE + the Hunt + 2 PvP", week: "3 Weekly + a Bounty" },
-    tiles: recipe(on, input.data, off),
-    quarry: quarry(input.data.hunt, input.today),
-    days: days.map((d) => tile(d, input.today, input.data)),
+    tiles: recipe(input.data.recipe),
+    quarry: quarry(input.data.quarry, input.data.days, input.today),
+    days: days.map((d) => tile(d, input.today, byDay.get(d.n))),
     weeks: weeks.map((w) => weekTile(w, input.s, timeZone)),
     since: `since launch · ${Math.max(0, input.today - input.fromDay)} days`,
     filters,

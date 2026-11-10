@@ -361,6 +361,7 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
       if (owners.length > 0) sawNormal.push({ period, n: p.n, owners });
     }
   }
+  const stats = missionStats(records, { day: fromDay, week: weekOf(fromDay) });
   return {
     now,
     s: c.s,
@@ -370,8 +371,8 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
     plan,
     settings: state.settings,
     overrides: state.overrides,
-    stats: missionStats(records, { day: fromDay, week: weekOf(fromDay) }),
+    stats,
     sawNormal,
-    data: samplePoolData(c.today, state.settings),
+    data: samplePoolData(c.today, state.settings, plan.days, stats),
   };
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HuntPortrait } from "@/components/ui/HuntPortrait";
+import { QuarryPortrait } from "@/components/ui/QuarryPortrait";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { CrosshairIcon, LockIcon, ReticleIcon } from "@/components/ui/icons";
 import type { Quarry } from "@/core/views/hunt";
@@ -67,7 +67,7 @@ export function QuarryCard({ q, targetsHref }: { q: Quarry; targetsHref: string 
         <div className={styles.quarryHead}>
           {q.target !== undefined && (
             <>
-              <HuntPortrait short={q.target.short} classFile={q.target.classFile} size="lg" />
+              <QuarryPortrait quarry={q.target} size="lg" />
               <div>
                 <p className={styles.quarryName}>{q.target.name}</p>
                 <p className={styles.quarryHunter}>
@@ -79,7 +79,7 @@ export function QuarryCard({ q, targetsHref }: { q: Quarry; targetsHref: string 
           )}
           {q.other !== undefined && (
             <div className={styles.quarryOther}>
-              <HuntPortrait short={q.other.target.short} classFile={q.other.target.classFile} />
+              <QuarryPortrait quarry={q.other.target} size="sm" />
               <p>
                 {q.other.hunter}
                 <br />
@@ -95,7 +95,7 @@ export function QuarryCard({ q, targetsHref }: { q: Quarry; targetsHref: string 
         <ul className={styles.minis} aria-label="Next 7 days">
           {q.next.map((d) => (
             <li key={d.n} className={styles.mini}>
-              <HuntPortrait short={d.short} classFile={d.classFile} />
+              <QuarryPortrait quarry={d} size="sm" />
               <span>
                 <b>{d.weekday}</b>
                 <br />

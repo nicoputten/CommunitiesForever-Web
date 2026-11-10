@@ -486,7 +486,8 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
     },
     firstDay: active.every((f) => (f.points?.allTime.pve ?? 0) + (f.points?.allTime.pvp ?? 0) === 0),
   };
-  if (s.quarry !== undefined && Object.keys(s.quarry.today).length > 0) page.huntToday = huntToday(s, viewerKey, timeZone);
+  if (s.quarry !== undefined && Object.keys(s.quarry.today).length > 0)
+    page.huntToday = huntToday(s, viewerKey, timeZone);
   const noAddon = s.friends.filter((f) => f.status !== "active").map((f) => f.name);
   if (noAddon.length > 0) {
     page.heatmap.without = `${joinNames(noAddon)}: no Doomsday data yet.`;
