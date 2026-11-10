@@ -162,13 +162,17 @@ export async function expectTouchTargets(page: Page): Promise<void> {
 
 /**
  * axe-core finds no serious or critical WCAG 2.2 AA violation. `disable` turns off named rules for one check; each use
- * says why and needs Nico's OK (the phone map, WEB-25: markers may overlap until zoom, WEB-26 and WEB-28).
+ * says why and needs Nico's OK (the phone map, WEB-25: markers may overlap until zoom, WEB-26 and WEB-28). `exclude`
+ * leaves elements out of the check, the same way: each use names Nico's decision.
  */
-export async function expectAccessible(page: Page, disable: readonly string[] = []): Promise<void> {
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .disableRules([...disable])
-    .analyze();
+export async function expectAccessible(
+  page: Page,
+  disable: readonly string[] = [],
+  exclude: readonly string[] = [],
+): Promise<void> {
+  let axe = new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]);
+  for (const selector of exclude) axe = axe.exclude(selector);
+  const { violations } = await axe.disableRules([...disable]).analyze();
   const bad = violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")
     .map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(" ")).join(", ")})`);
