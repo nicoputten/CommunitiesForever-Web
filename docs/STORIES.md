@@ -537,3 +537,42 @@ already says; it has no value. It goes, not repurposed.
   `tokens.css`; the deviation is recorded in `docs/DESIGN.md`.
 - Done when: lint, tests, build, e2e and design checks pass; the roster and roster-table screenshot baselines change
   (new baselines after Nico's OK).
+
+## E17 Mission pool v2 and the Hunt (2026-11-10)
+Nico ordered "Mission pool v2 + the Hunt", built in parallel against one contract: the addon's CF-118 (the catalogue
+and its fallback draw), WEB-108 (the site's data and draw), WEB-109 (the Mission pool page), WEB-110 (the Doomsday
+pages). One release, pool version 6. Design: Claude Design canvas "Doombringers v2", boards MP05–MP07, DS01–DS02.
+
+### WEB-108 The site's pool 6: the draw, the census-weighted Hunt, Hunt kills and feats
+- **Catalogue (mirrors CF-118):** `POOL_VERSION = 6`; a `theme` on every PvE daily (Questing, Loot & gold, Social,
+  Professions, Exploration, Combat & character); the 50 PvP dailies (`src/core/doomsday/catalogue6.ts`): 41 to the
+  Skirmish, 7 plus "First duel with each friend" to a new `duel` kind; the 8 `check` missions are in the pool but Off
+  until the owner switches them on (never in the draw). Existing catalogue ids without `since` are taken up where the
+  condition is the same (`p.double`, `p.fairFight`, `p.mirror`, `p.races3`, `p.contested`, `p.duelWin`).
+- **The draw (the site decides):** every day 3 PvE dailies from 3 different themes (Rare / Normal / Often weigh inside
+  a theme; Off never), the Skirmish, the Duel (rotating through its pool), and the Hunt per hunted faction. Weeks as
+  before. Today and tomorrow locked; the day editor's pins win. The plan covers yesterday to 16 days ahead; the
+  calendar shows 14.
+- **The Hunt:** the 28 targets per faction from the game files (Everloot `class_races`, build 1.60.1.70862), Skyborne
+  included, by race id and class id. Weighted by the Everloot census count; under 30 seen (or no count) skipped; never
+  the same target within 7 days; the owner switches targets off and on; pins win; today and tomorrow frozen. Without
+  any census every target weighs the same; when nothing is left the rules give way in that order.
+- **The census:** Everloot's population tool over HTTP (`GET https://everloot.app/api/tools/population?faction=&class=
+  &window=week`, `Authorization: Bearer $EVERLOOT_API_KEY`), 18 calls once per realm day before the draw, sequential,
+  stopping at a 429. Stored with its date; on failure the last stored census and a log line (never the key). The owner
+  can import a JSON by hand (Everloot answers, or counts by `raceId:classId` or by faction, race and class). Every
+  census number links "Everloot census" with its date (CC BY-SA 4.0).
+- **The schedule (CF-68 shape, new optional fields):** every day from yesterday to 16 ahead with `daily`, `skirmish`,
+  `duel`, `hunt = { Alliance = { race, class }, Horde = { race, class } }` (keyed by the hunted faction, ids) and
+  `pool = 6`; top-level `rare` ("raceId:classId" under 1% of the census) and `census = { at, characters }`.
+- **Hunt kills:** the feed's optional `hunts[]` (CF-118: `race`/`class` tokens, `raceId`/`classId`, `at`, `zone`);
+  per friend: today's Hunt done (also from the goal record's `done.hunt`), bagged list, trophies grid, "Hunt · this
+  week", and the six Hunt feats (`f.huntFirst`, `f.hunt10`, `f.huntClasses`, `f.huntAll`, `f.huntRare`,
+  `f.huntWeek`), held as feats of kind `hunt` on the character whose kill reached them and posted to the feed. The
+  bot skips the new kind (BOT-API "Unknown kinds: skip them").
+- **View models for WEB-109 and WEB-110:** `src/core/views/pool6.ts`; data from `src/server/hunt.ts`
+  (`doomsdayHunt`, `huntTargetsFor`, `setHuntTarget`, `pinHunt`, `importCensus`, `huntCensusInfo`).
+- **Bot API:** unchanged; the Duel slot's mission isn't on the bot's board.
+- Done when: unit and server tests for the draw (themes distinct, weights, skip, no repeat, locks, pins, fallback
+  without a census), the census parsing, the schedule export and the Hunt kills; lint, tests, build and e2e pass.
+  The golden catalogue comparison waits for CF-118's golden file (pool 6).
