@@ -1,0 +1,295 @@
+/* The Hunt targets (WEB-109, board mission-pool-v2-hunt): races × classes with Everloot's census. */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chipCount {
+  font-weight: var(--fw-semibold);
+  color: var(--text-dim);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-tip);
+  color: var(--text-muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: var(--size-swatch);
+  height: var(--size-swatch);
+  box-sizing: border-box;
+  border-radius: var(--r-swatch);
+  border: var(--border) solid var(--gold);
+  vertical-align: -2px;
+}
+
+.swatch[data-kind="skip"] {
+  border: var(--border) dashed var(--text-dim);
+}
+
+.swatch[data-kind="new"] {
+  border-color: var(--new-race);
+}
+
+.swatch[data-kind="today"] {
+  border: 0;
+  box-shadow: var(--ring-cell-today);
+}
+
+.gridWrap {
+  overflow-x: auto;
+}
+
+.grid {
+  border-collapse: separate;
+  border-spacing: var(--s-1-5);
+}
+
+.grid thead th {
+  padding: 0 var(--s-1);
+  font-size: var(--fs-meta-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.icon {
+  width: var(--size-class-icon-grid);
+  height: var(--size-class-icon-grid);
+}
+
+.className {
+  display: block;
+  margin-top: var(--s-1);
+}
+
+.race {
+  padding-right: var(--s-2-5);
+  font-family: var(--font-name);
+  font-size: var(--fs-name-sm);
+  font-weight: var(--fw-regular);
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text-strong);
+}
+
+.fresh {
+  margin-left: var(--s-1-5);
+  font-family: var(--font-ui);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-th);
+  color: var(--new-race);
+}
+
+.form {
+  position: relative;
+  display: block;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: var(--size-cell-w);
+  height: var(--size-cell-h);
+  padding: var(--s-1-5) var(--s-2);
+  box-sizing: border-box;
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-target-cell);
+  background: var(--tint-cell);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell b {
+  font-size: var(--fs-name-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.bar {
+  display: block;
+  height: var(--size-cell-bar);
+  overflow: hidden;
+  border-radius: var(--r-progress);
+  background: var(--boss-bar-track);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--pvp-text);
+}
+
+.label {
+  white-space: nowrap;
+  font-size: var(--fs-mini);
+  color: var(--text-muted);
+}
+
+.cell[data-state="skip"],
+.cell[data-state="off"] {
+  border-style: dashed;
+  border-color: var(--line-cell-skip);
+  background: transparent;
+}
+
+.cell[data-state="skip"] b,
+.cell[data-state="off"] b {
+  color: var(--text-dim);
+}
+
+.cell[data-state="skip"] .label,
+.cell[data-state="off"] .label {
+  color: var(--pill-soon-text);
+}
+
+.cell[data-new][data-state="draw"] {
+  border-color: var(--new-race);
+}
+
+.cell[data-today] {
+  box-shadow: var(--ring-cell-today);
+}
+
+.cell:hover {
+  border-color: var(--gold-bright);
+}
+
+.na {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-cell-w);
+  height: var(--size-cell-h);
+  font-size: var(--fs-cell-na);
+  color: var(--duel-self);
+}
+
+/* The hover: race and class, seen, share, last hunted, done. */
+.tip {
+  position: absolute;
+  bottom: calc(100% + var(--s-1-5));
+  left: 0;
+  z-index: 5;
+  display: none;
+  padding: var(--s-2) var(--s-2-5);
+  border-radius: var(--r-talent-tip);
+  background: var(--surface-talent-tip);
+  border: var(--border) solid var(--line-talent-split);
+  box-shadow: var(--shadow-modal);
+  font-size: var(--fs-tip);
+  white-space: nowrap;
+  color: var(--text-chip);
+  pointer-events: none;
+}
+
+.form:hover .tip,
+.form:focus-within .tip {
+  display: block;
+}
+
+/* The phone: one list per race. */
+.lists {
+  display: none;
+}
+
+.list {
+  margin-top: var(--s-2-5);
+}
+
+.listRace {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-name-sm);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-brand);
+  color: var(--gold-bright);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  border-bottom: var(--border) solid var(--line-row);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Skipped or off: the icon dimmed, the text in the dim colour (readable, unlike the board's 50 % opacity). */
+.line[data-state="skip"] .lineClass,
+.line[data-state="off"] .lineClass,
+.line[data-state="skip"] .lineCount,
+.line[data-state="off"] .lineCount {
+  color: var(--text-dim);
+}
+
+.line[data-state="skip"] .lineClass > span,
+.line[data-state="off"] .lineClass > span {
+  opacity: var(--opacity-disabled);
+}
+
+.lineClass {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--class-text);
+}
+
+.lineCount {
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.census {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-faint);
+}
+
+.census a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: var(--s-0-5);
+}
+
+@media (max-width: 767px) {
+  .gridWrap,
+  .legend {
+    display: none;
+  }
+
+  .lists {
+    display: block;
+  }
+
+  .census a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+  }
+
+  .lists .tip {
+    display: none !important;
+  }
+}

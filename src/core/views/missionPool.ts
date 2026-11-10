@@ -27,10 +27,27 @@ import {
   weekStart,
 } from "../doomsday/rules";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
+import { dayTarget, type Quarry, quarry } from "./hunt";
+import type { DayRecipeView, HuntTargetsView, QuarryView, RecipeTileView, ThemeCardView } from "./pool6";
 
-// The Mission pool page (WEB-79, boards `mission-pool`, `mission-pool-steering`, `mission-pool-states`) and the Admin
-// page's box (`mission-pool-admin-entry`), from WEB-78's data. Times in the viewer's zone; day names ("Fri 7") are the
+// The Mission pool page (WEB-79, boards `mission-pool`, `mission-pool-steering`, `mission-pool-states`; v2 WEB-109,
+// boards `mission-pool-v2-overview`, `mission-pool-v2-pvp`) and the Admin page's box (`mission-pool-admin-entry`), from
+// WEB-78's and WEB-108's data. Times in the viewer's zone; day names ("Fri 7") are the
 // Doomsday day's, the realm date it starts on. Pure.
+
+/**
+ * Pool version 6 as WEB-108 gives it (src/core/views/pool6.ts): the recipe, the days' slots and Hunt, today's quarry
+ * per hunted faction, the theme cards and the Hunt targets.
+ */
+export interface PoolData {
+  recipe: readonly RecipeTileView[];
+  days: readonly DayRecipeView[];
+  quarry: Partial<Record<"Alliance" | "Horde", QuarryView>>;
+  cards: readonly ThemeCardView[];
+  targets: HuntTargetsView;
+  /** A new PvP mission's MP07 tag: true "check", false "easy"; undefined: no tag (default: the catalogue's). */
+  check?: (id: string) => boolean | undefined;
+}
 
 export interface MissionPoolInput {
   now: number;
@@ -43,11 +60,7 @@ export interface MissionPoolInput {
   overrides: Readonly<Record<Period, Readonly<Record<number, Readonly<Record<number, Override>>>>>>;
   stats: ReadonlyMap<string, MissionStats>;
   sawNormal: readonly { period: Period; n: number; owners: string[] }[];
-}
-
-export interface TileMission {
-  short: string;
-  pvp: boolean;
+  data: PoolData;
 }
 
 export interface DayTile {
@@ -58,7 +71,10 @@ export interface DayTile {
   note?: string;
   locked: boolean;
   changed: boolean;
-  missions: TileMission[];
+  /** Short names: the 3 PvE, then the Hunt's target ("Gnome Mage"), then the PvP slots. */
+  pve: string[];
+  hunt?: string;
+  pvp: string[];
 }
 
 export interface WeekTile {
@@ -73,27 +89,82 @@ export interface WeekTile {
   changed: boolean;
 }
 
+/** A tile of the recipe bar. */
+export interface RecipeTile {
+  /** "Daily PvE". */
+  label: string;
+  /** "3". */
+  count: string;
+  /** "a day", "a week", "". */
+  per: string;
+  /** "108 in pool · back every ~36 d". */
+  line: string;
+  /** Its missions come back within ~6 weeks. */
+  warn: boolean;
+  hunt: boolean;
+}
+
 export interface PoolRow {
   id: string;
   text: string;
   short: string;
   points: string;
-  cameUp: string;
-  swapped: string;
+  /** "came up 2× · 75% · Tue", "—". */
+  history: string;
+  /** The phone's line: "+3 · came up 2× · 75% · Tue". */
+  line: string;
   /** 0..100, undefined without records. */
   donePct?: number;
-  done: string;
-  last: string;
-  /** The phone's line: "Came up 18 · done 71% · last Mon". */
-  line: string;
+  cameUp: number;
+  /** "easy" or "check" (the new PvP missions). */
+  tag?: "easy" | "check";
   off: boolean;
   often: Often;
 }
 
-export interface PoolGroup {
-  kind: string;
-  title: string;
+export type CardKind = "pve" | "pvp" | "weekly";
+
+export interface ThemeCard {
+  key: string;
+  /** "Questing". */
+  name: string;
+  /** "Daily PvE", "PvP", "Weekly". */
+  tag: string;
+  kind: CardKind;
+  count: number;
+  /** "64 came up · 71% done". */
+  history: string;
+  /** "50 new". */
+  fresh?: string;
   rows: PoolRow[];
+}
+
+export type PoolFilter = "all" | "never" | "hard" | "off";
+
+export interface FilterChipView {
+  filter: PoolFilter;
+  label: string;
+  count: number;
+}
+
+export interface MissionPoolView {
+  /** "Every day" … "3 Weekly + a Bounty". */
+  recipe: { day: string; week: string };
+  tiles: RecipeTile[];
+  quarry: Quarry;
+  /** "1 changed", or nothing. */
+  changedText?: string;
+  days: DayTile[];
+  weeks: WeekTile[];
+  /** "since launch · 34 days". */
+  since: string;
+  filters: FilterChipView[];
+  cards: ThemeCard[];
+  /** Missions in the pool. */
+  missionCount: number;
+  editor?: Editor;
+  /** "Won't come up from Thu 6.": the first free day. */
+  offFrom: string;
 }
 
 export interface SlotOption {
@@ -132,31 +203,16 @@ export interface Editor {
   sawNormal: string[];
 }
 
-export interface MissionPoolView {
-  counts: { label: string; count: number }[];
-  /** "1 changed", or nothing. */
-  changedText?: string;
-  days: DayTile[];
-  weeks: WeekTile[];
-  /** "since launch · 34 days". */
-  since: string;
-  groups: PoolGroup[];
-  /** Missions in the pool. */
-  missionCount: number;
-  editor?: Editor;
-  /** "Won't come up from Thu 6.": the first free day. */
-  offFrom: string;
+/** A pool version 6 PvP mission's tag from the catalogue (CF-118): check, easy; none for the older missions. */
+function catalogueCheck(id: string): boolean | undefined {
+  const g = goal(id);
+  return g !== undefined && (g.slot === "skirmish" || g.slot === "duel") && g.since === 6
+    ? g.check === true
+    : undefined;
 }
 
-/** The kinds in page order (the Hunt joins once it is on: HUNT_SINCE). */
-const KINDS = [
-  { kind: "daily", title: "Daily · PvE", count: "Daily PvE" },
-  { kind: "skirmish", title: "Skirmish · PvP", count: "Skirmish" },
-  // Pool version 6 (WEB-108): the Duel slot's pool.
-  { kind: "duel", title: "Duel · PvP", count: "Duel" },
-  { kind: "weekly", title: "Weekly", count: "Weekly" },
-  { kind: "bounty", title: "Bounty · PvP", count: "Bounty" },
-] as const;
+/** The kinds of the pool's non-theme cards; the Duel slot's pool from pool version 6 (WEB-108). */
+const KINDS = ["daily", "skirmish", "duel", "weekly", "bounty"] as const;
 
 interface Clock {
   weekday: string;
@@ -222,40 +278,137 @@ function lastText(kind: string, last: number | undefined, today: number): string
   return `${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
 }
 
-function row(id: string, kind: string, setting: MissionSetting, stats: MissionStats | undefined, today: number) {
-  const pct = stats !== undefined && stats.had > 0 ? Math.round((stats.done / stats.had) * 100) : undefined;
-  const cameUp = stats?.cameUp ?? 0;
-  const done = pct === undefined ? "—" : `${pct}%`;
-  const last = lastText(kind, stats?.last, today);
-  const out: PoolRow = {
+function history(stats: MissionStats | undefined, kind: string, today: number): { text: string; pct?: number } {
+  if (stats === undefined || stats.cameUp === 0) return { text: "—" };
+  const pct = stats.had > 0 ? Math.round((stats.done / stats.had) * 100) : undefined;
+  const parts = [`came up ${stats.cameUp}×`];
+  if (pct !== undefined) parts.push(`${pct}%`);
+  const last = lastText(kind, stats.last, today);
+  if (last !== "—") parts.push(last);
+  return pct === undefined ? { text: parts.join(" · ") } : { text: parts.join(" · "), pct };
+}
+
+function row(
+  id: string,
+  kind: string,
+  setting: MissionSetting,
+  stats: MissionStats | undefined,
+  today: number,
+  data: PoolData,
+): PoolRow {
+  const h = history(stats, kind, today);
+  // In the site's pool version: flat in pool version 1, each mission's own points from version 2 (WEB-80).
+  const points = `+${goalPoints(id, POOL_VERSION)?.points ?? 0}`;
+  const r: PoolRow = {
     id,
     text: missionText(id),
     short: shortLabel(id),
-    // In the site's pool version: flat in pool version 1, each mission's own points from version 2 (WEB-80).
-    points: `+${goalPoints(id, POOL_VERSION)?.points ?? 0}`,
-    cameUp: stats === undefined ? "—" : String(cameUp),
-    swapped: stats === undefined ? "—" : String(stats.swapped),
-    done,
-    last,
-    line: `Came up ${stats === undefined ? "—" : cameUp} · done ${done} · last ${last}`,
+    points,
+    history: h.text,
+    line: `${points} · ${h.text}`,
+    cameUp: stats?.cameUp ?? 0,
     off: setting.off,
     often: setting.often,
   };
-  if (pct !== undefined) out.donePct = pct;
-  return out;
+  if (h.pct !== undefined) r.donePct = h.pct;
+  const check = data.check !== undefined ? data.check(id) : catalogueCheck(id);
+  if (check !== undefined) r.tag = check ? "check" : "easy";
+  return r;
 }
 
-function tile(p: PlannedPeriod, today: number): DayTile {
+function tile(p: PlannedPeriod, today: number, d: DayRecipeView | undefined): DayTile {
+  // WEB-108's slots when it has the day, else the plan's (3 PvE, then the PvP slots).
+  const pve = d?.pve ?? p.plan.filter((id) => !isPvp(id));
+  const pvp = d !== undefined ? [d.skirmish, d.duel].filter((x) => x !== undefined) : p.plan.filter(isPvp);
   const t: DayTile = {
     n: p.n,
     label: shortDay(p.n),
     locked: p.locked,
     changed: p.changed,
-    missions: p.plan.map((id) => ({ short: shortLabel(id), pvp: isPvp(id) })),
+    pve: pve.map(shortLabel),
+    pvp: pvp.map(shortLabel),
   };
+  const hunt = dayTarget(d);
+  if (hunt !== undefined) t.hunt = hunt;
   if (p.n === today) t.note = "today";
   else if (p.n === today + 1) t.note = "tomorrow";
   return t;
+}
+
+/** "~36 d", "6 wk": how often a mission comes back. */
+function every(days: number | undefined, weeks: boolean, slots: number): string {
+  if (days === undefined) return "—";
+  const n = weeks ? days / 7 : days;
+  const approx = Number.isInteger(n) && slots === 1 ? "" : "~";
+  return `${approx}${Math.round(n)} ${weeks ? "wk" : "d"}`;
+}
+
+/** The recipe bar's tiles from WEB-108's (board `mission-pool-v2-overview`). */
+function recipe(tiles: readonly RecipeTileView[]): RecipeTile[] {
+  return tiles.map((t) => {
+    const per = t.id === "off" ? "" : t.period === "day" ? "a day" : "a week";
+    const back = every(t.backEveryDays, t.period === "week", t.perPeriod);
+    const line =
+      t.id === "off"
+        ? "switched off"
+        : t.id === "hunt"
+          ? `${t.pool} targets · weighted`
+          : t.id === "pve"
+            ? `${t.pool} in pool · back every ${back}`
+            : `${t.pool} in pool · every ${back}`;
+    return {
+      label: t.label,
+      count: String(t.id === "off" ? t.pool : t.perPeriod),
+      per,
+      line,
+      warn: t.soon,
+      hunt: t.id === "hunt",
+    };
+  });
+}
+
+const TAGS: Readonly<Record<ThemeCardView["kind"], { tag: string; kind: CardKind }>> = {
+  "Daily PvE": { tag: "Daily PvE", kind: "pve" },
+  PvP: { tag: "PvP", kind: "pvp" },
+  Weekly: { tag: "Weekly", kind: "weekly" },
+};
+
+/** The nine cards from WEB-108's: the six PvE themes, Skirmish (the Duel pool shows under it), Weekly, Bounty. */
+function cards(input: MissionPoolInput): ThemeCard[] {
+  const { data, settings, stats, today } = input;
+  const duel = data.cards.find((c) => c.id === "duel");
+  return data.cards
+    .filter((c) => c.id !== "duel")
+    .map((c) => {
+      const slot =
+        c.kind === "Daily PvE" ? "daily" : c.id === "weekly" ? "weekly" : c.id === "bounty" ? "bounty" : "skirmish";
+      const ids =
+        c.id === "skirmish" && duel !== undefined ? [...new Set([...c.missions, ...duel.missions])] : c.missions;
+      const rows = ids.map((id) => row(id, slot, settingOf(settings, id), stats.get(id), today, data));
+      const cameUp = c.cameUp + (c.id === "skirmish" ? (duel?.cameUp ?? 0) : 0);
+      const fresh = c.fresh + (c.id === "skirmish" ? (duel?.fresh ?? 0) : 0);
+      const card: ThemeCard = {
+        key: c.id,
+        name: c.label,
+        ...TAGS[c.kind],
+        count: rows.length,
+        history:
+          c.donePct !== undefined ? `${cameUp} came up · ${Math.round(c.donePct * 100)}% done` : `${cameUp} came up`,
+        rows,
+      };
+      if (fresh > 0) card.fresh = `${fresh} new`;
+      return card;
+    });
+}
+
+/** Hard: done by under 30 % of the friends who had it. */
+export const HARD_PCT = 30;
+
+export function matches(r: PoolRow, filter: PoolFilter): boolean {
+  if (filter === "never") return r.cameUp === 0;
+  if (filter === "hard") return r.donePct !== undefined && r.donePct < HARD_PCT;
+  if (filter === "off") return r.off;
+  return true;
 }
 
 function weekTile(p: PlannedPeriod, s: Schedule, timeZone: string): WeekTile {
@@ -347,23 +500,26 @@ export function missionPoolView(
   const days = input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS);
   const weeks = input.plan.weeks.filter((w) => w.n > input.week);
   const changed = days.filter((d) => d.changed).length;
-  const groups = KINDS.map((k) => {
-    const rows = pool(k.kind).map((id) =>
-      row(id, k.kind, settingOf(input.settings, id), input.stats.get(id), input.today),
-    );
-    return { kind: k.kind, title: `${k.title} · ${rows.length}`, rows };
-  });
-  const all = groups.flatMap((g) => g.rows);
+  const all = cards(input);
+  const rows = [...new Map(all.flatMap((c) => c.rows).map((r) => [r.id, r])).values()];
+  const off = rows.filter((r) => r.off).length;
+  const byDay = new Map(input.data.days.map((d) => [d.n, d]));
+  const filters: FilterChipView[] = [
+    { filter: "all", label: "All", count: rows.length },
+    { filter: "never", label: "Never came up", count: rows.filter((r) => matches(r, "never")).length },
+    { filter: "hard", label: "Hard", count: rows.filter((r) => matches(r, "hard")).length },
+    { filter: "off", label: "Off", count: off },
+  ];
   const view: MissionPoolView = {
-    counts: [
-      ...KINDS.map((k, i) => ({ label: k.count, count: groups[i]!.rows.filter((r) => !r.off).length })),
-      { label: "Off", count: all.filter((r) => r.off).length },
-    ],
-    days: days.map((d) => tile(d, input.today)),
+    recipe: { day: "3 PvE + the Hunt + 2 PvP", week: "3 Weekly + a Bounty" },
+    tiles: recipe(input.data.recipe),
+    quarry: quarry(input.data.quarry, input.data.days, input.today),
+    days: days.map((d) => tile(d, input.today, byDay.get(d.n))),
     weeks: weeks.map((w) => weekTile(w, input.s, timeZone)),
     since: `since launch · ${Math.max(0, input.today - input.fromDay)} days`,
-    groups,
-    missionCount: all.length,
+    filters,
+    cards: all,
+    missionCount: rows.length,
     offFrom: `Won’t come up from ${shortDay(input.today + 2)}.`,
   };
   if (changed > 0) view.changedText = `${changed} changed`;
@@ -375,13 +531,13 @@ export function missionPoolView(
 }
 
 /** The Admin page's box: missions, changed days in the next 14 days, today. */
-export function missionPoolBox(input: MissionPoolInput): {
+export function missionPoolBox(input: Omit<MissionPoolInput, "data">): {
   missions: number;
   changed: number;
   today: string;
 } {
   return {
-    missions: KINDS.reduce((a, k) => a + pool(k.kind).length, 0),
+    missions: KINDS.reduce((a, k) => a + pool(k).length, 0),
     changed: input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS && d.changed).length,
     today: shortDay(input.today),
   };

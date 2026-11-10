@@ -1116,4 +1116,103 @@
   --fs-talent-name: 13.5px;
   --fs-talent-text: 12.5px;
   --lh-talent-text: 1.4;
+  /* The Hunt on Doomsday (WEB-110, boards DS01HuntToday, DS02HuntMore): the quarry's red wanted card, the race ring
+     with its class icon, the board's Hunt column, the trophies and the Hunt feats. */
+  --hunt-line: rgba(224, 98, 90, 0.6); /* DS01: the Hunt card's border */
+  --hunt-box-line: rgba(224, 98, 90, 0.4); /* DS01: "The Hunt today" */
+  --hunt-card:
+    radial-gradient(260px 160px at 25% 30%, rgba(224, 98, 90, 0.22), rgba(0, 0, 0, 0) 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 9px, rgba(0, 0, 0, 0) 9px 18px), #0b0f18;
+  --hunt-card-done: radial-gradient(260px 160px at 25% 30%, rgba(212, 175, 106, 0.24), rgba(0, 0, 0, 0) 70%), #0b0f18;
+  --hunt-ink: #0b0f18; /* DS01: the card's night, the ring around a class icon */
+  --hunt-hit: #ffb4a8; /* DS02: a bagged quarry on the board, "20:14 · Ashenvale" */
+  --hunt-column: rgba(224, 98, 90, 0.06); /* DS02: the board's Hunt column */
+  --hunt-icon-tint: rgba(224, 98, 90, 0.14); /* DS02: a Hunt feat's icon box */
+  --opacity-hunt-mark: 0.13; /* DS01: the crosshair watermark */
+  --size-hunt-mark: 150px;
+  --s-hunt-mark: -36px; /* how far the watermark sits past the card's top right */
+  --size-hunt-card: 120px; /* DS01: the Hunt card's height */
+  --fs-quarry: 19px; /* DS01: "Night Elf Hunter" */
+  --ls-quarry: 0.03em;
+  --stamp-tilt: rotate(-8deg); /* DS01: the "Bagged" stamp */
+  --ls-stamp: 0.14em;
+  --line-stamp: 2px;
+  --stamp-bg: rgba(11, 15, 24, 0.7);
+  --race-ring: radial-gradient(circle at 35% 30%, #3a4a6a, #121a2a); /* DS01: the race ring's inside */
+  --race-ring-flat: #162034; /* DS01: the small ring of tomorrow's quarry */
+  --line-race-ring-sm: rgba(240, 208, 142, 0.6);
+  --size-quarry: 58px; /* DS01: the portrait (46 px ring + 24 px class icon) */
+  --size-race-ring: 46px;
+  --size-quarry-class: 24px;
+  --fs-race-ring: 18px;
+  --size-quarry-sm: 40px; /* DS01: tomorrow's quarry, the board's header (32 px ring) */
+  --size-race-ring-sm: 32px;
+  --size-quarry-class-sm: 18px;
+  --size-class-icon: 18px; /* DS01: a friend's class icon in "The Hunt today" */
+  --class-glyph: #0b1322; /* the class icon's glyph on the class colour */
+  --ring-class-icon: 0 0 0 1px #0b0f14;
+  --ring-quarry-class: 0 0 0 2px #0b0f18; /* DS01: the class icon on the race ring */
+  --class-glyph-shine: radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 55%);
+  --size-hunt-row: 32px; /* DS01: a friend's line in "The Hunt today" */
+  --size-trophy-w: 46px; /* DS02: a trophy cell */
+  --size-trophy-h: 40px;
+  --s-trophy: 5px; /* DS02: the grid's gaps */
+  --r-trophy: 8px;
+  --line-trophy: rgba(174, 182, 195, 0.18); /* DS02: not bagged yet */
+  --trophy-got: rgba(212, 175, 106, 0.12); /* DS02: bagged */
+  --trophy-empty: #4a5468;
+  --trophy-na: #2a3446; /* DS02: "·", not a valid target */
+  --ring-trophy-rare: 0 0 0 2px rgba(195, 208, 255, 0.5); /* DS02: seen fewer than 60 this week */
+  --size-trophy-bar: 5px; /* DS02: trophies and feat progress */
+  --size-hunt-feat-icon: 36px; /* DS02: a Hunt feat's icon box */
+  --r-hunt-feat-icon: 8px;
+  --line-hunt-feat: rgba(174, 182, 195, 0.2);
+  --line-hunt-feat-got: rgba(212, 175, 106, 0.55);
+  /* Mission pool v2 and the Hunt (WEB-109, boards mission-pool-v2-overview, mission-pool-v2-hunt, mission-pool-v2-pvp) */
+  --hunt: #e0625a; /* the Hunt's red (card borders, tints) */
+  --hunt-text: #ffb4a8; /* the Hunt line on a day, a bagged time */
+  --line-hunt: rgba(224, 98, 90, 0.55); /* the quarry card, the Hunt's recipe tile */
+  --surface-quarry:
+    radial-gradient(500px 220px at 18% 30%, rgba(224, 98, 90, 0.22), rgba(0, 0, 0, 0) 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 10px, rgba(0, 0, 0, 0) 10px 20px), #0b0f18;
+  --surface-hunt-tile: linear-gradient(135deg, rgba(224, 98, 90, 0.14), #0e1626 60%);
+  --r-quarry: 16px;
+  --opacity-watermark: 0.12; /* the quarry card's crosshair */
+  --size-watermark: 220px;
+  --fs-kicker: 11px; /* "TODAY'S QUARRY · THU 19" */
+  --ls-kicker: 0.2em;
+  --fs-mini: 10.5px; /* a portrait's day, race and class; a target cell's "% of draws" */
+  --size-mini: 66px; /* a next-7-days portrait's column */
+  --surface-quiet: rgba(0, 0, 0, 0.25); /* the other faction's target */
+  --warn-tile-line: rgba(240, 167, 116, 0.5); /* a recipe tile whose missions come back within ~6 weeks */
+  --warn-tile-bg: rgba(240, 167, 116, 0.06);
+  --tint-pve-tag: rgba(127, 217, 154, 0.14); /* theme card tags */
+  --tint-pvp-tag: rgba(240, 138, 128, 0.16);
+  --tint-weekly-tag: rgba(157, 180, 255, 0.14);
+  --weekly-tag-text: #c3d0ff;
+  --tint-check-tag: rgba(240, 167, 116, 0.14); /* mission-pool-v2-pvp: "check" */
+  --tint-easy-tag: rgba(127, 217, 154, 0.12);
+  --size-pool-list: 330px; /* the open theme's list: about 7 rows, then it scrolls */
+  --size-col-short: 110px; /* the open theme's columns */
+  --size-col-pts: 46px;
+  --size-col-history: 200px;
+  --size-col-often: 150px;
+  --size-pool-search: 220px;
+  --size-cell-w: 96px; /* a Hunt target cell */
+  --size-cell-h: 58px;
+  --size-cell-bar: 4px;
+  --line-target-cell: rgba(212, 175, 106, 0.55);
+  --tint-cell: rgba(212, 175, 106, 0.07);
+  --line-cell-skip: rgba(174, 182, 195, 0.3);
+  --new-race: #9db4ff; /* a Forever race new to the list */
+  --ring-cell-today: 0 0 0 2px #f08a80;
+  --fs-cell-na: 18px;
+  --size-swatch: 12px;
+  --r-swatch: 3px;
+  --size-quarry-lg: 96px; /* MP05: today's quarry (76 px ring + 40 px class icon), with WEB-110's QuarryPortrait */
+  --size-race-ring-lg: 76px;
+  --size-quarry-class-lg: 40px;
+  --fs-race-ring-lg: 28px;
+  --ring-quarry-class-lg: 0 0 0 3px #0b0f18;
+  --size-class-icon-grid: 20px; /* MP06: the class icons over the grid and in the phone lists */
 }

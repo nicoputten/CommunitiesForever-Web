@@ -1,0 +1,17 @@
+/* The class icon (boards DS01HuntToday, DS02HuntMore): the class colour as a disc, a shine, a dark glyph. */
+.icon {
+  --class: var(--avatar);
+  display: inline-flex;
+  flex: none;
+  width: var(--size-class-icon);
+  height: var(--size-class-icon);
+  border-radius: var(--r-pill);
+  background: var(--class-glyph-shine), var(--class);
+  box-shadow: var(--ring-class-icon);
+  color: var(--class);
+}
+
+.icon > svg {
+  width: 100%;
+  height: 100%;
+}

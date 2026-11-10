@@ -3,6 +3,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
+/** The Everloot stub (tests/design/everloot-stub.mjs), its own port so e2e and design runs can overlap. */
+const EVERLOOT_STUB_PORT = 3191;
 const port = 3100;
 
 /**
@@ -59,28 +61,36 @@ export default defineConfig({
     { name: "desktop", testIgnore: OTHERS, dependencies: ["roster-desktop", "roster-phone"], use: desktop },
     { name: "phone", testIgnore: OTHERS, dependencies: ["roster-desktop", "roster-phone"], use: phone },
   ],
-  webServer: {
-    command: "npm run start",
-    env: {
-      PORT: String(port),
-      HOSTNAME: "localhost",
-      DATA_DIR: process.env.E2E_DATA_DIR,
-      // Item icons (WEB-92): the seed draws the sample's; nothing is ever fetched from a CDN.
-      ICON_CDN_URL: "http://127.0.0.1:9/{icon}.jpg",
-      // The Hunt's census (WEB-108): never fetched from Everloot in tests.
-      EVERLOOT_API_URL: "http://127.0.0.1:9",
-      AUTH_SECRET: E2E.secret,
-      AUTH_URL: `http://localhost:${port}`,
-      ADMIN_BATTLETAG: E2E.admin,
-      AUTH_BATTLENET_ID: "e2e-client-id",
-      AUTH_BATTLENET_SECRET: "e2e-client-secret",
-      // Discord linking (WEB-39): made-up values; Discord itself is never called.
-      DISCORD_CLIENT_ID: "e2e-discord-client-id",
-      DISCORD_CLIENT_SECRET: "e2e-discord-secret",
-      UPLOADER_DEPLOY_SECRET: E2E.deploySecret,
+  webServer: [
+    // Up before the site: its first census check runs at start (WEB-108).
+    {
+      command: `node tests/design/everloot-stub.mjs ${EVERLOOT_STUB_PORT}`,
+      url: `http://127.0.0.1:${EVERLOOT_STUB_PORT}/`,
+      reuseExistingServer: false,
     },
-    port,
-    // Always a fresh server: a reused one would have another database.
-    reuseExistingServer: false,
-  },
+    {
+      command: "npm run start",
+      env: {
+        PORT: String(port),
+        HOSTNAME: "localhost",
+        DATA_DIR: process.env.E2E_DATA_DIR,
+        // Item icons (WEB-92): the seed draws the sample's; nothing is ever fetched from a CDN.
+        ICON_CDN_URL: "http://127.0.0.1:9/{icon}.jpg",
+        // The Hunt's census (WEB-108): never Everloot itself; a stub with made-up counts (WEB-109).
+        EVERLOOT_API_URL: `http://127.0.0.1:${EVERLOOT_STUB_PORT}`,
+        AUTH_SECRET: E2E.secret,
+        AUTH_URL: `http://localhost:${port}`,
+        ADMIN_BATTLETAG: E2E.admin,
+        AUTH_BATTLENET_ID: "e2e-client-id",
+        AUTH_BATTLENET_SECRET: "e2e-client-secret",
+        // Discord linking (WEB-39): made-up values; Discord itself is never called.
+        DISCORD_CLIENT_ID: "e2e-discord-client-id",
+        DISCORD_CLIENT_SECRET: "e2e-discord-secret",
+        UPLOADER_DEPLOY_SECRET: E2E.deploySecret,
+      },
+      port,
+      // Always a fresh server: a reused one would have another database.
+      reuseExistingServer: false,
+    },
+  ],
 });

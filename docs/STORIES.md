@@ -330,6 +330,32 @@ Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (t
 - Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
   checks follow; screenshot baselines change only after Nico's OK.
 
+### WEB-109 Mission pool v2 and the Hunt targets (boards `mission-pool-v2-overview`, `mission-pool-v2-hunt`, `mission-pool-v2-pvp`)
+Nico (2026-11-10): "Mission pool v2 + the Hunt", pool version 6, built with WEB-108 (draw, census), WEB-110 (Doomsday
+pages) and the addon's CF-118. Supersedes WEB-107 (PR #226). Only the boards' visible strings in the UI.
+- **Recipe bar** instead of the count chips: "Every day 3 PvE + the Hunt + 2 PvP · Every week 3 Weekly + a Bounty";
+  six tiles Daily PvE, The Hunt, Daily PvP, Weekly, Bounty, Off with per day or week, the pool and "every ~N d/wk"
+  (pool ÷ slots); a weekly slot whose missions come back within ~6 weeks is orange (Bounty).
+- **Today's quarry:** the red card with the reticle: race initials in a gold ring with the class icon, the name, the
+  hunting faction, +5 points, done today, seen this week (Everloot census, ⓘ), the other faction's target, the next 7
+  days and "Hunt targets ›".
+- **Days:** 6 lines: 3 PvE, the Hunt (crosshair, race and class), the PvP slots. Locks, "changed", the day editor and
+  Next 2 weeks as before.
+- **The pool as themes:** Search, All, Never came up, Hard (under 30 % done), Off with counts; nine cards with kind tag,
+  count and "N came up · N% done" (Skirmish "N new"); one card open below (gold border) with Mission, Short, Pts,
+  History ("came up 2× · 75% · Tue"), How often and the switch; about 7 rows, then it scrolls. A search or filter lists
+  the matches of every card. The new PvP missions carry their easy / check tag. Phone: one column, tiles 2 wide, rows
+  in two lines.
+- **Hunt targets** (`/admin/missions/hunt`): tabs per hunting faction with the targets in the draw, the legend, races ×
+  the 9 classes: count, weight bar and "% of draws", "too rare" under 30, "off", "—" for no valid combination, blue for
+  a Forever race new to the list, red ring for today; hover: seen, share, last hunted, done; a click switches a target
+  off or on (stored as the setting `hunt:<race>:<class>`, logged in Admin changes). The census line with its window,
+  characters and installs links everloot.app/census. Phone: one list per race.
+- **Shared with WEB-110:** `ClassIcon`, `HuntPortrait`, `CrosshairIcon`.
+- **Data:** the page reads WEB-108's pool version 6 data (`PoolData`, `HuntData`); until it lands, a stand-in
+  (`src/server/pool6Sample.ts`) that is replaced before this merges.
+- Done when: view-model tests; design checks desktop and phone, the Hunt targets grid included; e2e; lint, unit, build.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe

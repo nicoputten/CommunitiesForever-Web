@@ -14,17 +14,17 @@ import {
 import { ADMIN } from "./sample";
 
 // WEB-79: design checks of the owner's Mission pool (boards `mission-pool`, `mission-pool-steering`,
-// `mission-pool-states`) on the sample data: the page, a free day's editor and a locked day. Read only, so the
+// `mission-pool-states`; v2 WEB-109: `mission-pool-v2-overview`, `mission-pool-v2-hunt`) on the sample data: the page, a free day's editor and a locked day. Read only, so the
 // desktop and phone projects can run side by side.
 
 test.beforeEach(async ({ context, baseURL }) => signInAs(context, baseURL!, ADMIN));
 
 /**
- * Dimmed by design, below AA contrast: today's and tomorrow's tiles and Off missions' rows (Nico 2026-11-10, WEB-109's
- * docs/DESIGN.md "Deviations"), left out of the contrast check. The last selector is the current page's Off rows
- * (pool 6's check missions start Off, WEB-108) until WEB-109's page replaces it.
+ * Left out of the contrast check, as the boards draw them below AA contrast (Nico's decisions 2026-11-10, WEB-109,
+ * docs/DESIGN.md "Deviations"): today's and tomorrow's day tiles at the board's 60 % opacity (`--opacity-locked`), and
+ * the pool's Off missions dimmed by `--opacity-disabled` (table rows and phone lines both carry `data-off`).
  */
-const DIMMED_BY_DESIGN = ['[data-testid="mission-day"][data-locked]', '[data-testid="theme-list"] [data-off]', "[data-off]"];
+const DIMMED_BY_DESIGN = ['[data-testid="mission-day"][data-locked]', '[data-testid="theme-list"] [data-off]'];
 
 /** The fourth day shown: free (today and tomorrow are locked). */
 async function freeDay(page: import("@playwright/test").Page): Promise<string> {
@@ -90,6 +90,91 @@ test("missions: a free day's editor", async ({ page }) => {
   await expect(editor.getByRole("button", { name: "Reroll day" })).toBeVisible();
   await expectStyles(editor, { "border-color": "var(--gold)" });
   await expectScreenshot(page, "missions-day");
+});
+
+/** WEB-109: the recipe bar, today's quarry, 6-line days (board `mission-pool-v2-overview`). */
+test("missions: recipe bar, quarry, day lines", async ({ page }) => {
+  await openScreen(page, "/admin/missions");
+  const tiles = page.getByRole("list", { name: "Missions" }).getByRole("listitem");
+  await expect(tiles).toHaveCount(6);
+  await expectStyles(tiles.first(), {
+    "background-color": "var(--surface-goal)",
+    "border-radius": "var(--r-btn)",
+  });
+  await expectStyles(tiles.filter({ hasText: "Bounty" }), { "border-color": "var(--warn-tile-line)" });
+  await expectStyles(tiles.filter({ hasText: "The Hunt" }), { "border-color": "var(--line-hunt)" });
+  const quarry = page.getByTestId("quarry");
+  await expectStyles(quarry, { "border-radius": "var(--r-quarry)", "border-color": "var(--line-hunt)" });
+  await expectStyles(quarry.getByRole("heading", { level: 2 }), {
+    "font-size": "var(--fs-kicker)",
+    color: "var(--pvp-text)",
+  });
+  await expect(quarry.getByRole("list", { name: "Next 7 days" }).getByRole("listitem")).toHaveCount(7);
+  await expect(quarry.getByRole("link", { name: "Hunt targets ›" })).toBeVisible();
+  const day = page.getByTestId("mission-day").nth(3);
+  await expectStyles(day.locator("span").filter({ has: page.locator("svg") }).last(), {
+    color: "var(--hunt-text)",
+    "font-weight": "var(--fw-semibold)",
+  });
+});
+
+/** WEB-109: the pool as themes, one open (board `mission-pool-v2-overview`). */
+test("missions: theme cards and an open theme", async ({ page }) => {
+  await openScreen(page, "/admin/missions");
+  const pool = page.getByRole("region", { name: "The pool" });
+  const cards = pool.getByTestId("theme-card");
+  await expect(cards).toHaveCount(9);
+  await expectStyles(cards.first(), { "border-color": "var(--gold)", "border-radius": "var(--r-card)" });
+  await expectStyles(cards.nth(1), { "border-color": "var(--line-goal)" });
+  await cards.nth(6).click();
+  await expect(cards.nth(6)).toHaveAttribute("aria-expanded", "true");
+  await expect(pool.getByTestId("theme-list").getByRole("heading", { level: 3 })).toHaveText(/^Skirmish · \d+$/);
+  await expectAccessible(page, [], DIMMED_BY_DESIGN);
+  if (isPhone(page)) await expectTouchTargets(page);
+});
+
+test("missions: an open theme, screenshot", async ({ page }) => {
+  test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
+  await openScreen(page, "/admin/missions");
+  await expect(page.getByRole("region", { name: "The pool" })).toHaveScreenshot("missions-pool.png");
+});
+
+/** WEB-109: the Hunt targets (board `mission-pool-v2-hunt`): a grid on a desktop, a list per race on a phone. */
+test("missions: Hunt targets", async ({ page }) => {
+  await openScreen(page, "/admin/missions/hunt");
+  const box = page.getByRole("region", { name: "Hunt targets" });
+  await expect(box.getByRole("button", { name: /^Horde hunts · Alliance targets/, pressed: true })).toBeVisible();
+  await expect(box.getByText(/^Everloot census · active/)).toBeVisible();
+  await expect(box.getByRole("link", { name: "everloot.app/census" })).toHaveAttribute(
+    "href",
+    "https://everloot.app/census",
+  );
+  if (isPhone(page)) {
+    await expect(box.getByTestId("target-grid")).toBeHidden();
+    await expectStyles(box.getByRole("heading", { level: 3, name: "Human" }), {
+      "font-family": "var(--font-display)",
+      color: "var(--gold-bright)",
+    });
+    await expectTouchTargets(page);
+  } else {
+    const grid = box.getByTestId("target-grid");
+    await expect(grid.getByRole("columnheader")).toHaveCount(9);
+    const cell = grid.getByRole("switch").first();
+    await expectStyles(cell, {
+      "border-radius": "var(--r-btn)",
+      "border-color": "var(--line-target-cell)",
+      "background-color": "var(--tint-cell)",
+    });
+    await cell.hover();
+    await expect(grid.getByRole("tooltip").first()).toBeVisible();
+  }
+  await expectAccessible(page, [], DIMMED_BY_DESIGN);
+});
+
+test("missions: Hunt targets, screenshot", async ({ page }) => {
+  test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
+  await openScreen(page, "/admin/missions/hunt");
+  await expectScreenshot(page, "missions-hunt-targets");
 });
 
 test("missions: a locked day", async ({ page }) => {
