@@ -330,6 +330,36 @@ Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (t
 - Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
   checks follow; screenshot baselines change only after Nico's OK.
 
+### WEB-110 The Hunt on the Doomsday pages (pool version 6, boards DS01HuntToday and DS02HuntMore)
+Nico (2026-11-10, "Mission pool v2 + the Hunt"): the Hunt gets its own look on `/doomsday`, built with WEB-108 (the
+draw, the census, Hunt kills and feats) and WEB-109 (the Mission pool page) against one contract (pool version 6:
+targets as race id + class id, keyed by the hunted faction). Boards in `design/boards/doomsday-hunt`; only their
+visible strings in the UI. Everything else on the tabs stays.
+- **Today (DS01):** the Hunt card in its slot (order 3 PvE → Hunt → Skirmish → Duel slot, "x of 6 done"): the red
+  wanted card with a faint crosshair, "PvP · The Hunt", the quarry's portrait (race ring 46 px + class icon 24 px), the
+  name in Marcellus SC ("Night Elf Hunter"), "+5 PvP · 230 seen this week ⓘ", the hover "Kill one · target or mouse
+  over them first so the kill counts". Done: gold border, a "Bagged" stamp, "+5 PvP · bagged at 21:02 in Ashenvale".
+  **The Hunt today** above Today so far: "1 of 12 bagged one", up to four friends (class icon, name, crosshair with
+  time and zone, or "—"), "+ N more" to the board's Hunt column, Tomorrow's quarry. Today so far: "Grom bagged a
+  Night Elf Hunter · 20:14". Phone: goals, The Hunt today, Today so far.
+- **Board (DS02):** the Hunt column with a faint red tint, the quarry's portrait, "The Hunt" and the target in its
+  header; a kill shows a crosshair and the time, hover "Bagged 20:14 in Ashenvale". PvP Virgin stays.
+- **PvP tab (DS02):** for the friend picked with the chips, **Hunt trophies** (the other faction's 28 valid targets,
+  race × class with class icons; "6 of 28 · 9 quarries" and a gold bar; bagged gold "×count", not yet an outline,
+  invalid "·", a blue ring under 60 seen this week; hover "Human Paladin · bagged 3× · last Tue · 435 seen this
+  week"; "Rarest: …") and **Hunt · this week** (friends ranked by days with the quarry bagged).
+- **Feats tab (DS02):** the six Hunt feats (First quarry, Quarry ×10, Every class, Big game, Rare quarry, Hunter's
+  week) for the picked friend with a crosshair, a bar and "a / b" while unfinished. Hunt feats in the group's feed get
+  the crosshair.
+- **Census:** Everloot's numbers ("seen this week") only where a census is stored (WEB-108); the ⓘ next to each links
+  "Everloot census" (https://everloot.app/census) with the week's dates. Without a census nothing shows a number.
+- **Data:** the snapshot's `quarry` (today, tomorrow), `census` and `rare`; per friend `hunted`, `classFile` and
+  `huntKills` (from the day records now; the addon's zone and ids with CF-118 via WEB-108). Views in
+  `src/core/views/doomsdayHunt.ts`; the portrait (`QuarryPortrait`, `ClassIcon`) is shared with WEB-109.
+- Done when: view-model tests; design checks at desktop and phone (Hunt card open and bagged, The Hunt today, the
+  board column, trophies, feats; `/dev/doomsday?state=hunt|hunt-bagged&tab=`); lint, unit, e2e; screenshot baselines
+  only after Nico's OK.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe

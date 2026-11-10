@@ -22,7 +22,10 @@
   background: var(--race-ring);
   font-family: var(--font-display);
   font-size: var(--fs-race-ring);
+  font-weight: var(--fw-regular);
   line-height: var(--lh-tight);
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--gold-pale);
 }
 

@@ -36,6 +36,12 @@ const TABS = [
   { name: "state-only-you", url: "/dev/doomsday?state=only-you" },
   { name: "state-loading", url: "/dev/doomsday?state=loading" },
   { name: "state-error", url: "/dev/doomsday?state=error" },
+  // WEB-110 (boards DS01HuntToday, DS02HuntMore): the Hunt with a census and the addon's kill zones.
+  { name: "hunt-today", url: "/dev/doomsday?state=hunt" },
+  { name: "hunt-bagged", url: "/dev/doomsday?state=hunt-bagged" },
+  { name: "hunt-board", url: "/dev/doomsday?state=hunt-bagged&tab=board" },
+  { name: "hunt-pvp", url: "/dev/doomsday?state=hunt&tab=pvp" },
+  { name: "hunt-feats", url: "/dev/doomsday?state=hunt&tab=feats" },
 ];
 
 test("doomsday phone: design values", async ({ page }) => {
@@ -181,8 +187,8 @@ test("doomsday: design values", async ({ page }) => {
   // (pool version 5, WEB-106: drawn from Forever's combinations).
   const open = page.getByTestId("goal").filter({ hasText: "Revenge" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Human Rogues" });
-  await expectStyles(hunt.getByText("PvP · the Hunt"), { color: "var(--pvp-text)" });
+  const hunt = page.getByTestId("goal").filter({ hasText: "Human Rogue" });
+  await expectStyles(hunt.getByText("PvP · The Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
   // The phone shows the board as cards (WEB-61, "doomsday phone: design values").
@@ -280,4 +286,105 @@ test("info tip: design values", async ({ page }) => {
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   await expect(button).toHaveAttribute("aria-describedby", (await tip.getAttribute("id"))!);
+});
+
+// WEB-110: the Hunt (boards DS01HuntToday, DS02HuntMore).
+test("doomsday hunt card: design values", async ({ page }) => {
+  await openScreen(page, "/dev/doomsday?state=hunt");
+  const card = page.locator('[data-slot="hunt"]').first();
+  await expectStyles(card, { "border-color": "var(--hunt-line)", "min-height": "var(--size-hunt-card)" });
+  await expect(card).toHaveAttribute("title", "Kill one · target or mouse over them first so the kill counts");
+  await expectStyles(card.getByText("PvP · The Hunt"), {
+    ...TYPE.overline,
+    "font-weight": "var(--fw-semibold)",
+    color: "var(--pvp-text)",
+  });
+  await expectStyles(card.getByText("Human Rogue", { exact: true }), {
+    "font-family": "var(--font-display)",
+    "font-size": "var(--fs-quarry)",
+    color: "var(--gold-pale)",
+  });
+  const portrait = card.getByRole("img", { name: "Human Rogue" });
+  await expectStyles(portrait, { width: "var(--size-quarry)", height: "var(--size-quarry)" });
+  await expectStyles(portrait.getByText("Hu"), {
+    width: "var(--size-race-ring)",
+    "border-top-color": "var(--gold-bright)",
+    "font-family": "var(--font-display)",
+  });
+  // The census number; its ⓘ links Everloot's census with the week's dates.
+  await expect(card.getByText(/seen this week/)).toBeVisible();
+  await card.getByRole("button", { name: "More info" }).click();
+  const tip = page.getByRole("tooltip").filter({ hasText: "seen in the last 7 days" });
+  await expect(tip).toContainText(/^Everloot census: Human Rogues seen in the last 7 days \(\d+–\d+ \w{3}\)\. More/);
+  await expect(tip.getByRole("link", { name: "Everloot census" })).toHaveAttribute("href", "https://everloot.app/census");
+  await page.keyboard.press("Escape");
+
+  // The Hunt today, above Today so far; tomorrow's quarry at the bottom.
+  const box = page.getByRole("region", { name: "The Hunt today" });
+  await expectStyles(box, { "border-color": "var(--hunt-box-line)" });
+  await expect(box.getByText(/^\d+ of \d+ bagged one$/)).toBeVisible();
+  await expect(page.getByTestId("hunt-friend")).toHaveCount(4);
+  await expectStyles(box.getByText(/ · Ashenvale$/).first(), { color: "var(--hunt-hit)" });
+  await expectStyles(box.getByRole("link", { name: /^\+ \d+ more$/ }), { "min-height": "var(--size-touch)" });
+  await expect(box.getByText("Tomorrow’s quarry")).toBeVisible();
+  const order = await page.locator("h2").allTextContents();
+  expect(order.indexOf("The Hunt today")).toBeLessThan(order.indexOf("Today so far"));
+});
+
+test("doomsday hunt bagged: design values", async ({ page }) => {
+  await openScreen(page, "/dev/doomsday?state=hunt-bagged");
+  const card = page.locator('[data-slot="hunt"]').first();
+  await expectStyles(card, { "border-color": "var(--gold)" });
+  await expectStyles(card.getByText("Bagged", { exact: true }), {
+    color: "var(--gold-bright)",
+    "border-top-color": "var(--gold)",
+    "font-weight": "var(--fw-bold)",
+  });
+  await expect(card.getByText(/^\+5 PvP · bagged at \d\d:\d\d in Ashenvale$/)).toBeVisible();
+  await expect(page.getByText(/^Nico bagged a Human Rogue · \d\d:\d\d$/)).toBeVisible();
+});
+
+test("doomsday hunt board column: design values", async ({ page }) => {
+  test.skip(isPhone(page), "the phone shows the board as cards");
+  await openScreen(page, "/dev/doomsday?state=hunt-bagged&tab=board");
+  const head = page.getByRole("columnheader", { name: /The Hunt/ });
+  await expectStyles(head, { "background-color": "var(--hunt-column)" });
+  await expect(head.getByRole("img", { name: "Human Rogue" })).toBeVisible();
+  const hit = page.getByRole("cell", { name: /Bagged \d\d:\d\d in / }).first();
+  await expect(hit).toHaveAttribute("title", /^Bagged \d\d:\d\d in \w/);
+  await expectStyles(hit.getByText(/^\d\d:\d\d$/), { color: "var(--hunt-hit)" });
+});
+
+test("doomsday hunt trophies: design values", async ({ page }) => {
+  await openScreen(page, "/dev/doomsday?state=hunt&tab=pvp");
+  const box = page.getByRole("region", { name: "Hunt trophies · Nico" });
+  await expect(box.getByText(/^\d+ of 28 · \d+ quarr(y|ies)$/)).toBeVisible();
+  const got = box.getByRole("img", { name: /bagged \d+×/ }).first();
+  await expectStyles(got, {
+    width: "var(--size-trophy-w)",
+    height: "var(--size-trophy-h)",
+    "border-top-color": "var(--gold)",
+    "background-color": "var(--trophy-got)",
+    color: "var(--gold-pale)",
+  });
+  await expect(got).toHaveText(/^×\d+$/);
+  await expectStyles(box.getByRole("img", { name: /^Skyborne Warrior/ }), { "box-shadow": "var(--ring-trophy-rare)" });
+  await expect(box.getByText(/^Rarest:/)).toContainText("seen this week) · blue ring = rare on the realm");
+  const week = page.getByRole("region", { name: "Hunt · this week" });
+  await expect(week.getByText("Days with the quarry bagged")).toBeVisible();
+  await expectStyles(week.getByText(/^\d+ days?$/).first(), { color: "var(--hunt-hit)" });
+});
+
+test("doomsday hunt feats: design values", async ({ page }) => {
+  await openScreen(page, "/dev/doomsday?state=hunt&tab=feats");
+  await expect(page.getByTestId("hunt-feat")).toHaveCount(6);
+  const done = page.getByTestId("hunt-feat").filter({ hasText: "First quarry" });
+  await expectStyles(done, { "border-color": "var(--line-hunt-feat-got)", "background-color": "var(--surface-goal)" });
+  const open = page.getByTestId("hunt-feat").filter({ hasText: "Big game" });
+  await expectStyles(open, { "border-color": "var(--line-hunt-feat)" });
+  await expect(open.getByText(/^\d+ \/ 28$/)).toBeVisible();
+  await expectStyles(open.locator('[aria-hidden="true"]').first(), {
+    width: "var(--size-hunt-feat-icon)",
+    "background-color": "var(--hunt-icon-tint)",
+  });
 });

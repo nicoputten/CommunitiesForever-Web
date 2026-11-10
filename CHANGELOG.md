@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Doomsday: the Hunt gets its own look. Today shows the quarry as a red wanted card with the race and class, how many Everloot saw this week (with a link to its census), and a gold "Bagged" stamp with the time and zone once you got one. A new box, The Hunt today, lists who bagged one and shows tomorrow's quarry. The board has a Hunt column, the PvP tab a trophy collection of every race and class of the other faction plus this week's best hunters, and the Feats tab six Hunt feats with their progress.
+
 ## v0.14.0 (2026-11-10)
 - Doomsday: pool version 5, with the addon of the same release. The Hunt now picks from every race and class the other faction can play in Forever, including Human Hunters, Dwarf Shamans, Gnome Priests, Orc Mages, Undead Paladins and Troll Warlocks. Days a friend played on the older addon keep their Hunt.
 

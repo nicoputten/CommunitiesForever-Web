@@ -36,13 +36,13 @@ export interface QuarryView {
   className: string;
 }
 
-/** A census number with its link (Everloot's census, CC BY-SA 4.0) and its window. */
+/** A census number with its source: Everloot's census (CC BY-SA 4.0), linked in the ⓘ next to it, and its window. */
 export interface SeenView {
   /** "230". */
   count: string;
   href: string;
-  /** "Everloot census · active 4–10 Nov": the link's accessible name and hover. */
-  title: string;
+  /** "13–19 Nov": the census's 7 days. */
+  window: string;
 }
 
 /** The Hunt card in Your goals (DS01). */
@@ -52,7 +52,7 @@ export interface HuntCardView {
   worth: string;
   /** Open, with a census: "230" seen this week. */
   seen?: SeenView;
-  /** "Everloot census: Night Elf Hunters seen in the last 7 days. More seen = easier to find." */
+  /** After the linked "Everloot census: ": "Night Elf Hunters seen in the last 7 days (13–19 Nov). More seen = …". */
   seenTip?: string;
   /** Done: "bagged at 21:02 in Ashenvale" (no zone from an older addon: "bagged at 21:02"). */
   bagged?: string;
@@ -142,21 +142,19 @@ export function censusWindow(c: HuntCensus, timeZone: string): string {
     const p = new Intl.DateTimeFormat("en-GB", { timeZone, day: "numeric", month: "numeric" })
       .formatToParts(new Date(at * 1000))
       .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
-    return { day: p.day ?? "", month: MONTH_SHORT[Number(p.month) - 1] ?? "" };
+    return { day: String(Number(p.day)), month: MONTH_SHORT[Number(p.month) - 1] ?? "" };
   };
   const from = part(c.at - 6 * 86400);
   const to = part(c.at);
-  return from.month === to.month ? `${from.day}–${to.day} ${to.month}` : `${from.day} ${from.month}–${to.day} ${to.month}`;
+  return from.month === to.month
+    ? `${from.day}–${to.day} ${to.month}`
+    : `${from.day} ${from.month}–${to.day} ${to.month}`;
 }
 
 function seenOf(t: HuntTarget, census: HuntCensus | undefined, timeZone: string): SeenView | undefined {
   const n = census?.counts[targetKey(t)];
   if (census === undefined || n === undefined) return undefined;
-  return {
-    count: n.toLocaleString("en-GB"),
-    href: CENSUS_URL,
-    title: `Everloot census · active ${censusWindow(census, timeZone)}`,
-  };
+  return { count: n.toLocaleString("en-GB"), href: CENSUS_URL, window: censusWindow(census, timeZone) };
 }
 
 /** The faction a friend hunts; Alliance targets when unknown (the group plays Horde). */
@@ -198,7 +196,7 @@ export function huntCard(
   const seen = seenOf(target, s.census, timeZone);
   if (seen !== undefined) {
     card.seen = seen;
-    card.seenTip = `Everloot census: ${quarry.name}s seen in the last 7 days. More seen = easier to find.`;
+    card.seenTip = `${quarry.name}s seen in the last 7 days (${seen.window}). More seen = easier to find.`;
   }
   return card;
 }
@@ -262,7 +260,7 @@ function lastDay(atSec: number, now: number, timeZone: string): string {
     .formatToParts(new Date(atSec * 1000))
     .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
   if (now - atSec < 6 * 86400) return WEEKDAY_SHORT[WEEKDAY_SHORT.indexOf(p.weekday ?? "")] ?? p.weekday ?? "";
-  return `${p.day} ${MONTH_SHORT[Number(p.month) - 1]}`;
+  return `${Number(p.day)} ${MONTH_SHORT[Number(p.month) - 1]}`;
 }
 
 /** The PvP tab's trophy collection of one friend (DS02): the other faction's valid targets, gold where bagged. */
@@ -300,7 +298,13 @@ export function huntTrophies(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: s
         ]
           .filter((x) => x !== undefined)
           .join(" · ");
-        return { kind: "target", key: targetKey(t), count: mine.length, rare: seen !== undefined && seen < RARE_SEEN, label };
+        return {
+          kind: "target",
+          key: targetKey(t),
+          count: mine.length,
+          rare: seen !== undefined && seen < RARE_SEEN,
+          label,
+        };
       }),
     })),
   };
@@ -320,7 +324,10 @@ export function huntTrophies(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: s
 export function huntWeek(s: DoomsdaySnapshot): HuntWeekView {
   const ranked = s.friends
     .filter((f) => f.status === "active")
-    .map((f) => ({ f, days: new Set((f.huntKills ?? []).filter((k) => weekOf(k.day) === s.schedule.week).map((k) => k.day)).size }))
+    .map((f) => ({
+      f,
+      days: new Set((f.huntKills ?? []).filter((k) => weekOf(k.day) === s.schedule.week).map((k) => k.day)).size,
+    }))
     .filter((r) => r.days > 0)
     .sort((a, b) => b.days - a.days || compareText(a.f.name, b.f.name));
   return {

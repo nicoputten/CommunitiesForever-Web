@@ -455,3 +455,24 @@ export function PinIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** The Hunt (boards DS01HuntToday, DS02HuntMore): a crosshair. */
+export function CrosshairIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 12 12" strokeWidth={1.3} strokeLinecap="butt" {...props}>
+      <circle cx="6" cy="6" r="4.5" />
+      <path d="M6 0v3M6 9v3M0 6h3M9 6h3" />
+    </Icon>
+  );
+}
+
+/** DS01: the Hunt card's faint crosshair watermark (two rings and four ticks). */
+export function CrosshairMark(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 100 100" strokeWidth={2} strokeLinecap="butt" {...props}>
+      <circle cx="50" cy="50" r="40" />
+      <circle cx="50" cy="50" r="20" />
+      <path d="M50 0v30M50 70v30M0 50h30M70 50h30" />
+    </Icon>
+  );
+}

@@ -4,7 +4,16 @@ import type { FeatIcon, FeatsView } from "@/core/views/doomsdayFeats";
 import type { LadderTrackView, PvpView } from "@/core/views/doomsdayLadder";
 import { ClassDisc } from "@/components/ui/ClassDisc";
 import chip from "@/components/ui/FilterChip.module.css";
-import { EmblemIcon, FishIcon, MountIcon, PotIcon, RankInsignia, SkullIcon, SwordIcon } from "@/components/ui/icons";
+import {
+  EmblemIcon,
+  FishIcon,
+  MountIcon,
+  PotIcon,
+  RankInsignia,
+  SkullIcon,
+  SwordIcon,
+  CrosshairIcon,
+} from "@/components/ui/icons";
 import base from "./Doomsday.module.css";
 import styles from "./Ladder.module.css";
 
@@ -265,6 +274,7 @@ const GLYPHS: Record<Exclude<FeatIcon, "rank">, typeof SwordIcon> = {
   fish: FishIcon,
   skull: SkullIcon,
   cook: PotIcon,
+  hunt: CrosshairIcon,
   star: EmblemIcon,
 };
 

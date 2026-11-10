@@ -1120,7 +1120,8 @@
      with its class icon, the board's Hunt column, the trophies and the Hunt feats. */
   --hunt-line: rgba(224, 98, 90, 0.6); /* DS01: the Hunt card's border */
   --hunt-box-line: rgba(224, 98, 90, 0.4); /* DS01: "The Hunt today" */
-  --hunt-card: radial-gradient(260px 160px at 25% 30%, rgba(224, 98, 90, 0.22), rgba(0, 0, 0, 0) 70%),
+  --hunt-card:
+    radial-gradient(260px 160px at 25% 30%, rgba(224, 98, 90, 0.22), rgba(0, 0, 0, 0) 70%),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 9px, rgba(0, 0, 0, 0) 9px 18px), #0b0f18;
   --hunt-card-done: radial-gradient(260px 160px at 25% 30%, rgba(212, 175, 106, 0.24), rgba(0, 0, 0, 0) 70%), #0b0f18;
   --hunt-ink: #0b0f18; /* DS01: the card's night, the ring around a class icon */
@@ -1152,6 +1153,7 @@
   --ring-class-icon: 0 0 0 1px #0b0f14;
   --ring-quarry-class: 0 0 0 2px #0b0f18; /* DS01: the class icon on the race ring */
   --class-glyph-shine: radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 55%);
+  --size-hunt-week: 320px; /* DS02: Hunt · this week next to the trophies */
   --size-hunt-row: 32px; /* DS01: a friend's line in "The Hunt today" */
   --size-trophy-w: 46px; /* DS02: a trophy cell */
   --size-trophy-h: 40px;

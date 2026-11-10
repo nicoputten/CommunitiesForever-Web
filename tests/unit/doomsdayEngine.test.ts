@@ -1,3 +1,4 @@
+import { targetOfTokens } from "@/core/doomsday/hunt";
 import { describe, expect, it } from "vitest";
 import { doomsdaySnapshot, type DoomsdayInput } from "@/core/doomsday/engine";
 import { boardData } from "@/core/doomsday/posts";
@@ -326,6 +327,29 @@ describe("pool version 4", () => {
     // The day's own pool-4 Hunt (Vanilla's 20), not today's pool-5 draw (WEB-106).
     expect(ada.today!.goals[3]!.goal.title).toBe(huntTitle(draw(today, 4).hunt!.Horde!));
     expect(ada.points!.today).toEqual({ pve: 3, pvp: 5 + 1 });
+  });
+
+  it("the Hunt's facts as ids (WEB-110): today's and tomorrow's quarry, a friend's bagged quarries", () => {
+    const snap = doomsdaySnapshot(input);
+    expect(snap.quarry?.today.Alliance).toEqual(targetOfTokens(hunt.Horde!.race, hunt.Horde!.class));
+    expect(snap.quarry?.today.Horde).toEqual(targetOfTokens(hunt.Alliance!.race, hunt.Alliance!.class));
+    const tomorrow = draw(today + 1).hunt!;
+    expect(snap.quarry?.tomorrow.Alliance).toEqual(targetOfTokens(tomorrow.Horde!.race, tomorrow.Horde!.class));
+    const record = (n: number, pool: number) => ({
+      set: ["d.reward", "d.summoned", "d.auctionPost", "p.flagUp", "hunt"],
+      swapped: {},
+      done: { hunt: 100 + n },
+      pool,
+    });
+    const ada = adaOf(withGoals({ [today - 1]: record(today - 1, 4), [today]: record(today, POOL_VERSION) }));
+    expect(ada.hunted).toBe("Alliance");
+    const day4 = draw(today - 1, 4).hunt!.Horde!;
+    expect(ada.huntKills).toEqual([
+      { day: today - 1, at: 99 + today, ...targetOfTokens(day4.race, day4.class)! },
+      { day: today, at: 100 + today, ...targetOfTokens(hunt.Horde!.race, hunt.Horde!.class)! },
+    ]);
+    // An Alliance player hunts the Horde.
+    expect(adaOf(withGoals({ [today]: record(today, POOL_VERSION) }, ["Alliance"])).hunted).toBe("Horde");
   });
 
   it("a friend with both factions has both Hunts: one grid slot, done by either", () => {
