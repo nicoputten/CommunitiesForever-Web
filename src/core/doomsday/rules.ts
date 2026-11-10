@@ -2938,9 +2938,19 @@ const RACE_NAMES: Readonly<Record<string, string>> = {
   Troll: "Troll",
 };
 
+/** "Night Elf": a race token of COMBOS in words. */
+export function huntRace(race: string): string {
+  return RACE_NAMES[race] ?? race;
+}
+
+/** "Druid": a class token of COMBOS in words. */
+export function huntClass(cls: string): string {
+  return classInfo(cls)?.name ?? cls;
+}
+
 /** "Night Elf Druid": a Hunt combination in words (BOT-API "Goals"). */
 export function huntName(c: Combo): string {
-  return `${RACE_NAMES[c.race] ?? c.race} ${classInfo(c.class)?.name ?? c.class}`;
+  return `${huntRace(c.race)} ${huntClass(c.class)}`;
 }
 
 /** "Hunt: Night Elf Druids": a Hunt's title on the site's board (board `doomsday-today`). */

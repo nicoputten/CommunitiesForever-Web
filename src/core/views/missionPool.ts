@@ -13,11 +13,18 @@ import {
   slotName,
 } from "../doomsday/missionPool";
 import {
+  combos,
   dayLabel,
   dayStart,
   DAY,
+  draw,
+  type Faction,
   goal,
   goalPoints,
+  HUNT_SINCE,
+  huntClass,
+  huntName,
+  huntRace,
   partOfDay,
   pool,
   POOL_VERSION,
@@ -95,6 +102,39 @@ export interface PoolGroup {
   rows: PoolRow[];
 }
 
+export interface HuntRace {
+  /** "Night Elf". */
+  race: string;
+  /** "Warrior, Hunter, Rogue, Priest, Druid". */
+  classes: string;
+}
+
+export interface HuntFaction {
+  faction: Faction;
+  /** "Horde hunts · 23". */
+  title: string;
+  races: HuntRace[];
+}
+
+/**
+ * The Hunt (WEB-107): one daily PvP mission the owner doesn't steer, so its row has stats but no How often. Between
+ * the dailies and the Skirmish, where the Doomsday board puts it.
+ */
+export interface HuntGroup {
+  /** "The Hunt · PvP". */
+  title: string;
+  row: Omit<PoolRow, "off" | "often">;
+  /** "Every day". */
+  often: string;
+  /** "Target or mouse over them so the kill knows who it was." */
+  about: string;
+  /** ["Horde hunts: Gnome Priest", "Alliance hunts: Orc Mage"]. */
+  today: { label: string; combo: string }[];
+  /** "Pool version 5 draws from 23 combinations per faction." */
+  drawsFrom: string;
+  factions: HuntFaction[];
+}
+
 export interface SlotOption {
   id: string;
   text: string;
@@ -140,6 +180,8 @@ export interface MissionPoolView {
   /** "since launch · 34 days". */
   since: string;
   groups: PoolGroup[];
+  /** The Hunt, from pool version 4 (HUNT_SINCE); shown after the "daily" group. */
+  hunt?: HuntGroup;
   /** Missions in the pool. */
   missionCount: number;
   editor?: Editor;
@@ -147,7 +189,7 @@ export interface MissionPoolView {
   offFrom: string;
 }
 
-/** The kinds in page order (the Hunt joins once it is on: HUNT_SINCE). */
+/** The kinds in page order; the Hunt (`huntGroup`) goes after the dailies. */
 const KINDS = [
   { kind: "daily", title: "Daily · PvE", count: "Daily PvE" },
   { kind: "skirmish", title: "Skirmish · PvP", count: "Skirmish" },
@@ -219,12 +261,13 @@ function lastText(kind: string, last: number | undefined, today: number): string
   return `${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
 }
 
-function row(id: string, kind: string, setting: MissionSetting, stats: MissionStats | undefined, today: number) {
+/** A row's text and stats, without the owner's setting. */
+function rowStats(id: string, kind: string, stats: MissionStats | undefined, today: number) {
   const pct = stats !== undefined && stats.had > 0 ? Math.round((stats.done / stats.had) * 100) : undefined;
   const cameUp = stats?.cameUp ?? 0;
   const done = pct === undefined ? "—" : `${pct}%`;
   const last = lastText(kind, stats?.last, today);
-  const out: PoolRow = {
+  const out: Omit<PoolRow, "off" | "often"> = {
     id,
     text: missionText(id),
     short: shortLabel(id),
@@ -235,11 +278,64 @@ function row(id: string, kind: string, setting: MissionSetting, stats: MissionSt
     done,
     last,
     line: `Came up ${stats === undefined ? "—" : cameUp} · done ${done} · last ${last}`,
-    off: setting.off,
-    often: setting.often,
   };
   if (pct !== undefined) out.donePct = pct;
   return out;
+}
+
+function row(
+  id: string,
+  kind: string,
+  setting: MissionSetting,
+  stats: MissionStats | undefined,
+  today: number,
+): PoolRow {
+  return { ...rowStats(id, kind, stats, today), off: setting.off, often: setting.often };
+}
+
+/** The Hunt is in a pool version from HUNT_SINCE on. */
+export function hasHunt(version = POOL_VERSION): boolean {
+  return HUNT_SINCE !== undefined && version >= HUNT_SINCE;
+}
+
+const HUNT_TEXT = "Kill an enemy player of the day’s race and class";
+
+/** The hunting factions, Horde first (the group plays Horde). */
+const HUNTERS: readonly Faction[] = ["Horde", "Alliance"];
+
+/** The Hunt's group: today's combinations and every one the pool version draws from. Undefined before HUNT_SINCE. */
+export function huntGroup(
+  stats: ReadonlyMap<string, MissionStats>,
+  today: number,
+  version = POOL_VERSION,
+): HuntGroup | undefined {
+  if (!hasHunt(version)) return undefined;
+  const r = rowStats("hunt", "daily", stats.get("hunt"), today);
+  const drawn = draw(today, version).hunt;
+  const factions: HuntFaction[] = HUNTERS.map((faction) => {
+    const list = combos(faction, version);
+    const races: HuntRace[] = [];
+    for (const c of list) {
+      const race = huntRace(c.race);
+      const last = races.at(-1);
+      if (last?.race === race) last.classes += `, ${huntClass(c.class)}`;
+      else races.push({ race, classes: huntClass(c.class) });
+    }
+    return { faction, title: `${faction} hunts · ${list.length}`, races };
+  });
+  const counts = [...new Set(HUNTERS.map((f) => combos(f, version).length))];
+  return {
+    title: "The Hunt · PvP",
+    row: { ...r, text: HUNT_TEXT },
+    often: "Every day",
+    about: "Target or mouse over them so the kill knows who it was.",
+    today: HUNTERS.flatMap((f) => {
+      const c = drawn?.[f];
+      return c === undefined ? [] : [{ label: `${f} hunts`, combo: huntName(c) }];
+    }),
+    drawsFrom: `Pool version ${version} draws from ${counts.join(" or ")} combinations per faction.`,
+    factions,
+  };
 }
 
 function tile(p: PlannedPeriod, today: number): DayTile {
@@ -351,18 +447,22 @@ export function missionPoolView(
     return { kind: k.kind, title: `${k.title} · ${rows.length}`, rows };
   });
   const all = groups.flatMap((g) => g.rows);
+  const hunt = huntGroup(input.stats, input.today);
+  const counts: { label: string; count: number }[] = KINDS.map((k, i) => ({
+    label: k.count,
+    count: groups[i]!.rows.filter((r) => !r.off).length,
+  }));
+  if (hunt !== undefined) counts.splice(1, 0, { label: "Hunt", count: 1 });
   const view: MissionPoolView = {
-    counts: [
-      ...KINDS.map((k, i) => ({ label: k.count, count: groups[i]!.rows.filter((r) => !r.off).length })),
-      { label: "Off", count: all.filter((r) => r.off).length },
-    ],
+    counts: [...counts, { label: "Off", count: all.filter((r) => r.off).length }],
     days: days.map((d) => tile(d, input.today)),
     weeks: weeks.map((w) => weekTile(w, input.s, timeZone)),
     since: `since launch · ${Math.max(0, input.today - input.fromDay)} days`,
     groups,
-    missionCount: all.length,
+    missionCount: all.length + (hunt !== undefined ? 1 : 0),
     offFrom: `Won’t come up from ${shortDay(input.today + 2)}.`,
   };
+  if (hunt !== undefined) view.hunt = hunt;
   if (changed > 0) view.changedText = `${changed} changed`;
   if (select !== undefined) {
     const e = editor(input, select.period, select.n, timeZone, nameOf);
@@ -378,7 +478,7 @@ export function missionPoolBox(input: MissionPoolInput): {
   today: string;
 } {
   return {
-    missions: KINDS.reduce((a, k) => a + pool(k.kind).length, 0),
+    missions: KINDS.reduce((a, k) => a + pool(k.kind).length, 0) + (hasHunt() ? 1 : 0),
     changed: input.plan.days.filter((d) => d.n >= input.today && d.changed).length,
     today: shortDay(input.today),
   };

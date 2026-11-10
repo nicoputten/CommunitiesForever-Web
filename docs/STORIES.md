@@ -330,6 +330,21 @@ Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (t
 - Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
   checks follow; screenshot baselines change only after Nico's OK.
 
+### WEB-107 The Hunt on the Mission pool page (board `mission-pool`)
+Nico (2026-11-10): the Mission pool page lists every kind but the Hunt, which joined in pool version 4 (WEB-101).
+- **Its own group** "The Hunt · PvP" between the dailies and the Skirmish (where the Doomsday board puts it), in the
+  page's group look: one row "Kill an enemy player of the day's race and class", short "Hunt", +5, its stats (Came up,
+  Swapped, Done, Last from the recorded `hunt` id) and "Every day" instead of How often: the owner doesn't steer it.
+- **What it is:** "Target or mouse over them so the kill knows who it was."
+- **Today:** the day's combination per hunting faction: "Horde hunts: Gnome Priest", "Alliance hunts: Orc Mage".
+- **The pool:** every combination the site's pool version draws from, per hunting faction and grouped by race
+  ("Horde hunts · 23", "Night Elf: Warrior, Hunter, …"), with the pool version: "Pool version 5 draws from 23
+  combinations per faction." Pool versions before 4 (HUNT_SINCE) have no Hunt and no group.
+- **Counts:** the counts line gets "1 Hunt" after Daily PvE; the Admin page's box counts the Hunt as one mission.
+- **Phone:** one block after the dailies, the lists one under the other; counted in "Show all".
+- Done when: view-model tests (the group, today, pool 5's 23 and pool 4's 20, none before 4, the counts); design
+  checks of the group on desktop and phone; e2e sees the group; lint, unit, build pass.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe

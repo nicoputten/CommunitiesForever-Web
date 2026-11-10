@@ -179,7 +179,13 @@ export default async function MissionPoolPage({
           </span>
           <span className={styles.aside}>{view.since}</span>
         </div>
-        <PoolControls groups={view.groups} offFrom={view.offFrom} setOff={setOffAction} setOften={setOftenAction} />
+        <PoolControls
+          groups={view.groups}
+          hunt={view.hunt}
+          offFrom={view.offFrom}
+          setOff={setOffAction}
+          setOften={setOftenAction}
+        />
       </section>
     </div>
   );

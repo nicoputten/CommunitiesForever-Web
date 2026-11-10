@@ -548,6 +548,64 @@
   font-weight: var(--fw-semibold);
 }
 
+/* The Hunt (WEB-107): how the kill counts, today's combinations, the lists by race. */
+.hunt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-1) 0 var(--s-2);
+}
+
+.huntText {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.huntToday {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1-5) var(--s-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.huntToday b {
+  font-weight: var(--fw-semibold);
+}
+
+.huntLists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3) var(--s-5);
+}
+
+.huntTitle {
+  margin: 0;
+  font-size: var(--fs-meta-sm);
+  letter-spacing: var(--ls-overline);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.huntRaces {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s-1) var(--s-3);
+  margin: var(--s-1-5) 0 0;
+  font-size: var(--fs-meta);
+}
+
+.huntRaces dt {
+  color: var(--text-strong);
+}
+
+.huntRaces dd {
+  margin: 0;
+  color: var(--text-dim);
+}
+
 /* The phone's pool: one block per mission. */
 .lines {
   display: none;
@@ -755,6 +813,10 @@
 @media (max-width: 767px) {
   .lineBlock[data-hidden] {
     display: none;
+  }
+
+  .huntLists {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

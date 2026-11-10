@@ -2,6 +2,7 @@
 
 ## v0.14.0 (2026-11-10)
 - Doomsday: pool version 5, with the addon of the same release. The Hunt now picks from every race and class the other faction can play in Forever, including Human Hunters, Dwarf Shamans, Gnome Priests, Orc Mages, Undead Paladins and Troll Warlocks. Days a friend played on the older addon keep their Hunt.
+- Mission pool: the Hunt has its own group between the dailies and the Skirmish: what it asks, its stats, today's Hunt for each faction ("Horde hunts: Gnome Priest") and every race and class combination the pool draws from, by race. The counts and the Admin page's box count it as a mission.
 
 ## v0.13.0 (2026-11-09)
 - Recipes: every reagent in a recipe's panel says where to get it, at most three ways, best first: the vendor that sells it (and where, with "limited stock" when it only has a few), the recipe that makes it (with who in the group knows it first; the link opens that recipe, Back returns), skinning, herbs or ore, then the creatures that drop it with their chance. "No known source" when the game data has none. DoomBot's `/craft` gets the same, for the bot's next version. Needs "Import item data" once after the release.
