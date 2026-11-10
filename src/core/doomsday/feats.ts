@@ -3,6 +3,8 @@ import { PROFESSIONS } from "../gamedata/professions";
 import type { FeedDay } from "../feed";
 import type { Character, Dataset } from "../model";
 import { ordinal } from "../names";
+import type { HuntFeatId, HuntFeatProgress } from "../views/pool6";
+import { HUNT_FEATS } from "./hunt";
 
 // Feats (WEB-56; the addon repo's docs/DOOMSDAY.md "Feats"): one-time achievements per character, posted once as
 // "Feat unlocked", no points. Every milestone (src/core/bot.ts) is one, and these kinds join them. Pure: the server
@@ -30,7 +32,9 @@ export type FeatKind =
   | "epicMount"
   | "firstCatch"
   | "jackOfAllTrades"
-  | "notableItem";
+  | "notableItem"
+  /** WEB-108: the six Hunt feats (one per friend, held on the character that made the kill). */
+  | "hunt";
 
 /** The watch-list feats (addon CF-53's `notable`). */
 export type Notable =
@@ -51,6 +55,9 @@ export interface FeatFields {
   place?: number;
   professions?: string[];
   notable?: Notable;
+  /** WEB-108: the Hunt feat ("f.huntFirst" ...) and the target of the kill that reached it ("Skyborne Druid"). */
+  hunt?: HuntFeatId;
+  target?: string;
 }
 
 /** A feat the site holds for a character. */
@@ -193,6 +200,8 @@ export function groupKey(f: { kind: FeatKind; fields: FeatFields }): string | un
       return f.kind;
     case "notableItem":
       return `notableItem:${f.fields.notable}`;
+    case "hunt":
+      return `hunt:${f.fields.hunt}`;
     default:
       return undefined;
   }
@@ -216,6 +225,8 @@ export interface FeatInput {
   feedCounts: Readonly<Record<string, { duelsWon: number; deaths: number }>>;
   /** The milestones (src/core/bot.ts) of this upload: level, maxLevel, professionCap and newCharacter. */
   milestones: readonly { kind: FeatKind; guid: string; key: string; fields: FeatFields }[];
+  /** WEB-108: per person key, the Hunt feats' progress from every stored Hunt kill (src/core/doomsday/hunt.ts). */
+  huntFeats?: Readonly<Record<string, readonly HuntFeatProgress[]>>;
 }
 
 /** A feat's key for a milestone of src/core/bot.ts. */
@@ -385,6 +396,21 @@ export function detectFeats(input: FeatInput): HeldFeat[] {
       }
     }
   }
+
+  // WEB-108: the Hunt feats, once per friend, on the character whose kill reached them.
+  for (const owner of Object.keys(input.huntFeats ?? {}).sort()) {
+    const mine = guids.filter((g) => after.characters[g]?.owner === owner && after.characters[g]?.hasRecord);
+    if (mine.length === 0) continue;
+    for (const f of input.huntFeats![owner]!) {
+      if (!f.done) continue;
+      const key = `hunt:${f.id}`;
+      if (mine.some((g) => has(g, key))) continue;
+      const guid = f.kill !== undefined && mine.includes(f.kill.guid) ? f.kill.guid : mine[0]!;
+      const fields: FeatFields = { hunt: f.id };
+      if (f.kill?.target !== undefined) fields.target = f.kill.target.name;
+      add(guid, key, "hunt", fields, firstUpload);
+    }
+  }
   return out;
 }
 
@@ -537,6 +563,14 @@ export function featText(
     case "notableItem": {
       const t = NOTABLE_TEXT[x.notable ?? "arcaniteReaper"];
       return { ...t, text: `${name}: ${t.line}` };
+    }
+    case "hunt": {
+      const feat = HUNT_FEATS.find((h) => h.id === x.hunt) ?? HUNT_FEATS[0]!;
+      return {
+        title: feat.name,
+        line: feat.text,
+        text: x.target !== undefined ? `${name} bagged a ${x.target} · ${feat.name}` : `${name}: ${feat.name}`,
+      };
     }
   }
 }

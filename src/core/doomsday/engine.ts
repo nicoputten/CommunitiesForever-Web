@@ -179,6 +179,7 @@ const SLOTS: Record<string, GoalSlot> = {
   daily: "pveDaily",
   weekly: "pveWeekly",
   skirmish: "skirmish",
+  duel: "duel",
   bounty: "bounty",
 };
 
@@ -435,9 +436,10 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   ): FriendGoal[] => {
     // Board order: the PvE goals, the Hunt, then the PvP slot (the addon records the Hunt as the set's fifth id).
     const ordered = [
-      ...set.filter((id) => id !== "hunt" && goal(id)?.slot !== "skirmish"),
+      ...set.filter((id) => id !== "hunt" && goal(id)?.slot !== "skirmish" && goal(id)?.slot !== "duel"),
       ...set.filter((id) => id === "hunt"),
       ...set.filter((id) => id !== "hunt" && goal(id)?.slot === "skirmish"),
+      ...set.filter((id) => id !== "hunt" && goal(id)?.slot === "duel"),
     ];
     return ordered.flatMap((id): FriendGoal[] => {
       if (id === "hunt" && huntGoals.length > 0) {
@@ -791,6 +793,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
       weekReset: dayStart(weekStart(week + 1), s),
     },
     todayGoals,
+    ...(dayDraw.duel !== undefined ? { todayDuel: goalRef(dayDraw.duel) } : {}),
     hunts,
     weekGoals,
     friends: out,

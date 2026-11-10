@@ -18,7 +18,7 @@ import {
   type StoredGoals,
   weekLocked,
 } from "@/core/doomsday/missionPool";
-import { dayStart, goal, pool, weekStart } from "@/core/doomsday/rules";
+import { dailyKind, dayStart, pool, weekStart } from "@/core/doomsday/rules";
 
 // WEB-78: the Mission pool's plan. Days 20766 (Mon 9 Nov) and on, week 2967; the realm clock is CET, reset 19:00.
 
@@ -53,8 +53,9 @@ function chain(from: number, count: number, settings: Settings, overrides: Overr
 
 function expectDrawRules(plans: Plan[]): void {
   plans.forEach((p, i) => {
-    expect(new Set(p.slice(0, 3).map((id) => goal(id)!.category)).size, `day ${i} categories`).toBe(3);
-    expect(new Set(p).size, `day ${i} distinct`).toBe(4);
+    // Pool version 6: 3 different themes, then the Skirmish and the Duel.
+    expect(new Set(p.slice(0, 3).map((id) => dailyKind(id))).size, `day ${i} themes`).toBe(3);
+    expect(new Set(p).size, `day ${i} distinct`).toBe(5);
     if (i > 0)
       expect(
         p.filter((id) => plans[i - 1]!.includes(id)),
@@ -66,7 +67,8 @@ function expectDrawRules(plans: Plan[]): void {
 describe("the plan", () => {
   it("is the normal draw without settings or changes, and no schedule is sent", () => {
     const plan = fullPlan(input());
-    expect(plan.days.map((d) => d.n)).toEqual(Array.from({ length: 15 }, (_, i) => TODAY - 1 + i));
+    // Yesterday to 16 days ahead (the schedule's window).
+    expect(plan.days.map((d) => d.n)).toEqual(Array.from({ length: 18 }, (_, i) => TODAY - 1 + i));
     expect(plan.weeks.map((w) => w.n)).toEqual([WEEK - 1, WEEK, WEEK + 1, WEEK + 2]);
     expect([...plan.days, ...plan.weeks].every((p) => !p.changed)).toBe(true);
     expect(scheduleOf(plan, 0, NOW)).toBeUndefined();
@@ -94,8 +96,12 @@ describe("the plan", () => {
     expect(schedule.days![String(free.find((d) => d.changed)!.n)]!.daily).toHaveLength(3);
   });
 
-  it("Often comes up more and Rare less than Normal, always with the draw's rules", () => {
-    const count = (settings: Settings, id: string) => chain(21000, 400, settings).filter((p) => p.includes(id)).length;
+  it("Often comes up more and Rare less than Normal inside its theme, always with the draw's rules", () => {
+    // Pool version 6: a weighted day draws a theme first, then a mission of it by weight. A Social mission set to
+    // Often makes every daily slot weighted, so d.dungeon (Combat & character) is compared inside the same draw.
+    const base: Settings = { "d.trade": { off: false, often: "often" } };
+    const count = (settings: Settings, id: string) =>
+      chain(21000, 1000, { ...base, ...settings }).filter((p) => p.includes(id)).length;
     const normal = count({}, "d.dungeon");
     const often = count({ "d.dungeon": { off: false, often: "often" } }, "d.dungeon");
     const rare = count({ "d.dungeon": { off: false, often: "rare" } }, "d.dungeon");
@@ -116,11 +122,11 @@ describe("the plan", () => {
     expect(chain(n, 1, off, rerolled)[0]).not.toContain("d.secondary");
   });
 
-  it("a pin pushes the normal mission of its category to another one", () => {
+  it("a pin pushes the normal mission of its theme to another one", () => {
     const n = TODAY + 3;
     const normal = normalPlan("day", n);
-    // Pinned in the first slot: a daily of the third slot's category.
-    const pin = pool("daily").find((id) => id !== normal[2] && goal(id)?.category === goal(normal[2]!)?.category)!;
+    // Pinned in the first slot: a daily of the third slot's theme.
+    const pin = pool("daily").find((id) => id !== normal[2] && dailyKind(id) === dailyKind(normal[2]!))!;
     const plan = chain(n, 1, {}, { [n]: { 0: { id: pin, kind: "pin" } } })[0]!;
     expect(plan[0]).toBe(pin);
     expect(plan).not.toContain(normal[2]);

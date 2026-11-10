@@ -15,6 +15,8 @@ export interface DoomsdaySnapshot {
   schedule: DoomsdaySchedule;
   /** Today's draw as the board's columns, before per-friend swaps: the 3 PvE dailies, then the Skirmish. */
   todayGoals: GoalRef[];
+  /** Pool version 6: the Duel slot's mission today (not in todayGoals, so the bot's board keeps its shape). */
+  todayDuel?: GoalRef;
   /** The Hunt per enemy faction: Horde characters hunt `alliance`, Alliance characters `horde`. */
   hunts: { alliance?: GoalRef; horde?: GoalRef };
   /** This week's draw: the 3 PvE weeklies, then the Weekly bounty. */
@@ -43,7 +45,7 @@ export interface DoomsdaySchedule {
   weekReset: number;
 }
 
-export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "pveWeekly" | "bounty";
+export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "duel" | "pveWeekly" | "bounty";
 
 export interface GoalRef {
   /** Catalogue id ("d.quests10", "p.loneWolf", "hunt:NightElf:DRUID"); never reused. */

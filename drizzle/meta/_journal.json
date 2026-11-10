@@ -253,6 +253,13 @@
       "when": 1794262239776,
       "tag": "0035_talent_trees",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1794331138956,
+      "tag": "0036_hunt",
+      "breakpoints": true
     }
   ]
 }

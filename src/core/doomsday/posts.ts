@@ -92,7 +92,9 @@ function daySlotsOf(goals: readonly FriendGoal[]) {
   // A friend's Hunts (one per faction) are the one `hunt` slot, with id "hunt" as the column: the done one, else the first.
   const hunts = goals.filter((g) => g.goal.slot === "hunt");
   const hunt = hunts.find((g) => g.doneAt !== undefined) ?? hunts[0];
+  // Pool version 6's Duel slot mission isn't on the bot's board (BOT-API unchanged).
   return goals
+    .filter((g) => g.goal.slot !== "duel")
     .filter((g) => g.goal.slot !== "hunt" || g === hunt)
     .map((g) =>
       g.goal.slot === "hunt"

@@ -269,10 +269,13 @@ describe("pool version 4", () => {
 
   it("pools: 108 dailies, 6 Skirmish, 49 weeklies, 6 Bounty; Defend home retired; the Hunt from 4", () => {
     expect(HUNT_SINCE).toBe(4);
-    expect([pool("daily").length, pool("skirmish").length, pool("weekly").length, pool("bounty").length]).toEqual([
-      108, 6, 49, 6,
-    ]);
-    expect(pool("skirmish")).toEqual([
+    expect([
+      pool("daily", 5).length,
+      pool("skirmish", 5).length,
+      pool("weekly", 5).length,
+      pool("bounty", 5).length,
+    ]).toEqual([108, 6, 49, 6]);
+    expect(pool("skirmish", 5)).toEqual([
       "p.frontLine",
       "p.loneWolf",
       "p.untouchable",
@@ -280,9 +283,9 @@ describe("pool version 4", () => {
       "p.flagHour",
       "p.flagUp",
     ]);
-    expect(pool("bounty")).toContain("b.flagged3h");
+    expect(pool("bounty", 5)).toContain("b.flagged3h");
     for (const id of ["d.reward", "d.fishFriend", "d.feedFriend", "d.summoned", "d.auctionPost"])
-      expect(pool("daily"), id).toContain(id);
+      expect(pool("daily", 5), id).toContain(id);
     expect(pool("skirmish", 3)).toContain("p.homeGuard");
     expect(pool("skirmish", 4)).not.toContain("p.homeGuard");
     for (const slot of ["daily", "skirmish", "weekly", "bounty"] as const) expect(pool(slot, 4)).toEqual(pool(slot, 5));
@@ -400,8 +403,8 @@ describe("pool version 5", () => {
   const key = (c: Combo) => `${c.race}:${c.class}`;
   const days = Array.from({ length: 200 }, (_, i) => EPOCH + i);
 
-  it("is the current pool version; Forever's combinations from 5", () => {
-    expect(POOL_VERSION).toBe(5);
+  it("Forever's combinations from 5", () => {
+    expect(POOL_VERSION).toBeGreaterThanOrEqual(5);
     expect(FOREVER_COMBOS_SINCE).toBe(5);
   });
 
@@ -409,7 +412,6 @@ describe("pool version 5", () => {
     for (const faction of ["Horde", "Alliance"] as const) {
       for (const v of [1, 2, 3, 4]) expect(combos(faction, v), `${faction} ${v}`).toHaveLength(20);
       expect(combos(faction, 5)).toHaveLength(23);
-      expect(combos(faction)).toEqual(combos(faction, 5));
       // Forever only adds: every Vanilla combination is still there.
       const forever = new Set(combos(faction, 5).map(key));
       for (const c of combos(faction, 4)) expect(forever.has(key(c)), key(c)).toBe(true);
@@ -440,7 +442,7 @@ describe("pool version 5", () => {
     expect(huntName({ race: "Troll", class: "WARLOCK" })).toBe("Troll Warlock");
   });
 
-  it("today's Hunt on a pool-5 day is the site's own draw, worth 5 PvP", () => {
+  it("today's Hunt on a pool-6 day is the site's own draw, worth 5 PvP", () => {
     const today = doomsdaySnapshot(input).schedule.day;
     const i: DoomsdayInput = {
       ...input,
@@ -451,7 +453,7 @@ describe("pool version 5", () => {
               set: ["d.reward", "d.level", "d.potion", "p.revenge", "hunt"],
               swapped: {},
               done: { hunt: 1 },
-              pool: 5,
+              pool: 6,
             },
           },
           weeks: {},
@@ -462,7 +464,7 @@ describe("pool version 5", () => {
     const ada = snap.friends.find((f) => f.friendKey === "Ada#1001")!;
     const h = ada.today!.goals.find((g) => g.goal.slot === "hunt")!;
     expect(h.goal).toEqual(snap.hunts.alliance);
-    expect(h.goal.title).toBe(huntTitle(draw(today, 5).hunt!.Horde!));
+    expect(h.goal.title).toBe(huntTitle(draw(today, 6).hunt!.Horde!));
     expect([h.points, h.doneAt]).toEqual([5, 1]);
   });
 });
