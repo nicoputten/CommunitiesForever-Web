@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { fullPlan, type PlanInput } from "@/core/doomsday/missionPool";
 import { dayStart } from "@/core/doomsday/rules";
-import { type MissionPoolInput, missionPoolBox, missionPoolView, weekNumber } from "@/core/views/missionPool";
+import {
+  huntGroup,
+  type MissionPoolInput,
+  missionPoolBox,
+  missionPoolView,
+  weekNumber,
+} from "@/core/views/missionPool";
 
 // WEB-79: the Mission pool page's view on WEB-78's plan. Day 20766 is Mon 9 Nov 2026; the realm is CET, reset 19:00.
 
@@ -43,6 +49,7 @@ describe("the Mission pool page", () => {
     );
     expect(v.counts).toEqual([
       { label: "Daily PvE", count: 107 },
+      { label: "Hunt", count: 1 },
       { label: "Skirmish", count: 6 },
       { label: "Weekly", count: 49 },
       { label: "Bounty", count: 6 },
@@ -122,6 +129,64 @@ describe("the Mission pool page", () => {
   });
 
   it("the Admin page's box", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 169, changed: 0, today: "Mon 9" });
+    // The 169 missions of the four kinds and the Hunt.
+    expect(missionPoolBox(input())).toEqual({ missions: 170, changed: 0, today: "Mon 9" });
+    expect(missionPoolView(input(), "UTC").missionCount).toBe(170);
+  });
+});
+
+describe("the Hunt on the Mission pool page (WEB-107)", () => {
+  it("its own group after the dailies: a daily PvP mission of 5 points, with stats, not steered", () => {
+    const stats = new Map([["hunt", { cameUp: 6, swapped: 0, had: 10, done: 3, last: TODAY - 1 }]]);
+    const v = missionPoolView(input({}, { stats }), "UTC");
+    expect(v.hunt).toMatchObject({
+      title: "The Hunt · PvP",
+      row: {
+        text: "Kill an enemy player of the day’s race and class",
+        short: "Hunt",
+        points: "+5",
+        cameUp: "6",
+        done: "30%",
+        donePct: 30,
+        last: "Sun",
+        line: "Came up 6 · done 30% · last Sun",
+      },
+      often: "Every day",
+      about: "Target or mouse over them so the kill knows who it was.",
+    });
+    expect(v.hunt!.row).not.toHaveProperty("off");
+    // Not one of the steered kinds.
+    expect(v.groups.map((g) => g.kind)).toEqual(["daily", "skirmish", "weekly", "bounty"]);
+  });
+
+  it("today's Hunt per hunting faction: the day's draw", () => {
+    expect(huntGroup(new Map(), TODAY)!.today).toEqual([
+      { label: "Horde hunts", combo: "Night Elf Rogue" },
+      { label: "Alliance hunts", combo: "Tauren Druid" },
+    ]);
+  });
+
+  it("pool version 5: Forever's 23 combinations per faction, by race", () => {
+    const h = huntGroup(new Map(), TODAY, 5)!;
+    expect(h.drawsFrom).toBe("Pool version 5 draws from 23 combinations per faction.");
+    expect(h.factions.map((f) => f.title)).toEqual(["Horde hunts · 23", "Alliance hunts · 23"]);
+    expect(h.factions[0]!.races).toEqual([
+      { race: "Human", classes: "Warrior, Paladin, Hunter, Rogue, Priest, Mage, Warlock" },
+      { race: "Dwarf", classes: "Warrior, Paladin, Hunter, Rogue, Priest, Shaman" },
+      { race: "Night Elf", classes: "Warrior, Hunter, Rogue, Priest, Druid" },
+      { race: "Gnome", classes: "Warrior, Rogue, Priest, Mage, Warlock" },
+    ]);
+    expect(h.factions[1]!.races.map((r) => r.race)).toEqual(["Orc", "Undead", "Tauren", "Troll"]);
+  });
+
+  it("pool version 4: Vanilla's 20; before 4 there is no Hunt", () => {
+    const h = huntGroup(new Map(), TODAY, 4)!;
+    expect(h.drawsFrom).toBe("Pool version 4 draws from 20 combinations per faction.");
+    expect(h.factions.map((f) => f.title)).toEqual(["Horde hunts · 20", "Alliance hunts · 20"]);
+    expect(h.factions[0]!.races[0]).toEqual({
+      race: "Human",
+      classes: "Warrior, Paladin, Rogue, Priest, Mage, Warlock",
+    });
+    for (const version of [1, 2, 3]) expect(huntGroup(new Map(), TODAY, version)).toBeUndefined();
   });
 });

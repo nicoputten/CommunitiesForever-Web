@@ -76,3 +76,32 @@ test("the owner opens the pool from the Admin page, steers a day and switches a 
   await expect(log).toContainText("back to the normal draw");
   await expect(log).toContainText(`pinned ${picked}`);
 });
+
+test("the pool shows the Hunt after the dailies: today's Hunt per faction and its combinations (WEB-107)", async ({
+  page,
+  context,
+  baseURL,
+}, info) => {
+  await signInAs(context, baseURL!, E2E.admin);
+  await page.goto("/admin/missions");
+  await expect(page.getByRole("list", { name: "Missions" })).toContainText("1Hunt");
+  const pool = region(page, "The pool");
+  const phone = info.project.name === "phone";
+  if (phone) await pool.getByRole("button", { name: /^Show all/ }).click();
+  const hunt = pool.getByTestId(phone ? "hunt-lines" : "hunt-group");
+  await expect(hunt).toBeVisible();
+  await expect(hunt).toContainText("The Hunt · PvP");
+  const today = hunt.getByRole("list", { name: "Today’s Hunt" }).getByRole("listitem");
+  await expect(today.nth(0)).toHaveText(/^Horde hunts: \S/);
+  await expect(today.nth(1)).toHaveText(/^Alliance hunts: \S/);
+  await expect(hunt).toContainText("Horde hunts · 23");
+  await expect(hunt).toContainText("Alliance hunts · 23");
+  // After the dailies, before the Skirmish.
+  const titles = await pool
+    .locator(phone ? "h3" : "th[scope=colgroup]")
+    .locator("visible=true")
+    .allTextContents();
+  const at = (t: string) => titles.findIndex((x) => x.startsWith(t));
+  expect(at("Daily · PvE")).toBeLessThan(at("The Hunt · PvP"));
+  expect(at("The Hunt · PvP")).toBeLessThan(at("Skirmish · PvP"));
+});

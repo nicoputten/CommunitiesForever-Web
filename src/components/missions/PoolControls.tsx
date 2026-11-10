@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { Fragment, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import type { Often } from "@/core/doomsday/missionPool";
-import type { PoolGroup, PoolRow } from "@/core/views/missionPool";
+import type { HuntGroup, PoolGroup, PoolRow } from "@/core/views/missionPool";
 import styles from "./MissionPool.module.css";
 
 type Action = (form: FormData) => Promise<void>;
@@ -119,24 +119,93 @@ function Often({
   );
 }
 
+/** Done: the bar and the share. */
+function DoneCell({ row }: { row: Pick<PoolRow, "donePct" | "done"> }) {
+  return (
+    <td className={styles.dim}>
+      {row.donePct !== undefined && (
+        <span className={styles.bar} aria-hidden="true">
+          <i style={{ width: `${row.donePct}%` }} />
+        </span>
+      )}
+      {row.done}
+    </td>
+  );
+}
+
+/**
+ * The Hunt's details (WEB-107): how the kill counts, today's combination per hunting faction and every combination the
+ * pool version draws from, by race.
+ */
+function HuntInfo({ hunt }: { hunt: HuntGroup }) {
+  return (
+    <div className={styles.hunt}>
+      <p className={styles.huntText}>{hunt.about}</p>
+      <ul className={styles.huntToday} aria-label="Today’s Hunt">
+        {hunt.today.map((t) => (
+          <li key={t.label} className={styles.mission} data-pvp>
+            {t.label}: <b>{t.combo}</b>
+          </li>
+        ))}
+      </ul>
+      <p className={styles.huntText}>{hunt.drawsFrom}</p>
+      <div className={styles.huntLists}>
+        {hunt.factions.map((f) => (
+          <div key={f.faction}>
+            <p className={styles.huntTitle}>{f.title}</p>
+            <dl className={styles.huntRaces}>
+              {f.races.map((r) => (
+                <div key={r.race} className={styles.contents}>
+                  <dt>{r.race}</dt>
+                  <dd>{r.classes}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * The pool (board `mission-pool`): per kind, each mission with its stats and how often it comes up, or Off. A table on
- * a desktop; on a phone one block per mission, the first 7 until "Show all".
+ * a desktop; on a phone one block per mission, the first 7 until "Show all". The Hunt (WEB-107), which the owner
+ * doesn't steer, after the dailies.
  */
 export function PoolControls({
   groups,
+  hunt,
   offFrom,
   setOff,
   setOften,
 }: {
   groups: PoolGroup[];
+  hunt?: HuntGroup;
   offFrom: string;
   setOff: Action;
   setOften: Action;
 }) {
   const [all, setAll] = useState(false);
-  const total = groups.reduce((a, g) => a + g.rows.length, 0);
+  const total = groups.reduce((a, g) => a + g.rows.length, 0) + (hunt !== undefined ? 1 : 0);
   let index = 0;
+  const huntLines = (h: HuntGroup) => {
+    const blockHidden = !all && index >= SHOWN;
+    const hidden = !all && index++ >= SHOWN;
+    return (
+      <div data-hidden={blockHidden || undefined} className={styles.lineBlock} data-testid="hunt-lines">
+        <h3 className={styles.lineGroup}>{h.title}</h3>
+        <div className={styles.line} data-hidden={hidden || undefined}>
+          <div className={styles.lineHead}>
+            <span>{h.row.text}</span>
+            <span className={styles.offText}>{h.often}</span>
+          </div>
+          <div className={styles.lineStats}>{h.row.line}</div>
+          <HuntInfo hunt={h} />
+        </div>
+      </div>
+    );
+  };
   return (
     <>
       <table className={styles.table}>
@@ -161,54 +230,81 @@ export function PoolControls({
           </tr>
         </thead>
         {groups.map((g) => (
-          <tbody key={g.kind}>
-            <tr className={styles.group}>
-              <th scope="colgroup" colSpan={8}>
-                {g.title}
-              </th>
-            </tr>
-            {g.rows.map((r) => (
-              <tr key={r.id} data-off={r.off || undefined}>
-                <td className={styles.name}>{r.text}</td>
-                <td className={styles.short}>{r.short}</td>
-                <td className={styles.num}>{r.points}</td>
-                <td className={styles.num}>{r.cameUp}</td>
-                <td className={styles.num}>{r.swapped}</td>
-                <td className={styles.dim}>
-                  {r.donePct !== undefined && (
-                    <span className={styles.bar} aria-hidden="true">
-                      <i style={{ width: `${r.donePct}%` }} />
-                    </span>
-                  )}
-                  {r.done}
-                </td>
-                <td className={styles.dim}>{r.last}</td>
-                <td className={styles.end}>
-                  <Often row={r} offFrom={offFrom} setOff={setOff} setOften={setOften} />
-                </td>
+          <Fragment key={g.kind}>
+            <tbody>
+              <tr className={styles.group}>
+                <th scope="colgroup" colSpan={8}>
+                  {g.title}
+                </th>
               </tr>
-            ))}
-          </tbody>
+              {g.rows.map((r) => (
+                <tr key={r.id} data-off={r.off || undefined}>
+                  <td className={styles.name}>{r.text}</td>
+                  <td className={styles.short}>{r.short}</td>
+                  <td className={styles.num}>{r.points}</td>
+                  <td className={styles.num}>{r.cameUp}</td>
+                  <td className={styles.num}>{r.swapped}</td>
+                  <DoneCell row={r} />
+                  <td className={styles.dim}>{r.last}</td>
+                  <td className={styles.end}>
+                    <Often row={r} offFrom={offFrom} setOff={setOff} setOften={setOften} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            {g.kind === "daily" && hunt !== undefined && (
+              <tbody data-testid="hunt-group">
+                <tr className={styles.group}>
+                  <th scope="colgroup" colSpan={8}>
+                    {hunt.title}
+                  </th>
+                </tr>
+                <tr>
+                  <td className={styles.name}>{hunt.row.text}</td>
+                  <td className={styles.short}>{hunt.row.short}</td>
+                  <td className={styles.num}>{hunt.row.points}</td>
+                  <td className={styles.num}>{hunt.row.cameUp}</td>
+                  <td className={styles.num}>{hunt.row.swapped}</td>
+                  <DoneCell row={hunt.row} />
+                  <td className={styles.dim}>{hunt.row.last}</td>
+                  <td className={`${styles.end} ${styles.offText}`}>{hunt.often}</td>
+                </tr>
+                <tr>
+                  <td colSpan={8}>
+                    <HuntInfo hunt={hunt} />
+                  </td>
+                </tr>
+              </tbody>
+            )}
+          </Fragment>
         ))}
       </table>
       <div className={styles.lines}>
         {groups.map((g) => (
-          <div key={g.kind} data-hidden={(!all && index >= SHOWN) || undefined} className={styles.lineBlock}>
-            <h3 className={styles.lineGroup}>{g.title}</h3>
-            {g.rows.map((r) => {
-              const hidden = !all && index++ >= SHOWN;
-              return (
-                <div key={r.id} className={styles.line} data-off={r.off || undefined} data-hidden={hidden || undefined}>
-                  <div className={styles.lineHead}>
-                    <span>{r.text}</span>
-                    <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+          <Fragment key={g.kind}>
+            <div data-hidden={(!all && index >= SHOWN) || undefined} className={styles.lineBlock}>
+              <h3 className={styles.lineGroup}>{g.title}</h3>
+              {g.rows.map((r) => {
+                const hidden = !all && index++ >= SHOWN;
+                return (
+                  <div
+                    key={r.id}
+                    className={styles.line}
+                    data-off={r.off || undefined}
+                    data-hidden={hidden || undefined}
+                  >
+                    <div className={styles.lineHead}>
+                      <span>{r.text}</span>
+                      <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+                    </div>
+                    <div className={styles.lineStats}>{r.line}</div>
+                    {!r.off && <OftenChoice row={r} action={setOften} />}
                   </div>
-                  <div className={styles.lineStats}>{r.line}</div>
-                  {!r.off && <OftenChoice row={r} action={setOften} />}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {g.kind === "daily" && hunt !== undefined && huntLines(hunt)}
+          </Fragment>
         ))}
         {!all && total > SHOWN && (
           <button type="button" className={styles.button} onClick={() => setAll(true)}>

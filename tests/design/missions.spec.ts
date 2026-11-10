@@ -85,6 +85,51 @@ test("missions: a free day's editor", async ({ page }) => {
   await expectScreenshot(page, "missions-day");
 });
 
+/** WEB-107: the Hunt's group, after the dailies; on a phone behind "Show all". */
+async function huntGroup(page: import("@playwright/test").Page) {
+  await openScreen(page, "/admin/missions");
+  const pool = page.getByRole("region", { name: "The pool" });
+  if (isPhone(page)) await pool.getByRole("button", { name: /^Show all/ }).click();
+  return pool.getByTestId(isPhone(page) ? "hunt-lines" : "hunt-group");
+}
+
+test("missions: the Hunt's group", async ({ page }) => {
+  const hunt = await huntGroup(page);
+  await expect(hunt).toBeVisible();
+  await expect(hunt).toContainText("The Hunt · PvP");
+  await expect(hunt).toContainText("Kill an enemy player of the day’s race and class");
+  await expect(hunt).toContainText("Every day");
+  await expect(hunt).toContainText("Pool version 5 draws from 23 combinations per faction.");
+  await expect(hunt.getByRole("list", { name: "Today’s Hunt" }).getByRole("listitem")).toHaveCount(2);
+  if (isPhone(page)) {
+    await expectStyles(hunt.getByRole("heading", { name: "The Hunt · PvP" }), {
+      "font-size": "var(--fs-meta-sm)",
+      color: "var(--text-faint)",
+    });
+  } else {
+    await expectStyles(hunt.getByRole("columnheader", { name: "The Hunt · PvP" }), {
+      "font-family": "var(--font-display)",
+      "font-size": "var(--fs-section)",
+      color: "var(--gold-bright)",
+    });
+  }
+  await expectStyles(hunt.getByRole("listitem").first(), { "font-size": "var(--fs-meta)", color: "var(--pvp-soft)" });
+  await expectStyles(hunt.getByText("Horde hunts · 23"), {
+    "font-size": "var(--fs-meta-sm)",
+    color: "var(--text-faint)",
+  });
+  await expectStyles(hunt.locator("dt").first(), { "font-size": "var(--fs-meta)", color: "var(--text-strong)" });
+  await expectStyles(hunt.locator("dd").first(), { color: "var(--text-dim)" });
+  await expectAccessible(page);
+  if (isPhone(page)) await expectTouchTargets(page);
+});
+
+test("missions: the Hunt's group, screenshot", async ({ page }) => {
+  test.skip(process.platform !== "linux", "screenshot baselines are Linux only: CI checks them");
+  const hunt = await huntGroup(page);
+  await expect(hunt).toHaveScreenshot("missions-hunt.png");
+});
+
 test("missions: a locked day", async ({ page }) => {
   await openScreen(page, "/admin/missions");
   const href = await page.getByTestId("mission-day").first().getAttribute("href");
