@@ -3,7 +3,7 @@ import { SUGGESTIONS } from "@/core/views/doomsday";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { DoomsdayEmblem } from "@/components/ui/icons";
 import styles from "./Doomsday.module.css";
-import { Board, GoalCard, SoFar, Streak } from "./parts";
+import { Board, GoalCard, Streak } from "./parts";
 import { HuntCard, HuntToday } from "./hunt";
 import hunt from "./Hunt.module.css";
 
@@ -29,7 +29,8 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
   return (
     <>
       {page.firstDay && <DayOne />}
-      <div className={styles.grid}>
+      {/* Without the Hunt today, the goals take the whole width (WEB-111). */}
+      <div className={page.huntToday !== undefined ? styles.grid : undefined}>
         <section className={styles.card} aria-labelledby="dd-goals">
           {today === undefined ? (
             <>
@@ -88,15 +89,11 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
             </>
           )}
         </section>
-        <div className={hunt.aside}>
-          {page.huntToday !== undefined && <HuntToday view={page.huntToday} />}
-          <aside className={styles.card} aria-labelledby="dd-so-far">
-            <h2 id="dd-so-far" className={styles.cardTitle}>
-              Today so far
-            </h2>
-            <SoFar view={page.soFar} />
-          </aside>
-        </div>
+        {page.huntToday !== undefined && (
+          <div className={hunt.aside}>
+            <HuntToday view={page.huntToday} />
+          </div>
+        )}
       </div>
       <section className={styles.card} aria-labelledby="dd-board">
         <div className={styles.cardHead}>
