@@ -8,6 +8,9 @@ import {
   dayOf,
   dayStart,
   draw,
+  drawPool,
+  type Combo,
+  type DayDraw,
   drawWeek,
   duels,
   duration,
@@ -23,8 +26,8 @@ import {
   pick,
   points,
   pointsFor,
-  pool,
   POOL_VERSION,
+  themeOf,
   realmOffset,
   resetsIn,
   SALT,
@@ -42,32 +45,40 @@ const golden: any = JSON.parse(
   readFileSync(path.join(__dirname, "..", "fixtures", "doomsday", "doomsday-cases.json"), "utf8"),
 );
 
+/** Pool version 6 (CF-118): a Hunt as ids ({ race, class } per hunting faction); before, as tokens. */
+function huntOf(h: DayDraw["hunt"], version: number): unknown {
+  if (h === undefined || version < 6) return h;
+  const ids = (c: Combo | undefined) => (c === undefined ? undefined : { race: c.raceId, class: c.classId });
+  return { Horde: ids(h.Horde), Alliance: ids(h.Alliance) };
+}
+
+/** A day's draw as the golden case lists it: the Duel and the Hunt only where the case has them. */
+function daySet(d: DayDraw, expect: Record<string, unknown>, version = 6): Record<string, unknown> {
+  const out: Record<string, unknown> = { dailies: d.dailies, skirmish: d.skirmish };
+  if ("duel" in expect) out.duel = d.duel;
+  if ("hunt" in expect) out.hunt = huntOf(d.hunt, version);
+  return out;
+}
+
 /** A list of cases, for it.each. */
 const cases = (list: unknown) => list as any[];
 
-/**
- * WEB-108: the site moved to pool version 6 before the addon's golden file has it (CF-118 brings pool 6's catalogue
- * and cases). Until that file is copied here, the catalogue isn't compared and the pools are compared for the golden
- * file's version. Remove this once tests/fixtures/doomsday/doomsday-cases.json has `poolVersion: 6`.
- */
-const AHEAD = golden.poolVersion < POOL_VERSION;
-
 describe("Doomsday golden cases", () => {
   it("constants", () => {
-    if (AHEAD) expect(POOL_VERSION).toBe(golden.poolVersion + 1);
-    else expect(POOL_VERSION).toBe(golden.poolVersion);
+    expect(POOL_VERSION).toBe(golden.poolVersion);
     expect(EPOCH).toBe(golden.epoch);
     expect(SALT.hunt).toBe(golden.salts.hunt);
     expect(SALT.skirmish).toBe(golden.salts.skirmish);
     expect(SALT.bounty).toBe(golden.salts.bounty);
     expect(SALT.dailies).toEqual(golden.salts.dailies);
     expect(SALT.weeklies).toEqual(golden.salts.weeklies);
-    for (const slot of ["daily", "weekly", "skirmish", "bounty"] as const)
-      expect(pool(slot, golden.poolVersion)).toEqual(golden.pools[slot]);
+    // The golden pools are what the draw takes: the `check` missions (Off until tested, CF-118) left out.
+    for (const slot of ["daily", "weekly", "skirmish", "bounty", "duel"] as const)
+      expect(drawPool(slot)).toEqual(golden.pools[slot]);
   });
 
   // CF-70, CF-79: the catalogue, in pool order, as the addon's Doomsday.GOALS.
-  it.skipIf(AHEAD)("catalogue", () => {
+  it("catalogue", () => {
     const list = GOALS.map((g) => {
       const out: Record<string, unknown> = { id: g.id, slot: g.slot };
       for (const [key, value] of [
@@ -81,6 +92,9 @@ describe("Doomsday golden cases", () => {
         ["can", g.can],
         ["fallback", g.fallback],
         ["canFrom", g.canFrom],
+        // Pool version 6 (CF-118): the PvE dailies' theme, and the missions that wait for a test.
+        ["theme", themeOf(g.id)],
+        ["check", g.check],
       ] as const)
         if (value !== undefined) out[key] = value;
       return out;
@@ -118,11 +132,12 @@ describe("Doomsday golden cases", () => {
   it("draws days, weeks, hunts and zones", () => {
     for (const c of golden.draws.days) {
       const d = draw(c.day, poolOf(c));
-      expect({ dailies: d.dailies, skirmish: d.skirmish }, `day ${c.day} pool ${poolOf(c)}`).toEqual(c.expect);
+      expect(daySet(d, c.expect), `day ${c.day} pool ${poolOf(c)}`).toEqual(c.expect);
     }
     for (const c of golden.draws.weeks)
       expect(drawWeek(c.week, poolOf(c)), `week ${c.week} pool ${poolOf(c)}`).toEqual(c.expect);
-    for (const c of golden.draws.hunts) expect(draw(c.day, poolOf(c), true).hunt, `hunt ${c.day}`).toEqual(c.expect);
+    for (const c of golden.draws.hunts)
+      expect(huntOf(draw(c.day, poolOf(c), true).hunt, poolOf(c)), `hunt ${c.day}`).toEqual(c.expect);
     for (const c of golden.draws.zones) {
       expect(zoneFor(c.n, c.salt, c.level) ?? null, `zone ${c.n} ${c.salt} ${c.level}`).toBe(c.expect);
     }
@@ -200,7 +215,7 @@ describe("Doomsday golden cases", () => {
       expect({ set: got.set, swapped: got.swapped }).toEqual(c.expect);
     } else if (c.day !== undefined) {
       const d = scheduledDraw(c.day, c.schedule, poolOf(c));
-      expect({ dailies: d.dailies, skirmish: d.skirmish }).toEqual(c.expect);
+      expect(daySet(d, c.expect, poolOf(c))).toEqual(c.expect);
     } else expect(scheduledWeek(c.week, c.schedule, poolOf(c))).toEqual(c.expect);
   });
 

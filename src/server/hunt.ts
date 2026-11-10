@@ -9,6 +9,7 @@ import {
   friendHunt,
   type HuntEntry,
   type HuntFriend,
+  huntDay,
   huntedBy,
   huntFeats,
   huntKills,
@@ -29,11 +30,16 @@ import {
   targetDone,
   targetOf,
 } from "@/core/doomsday/hunt";
-import { PLAN_DAYS, type ScheduleHunt } from "@/core/doomsday/missionPool";
+import { CALENDAR_DAYS, PLAN_DAYS, type ScheduleHunt } from "@/core/doomsday/missionPool";
+import { dayRecipes, recipeTiles, themeCards } from "@/core/views/pool6Page";
 import type { GoalRecord } from "@/core/doomsday/record";
 import { dayOf, dayStart, draw, type Faction, POOL_VERSION, type Schedule } from "@/core/doomsday/rules";
 import type {
+  DayRecipeView,
   FriendHuntView,
+  HuntDay,
+  RecipeTileView,
+  ThemeCardView,
   HuntFeatProgress,
   HuntKill,
   HuntTargetsView,
@@ -45,6 +51,7 @@ import { logChange, requireOwner } from "./admins";
 import type { Db } from "./db";
 import { doomsdayGoals, feedDays, huntCensus, huntCensusFetch, huntPins, huntPlan, missionSettings } from "./db/schema";
 import { doomsdayResetSetting, getBotSettings } from "./discord";
+import { missionPool, type MissionPoolData } from "./missionPool";
 import { loadState as loadUploads } from "./uploads";
 
 // The Hunt from pool version 6 (WEB-108): the daily census from Everloot, the owner's switches, pins and imports, the
@@ -478,4 +485,37 @@ export function huntFeatsByOwner(tx: Db | Tx, now: number, data: Dataset): Recor
     if (mine.length > 0) out[f.owner] = huntFeats(mine, huntedBy(f), rare);
   }
   return out;
+}
+
+export interface MissionPoolPage {
+  /** The page's existing data (plan, settings, overrides, stats; WEB-79). */
+  pool: MissionPoolData;
+  /** MP05: the recipe bar, the theme cards, the 14 calendar days with their Hunt. */
+  tiles: RecipeTileView[];
+  cards: ThemeCardView[];
+  days: DayRecipeView[];
+  /** MP05: today's quarry per hunted faction, and the next 7 days. MP06: the Hunt targets grid. */
+  quarry: HuntTodayView["quarry"];
+  next: HuntDay[];
+  targets: HuntTargetsView;
+}
+
+/** Everything the Mission pool page v2 shows (WEB-109, boards MP05–MP07). Owner only. Stores days new to the plan. */
+export function missionPoolPage(db: Db, by: string, now: number, owner?: string): MissionPoolPage {
+  const data = missionPool(db, by, now, owner);
+  const { view, plan } = huntTargetsFor(db, by, now, owner);
+  const today = doomsdayHunt(db, now);
+  const inDraw = Math.round((view.factions.Alliance.inDraw + view.factions.Horde.inDraw) / 2);
+  return {
+    pool: data,
+    tiles: recipeTiles(data.settings, inDraw),
+    cards: themeCards(data.settings, data.stats),
+    days: dayRecipes(
+      data.plan.days.filter((d) => d.n >= data.today && d.n < data.today + CALENDAR_DAYS),
+      plan,
+    ),
+    quarry: today.hunt.quarry,
+    next: today.next.map(huntDay),
+    targets: view,
+  };
 }

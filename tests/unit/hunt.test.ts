@@ -27,6 +27,7 @@ import {
   dayStart,
   draw,
   drawDuel,
+  drawPool,
   EPOCH,
   goal,
   gridCount,
@@ -35,6 +36,7 @@ import {
   scheduledDraw,
 } from "@/core/doomsday/rules";
 import type { HuntKill } from "@/core/views/pool6";
+import { dayRecipes, recipeTiles, themeCards } from "@/core/views/pool6Page";
 
 // WEB-108: pool version 6's catalogue and the site's draw, the census-weighted Hunt, the census, the schedule's new
 // fields and the Hunt kills. Day 20766 is Mon 9 Nov 2026; the realm is CET, reset 19:00. Census numbers are made up.
@@ -64,9 +66,9 @@ describe("pool version 6: the catalogue", () => {
     // Payback (p.revenge), Clean 5 (p.untouchable) and Untouchable (p.flagHour) were in the pool already.
     expect(pool("skirmish")).toHaveLength(6 + 40);
     expect(pool("duel")).toEqual([
+      "p.duelFirst",
       "p.duelWin",
       "p.duelUp",
-      "p.duelFirst",
       "p.duel3",
       "p.spar",
       "p.styles3",
@@ -536,5 +538,61 @@ describe("the Duel slot from pool version 6", () => {
     const spar = [...pve, { goal: { slot: "duel", id: "p.spar" } }];
     expect(gridCount(spar, 1)).toEqual({ done: 1, total: 2 });
     expect(gridCount([...pve, { goal: { slot: "duel", id: "p.spar" }, doneAt: 5 }], 0)).toEqual({ done: 2, total: 2 });
+  });
+});
+
+describe("the Mission pool page's tiles, cards and days (MP05)", () => {
+  it("recipe tiles: per day or week, the pool on, back every ~N days, orange within 6 weeks; Off counts", () => {
+    const tiles = recipeTiles({ "d.quests10": { off: true, often: "normal" } }, 27);
+    const by = Object.fromEntries(tiles.map((t) => [t.id, t]));
+    expect(tiles.map((t) => t.label)).toEqual(["Daily PvE", "The Hunt", "Daily PvP", "Weekly", "Bounty", "Off"]);
+    expect(by.pve).toMatchObject({ perPeriod: 3, period: "day", pool: pool("daily").length - 1, soon: true });
+    expect(by.hunt).toMatchObject({ perPeriod: 1, pool: 27, backEveryDays: 27, soon: true });
+    // The 9 check missions start Off.
+    expect(by.pvp!.pool).toBe(drawPool("skirmish").length + drawPool("duel").length);
+    expect(by.off!.pool).toBe(1 + 9);
+    expect(by.bounty).toMatchObject({ perPeriod: 1, period: "week", backEveryDays: pool("bounty").length * 7 });
+  });
+
+  it("theme cards: six themes, then Skirmish, Duel, Weekly, Bounty, with history and what's new", () => {
+    const stats = new Map([["d.quests10", { cameUp: 4, swapped: 0, had: 8, done: 6 }]]);
+    const cards = themeCards({}, stats);
+    expect(cards.map((c) => c.label)).toEqual([
+      "Questing",
+      "Loot & gold",
+      "Social",
+      "Professions",
+      "Exploration",
+      "Combat & character",
+      "Skirmish",
+      "Duel",
+      "Weekly",
+      "Bounty",
+    ]);
+    expect(cards.slice(0, 6).reduce((a, c) => a + c.count, 0)).toBe(pool("daily").length);
+    expect(cards[0]).toMatchObject({ id: "questing", kind: "Daily PvE", cameUp: 4, donePct: 0.75 });
+    expect(cards[6]).toMatchObject({ id: "skirmish", kind: "PvP", fresh: 40, off: 9 });
+    expect(cards[7]).toMatchObject({ id: "duel", count: 8, fresh: 8 });
+  });
+
+  it("day tiles: 3 PvE, the Hunt, the Skirmish, the Duel", () => {
+    const plan = fullPlan(
+      {
+        settings: {},
+        overrides: { day: {}, week: {} },
+        stored: { day: {}, week: {} },
+        now: NOW,
+        s: S,
+        today: TODAY,
+        week: 2967,
+      },
+      true,
+    );
+    const hunts = planHunts({ today: TODAY, days: plan.days.map((d) => d.n), stored: {}, pins: {}, off: noOff });
+    const days = dayRecipes(plan.days, hunts);
+    const d = days.find((x) => x.n === TODAY + 2)!;
+    const p = plan.days.find((x) => x.n === TODAY + 2)!.plan;
+    expect(d).toMatchObject({ pve: p.slice(0, 3), skirmish: p[3], duel: p[4], locked: false });
+    expect(Object.keys(d.hunt.targets).sort()).toEqual(["Alliance", "Horde"]);
   });
 });

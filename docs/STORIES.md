@@ -544,14 +544,15 @@ and its fallback draw), WEB-108 (the site's data and draw), WEB-109 (the Mission
 pages). One release, pool version 6. Design: Claude Design canvas "Doombringers v2", boards MP05–MP07, DS01–DS02.
 
 ### WEB-108 The site's pool 6: the draw, the census-weighted Hunt, Hunt kills and feats
-- **Catalogue (mirrors CF-118):** `POOL_VERSION = 6`; a `theme` on every PvE daily (Questing, Loot & gold, Social,
-  Professions, Exploration, Combat & character); the 50 PvP dailies (`src/core/doomsday/catalogue6.ts`): 41 to the
-  Skirmish (40 join it), the Duel kind (`duel`, 8 with "First duel with each friend" = `p.duelFirst`, 0 goal points);
-  the 9 `check` missions are in the pool but Off until the owner switches them on (never in the draw). A condition the
-  catalogue had is that id with its own points (`p.kills10`, `p.punchUp5`, `p.variety`, `p.fairFight`, `p.mirror`,
-  `p.races3`, `p.enemyLand`, `p.zones3`, `p.trioKills`, `p.avenge`, `p.duelWin`, `p.duelUp`; Payback, Clean 5 and
-  Untouchable were in the pool); a different condition is a new id (`p.double30`, `p.contestedHk`). A pool-6 day's
-  set: 3 PvE, Skirmish, `hunt`, the Duel.
+- **Catalogue (mirrors CF-118, nicoputten/CommunitiesForever#267):** `POOL_VERSION = 6`; a `theme` on every PvE daily
+  (Questing, Loot & gold, Social, Professions, Exploration, Combat & character); the 50 PvP dailies
+  (`src/core/doomsday/catalogue6.ts`, generated from CF-118's golden `pools.catalogue`): 40 join the Skirmish, 8 the
+  Duel kind (`duel`, rotating `duel[n % 8 + 1]`, "First duel with each friend" = `p.duelFirst`, 0 goal points); the 9
+  `check` missions are in the catalogue but Off and never drawn (the golden pools leave them out). Reused ids take the
+  list's points; `p.double30` and `p.contestedHk` are new. Short names up to 13 characters for pool 6's PvP dailies
+  (the bot's board cuts them to 10, BOT-API). New `can` values `friends2`, `below30`; new `needs` `visit`. A pool-6
+  day's set: 3 PvE, Skirmish, `hunt`, the Duel. The addon's own fallback Hunt skips the 6 days before (`HUNT_GAP`).
+  The golden file `doomsday-cases.json` is CF-118's, byte for byte.
 - **The draw (the site decides):** every day 3 PvE dailies from 3 different themes (Rare / Normal / Often weigh inside
   a theme; Off never), the Skirmish, the Duel (rotating through its pool), and the Hunt per hunted faction. Weeks as
   before. Today and tomorrow locked; the day editor's pins win. The plan covers yesterday to 16 days ahead; the
@@ -581,4 +582,3 @@ pages). One release, pool version 6. Design: Claude Design canvas "Doombringers 
 - **Bot API:** unchanged; the Duel slot's mission isn't on the bot's board.
 - Done when: unit and server tests for the draw (themes distinct, weights, skip, no repeat, locks, pins, fallback
   without a census), the census parsing, the schedule export and the Hunt kills; lint, tests, build and e2e pass.
-  The golden catalogue comparison waits for CF-118's golden file (pool 6).
