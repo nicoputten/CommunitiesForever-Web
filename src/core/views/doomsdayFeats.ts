@@ -8,7 +8,7 @@ import { clockTime } from "./clock";
 // character already had when tracking began show only in that friend's own feats, as "before tracking".
 
 /** The drawn icon of a feat (board `doomsday-feats`). */
-export type FeatIcon = "rank" | "epic" | "mount" | "fish" | "skull" | "cook" | "sword" | "star";
+export type FeatIcon = "rank" | "epic" | "mount" | "fish" | "skull" | "cook" | "sword" | "hunt" | "star";
 
 const ICONS: Record<string, FeatIcon> = {
   pvpRank: "rank",
@@ -23,6 +23,13 @@ const ICONS: Record<string, FeatIcon> = {
   honorKills: "sword",
   duelWins: "sword",
   bgFirstWin: "sword",
+  // The six Hunt feats (WEB-110, board DS02HuntMore; ids of the pool-6 contract): the crosshair.
+  huntFirst: "hunt",
+  hunt10: "hunt",
+  huntClasses: "hunt",
+  huntAll: "hunt",
+  huntRare: "hunt",
+  huntWeek: "hunt",
 };
 
 export interface FeatView {

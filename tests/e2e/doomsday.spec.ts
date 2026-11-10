@@ -41,12 +41,13 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page.getByTestId("goal")).toHaveCount(6);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
   await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
-  // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click.
+  // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click. The Hunt cards' census has its own ⓘ (WEB-110).
   const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
   await expect(tip).toBeHidden();
   await page
     .getByRole("region", { name: /^Your goals/ })
     .getByRole("button", { name: "More info" })
+    .first()
     .click();
   await expect(tip).toBeVisible();
   await page.keyboard.press("Escape");
@@ -162,4 +163,32 @@ test("phone ladder switch and the roster chips", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Femke" }).getByText("PvP Virgin")).toBeVisible();
   await bob.getByRole("link", { name: /^Doomsday this week/ }).click();
   await expect(page).toHaveURL(/\/doomsday\/ladder$/);
+});
+
+// WEB-110 (boards DS01HuntToday, DS02HuntMore): the Hunt card, The Hunt today, the board's Hunt column, the PvP
+// tab's trophies and the six Hunt feats.
+test("the Hunt: today's quarry, who bagged one, trophies and feats", async ({ page }) => {
+  await page.goto("/doomsday");
+  const card = page.locator('[data-slot="hunt"]').first();
+  await expect(card.getByText("PvP · The Hunt")).toBeVisible();
+  await expect(card).toHaveAttribute("title", "Kill one · target or mouse over them first so the kill counts");
+  const box = page.getByRole("region", { name: "The Hunt today" });
+  await expect(box.getByText(/^\d+ of \d+ bagged one$/)).toBeVisible();
+  await expect(box.getByText("Tomorrow’s quarry")).toBeVisible();
+  // "+ N more" opens the board on its Hunt column.
+  await box.getByRole("link", { name: /^\+ \d+ more$/ }).click();
+  await expect(page).toHaveURL(/\/doomsday\/board#hunt$/);
+  if (!isPhone(page)) await expect(page.getByRole("columnheader", { name: /The Hunt/ })).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Doomsday" }).getByRole("link", { name: "PvP" }).click();
+  const trophies = page.getByRole("region", { name: /^Hunt trophies · / });
+  await expect(trophies.getByText(/^\d+ of 28 · \d+ quarr(y|ies)$/)).toBeVisible();
+  await expect(trophies.getByRole("rowheader")).toHaveText(["Human", "Dwarf", "Night Elf", "Gnome", "Skyborne"]);
+  await expect(page.getByRole("region", { name: "Hunt · this week" })).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Doomsday" }).getByRole("link", { name: "Feats" }).click();
+  await expect(page.getByTestId("hunt-feat")).toHaveCount(6);
+  await expect(page.getByTestId("hunt-feat").filter({ hasText: "Big game" })).toContainText(
+    "Bag all 28 race and class targets",
+  );
 });

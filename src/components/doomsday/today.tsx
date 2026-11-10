@@ -4,6 +4,8 @@ import { InfoTip } from "@/components/ui/InfoTip";
 import { DoomsdayEmblem } from "@/components/ui/icons";
 import styles from "./Doomsday.module.css";
 import { Board, GoalCard, SoFar, Streak } from "./parts";
+import { HuntCard, HuntToday } from "./hunt";
+import hunt from "./Hunt.module.css";
 
 // The Doomsday page's Today tab (WEB-59, board doomsday-today; the phone and day one: WEB-61, board doomsday-phone).
 
@@ -60,15 +62,23 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
                 ))}
               </div>
               <div className={styles.goals}>
-                {today.pvp.map((g) => (
-                  <GoalCard key={g.key} goal={g} />
-                ))}
-                <div className={styles.goal} data-slot="duel">
-                  <span className={`${styles.kind} ${styles.pvp}`}>PvP · Duel slot</span>
-                  <span className={styles.goalTitle}>First duel with each friend</span>
-                  <span className={styles.count}>{today.duels.count}</span>
-                  <span className={styles.goalMeta}>{today.duels.text}</span>
-                </div>
+                {today.pvp.map((g) =>
+                  g.hunt !== undefined ? (
+                    <HuntCard key={g.key} goal={{ ...g, hunt: g.hunt }} />
+                  ) : (
+                    <GoalCard key={g.key} goal={g} />
+                  ),
+                )}
+                {today.duelGoal !== undefined ? (
+                  <GoalCard goal={today.duelGoal} slot="duel" />
+                ) : (
+                  <div className={styles.goal} data-slot="duel">
+                    <span className={`${styles.kind} ${styles.pvp}`}>PvP · Duel slot</span>
+                    <span className={styles.goalTitle}>First duel with each friend</span>
+                    <span className={styles.count}>{today.duels.count}</span>
+                    <span className={styles.goalMeta}>{today.duels.text}</span>
+                  </div>
+                )}
               </div>
               {page.header.streak !== undefined && (
                 <p className={styles.phoneOnly}>
@@ -78,12 +88,15 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
             </>
           )}
         </section>
-        <aside className={styles.card} aria-labelledby="dd-so-far">
-          <h2 id="dd-so-far" className={styles.cardTitle}>
-            Today so far
-          </h2>
-          <SoFar view={page.soFar} />
-        </aside>
+        <div className={hunt.aside}>
+          {page.huntToday !== undefined && <HuntToday view={page.huntToday} />}
+          <aside className={styles.card} aria-labelledby="dd-so-far">
+            <h2 id="dd-so-far" className={styles.cardTitle}>
+              Today so far
+            </h2>
+            <SoFar view={page.soFar} />
+          </aside>
+        </div>
       </div>
       <section className={styles.card} aria-labelledby="dd-board">
         <div className={styles.cardHead}>

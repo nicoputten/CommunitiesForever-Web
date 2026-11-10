@@ -1,17 +1,23 @@
 import { WEEKDAY_SHORT } from "../names";
 import type { GoalRecord } from "./record";
 import {
+  dailyKind,
   DAY,
   dayStart,
   distinctCategories,
   draw,
   drawWeek,
+  type Faction,
   goal,
   type GoalSlot,
   type MissionSchedule,
   pick,
   pool,
+  POOL_VERSION,
   type Schedule,
+  type ScheduledDay,
+  type TargetIds,
+  THEMES_SINCE,
   weekStart,
 } from "./rules";
 
@@ -26,7 +32,7 @@ export type Often = "rare" | "normal" | "often";
 /** The weights of the redraw (WEB-78): Rare 1, Normal 2, Often 4. */
 export const WEIGHT: Readonly<Record<Often, number>> = { rare: 1, normal: 2, often: 4 };
 
-/** A mission's setting; a mission without one is on and Normal. */
+/** A mission's setting; a mission without one is on and Normal (a `check` mission of pool version 6: Off). */
 export interface MissionSetting {
   off: boolean;
   often: Often;
@@ -34,7 +40,10 @@ export interface MissionSetting {
 export type Settings = Readonly<Record<string, MissionSetting>>;
 
 export type Period = "day" | "week";
-/** A day's plan: the 3 PvE dailies then the Skirmish; a week's: the 3 PvE weeklies then the Bounty. */
+/**
+ * A day's plan: the 3 PvE dailies, the Skirmish, then (pool version 6) the Duel slot's mission; a week's: the 3 PvE
+ * weeklies then the Bounty. The Hunt is planned apart (hunt.ts): it is a race and class per faction, not a mission.
+ */
 export type Plan = readonly string[];
 
 /** The owner's change to one slot (0..3) of a day or week. A reroll is random and stored, so it never changes. */
@@ -46,7 +55,7 @@ export type Overrides = Readonly<Record<number, Readonly<Record<number, Override
 
 /** The slot kinds of a day and a week, by slot index. */
 export const SLOTS: Readonly<Record<Period, readonly GoalSlot[]>> = {
-  day: ["daily", "daily", "daily", "skirmish"],
+  day: ["daily", "daily", "daily", "skirmish", "duel"],
   week: ["weekly", "weekly", "weekly", "bounty"],
 };
 
@@ -54,28 +63,35 @@ export const SLOTS: Readonly<Record<Period, readonly GoalSlot[]>> = {
 export function slotName(period: Period, slot: number): string {
   const kind = SLOTS[period][slot];
   if (kind === "daily" || kind === "weekly") return `${kind === "daily" ? "Daily" : "Weekly"} ${slot + 1}`;
-  return kind === "skirmish" ? "Skirmish" : "Bounty";
+  return kind === "skirmish" ? "Skirmish" : kind === "duel" ? "Duel" : "Bounty";
 }
 
 /** The site's own salts for the redraw: never the draw's (rules.ts SALT), so a redraw isn't the normal draw again. */
-const REDRAW_SALT: Readonly<Record<Period, readonly number[]>> = { day: [31, 32, 33, 34], week: [41, 42, 43, 44] };
+const REDRAW_SALT: Readonly<Record<Period, readonly number[]>> = { day: [31, 32, 33, 34, 35], week: [41, 42, 43, 44] };
+/** The salt of a themed redraw's mission pick inside the theme (the theme takes REDRAW_SALT). */
+const THEME_SALT = 50;
 
 /** The normal draw of a day or week as a plan. */
 export function normalPlan(period: Period, n: number): Plan {
   if (period === "day") {
     const d = draw(n);
-    return [...d.dailies, ...(d.skirmish !== undefined ? [d.skirmish] : [])];
+    return [
+      ...d.dailies,
+      ...(d.skirmish !== undefined ? [d.skirmish] : []),
+      ...(d.skirmish !== undefined && d.duel !== undefined ? [d.duel] : []),
+    ];
   }
   const w = drawWeek(n);
   return [...w.weeklies, ...(w.bounty !== undefined ? [w.bounty] : [])];
 }
 
 export function settingOf(settings: Settings, id: string): MissionSetting {
-  return settings[id] ?? { off: false, often: "normal" };
+  return settings[id] ?? { off: goal(id)?.check === true, often: "normal" };
 }
 
 const isOn = (settings: Settings, id: string) => !settingOf(settings, id).off;
-const category = (id: string) => goal(id)?.category;
+/** What may not repeat within a day's dailies (the category; from pool version 6 the theme) or a week's weeklies. */
+const kindOf = (period: Period, id: string) => (period === "day" ? dailyKind(id) : goal(id)?.category);
 
 /** Whether a slot kind is weighted: some mission of it that is on is set to Rare or Often. */
 function weighted(kind: GoalSlot, settings: Settings): boolean {
@@ -89,7 +105,7 @@ function weighted(kind: GoalSlot, settings: Settings): boolean {
 function fits(period: Period, slot: number, id: string, others: readonly (string | undefined)[]): boolean {
   if (others.some((o, i) => i !== slot && o === id)) return false;
   if (!distinctCategories(SLOTS[period][slot]!)) return true;
-  return !others.some((o, i) => i !== slot && o !== undefined && i < 3 && category(o) === category(id));
+  return !others.some((o, i) => i !== slot && o !== undefined && i < 3 && kindOf(period, o) === kindOf(period, id));
 }
 
 /** The missions that may fill a slot: of its kind, on, fitting the day, not on the day before or after. */
@@ -115,6 +131,23 @@ function weightedPick(list: readonly string[], n: number, salt: number, settings
     if (k <= 0) return id;
   }
   return list[list.length - 1];
+}
+
+/**
+ * A daily PvE slot's weighted redraw from pool version 6: first a theme, every theme that still fits alike, then a
+ * mission of it by its weight (Rare 1, Normal 2, Often 4). Before 6: the weighted pick over every candidate.
+ */
+function pickDaily(list: readonly string[], n: number, slot: number, settings: Settings): string | undefined {
+  if (POOL_VERSION < THEMES_SINCE) return weightedPick(list, n, REDRAW_SALT.day[slot]!, settings);
+  const themes = [...new Set(list.map((id) => dailyKind(id) ?? id))];
+  if (themes.length === 0) return undefined;
+  const theme = themes[pick(n, REDRAW_SALT.day[slot]!, themes.length) - 1]!;
+  return weightedPick(
+    list.filter((id) => (dailyKind(id) ?? id) === theme),
+    n,
+    THEME_SALT + slot,
+    settings,
+  );
 }
 
 /**
@@ -148,7 +181,11 @@ export function planOne(
   }
   for (let i = 0; i < slots.length; i++) {
     if (out[i] !== undefined) continue;
-    out[i] = weightedPick(candidates(period, i, out, settings, previous), n, REDRAW_SALT[period][i]!, settings);
+    const list = candidates(period, i, out, settings, previous);
+    out[i] =
+      period === "day" && slots[i] === "daily"
+        ? pickDaily(list, n, i, settings)
+        : weightedPick(list, n, REDRAW_SALT[period][i]!, settings);
     // Nothing on fits (everything switched off): the normal draw's mission stays.
     out[i] ??= normal[i];
   }
@@ -161,8 +198,12 @@ export function samePlan(a: Plan | undefined, b: Plan | undefined): boolean {
 
 // --- the window ------------------------------------------------------------------------------------------------
 
-/** Days shown and planned: today and the 13 after it. Weeks: this week and the 2 after it. */
-export const PLAN_DAYS = 14;
+/**
+ * Days planned: today and the 16 after it (the schedule sends 16 days ahead, CF-68 SCHEDULE_DAYS). The calendar shows
+ * the first CALENDAR_DAYS of them. Weeks: this week and the 2 after it.
+ */
+export const PLAN_DAYS = 17;
+export const CALENDAR_DAYS = 14;
 export const PLAN_WEEKS = 3;
 /** A week locks this long before it starts. */
 export const WEEK_LOCK = DAY;
@@ -226,13 +267,15 @@ export function fullPlan(input: PlanInput, recompute = false): FullPlan {
     let previous: Plan = input.stored[period][first - 1] ?? normalPlan(period, first - 1);
     return list.map((n) => {
       const isLocked = locked(n);
-      const stored = input.stored[period][n];
+      // A day stored before pool version 6 has no Duel slot: the normal draw's fills it.
+      const normal = normalPlan(period, n);
+      const raw = input.stored[period][n];
+      const stored = raw !== undefined && raw.length < normal.length ? [...raw, ...normal.slice(raw.length)] : raw;
       const plan =
         stored !== undefined && (isLocked || !recompute)
           ? stored
           : planOne(period, n, previous, input.settings, input.overrides[period][n]);
       previous = plan;
-      const normal = normalPlan(period, n);
       return { n, plan, normal, locked: isLocked, changed: !samePlan(plan, normal) };
     });
   };
@@ -242,21 +285,52 @@ export function fullPlan(input: PlanInput, recompute = false): FullPlan {
   };
 }
 
+/** What the schedule adds from pool version 6 (WEB-108): the Hunt per day, the rare targets and the census. */
+export interface ScheduleHunt {
+  /** Per day: the Hunt targets keyed by the hunted faction. */
+  days: Readonly<Record<number, Partial<Record<Faction, TargetIds>>>>;
+  /** "<raceId>:<classId>" of the targets under 1% of the census. */
+  rare: readonly string[];
+  census?: { at: number; characters?: number };
+}
+
 /**
- * The schedule for the runs answer (CF-68): the changed days and weeks, every slot. Undefined while nothing was ever
- * changed; `{ v }` alone once everything is back to the normal draw, so the addons drop the old one. `v` is the last
- * change, or today's reset when later: a day that entered the window since follows the settings, and is new to the
- * addons.
+ * The schedule for the runs answer (CF-68). Before pool version 6: the changed days and weeks, every slot; undefined
+ * while nothing was ever changed; `{ v }` alone once everything is back to the normal draw, so the addons drop the
+ * old one. From pool version 6 (`hunt` given, WEB-108) the site decides every day: each day from yesterday to 16 ahead
+ * with all its slots, the Duel, the Hunt and `pool`, plus `rare` and `census`. `v` is the last change, or today's
+ * reset when later: a day that entered the window since is new to the addons.
  */
-export function scheduleOf(plan: FullPlan, lastChange: number, todayStart: number): MissionSchedule | undefined {
-  if (lastChange <= 0) return undefined;
+export function scheduleOf(
+  plan: FullPlan,
+  lastChange: number,
+  todayStart: number,
+  hunt?: ScheduleHunt,
+): MissionSchedule | undefined {
+  if (hunt === undefined && lastChange <= 0) return undefined;
   const out: MissionSchedule = { v: Math.max(lastChange, todayStart) };
-  const days = plan.days.filter((d) => d.changed && d.plan.length === 4);
+  const all = hunt !== undefined;
+  const days = plan.days.filter((d) => (all || d.changed) && d.plan.length >= 4);
   if (days.length > 0)
-    out.days = Object.fromEntries(days.map((d) => [String(d.n), { daily: d.plan.slice(0, 3), skirmish: d.plan[3]! }]));
+    out.days = Object.fromEntries(
+      days.map((d) => {
+        const day: ScheduledDay = { daily: d.plan.slice(0, 3), skirmish: d.plan[3]! };
+        if (all) {
+          if (d.plan[4] !== undefined) day.duel = d.plan[4];
+          const h = hunt.days[d.n];
+          if (h !== undefined && Object.keys(h).length > 0) day.hunt = { ...h };
+          day.pool = POOL_VERSION;
+        }
+        return [String(d.n), day];
+      }),
+    );
   const weeks = plan.weeks.filter((w) => w.changed && w.plan.length === 4);
   if (weeks.length > 0)
     out.weeks = Object.fromEntries(weeks.map((w) => [String(w.n), { weekly: w.plan.slice(0, 3), bounty: w.plan[3]! }]));
+  if (hunt !== undefined) {
+    if (hunt.rare.length > 0) out.rare = [...hunt.rare];
+    if (hunt.census !== undefined) out.census = { ...hunt.census };
+  }
   return out;
 }
 
@@ -385,7 +459,7 @@ export function missionPlace(detail: string | undefined): string {
 export function missionSlot(detail: string | undefined): string {
   const [period, , slot] = (detail ?? "").split(":");
   const i = Number(slot);
-  return (period === "day" || period === "week") && Number.isInteger(i) && i >= 0 && i < 4
+  return (period === "day" || period === "week") && Number.isInteger(i) && i >= 0 && i < SLOTS[period].length
     ? slotName(period, i)
     : "a slot";
 }

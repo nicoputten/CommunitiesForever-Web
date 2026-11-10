@@ -455,3 +455,24 @@ export function PinIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** mission-pool-v2, doomsday Hunt: the Hunt's crosshair (a day's Hunt line, the quarry card's watermark). */
+export function CrosshairIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 12 12" strokeWidth={1.4} strokeLinecap="butt" {...props}>
+      <circle cx="6" cy="6" r="4.5" />
+      <path d="M6 0v3M6 9v3M0 6h3M9 6h3" />
+    </Icon>
+  );
+}
+
+/** mission-pool-v2: the quarry card's faint reticle. */
+export function ReticleIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 100 100" strokeWidth={2} strokeLinecap="butt" {...props}>
+      <circle cx="50" cy="50" r="40" />
+      <circle cx="50" cy="50" r="22" />
+      <path d="M50 0v30M50 70v30M0 50h30M70 50h30" />
+    </Icon>
+  );
+}

@@ -330,6 +330,63 @@ Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (t
 - Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
   checks follow; screenshot baselines change only after Nico's OK.
 
+### WEB-110 The Hunt on the Doomsday pages (pool version 6, boards DS01HuntToday and DS02HuntMore)
+Nico (2026-11-10, "Mission pool v2 + the Hunt"): the Hunt gets its own look on `/doomsday`, built with WEB-108 (the
+draw, the census, Hunt kills and feats) and WEB-109 (the Mission pool page) against one contract (pool version 6:
+targets as race id + class id, keyed by the hunted faction). Boards in `design/boards/doomsday-hunt`; only their
+visible strings in the UI. Everything else on the tabs stays.
+- **Today (DS01):** the Hunt card in its slot (order 3 PvE → Hunt → Skirmish → Duel slot, "x of 6 done"): the red
+  wanted card with a faint crosshair, "PvP · The Hunt", the quarry's portrait (race ring 46 px + class icon 24 px), the
+  name in Marcellus SC ("Night Elf Hunter"), "+5 PvP · 230 seen this week ⓘ", the hover "Kill one · target or mouse
+  over them first so the kill counts". Done: gold border, a "Bagged" stamp, "+5 PvP · bagged at 21:02 in Ashenvale".
+  **The Hunt today** above Today so far: "1 of 12 bagged one", up to four friends (class icon, name, crosshair with
+  time and zone, or "—"), "+ N more" to the board's Hunt column, Tomorrow's quarry. Today so far: "Grom bagged a
+  Night Elf Hunter · 20:14". Phone: goals, The Hunt today, Today so far.
+- **Board (DS02):** the Hunt column with a faint red tint, the quarry's portrait, "The Hunt" and the target in its
+  header; a kill shows a crosshair and the time, hover "Bagged 20:14 in Ashenvale". PvP Virgin stays.
+- **PvP tab (DS02):** for the friend picked with the chips, **Hunt trophies** (the other faction's 28 valid targets,
+  race × class with class icons; "6 of 28 · 9 quarries" and a gold bar; bagged gold "×count", not yet an outline,
+  invalid "·", a blue ring under 60 seen this week; hover "Human Paladin · bagged 3× · last Tue · 435 seen this
+  week"; "Rarest: …") and **Hunt · this week** (friends ranked by days with the quarry bagged).
+- **Feats tab (DS02):** the six Hunt feats (First quarry, Quarry ×10, Every class, Big game, Rare quarry, Hunter's
+  week) for the picked friend with a crosshair, a bar and "a / b" while unfinished. Hunt feats in the group's feed get
+  the crosshair.
+- **Census:** Everloot's numbers ("seen this week") only where a census is stored (WEB-108); the ⓘ next to each links
+  "Everloot census" (https://everloot.app/census) with the week's dates. Without a census nothing shows a number.
+- **Data:** WEB-108's Hunt (`doomsdayHunt` in `src/server/hunt.ts`, types in `src/core/views/pool6.ts`): today's and
+  tomorrow's quarry, each friend's kills, trophies, week and feats; names and classes from the Doomsday snapshot (its
+  new `classFile` per friend). Views in `src/core/views/doomsdayHunt.ts`; the portrait (`QuarryPortrait`, `ClassIcon`)
+  is shared with WEB-109.
+- Done when: view-model tests; design checks at desktop and phone (Hunt card open and bagged, The Hunt today, the
+  board column, trophies, feats; `/dev/doomsday?state=hunt|hunt-bagged&tab=`); lint, unit, e2e; screenshot baselines
+  only after Nico's OK.
+
+### WEB-109 Mission pool v2 and the Hunt targets (boards `mission-pool-v2-overview`, `mission-pool-v2-hunt`, `mission-pool-v2-pvp`)
+Nico (2026-11-10): "Mission pool v2 + the Hunt", pool version 6, built with WEB-108 (draw, census), WEB-110 (Doomsday
+pages) and the addon's CF-118. Supersedes WEB-107 (PR #226). Only the boards' visible strings in the UI.
+- **Recipe bar** instead of the count chips: "Every day 3 PvE + the Hunt + 2 PvP · Every week 3 Weekly + a Bounty";
+  six tiles Daily PvE, The Hunt, Daily PvP, Weekly, Bounty, Off with per day or week, the pool and "every ~N d/wk"
+  (pool ÷ slots); a weekly slot whose missions come back within ~6 weeks is orange (Bounty).
+- **Today's quarry:** the red card with the reticle: race initials in a gold ring with the class icon, the name, the
+  hunting faction, +5 points, done today, seen this week (Everloot census, ⓘ), the other faction's target, the next 7
+  days and "Hunt targets ›".
+- **Days:** 6 lines: 3 PvE, the Hunt (crosshair, race and class), the PvP slots. Locks, "changed", the day editor and
+  Next 2 weeks as before.
+- **The pool as themes:** Search, All, Never came up, Hard (under 30 % done), Off with counts; nine cards with kind tag,
+  count and "N came up · N% done" (Skirmish "N new"); one card open below (gold border) with Mission, Short, Pts,
+  History ("came up 2× · 75% · Tue"), How often and the switch; about 7 rows, then it scrolls. A search or filter lists
+  the matches of every card. The new PvP missions carry their easy / check tag. Phone: one column, tiles 2 wide, rows
+  in two lines.
+- **Hunt targets** (`/admin/missions/hunt`): tabs per hunting faction with the targets in the draw, the legend, races ×
+  the 9 classes: count, weight bar and "% of draws", "too rare" under 30, "off", "—" for no valid combination, blue for
+  a Forever race new to the list, red ring for today; hover: seen, share, last hunted, done; a click switches a target
+  off or on (stored as the setting `hunt:<race>:<class>`, logged in Admin changes). The census line with its window,
+  characters and installs links everloot.app/census. Phone: one list per race.
+- **Shared with WEB-110:** `ClassIcon`, `HuntPortrait`, `CrosshairIcon`.
+- **Data:** the page reads WEB-108's pool version 6 data (`PoolData`, `HuntData`); until it lands, a stand-in
+  (`src/server/pool6Sample.ts`) that is replaced before this merges.
+- Done when: view-model tests; design checks desktop and phone, the Hunt targets grid included; e2e; lint, unit, build.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe
@@ -537,3 +594,48 @@ already says; it has no value. It goes, not repurposed.
   `tokens.css`; the deviation is recorded in `docs/DESIGN.md`.
 - Done when: lint, tests, build, e2e and design checks pass; the roster and roster-table screenshot baselines change
   (new baselines after Nico's OK).
+
+## E17 Mission pool v2 and the Hunt (2026-11-10)
+Nico ordered "Mission pool v2 + the Hunt", built in parallel against one contract: the addon's CF-118 (the catalogue
+and its fallback draw), WEB-108 (the site's data and draw), WEB-109 (the Mission pool page), WEB-110 (the Doomsday
+pages). One release, pool version 6. Design: Claude Design canvas "Doombringers v2", boards MP05–MP07, DS01–DS02.
+
+### WEB-108 The site's pool 6: the draw, the census-weighted Hunt, Hunt kills and feats
+- **Catalogue (mirrors CF-118, nicoputten/CommunitiesForever#267):** `POOL_VERSION = 6`; a `theme` on every PvE daily
+  (Questing, Loot & gold, Social, Professions, Exploration, Combat & character); the 50 PvP dailies
+  (`src/core/doomsday/catalogue6.ts`, generated from CF-118's golden `pools.catalogue`): 40 join the Skirmish, 8 the
+  Duel kind (`duel`, rotating `duel[n % 8 + 1]`, "First duel with each friend" = `p.duelFirst`, 0 goal points); the 9
+  `check` missions are in the catalogue but Off and never drawn (the golden pools leave them out). Reused ids take the
+  list's points; `p.double30` and `p.contestedHk` are new. Short names up to 13 characters for pool 6's PvP dailies
+  (the bot's board cuts them to 10, BOT-API). New `can` values `friends2`, `below30`; new `needs` `visit`. A pool-6
+  day's set: 3 PvE, Skirmish, `hunt`, the Duel. The addon's own fallback Hunt skips the 6 days before (`HUNT_GAP`).
+  The golden file `doomsday-cases.json` is CF-118's, byte for byte.
+- **The draw (the site decides):** every day 3 PvE dailies from 3 different themes (Rare / Normal / Often weigh inside
+  a theme; Off never), the Skirmish, the Duel (rotating through its pool), and the Hunt per hunted faction. Weeks as
+  before. Today and tomorrow locked; the day editor's pins win. The plan covers yesterday to 16 days ahead; the
+  calendar shows 14.
+- **The Hunt:** the 28 targets per faction from the game files (Everloot `class_races`, build 1.60.1.70862), Skyborne
+  included, by race id and class id. Weighted by the Everloot census count; under 30 seen (or no count) skipped; never
+  the same target within 7 days; the owner switches targets off and on (WEB-109: a `mission_settings` row
+  `hunt:<raceId>:<classId>`); pins win; today and tomorrow frozen. Without
+  any census every target weighs the same; when nothing is left the rules give way in that order.
+- **The census:** Everloot's population tool over HTTP (`GET https://everloot.app/api/tools/population?faction=&class=
+  &window=week`, `Authorization: Bearer $EVERLOOT_API_KEY`), 18 calls once per realm day before the draw, sequential,
+  stopping at a 429. Stored with its date; on failure the last stored census and a log line (never the key). The owner
+  can import a JSON by hand (Everloot answers, or counts by `raceId:classId` or by faction, race and class). Every
+  census number links "Everloot census" with its date (CC BY-SA 4.0).
+- **The schedule (CF-68 shape, new optional fields):** every day from yesterday to 16 ahead with `daily`, `skirmish`,
+  `duel`, `hunt = { Alliance = { race, class }, Horde = { race, class } }` (keyed by the hunted faction, ids) and
+  `pool = 6`; top-level `rare` ("raceId:classId" under 1% of the census) and `census = { at, characters }`.
+- **Hunt kills:** the feed's honorable kills (`pvpKills`: `t`, `zone`, `race`/`class` tokens, and from CF-118
+  `raceId`/`classId`) of a valid target;
+  per friend: today's Hunt done (also from the goal record's `done.hunt`), bagged list, trophies grid, "Hunt · this
+  week", and the six Hunt feats (`f.huntFirst`, `f.hunt10`, `f.huntClasses`, `f.huntAll`, `f.huntRare`,
+  `f.huntWeek`), held as feats of kind `hunt` on the character whose kill reached them and posted to the feed. The
+  bot skips the new kind (BOT-API "Unknown kinds: skip them").
+- **View models for WEB-109 and WEB-110:** `src/core/views/pool6.ts`; data from `src/server/hunt.ts`
+  (`doomsdayHunt`, `huntTargetsFor`, `pinHunt`, `importCensus`, `huntCensusInfo`); `PVP_GROUP` (MP07's groups) in
+  `src/core/doomsday/catalogue6.ts`. "N of M done" counts the Duel slot once.
+- **Bot API:** unchanged; the Duel slot's mission isn't on the bot's board.
+- Done when: unit and server tests for the draw (themes distinct, weights, skip, no repeat, locks, pins, fallback
+  without a census), the census parsing, the schedule export and the Hunt kills; lint, tests, build and e2e pass.

@@ -15,6 +15,8 @@ export interface DoomsdaySnapshot {
   schedule: DoomsdaySchedule;
   /** Today's draw as the board's columns, before per-friend swaps: the 3 PvE dailies, then the Skirmish. */
   todayGoals: GoalRef[];
+  /** Pool version 6: the Duel slot's mission today (not in todayGoals, so the bot's board keeps its shape). */
+  todayDuel?: GoalRef;
   /** The Hunt per enemy faction: Horde characters hunt `alliance`, Alliance characters `horde`. */
   hunts: { alliance?: GoalRef; horde?: GoalRef };
   /** This week's draw: the 3 PvE weeklies, then the Weekly bounty. */
@@ -43,7 +45,7 @@ export interface DoomsdaySchedule {
   weekReset: number;
 }
 
-export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "pveWeekly" | "bounty";
+export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "duel" | "pveWeekly" | "bounty";
 
 export interface GoalRef {
   /** Catalogue id ("d.quests10", "p.loneWolf", "hunt:NightElf:DRUID"); never reused. */
@@ -79,6 +81,8 @@ export interface FriendDoomsday {
   /** 84 Doomsday days, oldest first, ending today: goals done that day (either track); null = no data that day. */
   heatmap?: (number | null)[];
   pvp?: PvpDetails;
+  /** The friend's class for an icon next to the name: the highest-level character's (WEB-110). */
+  classFile?: string;
   /** The next step of the counted feats (honorKills, duelWins, deaths100, the next pvpRank; WEB-56). */
   featProgress?: FeatProgress[];
 }

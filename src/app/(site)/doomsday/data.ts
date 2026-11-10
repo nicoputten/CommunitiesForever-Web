@@ -8,6 +8,8 @@ import { doomsdayPage, type DoomsdayPage } from "@/core/views/doomsday";
 import { getDb } from "@/server/db";
 import { effectiveTimeZone } from "@/server/discord";
 import { doomsdayFor } from "@/server/doomsdayEngine";
+import { doomsdayHunt } from "@/server/hunt";
+import type { HuntPageData } from "@/core/views/doomsdayHunt";
 import { loadState } from "@/server/uploads";
 
 export interface DoomsdayContext {
@@ -16,6 +18,8 @@ export interface DoomsdayContext {
   timeZone: string;
   /** The header, Today, Week and the board (WEB-59). */
   page: DoomsdayPage;
+  /** The Hunt (WEB-108, WEB-110). */
+  hunt: HuntPageData;
 }
 
 /** Doomsday for the signed-in viewer (WEB-59, WEB-60); undefined before any Doomsday data. */
@@ -31,11 +35,13 @@ export async function doomsdayContext(): Promise<DoomsdayContext | undefined> {
     data === undefined ? undefined : peopleViews(data, now).find((p) => sameBattleTag(p.battleTag, viewer.battleTag));
   const timeZone = effectiveTimeZone(db, viewer.battleTag);
   const viewerKey = me?.key;
+  const hunt = doomsdayHunt(db, now);
   return {
     snapshot,
     ...(viewerKey === undefined ? {} : { viewerKey }),
     timeZone,
-    page: doomsdayPage({ snapshot, timeZone, ...(viewerKey === undefined ? {} : { viewerKey }) }),
+    hunt,
+    page: doomsdayPage({ snapshot, timeZone, hunt, ...(viewerKey === undefined ? {} : { viewerKey }) }),
   };
 }
 

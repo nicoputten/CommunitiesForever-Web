@@ -1,0 +1,75 @@
+/* The quarry's portrait (boards DS01HuntToday, DS02HuntMore): race ring + class icon. */
+.portrait {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: var(--size-quarry);
+  height: var(--size-quarry);
+}
+
+.ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-race-ring);
+  height: var(--size-race-ring);
+  box-sizing: border-box;
+  border-radius: var(--r-pill);
+  border: var(--line-stamp) solid var(--gold-bright);
+  background: var(--race-ring);
+  font-family: var(--font-display);
+  font-size: var(--fs-race-ring);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--gold-pale);
+}
+
+.portrait .class {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--size-quarry-class);
+  height: var(--size-quarry-class);
+  box-shadow: var(--ring-quarry-class);
+}
+
+.portrait[data-size="sm"] {
+  width: var(--size-quarry-sm);
+  height: var(--size-quarry-sm);
+}
+
+.portrait[data-size="sm"] .ring {
+  width: var(--size-race-ring-sm);
+  height: var(--size-race-ring-sm);
+  border: var(--border) solid var(--line-race-ring-sm);
+  background: var(--race-ring-flat);
+  font-size: var(--fs-body-sm);
+}
+
+.portrait[data-size="sm"] .class {
+  width: var(--size-quarry-class-sm);
+  height: var(--size-quarry-class-sm);
+}
+
+/* MP05: the Mission pool's quarry card (WEB-109). */
+.portrait[data-size="lg"] {
+  width: var(--size-quarry-lg);
+  height: var(--size-quarry-lg);
+}
+
+.portrait[data-size="lg"] .ring {
+  width: var(--size-race-ring-lg);
+  height: var(--size-race-ring-lg);
+  font-size: var(--fs-race-ring-lg);
+}
+
+.portrait[data-size="lg"] .class {
+  width: var(--size-quarry-class-lg);
+  height: var(--size-quarry-class-lg);
+  box-shadow: var(--ring-quarry-class-lg);
+}

@@ -54,6 +54,9 @@ export interface FeedPvpKill {
   myLvl?: number;
   class?: string;
   race?: string;
+  /** CF-118 (pool version 6): the victim's race and class as ids (ChrRaces / ChrClasses), next to the tokens. */
+  raceId?: number;
+  classId?: number;
   rank?: number;
   solo?: boolean;
   bg?: boolean;
@@ -155,6 +158,9 @@ function readDeath(t: Table): FeedDeath {
   });
 }
 
+/** A small whole id (race, class): from 1 to 999. */
+const smallId = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 && v < 1000 ? v : undefined);
+
 function readPvpKill(t: Table): FeedPvpKill {
   const lvl = num(t, "lvl");
   return strip({
@@ -165,6 +171,8 @@ function readPvpKill(t: Table): FeedPvpKill {
     myLvl: count(t, "myLvl"),
     class: text(t, "class"),
     race: text(t, "race"),
+    raceId: smallId(field(t, "raceId")),
+    classId: smallId(field(t, "classId")),
     rank: count(t, "rank"),
     solo: bool(t, "solo"),
     bg: bool(t, "bg"),
