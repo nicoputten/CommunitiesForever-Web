@@ -29,6 +29,7 @@ import {
   goalsForDay,
   goalsForWeek,
   type Combo,
+  draw,
   huntTitle,
   type Kill,
   ladder,
@@ -405,14 +406,19 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   if (hordeHunt !== undefined) hunts.horde = hordeHunt;
   /**
    * A friend's Hunts: one per faction of their characters (Horde first), the board's Alliance Hunt when none is known
-   * (the group plays Horde, Nico 2026-10-28). Empty when today has no Hunt.
+   * (the group plays Horde, Nico 2026-10-28). Empty when today has no Hunt. The Hunts of the friend's recorded pool
+   * version: a day an older addon drew keeps its own combination (pool 4 draws Vanilla's 20, WEB-106).
    */
-  const huntsOf = (f: Friend): { ref: GoalRef; column: string }[] => {
+  const huntsOf = (f: Friend, version: number): { ref: GoalRef; column: string }[] => {
+    const own =
+      version === POOL_VERSION
+        ? hunts
+        : { alliance: huntRef(draw(today, version).hunt?.Horde), horde: huntRef(draw(today, version).hunt?.Alliance) };
     const factions = new Set(f.chars.map((c) => c.faction));
     const out: { ref: GoalRef; column: string }[] = [];
-    if (hunts.alliance !== undefined && (factions.has("Horde") || !factions.has("Alliance")))
-      out.push({ ref: hunts.alliance, column: "hunt:alliance" });
-    if (hunts.horde !== undefined && factions.has("Alliance")) out.push({ ref: hunts.horde, column: "hunt:horde" });
+    if (own.alliance !== undefined && (factions.has("Horde") || !factions.has("Alliance")))
+      out.push({ ref: own.alliance, column: "hunt:alliance" });
+    if (own.horde !== undefined && factions.has("Alliance")) out.push({ ref: own.horde, column: "hunt:horde" });
     return out;
   };
 
@@ -661,7 +667,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
           dayZone,
           killProgress(f, dayDays, dayZone),
           dayRecord !== undefined ? entryPool(dayRecord) : POOL_VERSION,
-          huntsOf(f),
+          huntsOf(f, dayRecord !== undefined ? entryPool(dayRecord) : POOL_VERSION),
         ),
         ...(finished !== undefined ? { finishedAt: finished } : {}),
         duels: {

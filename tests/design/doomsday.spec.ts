@@ -177,10 +177,11 @@ test("doomsday: design values", async ({ page }) => {
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
-  // Pool version 4 (WEB-101): today's Skirmish (Revenge) has no progress the site can tell; the Hunt is a PvP goal.
+  // Pool version 4 (WEB-101): today's Skirmish (Revenge) has no progress the site can tell; the Hunt is a PvP goal
+  // (pool version 5, WEB-106: drawn from Forever's combinations).
   const open = page.getByTestId("goal").filter({ hasText: "Revenge" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Human Mages" });
+  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Human Rogues" });
   await expectStyles(hunt.getByText("PvP · the Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 

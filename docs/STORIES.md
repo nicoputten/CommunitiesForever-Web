@@ -311,6 +311,25 @@ says release:** a draft PR, so a site release in between (v0.11.2 with WEB-95) k
   doesn't plan the Hunt (the schedule has no Hunt slot, UPLOADER-API); its counts follow the pool. No new upload
   field: CF-104's flag, revenge, summon and auction facts stay in the addon, so the site shows no progress for them.
 
+### WEB-106 The site's copy of pool version 5: the Hunt draws Forever's combinations (pairs with the addon's CF-116)
+Nico (2026-11-10): the Hunt draws the race and class combinations Forever has (the game files of build 1.60.1.70862),
+23 per enemy faction, without the Skyborne races for now. Ships in the same release as the addon's pool version 5
+(PR nicoputten/CommunitiesForever#263).
+- **The pool:** `POOL_VERSION = 5`; no mission changes (version 5's pools are version 4's).
+- **The Hunt:** a versioned combination list: pool versions 1 to 4 draw Vanilla's 20 per faction exactly; from
+  `FOREVER_COMBOS_SINCE = 5` Forever's 23 (new: Human Hunter, Dwarf Shaman, Gnome Priest; Orc Mage, Undead Paladin,
+  Troll Warlock). `combos(faction, version)`, the draw by the day's pool version.
+- **Golden cases:** `doomsday-cases.json` copied byte for byte from the addon's develop after CF-116; the pool 1 to 4
+  cases pass unchanged.
+- **Names:** the new combinations by race and class name wherever the Hunt is shown (Today, the board, the bot's
+  board): "Hunt: Undead Paladins", "Dwarf Shaman".
+- **Compatibility (rule 4):** a day an addon on pool 4 recorded keeps its pool 4 Hunt (Vanilla's 20) on Today and its
+  pool 4 points; the Hunt scores 5 PvP in every version. The bot's board shows the site's own (pool 5) Hunt.
+- Not mirrored: `b.allClasses` (9 enemy classes from pool 5) is the addon's goal progress, not sent; the site shows
+  done only.
+- Done when: the golden cases pass unchanged; unit tests for the versioned list and the names; the design sample and
+  checks follow; screenshot baselines change only after Nico's OK.
+
 ## E15 Recipes (2026-11-06)
 Design handoff: `docs/RECIPES-HANDOFF.md` (boards RC01–RC08; its "Amendments" win). Four parts, each shipping on its own: A the addon's scan (CF-38), B the item database and upload processing (WEB-90), C the site's pages, D DoomBot. B's schema is what C and D build on.
 Findings of the launch probe (addon CF-105, Forever builds 70790 to 70862, 2026-11-07): the game gives no recipe
