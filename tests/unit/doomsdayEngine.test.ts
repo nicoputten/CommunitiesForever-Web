@@ -5,7 +5,10 @@ import {
   canDo,
   draw,
   drawWeek,
+  combos,
+  type Combo,
   EPOCH,
+  FOREVER_COMBOS_SINCE,
   goal,
   gridCount,
   HUNT_SINCE,
@@ -265,7 +268,6 @@ describe("pool version 4", () => {
   const adaOf = (i: DoomsdayInput) => doomsdaySnapshot(i).friends.find((f) => f.friendKey === "Ada#1001")!;
 
   it("pools: 108 dailies, 6 Skirmish, 49 weeklies, 6 Bounty; Defend home retired; the Hunt from 4", () => {
-    expect(POOL_VERSION).toBe(4);
     expect(HUNT_SINCE).toBe(4);
     expect([pool("daily").length, pool("skirmish").length, pool("weekly").length, pool("bounty").length]).toEqual([
       108, 6, 49, 6,
@@ -283,6 +285,7 @@ describe("pool version 4", () => {
       expect(pool("daily"), id).toContain(id);
     expect(pool("skirmish", 3)).toContain("p.homeGuard");
     expect(pool("skirmish", 4)).not.toContain("p.homeGuard");
+    for (const slot of ["daily", "skirmish", "weekly", "bounty"] as const) expect(pool(slot, 4)).toEqual(pool(slot, 5));
     expect(draw(today, 3).hunt).toBeUndefined();
     expect(hunt.Horde).toBeDefined();
   });
@@ -320,7 +323,8 @@ describe("pool version 4", () => {
       ["hunt", "hunt:alliance", 5, 2],
       ["skirmish", "p.flagUp", 1, 3],
     ]);
-    expect(ada.today!.goals[3]!.goal.title).toBe(huntTitle(hunt.Horde!));
+    // The day's own pool-4 Hunt (Vanilla's 20), not today's pool-5 draw (WEB-106).
+    expect(ada.today!.goals[3]!.goal.title).toBe(huntTitle(draw(today, 4).hunt!.Horde!));
     expect(ada.points!.today).toEqual({ pve: 3, pvp: 5 + 1 });
   });
 
@@ -388,5 +392,77 @@ describe("pool version 4", () => {
     const row = board.friends[0]!;
     expect(row.goals).toEqual([{ slot: "hunt", id: "hunt", done: true, at: 2 }]);
     expect([row.doneCount, row.goalCount]).toEqual([1, 6]);
+  });
+});
+
+// WEB-106 (addon CF-116): pool version 5, the Hunt draws Forever's combinations.
+describe("pool version 5", () => {
+  const key = (c: Combo) => `${c.race}:${c.class}`;
+  const days = Array.from({ length: 200 }, (_, i) => EPOCH + i);
+
+  it("is the current pool version; Forever's combinations from 5", () => {
+    expect(POOL_VERSION).toBe(5);
+    expect(FOREVER_COMBOS_SINCE).toBe(5);
+  });
+
+  it("pools 1 to 4 hunt Vanilla's 20 per faction, pool 5 Forever's 23", () => {
+    for (const faction of ["Horde", "Alliance"] as const) {
+      for (const v of [1, 2, 3, 4]) expect(combos(faction, v), `${faction} ${v}`).toHaveLength(20);
+      expect(combos(faction, 5)).toHaveLength(23);
+      expect(combos(faction)).toEqual(combos(faction, 5));
+      // Forever only adds: every Vanilla combination is still there.
+      const forever = new Set(combos(faction, 5).map(key));
+      for (const c of combos(faction, 4)) expect(forever.has(key(c)), key(c)).toBe(true);
+    }
+    const added = (faction: "Horde" | "Alliance") =>
+      combos(faction, 5)
+        .filter((c) => !combos(faction, 4).some((v) => key(v) === key(c)))
+        .map(huntName);
+    expect(added("Horde")).toEqual(["Human Hunter", "Dwarf Shaman", "Gnome Priest"]);
+    expect(added("Alliance")).toEqual(["Orc Mage", "Undead Paladin", "Troll Warlock"]);
+  });
+
+  it("each pool version draws from its own list", () => {
+    for (const n of days) {
+      const v4 = new Set(combos("Horde", 4).map(key));
+      expect(v4.has(key(draw(n, 4).hunt!.Horde!)), `${n}`).toBe(true);
+    }
+    const drawn = new Set(
+      days.flatMap((n) => [huntName(draw(n, 5).hunt!.Horde!), huntName(draw(n, 5).hunt!.Alliance!)]),
+    );
+    for (const name of ["Human Hunter", "Dwarf Shaman", "Gnome Priest", "Orc Mage", "Undead Paladin", "Troll Warlock"])
+      expect(drawn.has(name), name).toBe(true);
+  });
+
+  it("names the new combinations as the board and the bot do", () => {
+    expect(huntTitle({ race: "Scourge", class: "PALADIN" })).toBe("Hunt: Undead Paladins");
+    expect(huntTitle({ race: "Dwarf", class: "SHAMAN" })).toBe("Hunt: Dwarf Shamans");
+    expect(huntName({ race: "Troll", class: "WARLOCK" })).toBe("Troll Warlock");
+  });
+
+  it("today's Hunt on a pool-5 day is the site's own draw, worth 5 PvP", () => {
+    const today = doomsdaySnapshot(input).schedule.day;
+    const i: DoomsdayInput = {
+      ...input,
+      goals: {
+        "Ada#1001": {
+          days: {
+            [today]: {
+              set: ["d.reward", "d.level", "d.potion", "p.revenge", "hunt"],
+              swapped: {},
+              done: { hunt: 1 },
+              pool: 5,
+            },
+          },
+          weeks: {},
+        },
+      },
+    };
+    const snap = doomsdaySnapshot(i);
+    const ada = snap.friends.find((f) => f.friendKey === "Ada#1001")!;
+    const h = ada.today!.goals.find((g) => g.goal.slot === "hunt")!;
+    expect(h.goal).toEqual(snap.hunts.alliance);
+    expect(h.goal.title).toBe(huntTitle(draw(today, 5).hunt!.Horde!));
+    expect([h.points, h.doneAt]).toEqual([5, 1]);
   });
 });

@@ -4,7 +4,7 @@ import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 // src/core/Doomsday.lua (CF-55). Both pass tests/fixtures/doomsday/doomsday-cases.json, the golden cases, unchanged;
 // a rule change updates DOOMSDAY.md, the golden file and both copies in the same release. Pure.
 
-export const POOL_VERSION = 4;
+export const POOL_VERSION = 5;
 /** 19:00 realm time, seconds after midnight. */
 export const DEFAULT_RESET = 68400;
 export const DAY = 86400;
@@ -2870,8 +2870,11 @@ export function pool(slot: GoalSlot, version = POOL_VERSION): string[] {
 
 // ===== Lists =====
 
-/** Enemy race and class combinations, by the hunting character's faction (race tokens as UnitRace gives them). */
-const COMBOS: Record<Faction, [string, string[]][]> = {
+/**
+ * Enemy race and class combinations, by the hunting character's faction (race tokens as UnitRace gives them). Pool
+ * versions 1 to 4: Vanilla's 20 per faction. Source: the addon's src/core/Doomsday.lua COMBOS_V1.
+ */
+const COMBOS_V1: Record<Faction, [string, string[]][]> = {
   Horde: [
     ["Human", ["WARRIOR", "PALADIN", "ROGUE", "PRIEST", "MAGE", "WARLOCK"]],
     ["Dwarf", ["WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST"]],
@@ -2886,14 +2889,38 @@ const COMBOS: Record<Faction, [string, string[]][]> = {
   ],
 };
 
+/**
+ * From pool version 5 (addon CF-116, Nico 2026-11-10): Forever's combinations, 23 per faction, without the Skyborne
+ * races for now. Source: the game files of build 1.60.1.70862, as the addon's src/core/Doomsday.lua COMBOS_V5 lists
+ * them (docs/WOW-FOREVER.md "Races").
+ */
+const COMBOS_V5: Record<Faction, [string, string[]][]> = {
+  Horde: [
+    ["Human", ["WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "MAGE", "WARLOCK"]],
+    ["Dwarf", ["WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN"]],
+    ["NightElf", ["WARRIOR", "HUNTER", "ROGUE", "PRIEST", "DRUID"]],
+    ["Gnome", ["WARRIOR", "ROGUE", "PRIEST", "MAGE", "WARLOCK"]],
+  ],
+  Alliance: [
+    ["Orc", ["WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "MAGE", "WARLOCK"]],
+    ["Scourge", ["WARRIOR", "PALADIN", "ROGUE", "PRIEST", "MAGE", "WARLOCK"]],
+    ["Tauren", ["WARRIOR", "HUNTER", "SHAMAN", "DRUID"]],
+    ["Troll", ["WARRIOR", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK"]],
+  ],
+};
+
+/** The pool version from which the Hunt draws Forever's combinations (addon CF-116). */
+export const FOREVER_COMBOS_SINCE = 5;
+
 export interface Combo {
   race: string;
   class: string;
 }
 
-/** The combinations a faction hunts, in list order (20 each). */
-export function combos(faction: Faction): Combo[] {
-  return COMBOS[faction].flatMap(([race, classes]) => classes.map((c) => ({ race, class: c })));
+/** The combinations a faction hunts in a pool version, in list order: 20 each in versions 1 to 4, 23 from 5. */
+export function combos(faction: Faction, version = POOL_VERSION): Combo[] {
+  const list = version >= FOREVER_COMBOS_SINCE ? COMBOS_V5 : COMBOS_V1;
+  return list[faction].flatMap(([race, classes]) => classes.map((c) => ({ race, class: c })));
 }
 
 /**
@@ -3004,8 +3031,8 @@ function drawWeeklies(list: readonly string[], week: number, previous: readonly 
 
 const comboKey = (c: Combo) => `${c.race}:${c.class}`;
 
-function drawHunt(faction: Faction, n: number, previous: Combo | undefined): Combo | undefined {
-  const key = drawOne(combos(faction).map(comboKey), n, SALT.hunt, previous ? [comboKey(previous)] : []);
+function drawHunt(faction: Faction, n: number, previous: Combo | undefined, version: number): Combo | undefined {
+  const key = drawOne(combos(faction, version).map(comboKey), n, SALT.hunt, previous ? [comboKey(previous)] : []);
   if (key === undefined) return undefined;
   const [race, cls] = key.split(":") as [string, string];
   return { race, class: cls };
@@ -3049,8 +3076,8 @@ export function draw(n: number, version = POOL_VERSION, hunt = HUNT_SINCE !== un
       };
       if (hunt) {
         result.hunt = {
-          Horde: drawHunt("Horde", day, prev.hunt?.Horde),
-          Alliance: drawHunt("Alliance", day, prev.hunt?.Alliance),
+          Horde: drawHunt("Horde", day, prev.hunt?.Horde, version),
+          Alliance: drawHunt("Alliance", day, prev.hunt?.Alliance, version),
         };
       }
       dayCache.set(prefix + day, result);
