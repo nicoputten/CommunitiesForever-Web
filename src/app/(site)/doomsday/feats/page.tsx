@@ -5,7 +5,7 @@ import { FriendChips, GroupFeats, OwnFeats, RankTitles } from "@/components/doom
 import { HuntFeats } from "@/components/doomsday/hunt";
 import { DoomsdayFrame } from "@/components/doomsday/parts";
 import { featsView } from "@/core/views/doomsdayFeats";
-import { huntFeats } from "@/core/views/doomsdayHunt";
+import { friendHunt, huntFeats } from "@/core/views/doomsdayHunt";
 import { doomsdayContext } from "../data";
 import { NoDoomsday } from "../NoData";
 
@@ -19,7 +19,7 @@ export default async function DoomsdayFeatsPage({ searchParams }: { searchParams
   const ctx = await doomsdayContext();
   if (ctx === undefined) return <NoDoomsday />;
   const view = featsView(ctx.snapshot, (await searchParams).friend, ctx.viewerKey, ctx.timeZone);
-  const picked = ctx.snapshot.friends.find((f) => f.friendKey === view.friends.find((x) => x.current)?.key);
+  const hunt = friendHunt(ctx.hunt, view.friends.find((x) => x.current)?.key);
   return (
     <DoomsdayFrame header={ctx.page.header} tab="feats">
       <div className={ladder.feats}>
@@ -42,7 +42,7 @@ export default async function DoomsdayFeatsPage({ searchParams }: { searchParams
           <OwnFeats view={view} />
         </section>
       </div>
-      {picked !== undefined && <HuntFeats feats={huntFeats(ctx.snapshot, picked)} />}
+      {hunt !== undefined && <HuntFeats feats={huntFeats(hunt)} />}
       <section className={styles.card} aria-labelledby="dd-ranks">
         <div className={styles.cardHead}>
           <h2 id="dd-ranks" className={styles.cardTitle}>

@@ -14,11 +14,12 @@ import { initials, joinNames } from "./text";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
 import {
   boardHuntTitle,
+  boardQuarry,
   huntCard,
   huntSoFar,
   huntToday,
-  quarryView,
   type HuntCardView,
+  type HuntPageData,
   type HuntTodayView,
   type QuarryView,
 } from "./doomsdayHunt";
@@ -46,6 +47,8 @@ export interface DoomsdayInput {
   viewerKey?: string;
   /** The viewer's own time zone. */
   timeZone: string;
+  /** The Hunt (WEB-108's `doomsdayHunt`, WEB-110); undefined: the Hunt shows as a plain goal. */
+  hunt?: HuntPageData;
 }
 
 /** Points of both tracks, never added together; `approx` when a PvP number rests on guessed victims ("≈"). */
@@ -240,6 +243,7 @@ const KIND: Record<GoalSlot, string> = {
   pveDaily: "PvE daily",
   hunt: "PvP · the Hunt",
   skirmish: "PvP · Skirmish",
+  duel: "PvP · Duel",
   pveWeekly: "PvE weekly",
   bounty: "PvP bounty",
 };
@@ -359,7 +363,7 @@ function isPve(g: FriendGoal): boolean {
 }
 
 /** The board's columns: the 3 PvE dailies, the Hunt (Alliance: the group plays Horde, Nico 2026-10-28), the Skirmish. */
-function boardColumns(s: DoomsdaySnapshot): BoardColumn[] {
+function boardColumns(s: DoomsdaySnapshot, data: HuntPageData | undefined): BoardColumn[] {
   const column = (g: GoalRef, id = g.id): BoardColumn => ({ id, track: g.track, title: g.title });
   const pve = s.todayGoals.filter((g) => g.slot === "pveDaily").map((g) => column(g));
   const rest = s.todayGoals.filter((g) => g.slot !== "pveDaily").map((g) => column(g));
@@ -369,10 +373,10 @@ function boardColumns(s: DoomsdaySnapshot): BoardColumn[] {
       : s.hunts.horde !== undefined
         ? column(s.hunts.horde, "hunt:horde")
         : undefined;
-  const target = hunt === undefined ? undefined : s.quarry?.today[hunt.id === "hunt:horde" ? "Horde" : "Alliance"];
-  if (hunt !== undefined && target !== undefined) {
-    hunt.quarry = quarryView(target);
-    hunt.title = hunt.quarry.name;
+  const quarry = hunt === undefined ? undefined : boardQuarry(data, hunt.id === "hunt:horde" ? "Horde" : "Alliance");
+  if (hunt !== undefined && quarry !== undefined) {
+    hunt.quarry = quarry;
+    hunt.title = quarry.name;
   }
   return [...pve, ...(hunt === undefined ? [] : [hunt]), ...rest];
 }
@@ -462,7 +466,7 @@ function heatmapRow(f: FriendDoomsday, s: DoomsdaySnapshot): HeatmapRow {
   };
 }
 
-export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput): DoomsdayPage {
+export function doomsdayPage({ snapshot: s, viewerKey, timeZone, hunt: data }: DoomsdayInput): DoomsdayPage {
   const me = s.friends.find((f) => f.friendKey === viewerKey);
   const active = s.friends.filter((f) => f.status === "active");
   const approx = (f: FriendDoomsday) => f.points?.approx?.pvp === true;
@@ -479,15 +483,15 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
 
   const page: DoomsdayPage = {
     header,
-    soFar: soFar(s, timeZone),
-    board: board(s, viewerKey, timeZone),
+    soFar: soFar(s, timeZone, data),
+    board: board(s, viewerKey, timeZone, data),
     heatmap: {
       rows: orderFriends(active, viewerKey).map((f) => heatmapRow(f, s)),
     },
     firstDay: active.every((f) => (f.points?.allTime.pve ?? 0) + (f.points?.allTime.pvp ?? 0) === 0),
   };
-  if (s.quarry !== undefined && Object.keys(s.quarry.today).length > 0)
-    page.huntToday = huntToday(s, viewerKey, timeZone);
+  if (data !== undefined && Object.keys(data.hunt.quarry).length > 0)
+    page.huntToday = huntToday(s, data, viewerKey, timeZone);
   const noAddon = s.friends.filter((f) => f.status !== "active").map((f) => f.name);
   if (noAddon.length > 0) {
     page.heatmap.without = `${joinNames(noAddon)}: no Doomsday data yet.`;
@@ -506,7 +510,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
         .filter((g) => !isPve(g))
         .map((g) => {
           const card = goalCard(g, timeZone, s.schedule.dayStart);
-          const hunt = g.goal.slot === "hunt" ? huntCard(s, me, g, timeZone) : undefined;
+          const hunt = g.goal.slot === "hunt" ? huntCard(s, data, me.friendKey, g, timeZone) : undefined;
           return hunt === undefined ? card : { ...card, hunt };
         }),
       duels: duelSlot(me),
@@ -540,8 +544,13 @@ function orderFriends(friends: readonly FriendDoomsday[], viewerKey: string | un
   );
 }
 
-function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: string): BoardView {
-  const columns = boardColumns(s);
+function board(
+  s: DoomsdaySnapshot,
+  viewerKey: string | undefined,
+  timeZone: string,
+  data: HuntPageData | undefined,
+): BoardView {
+  const columns = boardColumns(s, data);
   const rows = orderFriends(s.friends, viewerKey).map((f): BoardRow => {
     const row: BoardRow = {
       key: f.friendKey,
@@ -559,7 +568,7 @@ function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: str
     if (s.crown?.friendKey === f.friendKey) row.crown = clockAt(s.crown.at, s.schedule.dayStart, timeZone);
     row.cells = columns.map((c) => {
       const cell = boardCell(goalFor(f, c), timeZone, s.schedule.dayStart);
-      const title = c.quarry === undefined || cell.kind !== "done" ? undefined : boardHuntTitle(s, f, timeZone);
+      const title = c.quarry === undefined || cell.kind !== "done" ? undefined : boardHuntTitle(s, data, f, timeZone);
       return title === undefined ? cell : { ...cell, hunt: title };
     });
     row.duels = duelsCell(f);
@@ -582,8 +591,8 @@ function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: str
   return view;
 }
 
-function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
-  const view: SoFarView = { finished: [], partial: [], hunts: huntSoFar(s, timeZone), empty: true };
+function soFar(s: DoomsdaySnapshot, timeZone: string, data: HuntPageData | undefined): SoFarView {
+  const view: SoFarView = { finished: [], partial: [], hunts: huntSoFar(s, data, timeZone), empty: true };
   const crownKey = s.crown?.friendKey;
   if (s.crown !== undefined) {
     const name = s.friends.find((f) => f.friendKey === crownKey)?.name;

@@ -3,8 +3,6 @@
 // catalogue's titles. The screens' views (src/core/views/doomsday.ts) turn them into text. Every part a friend's data
 // may lack is optional: a missing value shows nothing, never 0 as if known.
 
-import type { HuntCensus, HuntKill, HuntPair } from "./hunt";
-
 export type Track = "pve" | "pvp";
 
 export interface Points {
@@ -17,17 +15,10 @@ export interface DoomsdaySnapshot {
   schedule: DoomsdaySchedule;
   /** Today's draw as the board's columns, before per-friend swaps: the 3 PvE dailies, then the Skirmish. */
   todayGoals: GoalRef[];
+  /** Pool version 6: the Duel slot's mission today (not in todayGoals, so the bot's board keeps its shape). */
+  todayDuel?: GoalRef;
   /** The Hunt per enemy faction: Horde characters hunt `alliance`, Alliance characters `horde`. */
   hunts: { alliance?: GoalRef; horde?: GoalRef };
-  /**
-   * The Hunt's quarry as ids by the hunted faction (WEB-110, pool-6 contract): today's and tomorrow's (tomorrow is
-   * locked, so it is safe to show). A faction is missing on a day without its Hunt.
-   */
-  quarry?: { today: HuntPair; tomorrow: HuntPair };
-  /** Everloot's census for the Hunt (WEB-108 stores it); undefined until there is one: no "seen" numbers then. */
-  census?: HuntCensus;
-  /** Targets under 1 % of the census (`targetKey`s; the schedule's `rare`, WEB-108). */
-  rare?: string[];
   /** This week's draw: the 3 PvE weeklies, then the Weekly bounty. */
   weekGoals: GoalRef[];
   /** Every friend of the community, also those without the addon or without Doomsday data. */
@@ -54,7 +45,7 @@ export interface DoomsdaySchedule {
   weekReset: number;
 }
 
-export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "pveWeekly" | "bounty";
+export type GoalSlot = "pveDaily" | "hunt" | "skirmish" | "duel" | "pveWeekly" | "bounty";
 
 export interface GoalRef {
   /** Catalogue id ("d.quests10", "p.loneWolf", "hunt:NightElf:DRUID"); never reused. */
@@ -90,12 +81,8 @@ export interface FriendDoomsday {
   /** 84 Doomsday days, oldest first, ending today: goals done that day (either track); null = no data that day. */
   heatmap?: (number | null)[];
   pvp?: PvpDetails;
-  /** The faction this friend hunts (WEB-110): Alliance targets for a Horde player, the group's default. */
-  hunted?: "Alliance" | "Horde";
   /** The friend's class for an icon next to the name: the highest-level character's (WEB-110). */
   classFile?: string;
-  /** Every quarry this friend bagged, oldest first (WEB-110). */
-  huntKills?: HuntKill[];
   /** The next step of the counted feats (honorKills, duelWins, deaths100, the next pvpRank; WEB-56). */
   featProgress?: FeatProgress[];
 }

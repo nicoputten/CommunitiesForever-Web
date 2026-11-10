@@ -1,6 +1,7 @@
 import { blob, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { UploadSummary } from "@/core/diff";
 import type { FeatFields, FeatKind } from "@/core/doomsday/feats";
+import type { Census } from "@/core/doomsday/hunt";
 import type { Often } from "@/core/doomsday/missionPool";
 import type { GoalRecord } from "@/core/doomsday/record";
 import type { FeedDay } from "@/core/feed";
@@ -928,4 +929,57 @@ export const recipeFinds = sqliteTable(
     postedAt: integer("posted_at"),
   },
   (t) => [uniqueIndex("recipe_finds_upload_guid_recipe").on(t.uploadId, t.guid, t.recipeId)],
+);
+
+// --- WEB-108: the Hunt from pool version 6 (src/server/hunt.ts) ------------------------------------------------
+// The census the draw is weighted by, the owner's pins and the drawn quarries (a target the owner switched off is a
+// `mission_settings` row with id "hunt:<raceId>:<classId>", WEB-109). Not derived: a rebuild of
+// the uploads leaves them alone.
+
+/** A census as stored, one row per fetch or import: Everloot's population counts per Hunt target (CC BY-SA 4.0). */
+export const huntCensus = sqliteTable("hunt_census", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** The realm day it was stored on. */
+  day: integer("day").notNull(),
+  /** When it was stored (unix seconds). */
+  at: integer("at").notNull(),
+  source: text("source").$type<"everloot" | "import">().notNull(),
+  data: text("data", { mode: "json" }).$type<Census>().notNull(),
+  /** The owner who imported it; null for the daily fetch. */
+  by: text("by"),
+});
+
+/** The daily fetch's last try per realm day: whether it worked (else the last stored census is used, and logged). */
+export const huntCensusFetch = sqliteTable("hunt_census_fetch", {
+  day: integer("day").primaryKey(),
+  at: integer("at").notNull(),
+  ok: integer("ok", { mode: "boolean" }).notNull(),
+  /** Why it failed (never the key or a response body). */
+  error: text("error"),
+});
+
+/** A day's quarry per hunted faction: frozen when locked, as last drawn while free. */
+export const huntPlan = sqliteTable(
+  "hunt_plan",
+  {
+    n: integer("n").notNull(),
+    /** The hunted faction ("Alliance": the target Horde characters hunt). */
+    faction: text("faction").$type<"Alliance" | "Horde">().notNull(),
+    key: text("key").notNull(),
+    at: integer("at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.n, t.faction] })],
+);
+
+/** The owner's pin of a day's quarry for a hunted faction (the day editor). */
+export const huntPins = sqliteTable(
+  "hunt_pins",
+  {
+    n: integer("n").notNull(),
+    faction: text("faction").$type<"Alliance" | "Horde">().notNull(),
+    key: text("key").notNull(),
+    at: integer("at").notNull(),
+    by: text("by").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.n, t.faction] })],
 );

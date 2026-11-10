@@ -43,10 +43,12 @@ describe("the Mission pool page", () => {
     );
     expect(v.counts).toEqual([
       { label: "Daily PvE", count: 107 },
-      { label: "Skirmish", count: 6 },
+      // Pool version 6 (WEB-108): 40 PvP dailies join the Skirmish, 9 of them "check" ones that start Off.
+      { label: "Skirmish", count: 37 },
+      { label: "Duel", count: 8 },
       { label: "Weekly", count: 49 },
       { label: "Bounty", count: 6 },
-      { label: "Off", count: 1 },
+      { label: "Off", count: 10 },
     ]);
     expect(v.days).toHaveLength(14);
     expect(v.days[0]).toMatchObject({ label: "Mon 9", note: "today", locked: true });
@@ -58,7 +60,8 @@ describe("the Mission pool page", () => {
     expect(v.offFrom).toBe("Won’t come up from Wed 11.");
     expect(v.groups.map((g) => g.title)).toEqual([
       "Daily · PvE · 108",
-      "Skirmish · PvP · 6",
+      "Skirmish · PvP · 46",
+      "Duel · PvP · 8",
       "Weekly · 49",
       "Bounty · PvP · 6",
     ]);
@@ -74,7 +77,7 @@ describe("the Mission pool page", () => {
     const level = v.groups[0]!.rows.find((r) => r.id === "d.level")!;
     expect(level).toMatchObject({ cameUp: "18", swapped: "2", donePct: 71, done: "71%", last: "Sun" });
     expect(level.line).toBe("Came up 18 · done 71% · last Sun");
-    expect(v.groups[2]!.rows.find((r) => r.id === "w.days3")!.last).toBe(`wk ${weekNumber(2966)}`);
+    expect(v.groups[3]!.rows.find((r) => r.id === "w.days3")!.last).toBe(`wk ${weekNumber(2966)}`);
   });
 
   it("a free day's editor: slots, pinned, the Duel stays, a mission also on the day before", () => {
@@ -91,7 +94,7 @@ describe("the Mission pool page", () => {
     expect(e.span).toBe("Thu 19:00 → Fri 19:00");
     expect(e.changed).toBe(true);
     expect(e.canReset).toBe(true);
-    expect(e.slots.map((s) => s.name)).toEqual(["Daily 1", "Daily 2", "Daily 3", "Skirmish"]);
+    expect(e.slots.map((s) => s.name)).toEqual(["Daily 1", "Daily 2", "Daily 3", "Skirmish", "Duel"]);
     expect(e.slots[0]).toMatchObject({ text: "Raise Cooking, First Aid or Fishing", tag: "pinned" });
     expect(e.slots[0]!.options.some((o) => o.id === "d.secondary")).toBe(false);
     expect(e.slots[0]!.options.find((o) => o.id === prev)?.also).toBe(
@@ -122,6 +125,6 @@ describe("the Mission pool page", () => {
   });
 
   it("the Admin page's box", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 169, changed: 0, today: "Mon 9" });
+    expect(missionPoolBox(input())).toEqual({ missions: 217, changed: 0, today: "Mon 9" });
   });
 });

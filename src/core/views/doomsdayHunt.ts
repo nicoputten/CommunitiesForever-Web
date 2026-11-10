@@ -1,27 +1,30 @@
-import { classInfo } from "../gamedata/classes";
-import { raceInfo } from "../gamedata/races";
-import {
-  CENSUS_URL,
-  type HuntCensus,
-  type HuntKill,
-  type HuntTarget,
-  HUNT_CLASSES,
-  HUNT_TARGETS,
-  classFileOf,
-  huntTargets,
-  targetKey,
-} from "../doomsday/hunt";
-import { clockAt, weekOf } from "../doomsday/rules";
+import type { Faction } from "../doomsday/rules";
+import { clockAt } from "../doomsday/rules";
 import type { DoomsdaySnapshot, FriendDoomsday } from "../doomsday/snapshot";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
-import { compareText } from "./characters";
+import type {
+  CensusInfo,
+  FriendHuntView,
+  HuntKill,
+  HuntTarget,
+  HuntTodayView as HuntTodayData,
+  HuntWeekRow,
+  TrophiesView as TrophiesData,
+} from "./pool6";
+import { CENSUS_URL } from "./pool6";
 
 // The Hunt on the Doomsday pages (WEB-110, boards DS01HuntToday and DS02HuntMore, design/boards/doomsday-hunt): the
 // Hunt card, "The Hunt today" with tomorrow's quarry, the Today so far line, the board's Hunt column, the PvP tab's
-// trophies and "Hunt · this week", and the six Hunt feats. Census numbers are Everloot's sample ("seen this week"),
-// always linked to its census with the window's dates; without a census they don't show.
+// trophies and "Hunt · this week", and the six Hunt feats. The facts are WEB-108's (src/core/views/pool6.ts, from
+// src/server/hunt.ts `doomsdayHunt`); this turns them into text. Census numbers are Everloot's sample ("seen this
+// week"), always with its link and dates; without a census they don't show.
 
-type Faction = "Alliance" | "Horde";
+/** What the Doomsday pages get of the Hunt (WEB-108's `DoomsdayHuntData`). */
+export interface HuntPageData {
+  hunt: HuntTodayData;
+  friends: FriendHuntView[];
+  week: HuntWeekRow[];
+}
 
 /** A target for the portrait (race ring + class icon) and its name. */
 export interface QuarryView {
@@ -74,7 +77,7 @@ export type TrophyCell =
       kind: "target";
       key: string;
       count: number;
-      /** Seen fewer than RARE_SEEN this week: the blue ring. */
+      /** Seen fewer than 60 this week: the blue ring. */
       rare: boolean;
       /** "Human Paladin · bagged 3× · last Tue · 435 seen this week". */
       label: string;
@@ -86,7 +89,7 @@ export interface TrophiesView {
   /** "6 of 28 · 9 quarries". */
   summary: string;
   percent: number;
-  classes: { id: number; classFile?: string; name: string }[];
+  classes: { classFile: string; name: string }[];
   rows: { race: number; name: string; cells: TrophyCell[] }[];
   /** "Rarest: Skyborne Druid (75 seen this week) · …"; only with a census. */
   rarest?: { name: string; seen: SeenView };
@@ -105,14 +108,24 @@ export interface HuntFeatView {
   progress?: { text: string; percent: number };
 }
 
-/** Under this many seen this week a target gets the blue "rare" ring (board DS02HuntMore). */
-export const RARE_SEEN = 60;
-
 /** How many friends "The Hunt today" lists before "+ N more" (board DS01HuntToday). */
 const TODAY_FRIENDS = 4;
 
 /** The board tab with its Hunt column ("+ N more"). */
 export const BOARD_HUNT_HREF = "/doomsday/board#hunt";
+
+/** The trophy grid's columns: the 9 classes in the game's order (boards DS02HuntMore, MP06Hunt). */
+const CLASS_ORDER = [
+  ["WARRIOR", "Warrior"],
+  ["PALADIN", "Paladin"],
+  ["HUNTER", "Hunter"],
+  ["ROGUE", "Rogue"],
+  ["PRIEST", "Priest"],
+  ["SHAMAN", "Shaman"],
+  ["MAGE", "Mage"],
+  ["WARLOCK", "Warlock"],
+  ["DRUID", "Druid"],
+] as const;
 
 /** The race ring's letters: the initials of a two-word race ("NE"), else its first two letters ("Gn"). */
 export function raceShort(name: string): string {
@@ -122,52 +135,49 @@ export function raceShort(name: string): string {
 }
 
 export function quarryView(t: HuntTarget): QuarryView {
-  const raceName = raceInfo(t.race)?.name ?? "Unknown race";
-  const classFile = classFileOf(t.class);
-  const className = classInfo(classFile)?.name ?? "Unknown class";
-  const view: QuarryView = {
-    key: targetKey(t),
-    name: `${raceName} ${className}`,
-    raceName,
-    raceShort: raceShort(raceName),
-    className,
+  return {
+    key: t.key,
+    name: t.name,
+    raceName: t.race,
+    raceShort: raceShort(t.race),
+    classFile: t.classFile,
+    className: t.className,
   };
-  if (classFile !== undefined) view.classFile = classFile;
-  return view;
 }
 
-/** "4–10 Nov", "28 Oct–3 Nov": the census's 7-day window in the zone. */
-export function censusWindow(c: HuntCensus, timeZone: string): string {
-  const part = (at: number) => {
-    const p = new Intl.DateTimeFormat("en-GB", { timeZone, day: "numeric", month: "numeric" })
-      .formatToParts(new Date(at * 1000))
-      .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
-    return { day: String(Number(p.day)), month: MONTH_SHORT[Number(p.month) - 1] ?? "" };
+function dayMonth(at: number, timeZone: string): { day: string; month: string; weekday: string } {
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", day: "numeric", month: "numeric" })
+    .formatToParts(new Date(at * 1000))
+    .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
+  return {
+    day: String(Number(p.day)),
+    month: MONTH_SHORT[Number(p.month) - 1] ?? "",
+    weekday: WEEKDAY_SHORT[WEEKDAY_SHORT.indexOf(p.weekday ?? "")] ?? p.weekday ?? "",
   };
-  const from = part(c.at - 6 * 86400);
-  const to = part(c.at);
-  return from.month === to.month
-    ? `${from.day}–${to.day} ${to.month}`
-    : `${from.day} ${from.month}–${to.day} ${to.month}`;
 }
 
-function seenOf(t: HuntTarget, census: HuntCensus | undefined, timeZone: string): SeenView | undefined {
-  const n = census?.counts[targetKey(t)];
-  if (census === undefined || n === undefined) return undefined;
-  return { count: n.toLocaleString("en-GB"), href: CENSUS_URL, window: censusWindow(census, timeZone) };
+/** "4–10 Nov", "28 Oct–3 Nov": the census's 7-day window in the zone (Everloot's own when it names one). */
+export function censusWindow(c: CensusInfo, timeZone: string): string {
+  const to = c.to ?? c.asOf;
+  const from = dayMonth(c.from ?? to - 6 * 86400, timeZone);
+  const end = dayMonth(to, timeZone);
+  return from.month === end.month
+    ? `${from.day}–${end.day} ${end.month}`
+    : `${from.day} ${from.month}–${end.day} ${end.month}`;
 }
 
-/** The faction a friend hunts; Alliance targets when unknown (the group plays Horde). */
-function huntedOf(f: FriendDoomsday | undefined): Faction {
-  return f?.hunted ?? "Alliance";
+function seenOf(n: number | undefined, census: CensusInfo | undefined, timeZone: string): SeenView | undefined {
+  if (n === undefined || census === undefined) return undefined;
+  return { count: n.toLocaleString("en-GB"), href: census.url ?? CENSUS_URL, window: censusWindow(census, timeZone) };
 }
 
-function todayKill(f: FriendDoomsday, day: number): HuntKill | undefined {
-  return (f.huntKills ?? []).find((k) => k.day === day);
+function friendOf(data: HuntPageData | undefined, key: string): FriendHuntView | undefined {
+  return data?.friends.find((f) => f.owner === key);
 }
 
-/** "21:02 in Ashenvale" / "21:02". */
-function at(k: HuntKill, s: DoomsdaySnapshot, timeZone: string, sep: string): string {
+/** "21:02 in Ashenvale" / "21:02"; undefined for a kill without its time (an older addon). */
+function when(k: HuntKill, s: DoomsdaySnapshot, timeZone: string, sep: string): string | undefined {
+  if (k.at === undefined) return undefined;
   const time = clockAt(k.at, s.schedule.dayStart, timeZone);
   return k.zone === undefined ? time : `${time}${sep}${k.zone}`;
 }
@@ -178,22 +188,29 @@ function at(k: HuntKill, s: DoomsdaySnapshot, timeZone: string, sep: string): st
  */
 export function huntCard(
   s: DoomsdaySnapshot,
-  me: FriendDoomsday,
+  data: HuntPageData | undefined,
+  viewerKey: string,
   goal: { columnId: string; points: number; doneAt?: number },
   timeZone: string,
 ): HuntCardView | undefined {
   const hunted: Faction = goal.columnId === "hunt:horde" ? "Horde" : "Alliance";
-  const target = s.quarry?.today[hunted];
-  if (target === undefined) return undefined;
-  const quarry = quarryView(target);
+  const q = data?.hunt.quarry[hunted];
+  if (q === undefined) return undefined;
+  const quarry = quarryView(q.target);
   const card: HuntCardView = { quarry, worth: `+${goal.points} PvP` };
-  if (goal.doneAt !== undefined) {
-    const kill = todayKill(me, s.schedule.day);
-    const time = clockAt(kill?.at ?? goal.doneAt, s.schedule.dayStart, timeZone);
-    card.bagged = kill?.zone === undefined ? `bagged at ${time}` : `bagged at ${time} in ${kill.zone}`;
+  const kill = friendOf(data, viewerKey)?.todayKill;
+  const doneAt = kill?.at ?? goal.doneAt;
+  if (goal.doneAt !== undefined || kill !== undefined) {
+    const time = doneAt === undefined ? undefined : clockAt(doneAt, s.schedule.dayStart, timeZone);
+    card.bagged = [
+      time === undefined ? "bagged" : `bagged at ${time}`,
+      kill?.zone === undefined ? undefined : `in ${kill.zone}`,
+    ]
+      .filter((x) => x !== undefined)
+      .join(" ");
     return card;
   }
-  const seen = seenOf(target, s.census, timeZone);
+  const seen = seenOf(q.seen, q.census, timeZone);
   if (seen !== undefined) {
     card.seen = seen;
     card.seenTip = `${quarry.name}s seen in the last 7 days (${seen.window}). More seen = easier to find.`;
@@ -201,137 +218,126 @@ export function huntCard(
   return card;
 }
 
-/** Friends with Doomsday data; the viewer's own faction decides tomorrow's quarry. */
-export function huntToday(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: string): HuntTodayView {
-  const active = s.friends.filter((f) => f.status === "active");
-  const rows = active
-    .map((f) => ({ f, kill: todayKill(f, s.schedule.day) }))
-    .sort(
-      (a, b) =>
-        Number(b.kill !== undefined) - Number(a.kill !== undefined) ||
-        (a.kill?.at ?? 0) - (b.kill?.at ?? 0) ||
-        compareText(a.f.name, b.f.name),
-    );
-  const bagged = rows.filter((r) => r.kill !== undefined).length;
+/** "The Hunt today": friends with Doomsday data, those who bagged one first; the viewer's faction decides tomorrow. */
+export function huntToday(
+  s: DoomsdaySnapshot,
+  data: HuntPageData,
+  viewerKey: string | undefined,
+  timeZone: string,
+): HuntTodayView {
+  const active = new Map(s.friends.filter((f) => f.status === "active").map((f) => [f.friendKey, f]));
+  const rows = data.hunt.friends.flatMap((h) => {
+    const f = active.get(h.owner);
+    if (f === undefined) return [];
+    const done = friendOf(data, h.owner)?.todayDone === true;
+    return [{ f, kill: h.kill, done }];
+  });
+  const bagged = rows.filter((r) => r.done).length;
   const view: HuntTodayView = {
-    count: `${bagged} of ${active.length} bagged one`,
-    friends: rows.slice(0, TODAY_FRIENDS).map(({ f, kill }) => {
+    count: `${bagged} of ${rows.length} bagged one`,
+    friends: rows.slice(0, TODAY_FRIENDS).map(({ f, kill, done }) => {
       const row: HuntTodayView["friends"][number] = {
         key: f.friendKey,
         name: f.name,
-        bagged: kill !== undefined,
-        text: kill === undefined ? "—" : at(kill, s, timeZone, " · "),
+        bagged: done,
+        text: !done ? "—" : ((kill === undefined ? undefined : when(kill, s, timeZone, " · ")) ?? "bagged"),
       };
       if (f.classFile !== undefined) row.classFile = f.classFile;
       return row;
     }),
   };
   if (rows.length > TODAY_FRIENDS) view.more = { text: `+ ${rows.length - TODAY_FRIENDS} more`, href: BOARD_HUNT_HREF };
-  const me = s.friends.find((f) => f.friendKey === viewerKey);
-  const tomorrow = s.quarry?.tomorrow[huntedOf(me)];
+  const hunted = viewerKey === undefined ? undefined : friendOf(data, viewerKey)?.hunts[0];
+  const tomorrow = data.hunt.tomorrow[hunted ?? "Alliance"];
   if (tomorrow !== undefined) view.tomorrow = quarryView(tomorrow);
   return view;
 }
 
 /** Today so far: "Grom bagged a Night Elf Hunter · 20:14", in the order they were bagged. */
-export function huntSoFar(s: DoomsdaySnapshot, timeZone: string): { key: string; text: string }[] {
-  return s.friends
-    .filter((f) => f.status === "active")
-    .flatMap((f) => {
-      const k = todayKill(f, s.schedule.day);
-      return k === undefined ? [] : [{ f, k }];
-    })
-    .sort((a, b) => a.k.at - b.k.at || compareText(a.f.name, b.f.name))
-    .map(({ f, k }) => ({
-      key: f.friendKey,
-      text: `${f.name} bagged a ${quarryView(k).name} · ${clockAt(k.at, s.schedule.dayStart, timeZone)}`,
-    }));
+export function huntSoFar(
+  s: DoomsdaySnapshot,
+  data: HuntPageData | undefined,
+  timeZone: string,
+): { key: string; text: string }[] {
+  const names = new Map(s.friends.filter((f) => f.status === "active").map((f) => [f.friendKey, f.name]));
+  return (data?.hunt.friends ?? []).flatMap((h) => {
+    const name = names.get(h.owner);
+    const k = h.kill;
+    if (name === undefined || k?.target === undefined) return [];
+    const time = k.at === undefined ? "" : ` · ${clockAt(k.at, s.schedule.dayStart, timeZone)}`;
+    return [{ key: h.owner, text: `${name} bagged a ${k.target.name}${time}` }];
+  });
 }
 
-/** The board's Hunt cell hover: "Bagged 20:14 in Ashenvale". */
-export function boardHuntTitle(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: string): string | undefined {
-  const k = todayKill(f, s.schedule.day);
-  return k === undefined ? undefined : `Bagged ${at(k, s, timeZone, " in ")}`;
+/** The board's Hunt column: the quarry of a hunted faction. */
+export function boardQuarry(data: HuntPageData | undefined, hunted: Faction): QuarryView | undefined {
+  const q = data?.hunt.quarry[hunted];
+  return q === undefined ? undefined : quarryView(q.target);
 }
 
-/** "Tue" within the last week, else "2 Nov". */
-function lastDay(atSec: number, now: number, timeZone: string): string {
-  const p = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", day: "numeric", month: "numeric" })
-    .formatToParts(new Date(atSec * 1000))
-    .reduce<Record<string, string>>((acc, x) => ({ ...acc, [x.type]: x.value }), {});
-  if (now - atSec < 6 * 86400) return WEEKDAY_SHORT[WEEKDAY_SHORT.indexOf(p.weekday ?? "")] ?? p.weekday ?? "";
-  return `${Number(p.day)} ${MONTH_SHORT[Number(p.month) - 1]}`;
+/** A bagged cell's hover on the board: "Bagged 20:14 in Ashenvale". */
+export function boardHuntTitle(
+  s: DoomsdaySnapshot,
+  data: HuntPageData | undefined,
+  f: FriendDoomsday,
+  timeZone: string,
+): string | undefined {
+  const k = friendOf(data, f.friendKey)?.todayKill;
+  const at = k === undefined ? undefined : when(k, s, timeZone, " in ");
+  return at === undefined ? undefined : `Bagged ${at}`;
+}
+
+/** "Tue" within the last week, else "2 Nov": a Doomsday day, by its start in the zone. */
+function lastDay(day: number, s: DoomsdaySnapshot, timeZone: string): string {
+  const start = s.schedule.dayStart - (s.schedule.day - day) * 86400;
+  const d = dayMonth(start, timeZone);
+  return s.schedule.day - day < 6 ? d.weekday : `${d.day} ${d.month}`;
 }
 
 /** The PvP tab's trophy collection of one friend (DS02): the other faction's valid targets, gold where bagged. */
-export function huntTrophies(s: DoomsdaySnapshot, f: FriendDoomsday, timeZone: string): TrophiesView {
-  const hunted = huntedOf(f);
-  const kills = f.huntKills ?? [];
-  const byKey = new Map<string, HuntKill[]>();
-  for (const k of kills) byKey.set(targetKey(k), [...(byKey.get(targetKey(k)) ?? []), k]);
-  const targets = huntTargets(hunted);
-  const got = targets.filter((t) => byKey.has(targetKey(t))).length;
-  const quarries = kills.filter((k) => targets.some((t) => targetKey(t) === targetKey(k))).length;
-  const view: TrophiesView = {
+export function huntTrophies(
+  s: DoomsdaySnapshot,
+  f: FriendDoomsday,
+  view: TrophiesData,
+  timeZone: string,
+): TrophiesView {
+  const out: TrophiesView = {
     title: `Hunt trophies · ${f.name}`,
-    summary: `${got} of ${targets.length} · ${quarries} ${quarries === 1 ? "quarry" : "quarries"}`,
-    percent: targets.length === 0 ? 0 : Math.round((got / targets.length) * 100),
-    classes: HUNT_CLASSES.map((id) => {
-      const classFile = classFileOf(id);
-      const c: TrophiesView["classes"][number] = { id, name: classInfo(classFile)?.name ?? "Unknown class" };
-      if (classFile !== undefined) c.classFile = classFile;
-      return c;
-    }),
-    rows: HUNT_TARGETS[hunted].map((r) => ({
-      race: r.race,
-      name: raceInfo(r.race)?.name ?? "Unknown race",
-      cells: HUNT_CLASSES.map((c): TrophyCell => {
-        if (!r.classes.includes(c)) return { kind: "na" };
-        const t = { race: r.race, class: c };
-        const mine = byKey.get(targetKey(t)) ?? [];
-        const seen = s.census?.counts[targetKey(t)];
+    summary: `${view.distinct} of ${view.total} · ${view.quarries} ${view.quarries === 1 ? "quarry" : "quarries"}`,
+    percent: view.total === 0 ? 0 : Math.round((view.distinct / view.total) * 100),
+    classes: CLASS_ORDER.map(([classFile, name]) => ({ classFile, name })),
+    rows: view.races.map((r) => ({
+      race: r.raceId,
+      name: r.race,
+      cells: CLASS_ORDER.map(([classFile]): TrophyCell => {
+        const c = r.cells.find((x) => x.classFile === classFile);
+        if (c === undefined) return { kind: "na" };
         const label = [
-          quarryView(t).name,
-          mine.length > 0 ? `bagged ${mine.length}×` : undefined,
-          mine.length > 0 ? `last ${lastDay(mine[mine.length - 1]!.at, s.now, timeZone)}` : undefined,
-          seen !== undefined ? `${seen.toLocaleString("en-GB")} seen this week` : undefined,
+          c.name,
+          c.count > 0 ? `bagged ${c.count}×` : undefined,
+          c.count > 0 && c.last !== undefined ? `last ${lastDay(c.last, s, timeZone)}` : undefined,
+          c.seen !== undefined ? `${c.seen.toLocaleString("en-GB")} seen this week` : undefined,
         ]
           .filter((x) => x !== undefined)
           .join(" · ");
-        return {
-          kind: "target",
-          key: targetKey(t),
-          count: mine.length,
-          rare: seen !== undefined && seen < RARE_SEEN,
-          label,
-        };
+        return { kind: "target", key: c.key, count: c.count, rare: c.scarce, label };
       }),
     })),
   };
-  const counted = targets
-    .map((t) => ({ t, n: s.census?.counts[targetKey(t)] }))
-    .filter((x): x is { t: HuntTarget; n: number } => x.n !== undefined)
-    .sort((a, b) => a.n - b.n);
-  const rarest = counted[0];
-  const seen = rarest === undefined ? undefined : seenOf(rarest.t, s.census, timeZone);
-  if (rarest !== undefined && seen !== undefined) {
-    view.rarest = { name: quarryView(rarest.t).name, seen };
-  }
-  return view;
+  const seen = view.rarest === undefined ? undefined : seenOf(view.rarest.seen, view.census, timeZone);
+  if (view.rarest !== undefined && seen !== undefined) out.rarest = { name: view.rarest.target.name, seen };
+  return out;
 }
 
 /** "Hunt · this week": friends ranked by days with the quarry bagged this week (none: not listed). */
-export function huntWeek(s: DoomsdaySnapshot): HuntWeekView {
-  const ranked = s.friends
-    .filter((f) => f.status === "active")
-    .map((f) => ({
-      f,
-      days: new Set((f.huntKills ?? []).filter((k) => weekOf(k.day) === s.schedule.week).map((k) => k.day)).size,
-    }))
-    .filter((r) => r.days > 0)
-    .sort((a, b) => b.days - a.days || compareText(a.f.name, b.f.name));
+export function huntWeek(s: DoomsdaySnapshot, data: HuntPageData): HuntWeekView {
+  const active = new Map(s.friends.filter((f) => f.status === "active").map((f) => [f.friendKey, f]));
+  const rows = data.week.flatMap((w) => {
+    const f = active.get(w.owner);
+    return f === undefined ? [] : [{ f, days: w.days }];
+  });
   return {
-    rows: ranked.map(({ f, days }, i) => {
+    rows: rows.map(({ f, days }, i) => {
       const row: HuntWeekView["rows"][number] = {
         place: i + 1,
         key: f.friendKey,
@@ -344,56 +350,23 @@ export function huntWeek(s: DoomsdaySnapshot): HuntWeekView {
   };
 }
 
-/** The longest run of consecutive Doomsday days with a quarry bagged. */
-function longestRun(days: readonly number[]): number {
-  const sorted = [...new Set(days)].sort((a, b) => a - b);
-  let best = 0;
-  let run = 0;
-  sorted.forEach((d, i) => {
-    run = i > 0 && d === sorted[i - 1]! + 1 ? run + 1 : 1;
-    best = Math.max(best, run);
+/** The six Hunt feats of a friend with their progress (DS02; WEB-108's ids and names). */
+export function huntFeats(f: FriendHuntView): HuntFeatView[] {
+  return f.feats.map((p) => {
+    // The board names the other faction: "Bag every Alliance class".
+    const text = p.id === "f.huntClasses" ? `Bag every ${f.hunts[0] ?? "Alliance"} class` : p.text;
+    const view: HuntFeatView = { id: p.id, title: p.name.replace("'", "’"), text, done: p.done };
+    if (!p.done) {
+      view.progress = {
+        text: `${p.value} / ${p.target}`,
+        percent: p.target === 0 ? 0 : Math.round((p.value / p.target) * 100),
+      };
+    }
+    return view;
   });
-  return best;
 }
 
-/** The six Hunt feats of a friend with their progress (DS02; ids of the pool-6 contract). */
-export function huntFeats(s: DoomsdaySnapshot, f: FriendDoomsday): HuntFeatView[] {
-  const hunted = huntedOf(f);
-  const kills = f.huntKills ?? [];
-  const targets = huntTargets(hunted);
-  const valid = kills.filter((k) => targets.some((t) => targetKey(t) === targetKey(k)));
-  const classes = [...new Set(targets.map((t) => t.class))];
-  const rare = new Set(s.rare ?? []);
-  const feat = (id: string, title: string, text: string, value: number, target: number): HuntFeatView => {
-    const v = Math.min(value, target);
-    const view: HuntFeatView = { id, title, text, done: v >= target };
-    if (!view.done) view.progress = { text: `${v} / ${target}`, percent: Math.round((v / target) * 100) };
-    return view;
-  };
-  return [
-    feat("f.huntFirst", "First quarry", "Bag your first Hunt target", valid.length, 1),
-    feat("f.hunt10", "Quarry ×10", "Bag 10 Hunt targets", valid.length, 10),
-    feat(
-      "f.huntClasses",
-      "Every class",
-      `Bag every ${hunted} class`,
-      new Set(valid.map((k) => k.class)).size,
-      classes.length,
-    ),
-    feat(
-      "f.huntAll",
-      "Big game",
-      `Bag all ${targets.length} race and class targets`,
-      new Set(valid.map(targetKey)).size,
-      targets.length,
-    ),
-    feat(
-      "f.huntRare",
-      "Rare quarry",
-      "Bag a target under 1% of the census",
-      valid.some((k) => rare.has(targetKey(k))) ? 1 : 0,
-      1,
-    ),
-    feat("f.huntWeek", "Hunter’s week", "Bag the quarry 7 days in a row", longestRun(valid.map((k) => k.day)), 7),
-  ];
+/** The Hunt data of one friend (the PvP and Feats tabs' picked friend). */
+export function friendHunt(data: HuntPageData | undefined, key: string | undefined): FriendHuntView | undefined {
+  return key === undefined ? undefined : friendOf(data, key);
 }

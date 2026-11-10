@@ -34,6 +34,7 @@ import { cutoffAt } from "./cutoff";
 import type { Db } from "./db";
 import { doomsdayGoals, missionOverrides, missionPlan, missionSettings } from "./db/schema";
 import { doomsdayResetSetting, getBotSettings } from "./discord";
+import { scheduleHunt } from "./hunt";
 
 // The Mission pool (WEB-78): the owner's settings and changes, the plan they make (src/core/doomsday/missionPool.ts)
 // and the schedule for the runs answer (addon CF-68). Every change is the owner's only (rule 6: the page hides the
@@ -280,11 +281,13 @@ export function backToNormal(db: Db, by: string, period: Period, n: number, now:
 
 // --- reading -----------------------------------------------------------------------------------------------------
 
-/** The schedule for the runs answer (CF-68); undefined while the owner never changed anything. */
+/** The schedule for the runs answer (CF-68). */
 export function doomsdaySchedule(db: Db | Tx, now: number): MissionSchedule | undefined {
-  const last = lastChange(db);
-  if (last === 0) return undefined;
-  return scheduleOf(planAt(db, now), last, clock(db, now).todayStart);
+  // From pool version 6 the site decides every day (WEB-108): always a schedule, with the Hunt. The days that entered
+  // the window since the last change are stored, so they freeze as they lock.
+  const plan = planAt(db, now);
+  storePlan(db as Tx, plan, now, (_, locked) => locked);
+  return scheduleOf(plan, lastChange(db), clock(db, now).todayStart, scheduleHunt(db, now));
 }
 
 export interface MissionPoolData {

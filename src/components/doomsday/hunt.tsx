@@ -139,7 +139,7 @@ export function HuntTrophies({ view }: { view: TrophiesView }) {
             <tr>
               <td />
               {view.classes.map((c) => (
-                <th key={c.id} scope="col">
+                <th key={c.classFile} scope="col">
                   <ClassIcon classFile={c.classFile} />
                 </th>
               ))}

@@ -11,7 +11,7 @@ import { TodayContent } from "@/components/doomsday/today";
 import { HuntFeats, HuntTrophies, HuntWeek } from "@/components/doomsday/hunt";
 import huntStyles from "@/components/doomsday/Hunt.module.css";
 import type { DoomsdaySnapshot } from "@/core/doomsday/snapshot";
-import { huntFeats, huntTrophies, huntWeek } from "@/core/views/doomsdayHunt";
+import { friendHunt, huntFeats, huntTrophies, huntWeek, type HuntPageData } from "@/core/views/doomsdayHunt";
 import { sameBattleTag } from "@/core/access";
 import { peopleViews } from "@/core/views/characters";
 import { doomsdayPage, type DoomsdayPage } from "@/core/views/doomsday";
@@ -19,7 +19,8 @@ import { ladderView } from "@/core/views/doomsdayLadder";
 import { getDb } from "@/server/db";
 import { effectiveTimeZone } from "@/server/discord";
 import { doomsdayFor } from "@/server/doomsdayEngine";
-import { doomsdayState } from "@/server/doomsdayStates";
+import { doomsdayState, huntState } from "@/server/doomsdayStates";
+import { doomsdayHunt } from "@/server/hunt";
 import { loadState } from "@/server/uploads";
 
 export const metadata: Metadata = { title: "Doomsday states" };
@@ -30,18 +31,21 @@ export const metadata: Metadata = { title: "Doomsday states" };
  */
 function HuntStates({
   snapshot,
+  hunt,
   page,
   tab,
   viewerKey,
   timeZone,
 }: {
   snapshot: DoomsdaySnapshot;
+  hunt: HuntPageData;
   page: DoomsdayPage;
   tab: string | undefined;
   viewerKey: string | undefined;
   timeZone: string;
 }) {
   const me = snapshot.friends.find((f) => f.friendKey === viewerKey);
+  const mine = friendHunt(hunt, viewerKey);
   if (tab === "board") {
     return (
       <DoomsdayFrame header={page.header} tab="board">
@@ -54,16 +58,16 @@ function HuntStates({
       </DoomsdayFrame>
     );
   }
-  if ((tab === "pvp" || tab === "feats") && me !== undefined) {
+  if ((tab === "pvp" || tab === "feats") && me !== undefined && mine !== undefined) {
     return (
       <DoomsdayFrame header={page.header} tab={tab}>
         {tab === "pvp" ? (
           <div className={huntStyles.pvp}>
-            <HuntTrophies view={huntTrophies(snapshot, me, timeZone)} />
-            <HuntWeek view={huntWeek(snapshot)} />
+            <HuntTrophies view={huntTrophies(snapshot, me, mine.trophies, timeZone)} />
+            <HuntWeek view={huntWeek(snapshot, hunt)} />
           </div>
         ) : (
-          <HuntFeats feats={huntFeats(snapshot, me)} />
+          <HuntFeats feats={huntFeats(mine)} />
         )}
       </DoomsdayFrame>
     );
@@ -99,14 +103,20 @@ export default async function DoomsdayStatesPage({
   const timeZone = effectiveTimeZone(db, viewer.battleTag);
   const real = doomsdayFor(db, now);
   if (real === undefined) notFound();
-  const hunt = state === "hunt" || state === "hunt-bagged";
-  const snapshot = doomsdayState(
-    real,
-    state === "only-you" || state === "hunt" || state === "hunt-bagged" ? state : "first-day",
-    viewerKey,
-  );
+  if (state === "hunt" || state === "hunt-bagged") {
+    const h = huntState(real, doomsdayHunt(db, now), state === "hunt-bagged", viewerKey);
+    const page = doomsdayPage({
+      snapshot: h.snapshot,
+      timeZone,
+      hunt: h.hunt,
+      ...(viewerKey === undefined ? {} : { viewerKey }),
+    });
+    return (
+      <HuntStates snapshot={h.snapshot} hunt={h.hunt} page={page} tab={tab} viewerKey={viewerKey} timeZone={timeZone} />
+    );
+  }
+  const snapshot = doomsdayState(real, state === "only-you" ? "only-you" : "first-day", viewerKey);
   const page = doomsdayPage({ snapshot, timeZone, ...(viewerKey === undefined ? {} : { viewerKey }) });
-  if (hunt) return <HuntStates snapshot={snapshot} page={page} tab={tab} viewerKey={viewerKey} timeZone={timeZone} />;
   if (state === "only-you") {
     return (
       <DoomsdayFrame header={page.header} tab="board">

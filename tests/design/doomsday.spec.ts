@@ -175,19 +175,18 @@ test("doomsday: design values", async ({ page }) => {
     await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
   }
 
-  const goal = page.getByTestId("goal").filter({ hasText: "Loot a rare item" });
+  const goal = page.getByTestId("goal").filter({ hasText: "Defeat 15 enemies in a group with a friend" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
-  await expectStyles(goal.getByText("Loot a rare item"), {
+  await expectStyles(goal.getByText("Defeat 15 enemies in a group with a friend"), {
     "font-family": "var(--font-name)",
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
-  // Pool version 4 (WEB-101): today's Skirmish (Revenge) has no progress the site can tell; the Hunt is a PvP goal
-  // (pool version 5, WEB-106: drawn from Forever's combinations).
-  const open = page.getByTestId("goal").filter({ hasText: "Revenge" });
+  // Pool version 6 (WEB-108): today's Skirmish (Kills in 3 zones) and the Hunt are PvP goals.
+  const open = page.getByTestId("goal").filter({ hasText: "Kills in 3 zones" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Human Rogue" });
+  const hunt = page.getByTestId("goal").filter({ hasText: "Gnome Priest" });
   await expectStyles(hunt.getByText("PvP · The Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
@@ -252,13 +251,13 @@ for (const tab of TABS) {
 
 test("doomsday roster chips: design values", async ({ page }) => {
   await openScreen(page, "/roster");
-  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 44 PvP 60/ });
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 40 PvP 62/ });
   await expectStyles(chip, {
     "background-color": "var(--surface-dd-chip)",
     "border-color": "var(--line-control)",
     "font-size": "var(--fs-meta)",
   });
-  await expectStyles(chip.getByText("PvE 44"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText("PvE 40"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
 });
@@ -299,14 +298,14 @@ test("doomsday hunt card: design values", async ({ page }) => {
     "font-weight": "var(--fw-semibold)",
     color: "var(--pvp-text)",
   });
-  await expectStyles(card.getByText("Human Rogue", { exact: true }), {
+  await expectStyles(card.getByText("Gnome Priest", { exact: true }), {
     "font-family": "var(--font-display)",
     "font-size": "var(--fs-quarry)",
     color: "var(--gold-pale)",
   });
-  const portrait = card.getByRole("img", { name: "Human Rogue" });
+  const portrait = card.getByRole("img", { name: "Gnome Priest" });
   await expectStyles(portrait, { width: "var(--size-quarry)", height: "var(--size-quarry)" });
-  await expectStyles(portrait.getByText("Hu"), {
+  await expectStyles(portrait.getByText("Gn"), {
     width: "var(--size-race-ring)",
     "border-top-color": "var(--gold-bright)",
     "font-family": "var(--font-display)",
@@ -315,7 +314,7 @@ test("doomsday hunt card: design values", async ({ page }) => {
   await expect(card.getByText(/seen this week/)).toBeVisible();
   await card.getByRole("button", { name: "More info" }).click();
   const tip = page.getByRole("tooltip").filter({ hasText: "seen in the last 7 days" });
-  await expect(tip).toContainText(/^Everloot census: Human Rogues seen in the last 7 days \(\d+–\d+ \w{3}\)\. More/);
+  await expect(tip).toContainText(/^Everloot census: Gnome Priests seen in the last 7 days \(\d+–\d+ \w{3}\)\. More/);
   await expect(tip.getByRole("link", { name: "Everloot census" })).toHaveAttribute("href", "https://everloot.app/census");
   await page.keyboard.press("Escape");
 
@@ -341,7 +340,7 @@ test("doomsday hunt bagged: design values", async ({ page }) => {
     "font-weight": "var(--fw-bold)",
   });
   await expect(card.getByText(/^\+5 PvP · bagged at \d\d:\d\d in Ashenvale$/)).toBeVisible();
-  await expect(page.getByText(/^Nico bagged a Human Rogue · \d\d:\d\d$/)).toBeVisible();
+  await expect(page.getByText(/^Nico bagged a Gnome Priest · \d\d:\d\d$/)).toBeVisible();
 });
 
 test("doomsday hunt board column: design values", async ({ page }) => {
@@ -349,7 +348,7 @@ test("doomsday hunt board column: design values", async ({ page }) => {
   await openScreen(page, "/dev/doomsday?state=hunt-bagged&tab=board");
   const head = page.getByRole("columnheader", { name: /The Hunt/ });
   await expectStyles(head, { "background-color": "var(--hunt-column)" });
-  await expect(head.getByRole("img", { name: "Human Rogue" })).toBeVisible();
+  await expect(head.getByRole("img", { name: "Gnome Priest" })).toBeVisible();
   const hit = page.getByRole("cell", { name: /Bagged \d\d:\d\d in / }).first();
   await expect(hit).toHaveAttribute("title", /^Bagged \d\d:\d\d in \w/);
   await expectStyles(hit.getByText(/^\d\d:\d\d$/), { color: "var(--hunt-hit)" });
