@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.14.0 (2026-11-10)
 - Doomsday: pool version 5, with the addon of the same release. The Hunt now picks from every race and class the other faction can play in Forever, including Human Hunters, Dwarf Shamans, Gnome Priests, Orc Mages, Undead Paladins and Troll Warlocks. Days a friend played on the older addon keep their Hunt.
 
 ## v0.13.0 (2026-11-09)
