@@ -170,7 +170,9 @@ export function doomsdayPerson(
   for (let n = today - script.history; n <= last; n++) {
     const drawn = goalsForDay(n);
     // As the addon records it: from pool version 4 the Hunt is the set's fifth id (CF-104).
-    const set = draw(n).hunt !== undefined ? [...drawn.set, "hunt"] : drawn.set;
+    // From pool version 6 (CF-118) the Duel slot's mission is the sixth.
+    const d = draw(n);
+    const set = [...drawn.set, ...(d.hunt !== undefined ? ["hunt"] : []), ...(d.duel !== undefined ? [d.duel] : [])];
     const swapped = drawn.swapped;
     const done: Record<string, number> = {};
     if (n === today) {

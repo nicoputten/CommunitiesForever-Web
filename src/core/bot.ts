@@ -139,6 +139,7 @@ const KIND_ORDER: Record<FeatKind, number> = {
   firstCatch: 12,
   jackOfAllTrades: 13,
   notableItem: 14,
+  hunt: 15,
 };
 
 /** Sorts milestones as the event lists them. */

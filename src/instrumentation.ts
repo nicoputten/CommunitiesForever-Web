@@ -3,7 +3,8 @@
 // database that can't be opened stops the server at once; uploads of no community an older version took are refused
 // again (WEB-84). Then checks every minute whether the weekly recap is due
 // (WEB-41c, src/server/recap.ts): at start too, so a recap missed during downtime comes at once. The same minute
-// writes Doomsday's board and ladder posts when a reset passed (WEB-58, src/server/doomsdayPosts.ts).
+// writes Doomsday's board and ladder posts when a reset passed (WEB-58, src/server/doomsdayPosts.ts), and fetches the
+// Hunt's census once per realm day (WEB-108, src/server/hunt.ts).
 
 const RECAP_CHECK_MS = 60_000;
 
@@ -23,6 +24,7 @@ export async function register(): Promise<void> {
   const { getSiteInfo } = await import("@/app/site");
   const { runDueRecap } = await import("@/server/recap");
   const { runDueDoomsday } = await import("@/server/doomsdayPosts");
+  const { runDueCensus } = await import("@/server/hunt");
   const check = () => {
     try {
       runDueRecap(getDb(), nowSeconds(), getSiteInfo().name);
@@ -35,6 +37,10 @@ export async function register(): Promise<void> {
     } catch (e) {
       console.error(`doomsday: ${e instanceof Error ? e.message : "failed"}`);
     }
+    // WEB-108: the Hunt's census from Everloot, once per realm day (async; a failure keeps the last stored one).
+    runDueCensus(getDb(), nowSeconds()).catch((e: unknown) => {
+      console.error(`hunt: ${e instanceof Error ? e.message : "census failed"}`);
+    });
   };
   check();
   setInterval(check, RECAP_CHECK_MS).unref();

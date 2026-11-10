@@ -13,6 +13,7 @@ import {
 import type { FeedDay, PersonFeed } from "@/core/feed";
 import type { Dataset } from "@/core/model";
 import type { Db } from "./db";
+import { huntFeatsByOwner } from "./hunt";
 import { feats, feedDays } from "./db/schema";
 
 // Feats (WEB-56): with every accepted upload, in its transaction and in upload order, so a rebuild holds the same
@@ -108,6 +109,7 @@ export function recordFeats(
     feed,
     feedCounts: feedCounts(tx),
     milestones: fromMilestones,
+    huntFeats: huntFeatsByOwner(tx, upload.uploadedAt, after),
   });
 
   const posts: Milestone[] = [];

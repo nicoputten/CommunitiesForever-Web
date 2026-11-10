@@ -10,6 +10,7 @@ import {
   settingOf,
   shortDay,
   SLOTS,
+  CALENDAR_DAYS,
   slotName,
 } from "../doomsday/missionPool";
 import {
@@ -151,6 +152,8 @@ export interface MissionPoolView {
 const KINDS = [
   { kind: "daily", title: "Daily · PvE", count: "Daily PvE" },
   { kind: "skirmish", title: "Skirmish · PvP", count: "Skirmish" },
+  // Pool version 6 (WEB-108): the Duel slot's pool.
+  { kind: "duel", title: "Duel · PvP", count: "Duel" },
   { kind: "weekly", title: "Weekly", count: "Weekly" },
   { kind: "bounty", title: "Bounty · PvP", count: "Bounty" },
 ] as const;
@@ -341,7 +344,7 @@ export function missionPoolView(
   nameOf: (owner: string) => string = (o) => o.split("#")[0]!,
   select?: { period: Period; n: number },
 ): MissionPoolView {
-  const days = input.plan.days.filter((d) => d.n >= input.today);
+  const days = input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS);
   const weeks = input.plan.weeks.filter((w) => w.n > input.week);
   const changed = days.filter((d) => d.changed).length;
   const groups = KINDS.map((k) => {
@@ -379,7 +382,7 @@ export function missionPoolBox(input: MissionPoolInput): {
 } {
   return {
     missions: KINDS.reduce((a, k) => a + pool(k.kind).length, 0),
-    changed: input.plan.days.filter((d) => d.n >= input.today && d.changed).length,
+    changed: input.plan.days.filter((d) => d.n >= input.today && d.n < input.today + CALENDAR_DAYS && d.changed).length,
     today: shortDay(input.today),
   };
 }
