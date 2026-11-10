@@ -932,7 +932,8 @@ export const recipeFinds = sqliteTable(
 );
 
 // --- WEB-108: the Hunt from pool version 6 (src/server/hunt.ts) ------------------------------------------------
-// The census the draw is weighted by, the owner's switches and pins, and the drawn quarries. Not derived: a rebuild of
+// The census the draw is weighted by, the owner's pins and the drawn quarries (a target the owner switched off is a
+// `mission_settings` row with id "hunt:<raceId>:<classId>", WEB-109). Not derived: a rebuild of
 // the uploads leaves them alone.
 
 /** A census as stored, one row per fetch or import: Everloot's population counts per Hunt target (CC BY-SA 4.0). */
@@ -955,14 +956,6 @@ export const huntCensusFetch = sqliteTable("hunt_census_fetch", {
   ok: integer("ok", { mode: "boolean" }).notNull(),
   /** Why it failed (never the key or a response body). */
   error: text("error"),
-});
-
-/** A Hunt target the owner switched off ("<raceId>:<classId>"); a target without a row is on. */
-export const huntTargetSettings = sqliteTable("hunt_target_settings", {
-  key: text("key").primaryKey(),
-  off: integer("off", { mode: "boolean" }).notNull(),
-  changedAt: integer("changed_at").notNull(),
-  changedBy: text("changed_by").notNull(),
 });
 
 /** A day's quarry per hunted faction: frozen when locked, as last drawn while free. */

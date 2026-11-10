@@ -42,9 +42,7 @@ export type LogAction =
   | "missionDayNormal"
   // WEB-91: Import item data (detail: the Forever build).
   | "itemImport"
-  // WEB-108: the Hunt (target: "<raceId>:<classId>"; detail of a pin: "day:<n>").
-  | "huntTargetOff"
-  | "huntTargetOn"
+  // WEB-108: the Hunt (target: "<raceId>:<classId>"; detail of a pin: "day:<n>"). Target on/off: WEB-109.
   | "huntPinned"
   | "huntUnpinned"
   | "censusImported";
@@ -67,8 +65,6 @@ const OWNER_ACTIONS: ReadonlySet<LogAction> = new Set([
   "missionDayRerolled",
   "missionDayNormal",
   "itemImport",
-  "huntTargetOff",
-  "huntTargetOn",
   "huntPinned",
   "huntUnpinned",
   "censusImported",
@@ -255,10 +251,6 @@ export function logParts(entry: LogInput, nameOf: (battleTag: string) => string)
       return [t("set "), b(missionPlace(entry.detail)), t(" back to the normal draw")];
     case "itemImport":
       return [t("imported item data"), ...(entry.detail !== undefined ? [t(" of build "), b(entry.detail)] : [])];
-    case "huntTargetOff":
-      return [t("switched off Hunt target "), b(targetOf(target)?.name ?? "a target")];
-    case "huntTargetOn":
-      return [t("switched on Hunt target "), b(targetOf(target)?.name ?? "a target")];
     case "huntPinned":
       return [
         t("pinned "),

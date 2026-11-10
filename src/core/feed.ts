@@ -54,23 +54,12 @@ export interface FeedPvpKill {
   myLvl?: number;
   class?: string;
   race?: string;
+  /** CF-118 (pool version 6): the victim's race and class as ids (ChrRaces / ChrClasses), next to the tokens. */
+  raceId?: number;
+  classId?: number;
   rank?: number;
   solo?: boolean;
   bg?: boolean;
-}
-
-/**
- * CF-118 (pool version 6): one Hunt kill of the day: the victim's race and class as tokens ("NightElf", "HUNTER"),
- * and from CF-118 also as ids (ChrRaces / ChrClasses), with when and where. Every field optional (rule 4): the site
- * reads the ids when present, the tokens otherwise.
- */
-export interface FeedHunt {
-  race?: string;
-  class?: string;
-  raceId?: number;
-  classId?: number;
-  at?: number;
-  zone?: string;
 }
 
 /** A death's cause as the addon stores it (CF-52); anything else becomes `other`, as the addon cleans it. */
@@ -107,8 +96,6 @@ export interface FeedDay {
   groups?: string[];
   /** CF-55: each honorable kill. */
   pvpKills?: FeedPvpKill[];
-  /** CF-118: the day's Hunt kills. */
-  hunts?: FeedHunt[];
 }
 
 /** One person's feed. */
@@ -138,7 +125,6 @@ const MAX_EPICS = 50;
 const MAX_SESSIONS = 50;
 const MAX_GROUPS = 40;
 const MAX_PVP_KILLS = 100;
-const MAX_HUNTS = 50;
 /** Longest text kept from a victim or item field. */
 const MAX_TEXT = 64;
 
@@ -175,20 +161,6 @@ function readDeath(t: Table): FeedDeath {
 /** A small whole id (race, class): from 1 to 999. */
 const smallId = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 && v < 1000 ? v : undefined);
 
-/** A Hunt entry: `race` / `class` are tokens; the ids come as `raceId` / `classId`, or as a number in `race` / `class`. */
-function readHunt(t: Table): FeedHunt {
-  const race = field(t, "race");
-  const cls = field(t, "class");
-  return strip({
-    race: typeof race === "string" ? text(t, "race") : undefined,
-    class: typeof cls === "string" ? text(t, "class") : undefined,
-    raceId: smallId(field(t, "raceId")) ?? smallId(race),
-    classId: smallId(field(t, "classId")) ?? smallId(cls),
-    at: count(t, "at"),
-    zone: text(t, "zone"),
-  });
-}
-
 function readPvpKill(t: Table): FeedPvpKill {
   const lvl = num(t, "lvl");
   return strip({
@@ -199,6 +171,8 @@ function readPvpKill(t: Table): FeedPvpKill {
     myLvl: count(t, "myLvl"),
     class: text(t, "class"),
     race: text(t, "race"),
+    raceId: smallId(field(t, "raceId")),
+    classId: smallId(field(t, "classId")),
     rank: count(t, "rank"),
     solo: bool(t, "solo"),
     bg: bool(t, "bg"),
@@ -243,7 +217,6 @@ function readDoomsdayFields(t: Table): Partial<FeedDay> {
         : undefined,
     pvpKills:
       field(t, "pvpKills") !== undefined ? tables(field(t, "pvpKills"), MAX_PVP_KILLS).map(readPvpKill) : undefined,
-    hunts: field(t, "hunts") !== undefined ? tables(field(t, "hunts"), MAX_HUNTS).map(readHunt) : undefined,
   });
 }
 

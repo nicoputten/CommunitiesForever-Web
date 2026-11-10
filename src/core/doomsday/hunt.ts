@@ -1,5 +1,4 @@
 import { classInfo } from "../gamedata/classes";
-import type { FeedHunt } from "../feed";
 import {
   CENSUS_LICENCE,
   CENSUS_URL,
@@ -364,7 +363,8 @@ export function huntLocked(n: number, today: number): boolean {
 
 /**
  * The Hunt over the window. A locked day keeps its stored quarry (a day that has none yet is drawn once, then frozen);
- * a free day is drawn again (`recompute`, after the daily census and every change) or keeps its stored one. Pins win
+ * a free day is drawn again (`recompute`, after the daily census and every change; or when its target was switched off
+ * since) or keeps its stored one. Pins win
  * on free days. The 7-day rule looks at the 6 days before each day, stored or just drawn.
  */
 export function planHunts(input: HuntPlanInput, recompute = false): HuntPlannedDay[] {
@@ -387,7 +387,7 @@ export function planHunts(input: HuntPlanInput, recompute = false): HuntPlannedD
       if (pin[f] !== undefined && targetOf(pin[f])?.faction === f) {
         key = pin[f];
         pinned[f] = true;
-      } else if (stored?.[f] !== undefined && (locked || !recompute)) key = stored[f];
+      } else if (stored?.[f] !== undefined && (locked || (!recompute && !input.off.has(stored[f]!)))) key = stored[f];
       else key = drawTarget(f, n, recent, input.off, input.census);
       if (key !== undefined) pick[f] = key;
     }
@@ -488,14 +488,24 @@ const VANILLA_RACES = new Set(["Human", "Dwarf", "NightElf", "Gnome", "Orc", "Sc
 
 // --- Hunt kills (uploads) ----------------------------------------------------------------------------------------
 
-/** One upload's Hunt entry with who and when. */
+/** The victim of an honorable kill as the feed has it (CF-55 `pvpKills`; ids from CF-118), with when and where. */
+export interface HuntVictim {
+  race?: string;
+  class?: string;
+  raceId?: number;
+  classId?: number;
+  at?: number;
+  zone?: string;
+}
+
+/** One honorable kill of an upload with who and when: a Hunt kill when its victim is a valid target. */
 export interface HuntEntry {
   owner: string;
   guid: string;
   day: number;
   /** The killer's faction (the character's); undefined when unknown. */
   faction?: string;
-  hunt: FeedHunt;
+  hunt: HuntVictim;
 }
 
 /** The target a Hunt entry names: by ids when sent (CF-118), else by its race and class tokens. */
@@ -517,22 +527,23 @@ export function entryTarget(e: HuntEntry): HuntTarget | undefined {
 }
 
 /**
- * Every Hunt kill, oldest first. `quarryOf(day)`: that day's quarry per hunted faction (the stored plan, or the draw
+ * Every Hunt kill (an honorable kill of a valid target; other kills are left out), oldest first. `quarryOf(day)`: that day's quarry per hunted faction (the stored plan, or the draw
  * of an older pool version). A kill is the quarry when it is that day's target of the hunted faction.
  */
 export function huntKills(entries: readonly HuntEntry[], quarryOf: (day: number) => HuntPick): HuntKill[] {
   const out: HuntKill[] = [];
   for (const e of entries) {
     const target = entryTarget(e);
+    if (target === undefined) continue;
     const kill: HuntKill = {
       owner: e.owner,
       guid: e.guid,
       day: e.day,
-      quarry: target !== undefined && quarryOf(e.day)[target.faction] === target.key,
+      quarry: quarryOf(e.day)[target.faction] === target.key,
     };
     if (e.hunt.at !== undefined) kill.at = e.hunt.at;
     if (e.hunt.zone !== undefined) kill.zone = e.hunt.zone;
-    if (target !== undefined) kill.target = target;
+    kill.target = target;
     out.push(kill);
   }
   return out.sort((a, b) => a.day - b.day || (a.at ?? 0) - (b.at ?? 0) || cmp(a.owner, b.owner));

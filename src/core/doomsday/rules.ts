@@ -143,15 +143,22 @@ export function resetsText(nextReset: number, now: number, timeZone: string): st
  * plus the Duel slot, done after its first duel. The Duel slot still never counts for crossing out or the streak.
  */
 export function gridCount(
-  goals: readonly { doneAt?: number; goal?: { slot: string } }[],
+  goals: readonly { doneAt?: number; goal?: { slot: string; id?: string } }[],
   duels: number,
 ): { done: number; total: number } {
   // A friend with characters of both factions has a Hunt per faction (pool version 4): one grid slot, done by either.
   const hunts = goals.filter((g) => g.goal?.slot === "hunt");
-  const rest = goals.filter((g) => g.goal?.slot !== "hunt");
+  // Pool version 6: the Duel slot's mission is in the set; it is the Duel slot (the first duel with each friend is
+  // done after its first duel, as before).
+  const duel = goals.find((g) => g.goal?.slot === "duel");
+  const rest = goals.filter((g) => g.goal?.slot !== "hunt" && g.goal?.slot !== "duel");
   const huntDone = hunts.some((g) => g.doneAt !== undefined);
+  const duelDone =
+    duel === undefined || duel.goal?.id === "p.duelFirst"
+      ? duels > 0 || duel?.doneAt !== undefined
+      : duel.doneAt !== undefined;
   return {
-    done: rest.filter((g) => g.doneAt !== undefined).length + (huntDone ? 1 : 0) + (duels > 0 ? 1 : 0),
+    done: rest.filter((g) => g.doneAt !== undefined).length + (huntDone ? 1 : 0) + (duelDone ? 1 : 0),
     total: rest.length + (hunts.length > 0 ? 1 : 0) + 1,
   };
 }

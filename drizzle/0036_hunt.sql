@@ -30,10 +30,3 @@ CREATE TABLE `hunt_plan` (
 	`at` integer NOT NULL,
 	PRIMARY KEY(`n`, `faction`)
 );
---> statement-breakpoint
-CREATE TABLE `hunt_target_settings` (
-	`key` text PRIMARY KEY NOT NULL,
-	`off` integer NOT NULL,
-	`changed_at` integer NOT NULL,
-	`changed_by` text NOT NULL
-);

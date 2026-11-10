@@ -15,6 +15,7 @@ import {
   huntLocked,
   type HuntPick,
   type HuntPlannedDay,
+  type HuntVictim,
   huntTargetsView,
   huntToday,
   huntWeek,
@@ -42,15 +43,7 @@ import type {
 import { AccessError } from "./access";
 import { logChange, requireOwner } from "./admins";
 import type { Db } from "./db";
-import {
-  doomsdayGoals,
-  feedDays,
-  huntCensus,
-  huntCensusFetch,
-  huntPins,
-  huntPlan,
-  huntTargetSettings,
-} from "./db/schema";
+import { doomsdayGoals, feedDays, huntCensus, huntCensusFetch, huntPins, huntPlan, missionSettings } from "./db/schema";
 import { doomsdayResetSetting, getBotSettings } from "./discord";
 import { loadState as loadUploads } from "./uploads";
 
@@ -195,14 +188,20 @@ export function importCensus(db: Db, by: string, text: string, now: number, owne
 
 // --- the plan ----------------------------------------------------------------------------------------------------
 
+/**
+ * Targets the owner switched off on the Hunt targets grid: `mission_settings` rows with id "hunt:<raceId>:<classId>"
+ * (WEB-109's setHuntTarget). A free day with such a target is drawn again.
+ */
+export const HUNT_SETTING = "hunt:";
+
 function offTargets(db: Db | Tx): Set<string> {
   return new Set(
     db
       .select()
-      .from(huntTargetSettings)
+      .from(missionSettings)
       .all()
-      .filter((r) => r.off)
-      .map((r) => r.key),
+      .filter((r) => r.off && r.id.startsWith(HUNT_SETTING))
+      .map((r) => r.id.slice(HUNT_SETTING.length)),
   );
 }
 
@@ -276,23 +275,6 @@ function checkFaction(f: string): Faction {
   return f;
 }
 
-/** Switches a Hunt target off or on (the Hunt targets grid). Owner only; the free days are drawn again. */
-export function setHuntTarget(db: Db, by: string, key: string, off: boolean, now: number, owner?: string): void {
-  if (targetOf(key) === undefined) throw new AccessError("No such Hunt target.");
-  db.transaction((tx) => {
-    requireOwner(tx, by, owner);
-    storeHuntPlan(tx, now);
-    const old = tx.select().from(huntTargetSettings).where(eq(huntTargetSettings.key, key)).get();
-    if ((old?.off ?? false) === off) return;
-    tx.insert(huntTargetSettings)
-      .values({ key, off, changedAt: now, changedBy: by })
-      .onConflictDoUpdate({ target: huntTargetSettings.key, set: { off, changedAt: now, changedBy: by } })
-      .run();
-    storeHuntPlan(tx, now, true);
-    logChange(tx, by, off ? "huntTargetOff" : "huntTargetOn", now, key);
-  });
-}
-
 /**
  * Pins a day's quarry for a hunted faction in the day editor (`key` undefined: unpins). Owner only, free days only. A
  * pin wins over the census, the switches and the 7-day rule.
@@ -359,14 +341,22 @@ export function allHuntKills(
   const { s } = clock(db, now);
   const entries: HuntEntry[] = [];
   for (const row of db.select().from(feedDays).all()) {
-    for (const h of row.data.hunts ?? []) {
+    // Hunt kills are the honorable kills (CF-55 `pvpKills`, ids from CF-118) of a valid target.
+    for (const k of row.data.pvpKills ?? []) {
       const faction = data?.characters[row.guid]?.faction;
+      const hunt: HuntVictim = {};
+      if (k.race !== undefined) hunt.race = k.race;
+      if (k.class !== undefined) hunt.class = k.class;
+      if (k.raceId !== undefined) hunt.raceId = k.raceId;
+      if (k.classId !== undefined) hunt.classId = k.classId;
+      if (k.t !== undefined) hunt.at = k.t;
+      if (k.zone !== undefined) hunt.zone = k.zone;
       entries.push({
         owner: row.owner,
         guid: row.guid,
-        day: h.at !== undefined ? dayOf(h.at, s) : row.day,
+        day: k.t !== undefined ? dayOf(k.t, s) : row.day,
         ...(faction !== undefined ? { faction } : {}),
-        hunt: h,
+        hunt,
       });
     }
   }

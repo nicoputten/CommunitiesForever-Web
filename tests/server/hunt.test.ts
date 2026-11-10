@@ -8,7 +8,7 @@ import { dayStart } from "@/core/doomsday/rules";
 import { logParts } from "@/core/views/admin";
 import { listLog, OwnerOnlyError } from "@/server/admins";
 import { openDatabase, type Db } from "@/server/db";
-import { feats, huntCensusFetch } from "@/server/db/schema";
+import { feats, huntCensusFetch, missionSettings } from "@/server/db/schema";
 import {
   doomsdayHunt,
   type Fetch,
@@ -20,7 +20,6 @@ import {
   latestCensus,
   pinHunt,
   runDueCensus,
-  setHuntTarget,
 } from "@/server/hunt";
 import { doomsdaySchedule } from "@/server/missionPool";
 import { upload } from "@/server/uploads";
@@ -178,17 +177,19 @@ describe("the census", () => {
 });
 
 describe("the owner's switches and pins", () => {
-  it("a target switched off leaves the free days; the grid shows it off", () => {
-    const key = huntPlanAt(db, NOW).find((d) => d.n === TODAY + 4)!.pick.Alliance!;
-    expect(() => setHuntTarget(db, "Ada#1001", key, true, NOW, OWNER)).toThrow(OwnerOnlyError);
-    setHuntTarget(db, OWNER, key, true, NOW, OWNER);
+  it("a target switched off (WEB-109's mission setting hunt:<race>:<class>) leaves the free days; the grid shows it", () => {
+    const stored = doomsdayHunt(db, NOW).next; // stores the plan
+    const key = stored.find((d) => d.n === TODAY + 4)!.pick.Alliance!;
+    db.insert(missionSettings)
+      .values({ id: `hunt:${key}`, off: true, often: "normal", changedAt: NOW, changedBy: OWNER })
+      .run();
     const plan = huntPlanAt(db, NOW);
+    expect(plan.find((d) => d.n === TODAY + 1)!.pick).toEqual(stored.find((d) => d.n === TODAY + 1)!.pick);
     for (const d of plan.filter((x) => !x.locked)) expect(d.pick.Alliance).not.toBe(key);
     const cell = huntTargetsFor(db, OWNER, NOW, OWNER)
       .view.factions.Alliance.races.flatMap((r) => r.cells)
       .find((c) => c.key === key)!;
     expect(cell.state).toBe("off");
-    expect(logText()).toEqual([`${OWNER}switched off Hunt target ${targetOf(key)!.name}`]);
     expect(() => huntTargetsFor(db, "Ada#1001", NOW, OWNER)).toThrow(OwnerOnlyError);
   });
 
@@ -213,7 +214,8 @@ describe("Hunt kills from an upload", () => {
   it("today's quarry bagged: The Hunt today, the friend's trophies and the First quarry feat", () => {
     const quarry = huntPlanAt(db, NOW).find((d) => d.n === TODAY)!.pick.Alliance!;
     const t = targetOf(quarry)!;
-    const hunts = `hunts = { { race = "${t.raceToken}", class = "${t.classFile}", raceId = ${t.raceId}, classId = ${t.classId}, at = ${NOW + 60}, zone = "Ashenvale" } }`;
+    // The Hunt kill is an honorable kill (CF-55 pvpKills) with CF-118's ids next to the tokens.
+    const hunts = `pvpKills = { { t = ${NOW + 60}, zone = "Ashenvale", name = "Foe Example", race = "${t.raceToken}", class = "${t.classFile}", raceId = ${t.raceId}, classId = ${t.classId} } }`;
     expect(upload(db, file(NOW + 120, hunts), OWNER, NOW + 120, OWNER).status).toBe("ok");
     const data = doomsdayHunt(db, NOW + 180);
     const nico = data.friends.find((f) => f.owner === OWNER)!;
@@ -231,7 +233,7 @@ describe("Hunt kills from an upload", () => {
     expect(held.map((f) => [f.guid, f.key, f.fields.target])).toEqual([["V", "hunt:f.huntFirst", t.name]]);
   });
 
-  it("an older addon's feed without hunts[] still reads, and has no Hunt kills", () => {
+  it("an older addon's feed without pvpKills still reads, and has no Hunt kills", () => {
     expect(upload(db, file(NOW + 120, "quests = { Durotar = 2 }"), OWNER, NOW + 120, OWNER).status).toBe("ok");
     expect(doomsdayHunt(db, NOW + 180).friends.every((f) => !f.todayDone && f.bagged.length === 0)).toBe(true);
   });

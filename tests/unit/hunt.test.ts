@@ -29,6 +29,7 @@ import {
   drawDuel,
   EPOCH,
   goal,
+  gridCount,
   pool,
   POOL_VERSION,
   scheduledDraw,
@@ -59,11 +60,23 @@ describe("pool version 6: the catalogue", () => {
     expect(pool("daily").every((id) => dailyKind(id) !== undefined)).toBe(true);
   });
 
-  it("50 new PvP dailies: 41 in the Skirmish, 8 in the Duel slot with the first duel of each friend", () => {
-    expect(pool("skirmish")).toHaveLength(6 + 41);
-    expect(pool("duel")).toHaveLength(8);
-    expect(pool("duel")).toContain("p.duelFriends");
-    expect(pool("duel")).toContain("p.duelWin");
+  it("50 new PvP dailies: 40 join the Skirmish, 8 the Duel slot with the first duel of each friend", () => {
+    // Payback (p.revenge), Clean 5 (p.untouchable) and Untouchable (p.flagHour) were in the pool already.
+    expect(pool("skirmish")).toHaveLength(6 + 40);
+    expect(pool("duel")).toEqual([
+      "p.duelWin",
+      "p.duelUp",
+      "p.duelFirst",
+      "p.duel3",
+      "p.spar",
+      "p.styles3",
+      "p.cityDuel",
+      "p.bothWays",
+    ]);
+    // Reused ids keep their points (pool 4/5 scoring unchanged); a different condition is a new id.
+    expect([goal("p.revenge")!.points, goal("p.flagHour")!.points, goal("p.duelFirst")!.points]).toEqual([5, 3, 0]);
+    expect(pool("skirmish")).toContain("p.double30");
+    expect(pool("skirmish")).not.toContain("p.double");
     for (const v of [1, 2, 3, 4, 5]) expect(pool("duel", v)).toEqual([]);
     for (const slot of ["daily", "skirmish", "weekly", "bounty"] as const) expect(pool(slot, 5)).not.toContain("p.hk3");
   });
@@ -80,6 +93,7 @@ describe("pool version 6: the catalogue", () => {
         "p.selfDefense",
         "p.narrowEscape",
         "p.outnumbered",
+        "p.avenge",
       ].sort(),
     );
     for (let n = EPOCH; n < EPOCH + 300; n++) expect(check).not.toContain(draw(n).skirmish);
@@ -424,7 +438,7 @@ describe("Hunt kills and the pages' data", () => {
         entry("Bob#2002", TODAY, { race: "NightElf", class: "HUNTER", at: NOW + 30 }),
         entry("Bob#2002", TODAY, { race: "Gnome", class: "MAGE" }),
         entry("Cy#3003", TODAY, { race: "Troll", class: "MAGE" }, "Alliance"),
-        entry("Cy#3003", TODAY, { raceId: 2, classId: 2 }, "Alliance"), // no Orc Paladin
+        entry("Cy#3003", TODAY, { raceId: 2, classId: 2 }, "Alliance"), // no Orc Paladin: not a Hunt kill
       ],
       quarryOf,
     );
@@ -432,7 +446,6 @@ describe("Hunt kills and the pages' data", () => {
     expect(kills.map((k) => [k.owner, k.target?.name, k.quarry])).toEqual([
       ["Bob#2002", "Gnome Mage", false],
       ["Cy#3003", "Troll Mage", true],
-      ["Cy#3003", undefined, false],
       ["Bob#2002", "Night Elf Hunter", true],
       ["Ada#1001", "Night Elf Hunter", true],
     ]);
@@ -511,5 +524,17 @@ describe("Hunt kills and the pages' data", () => {
     expect(by["f.huntRare"]).toMatchObject({ done: true, kill: { day: TODAY + 9 } });
     expect(by["f.huntWeek"]).toMatchObject({ done: true, value: 7, kill: { day: TODAY + 6 } });
     expect(huntFeats([], ["Alliance"], new Set()).every((f) => !f.done && f.value === 0)).toBe(true);
+  });
+});
+
+describe("the Duel slot from pool version 6", () => {
+  it("counts once in N of M: First duel with each friend by its first duel, another Duel mission by its done", () => {
+    const pve = [{ goal: { slot: "pveDaily" }, doneAt: 1 }];
+    const first = [...pve, { goal: { slot: "duel", id: "p.duelFirst" } }];
+    expect(gridCount(first, 0)).toEqual({ done: 1, total: 2 });
+    expect(gridCount(first, 1)).toEqual({ done: 2, total: 2 });
+    const spar = [...pve, { goal: { slot: "duel", id: "p.spar" } }];
+    expect(gridCount(spar, 1)).toEqual({ done: 1, total: 2 });
+    expect(gridCount([...pve, { goal: { slot: "duel", id: "p.spar" }, doneAt: 5 }], 0)).toEqual({ done: 2, total: 2 });
   });
 });

@@ -43,12 +43,12 @@ describe("the Mission pool page", () => {
     );
     expect(v.counts).toEqual([
       { label: "Daily PvE", count: 107 },
-      // Pool version 6 (WEB-108): 41 new PvP dailies in the Skirmish, 8 of them "check" ones that start Off.
-      { label: "Skirmish", count: 39 },
+      // Pool version 6 (WEB-108): 40 PvP dailies join the Skirmish, 9 of them "check" ones that start Off.
+      { label: "Skirmish", count: 37 },
       { label: "Duel", count: 8 },
       { label: "Weekly", count: 49 },
       { label: "Bounty", count: 6 },
-      { label: "Off", count: 9 },
+      { label: "Off", count: 10 },
     ]);
     expect(v.days).toHaveLength(14);
     expect(v.days[0]).toMatchObject({ label: "Mon 9", note: "today", locked: true });
@@ -60,7 +60,7 @@ describe("the Mission pool page", () => {
     expect(v.offFrom).toBe("Won’t come up from Wed 11.");
     expect(v.groups.map((g) => g.title)).toEqual([
       "Daily · PvE · 108",
-      "Skirmish · PvP · 47",
+      "Skirmish · PvP · 46",
       "Duel · PvP · 8",
       "Weekly · 49",
       "Bounty · PvP · 6",
@@ -125,6 +125,6 @@ describe("the Mission pool page", () => {
   });
 
   it("the Admin page's box", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 218, changed: 0, today: "Mon 9" });
+    expect(missionPoolBox(input())).toEqual({ missions: 217, changed: 0, today: "Mon 9" });
   });
 });
