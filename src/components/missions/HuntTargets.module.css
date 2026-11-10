@@ -64,7 +64,8 @@
   color: var(--text-faint);
 }
 
-.icon {
+/* Doubled: beats ClassIcon's own size whatever order the CSS chunks load in. */
+.icon.icon {
   width: var(--size-class-icon-grid);
   height: var(--size-class-icon-grid);
 }
