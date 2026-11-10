@@ -264,3 +264,31 @@ describe("Hunt feats", () => {
     expect(feats[1]?.progress?.percent).toBe(50);
   });
 });
+
+describe("the Duel slot (pool version 6)", () => {
+  it("shows a rotating duel mission in the slot's place, never twice", () => {
+    const x = sample();
+    const me = x.s.friends.find((f) => f.friendKey === "nico")!;
+    me.today!.goals.push({
+      goal: { id: "p.duelWin", track: "pvp", slot: "duel", title: "Win a duel", known: true },
+      columnId: "p.duelWin",
+      points: 3,
+    });
+    const today = page(x).today!;
+    expect(today.pvp.some((g) => g.key === "p.duelWin")).toBe(false);
+    expect(today.duelGoal).toMatchObject({ kind: "PvP · Duel slot", title: "Win a duel", worth: "+3 PvP" });
+  });
+
+  it("keeps the first-duel card for p.duelFirst", () => {
+    const x = sample();
+    const me = x.s.friends.find((f) => f.friendKey === "nico")!;
+    me.today!.goals.push({
+      goal: { id: "p.duelFirst", track: "pvp", slot: "duel", title: "First duel with each friend", known: true },
+      columnId: "p.duelFirst",
+      points: 0,
+    });
+    const today = page(x).today!;
+    expect(today.duelGoal).toBeUndefined();
+    expect(today.pvp.some((g) => g.key === "p.duelFirst")).toBe(false);
+  });
+});

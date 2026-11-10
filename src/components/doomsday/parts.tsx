@@ -96,9 +96,15 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function GoalCard({ goal, week = false }: { goal: GoalCardView; week?: boolean }) {
+export function GoalCard({ goal, week = false, slot }: { goal: GoalCardView; week?: boolean; slot?: "duel" }) {
   return (
-    <div className={styles.goal} data-done={goal.done} data-week={week || undefined} data-testid="goal">
+    <div
+      className={styles.goal}
+      data-done={goal.done}
+      data-week={week || undefined}
+      data-slot={slot}
+      data-testid={slot === "duel" ? "duel" : "goal"}
+    >
       <span className={`${styles.kind} ${goal.track === "pve" ? styles.pve : styles.pvp}`}>{goal.kind}</span>
       <span className={styles.goalTitle}>
         {goal.title}

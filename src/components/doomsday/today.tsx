@@ -69,12 +69,16 @@ export function TodayContent({ page }: { page: DoomsdayPage }) {
                     <GoalCard key={g.key} goal={g} />
                   ),
                 )}
-                <div className={styles.goal} data-slot="duel">
-                  <span className={`${styles.kind} ${styles.pvp}`}>PvP · Duel slot</span>
-                  <span className={styles.goalTitle}>First duel with each friend</span>
-                  <span className={styles.count}>{today.duels.count}</span>
-                  <span className={styles.goalMeta}>{today.duels.text}</span>
-                </div>
+                {today.duelGoal !== undefined ? (
+                  <GoalCard goal={today.duelGoal} slot="duel" />
+                ) : (
+                  <div className={styles.goal} data-slot="duel">
+                    <span className={`${styles.kind} ${styles.pvp}`}>PvP · Duel slot</span>
+                    <span className={styles.goalTitle}>First duel with each friend</span>
+                    <span className={styles.count}>{today.duels.count}</span>
+                    <span className={styles.goalMeta}>{today.duels.text}</span>
+                  </div>
+                )}
               </div>
               {page.header.streak !== undefined && (
                 <p className={styles.phoneOnly}>

@@ -112,6 +112,11 @@ export interface TodayView {
   pve: GoalCardView[];
   pvp: GoalCardView[];
   duels: DuelSlotView;
+  /**
+   * Pool version 6 (WEB-108): the Duel slot's mission when it isn't "First duel with each friend" (`p.duelFirst`,
+   * which keeps the `duels` card); it takes the Duel slot's place.
+   */
+  duelGoal?: GoalCardView;
 }
 
 export interface SoFarView {
@@ -507,7 +512,7 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone, hunt: data }: D
       resets: resetsText(s.schedule.nextReset, s.now, timeZone),
       pve: goals.filter(isPve).map((g) => goalCard(g, timeZone, s.schedule.dayStart)),
       pvp: goals
-        .filter((g) => !isPve(g))
+        .filter((g) => !isPve(g) && g.goal.slot !== "duel")
         .map((g) => {
           const card = goalCard(g, timeZone, s.schedule.dayStart);
           const hunt = g.goal.slot === "hunt" ? huntCard(s, data, me.friendKey, g, timeZone) : undefined;
@@ -515,6 +520,9 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone, hunt: data }: D
         }),
       duels: duelSlot(me),
     };
+    const duel = goals.find((g) => g.goal.slot === "duel" && g.goal.id !== "p.duelFirst");
+    if (duel !== undefined)
+      page.today.duelGoal = { ...goalCard(duel, timeZone, s.schedule.dayStart), kind: "PvP · Duel slot" };
   }
   if (me?.status === "active" && me.week !== undefined) {
     const week: WeekView = {
