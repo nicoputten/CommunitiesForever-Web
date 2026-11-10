@@ -107,7 +107,7 @@
   padding: var(--s-1-5) var(--s-2);
   box-sizing: border-box;
   border-radius: var(--r-btn);
-  border: var(--border) solid var(--line-cell);
+  border: var(--border) solid var(--line-target-cell);
   background: var(--tint-cell);
   font-family: var(--font-ui);
   text-align: left;

@@ -162,7 +162,7 @@ test("missions: Hunt targets", async ({ page }) => {
     const cell = grid.getByRole("switch").first();
     await expectStyles(cell, {
       "border-radius": "var(--r-btn)",
-      "border-color": "var(--line-cell)",
+      "border-color": "var(--line-target-cell)",
       "background-color": "var(--tint-cell)",
     });
     await cell.hover();

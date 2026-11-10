@@ -1197,11 +1197,11 @@
   --size-col-pts: 46px;
   --size-col-history: 200px;
   --size-col-often: 150px;
-  --size-search: 220px;
+  --size-pool-search: 220px;
   --size-cell-w: 96px; /* a Hunt target cell */
   --size-cell-h: 58px;
   --size-cell-bar: 4px;
-  --line-cell: rgba(212, 175, 106, 0.55);
+  --line-target-cell: rgba(212, 175, 106, 0.55);
   --tint-cell: rgba(212, 175, 106, 0.07);
   --line-cell-skip: rgba(174, 182, 195, 0.3);
   --new-race: #9db4ff; /* a Forever race new to the list */

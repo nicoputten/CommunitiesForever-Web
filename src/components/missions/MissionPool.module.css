@@ -1039,7 +1039,7 @@
 }
 
 .search {
-  min-width: var(--size-search);
+  min-width: var(--size-pool-search);
   min-height: var(--size-btn-compact);
   padding: 0 var(--s-3);
   box-sizing: border-box;

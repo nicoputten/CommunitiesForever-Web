@@ -136,3 +136,12 @@ describe("lintCss and lintTsx", () => {
     ]);
   });
 });
+
+describe("tokens.css", () => {
+  it("defines every token once (a second definition silently overrides the first everywhere, WEB-109)", () => {
+    const css = readFileSync(path.join(SRC, TOKENS), "utf8");
+    const names = [...css.matchAll(/^\s*(--[\w-]+)\s*:/gm)].map((m) => m[1]!);
+    const twice = names.filter((n, i) => names.indexOf(n) !== i);
+    expect(twice).toEqual([]);
+  });
+});
