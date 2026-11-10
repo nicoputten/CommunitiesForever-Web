@@ -27,11 +27,11 @@
     "@radix-ui/react-hover-card": "1.2.1",
     "@radix-ui/react-tabs": "1.2.1",
     "@tanstack/react-table": "8.21.3",
-    "@tanstack/react-virtual": "3.14.22",
+    "@tanstack/react-virtual": "3.14.26",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.4",
     "minisearch": "7.2.0",
-    "next": "^16.4.3",
+    "next": "^16.4.5",
     "next-auth": "5.0.0-beta.32",
     "nuqs": "2.10.2",
     "react": "^19.3.1",
@@ -47,11 +47,11 @@
     "@types/react-dom": "^19.3.0",
     "drizzle-kit": "^0.31.11",
     "eslint": "^10.14.0",
-    "eslint-config-next": "^16.4.3",
+    "eslint-config-next": "^16.4.5",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "allowScripts": {
     "esbuild": false,
