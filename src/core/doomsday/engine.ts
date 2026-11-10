@@ -11,6 +11,7 @@ import {
   MAX_PVP_RANK,
   PVP_RANKS,
 } from "./feats";
+import { type HuntKill, type HuntPair, targetOfTokens } from "./hunt";
 import type { GoalRecord } from "./record";
 import {
   crown as crownOf,
@@ -29,6 +30,7 @@ import {
   goalsForDay,
   goalsForWeek,
   type Combo,
+  type DayDraw,
   draw,
   huntTitle,
   type Kill,
@@ -404,6 +406,32 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
   const hordeHunt = huntRef(dayDraw.hunt?.Alliance);
   if (allianceHunt !== undefined) hunts.alliance = allianceHunt;
   if (hordeHunt !== undefined) hunts.horde = hordeHunt;
+  // The quarry as ids by the hunted faction (WEB-110): the draw's Horde combination is an Alliance target.
+  const pairOf = (h: DayDraw["hunt"]): HuntPair => {
+    const out: HuntPair = {};
+    const alliance = h?.Horde === undefined ? undefined : targetOfTokens(h.Horde.race, h.Horde.class);
+    const horde = h?.Alliance === undefined ? undefined : targetOfTokens(h.Alliance.race, h.Alliance.class);
+    if (alliance !== undefined) out.Alliance = alliance;
+    if (horde !== undefined) out.Horde = horde;
+    return out;
+  };
+  const quarry = { today: pairOf(dayDraw.hunt), tomorrow: pairOf(scheduledDraw(today + 1, input.schedule).hunt) };
+  /**
+   * The quarries a friend bagged: every recorded day with the Hunt done, the target that day's draw (in its recorded
+   * pool version) gave the faction they hunt. The addon's own kill records (zone, ids; CF-118) come with WEB-108.
+   */
+  const huntKillsOf = (f: Friend, hunted: "Alliance" | "Horde"): HuntKill[] =>
+    Object.entries(f.goals?.days ?? {})
+      .map(([n, r]) => ({ n: Number(n), r }))
+      .filter(({ r }) => r.done.hunt !== undefined)
+      .sort((a, b) => a.n - b.n)
+      .flatMap(({ n, r }) => {
+        const version = entryPool(r);
+        const d = version === POOL_VERSION ? scheduledDraw(n, input.schedule) : draw(n, version);
+        const c = hunted === "Alliance" ? d.hunt?.Horde : d.hunt?.Alliance;
+        const t = c === undefined ? undefined : targetOfTokens(c.race, c.class);
+        return t === undefined ? [] : [{ day: n, at: r.done.hunt!, ...t }];
+      });
   /**
    * A friend's Hunts: one per faction of their characters (Horde first), the board's Alliance Hunt when none is known
    * (the group plays Horde, Nico 2026-10-28). Empty when today has no Hunt. The Hunts of the friend's recorded pool
@@ -703,6 +731,13 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
       pvp: pvpDetails(f, weekDays, firstOfWeek, allDuels, byKey, input, s),
       featProgress: featProgress(f, input.feats),
     };
+    // The Hunt (WEB-110): a Horde player hunts Alliance targets, as the board's Hunt column (the group plays Horde).
+    const factions = new Set(f.chars.map((c) => c.faction));
+    const hunted = factions.has("Horde") || !factions.has("Alliance") ? "Alliance" : "Horde";
+    friend.hunted = hunted;
+    const main = [...f.chars].sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0];
+    if (main?.classFile !== undefined) friend.classFile = main.classFile;
+    friend.huntKills = huntKillsOf(f, hunted);
     return friend;
   });
 
@@ -792,6 +827,7 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
     },
     todayGoals,
     hunts,
+    quarry,
     weekGoals,
     friends: out,
     ...(crown !== undefined ? { crown: { friendKey: crown.friend, at: crown.at } } : {}),
