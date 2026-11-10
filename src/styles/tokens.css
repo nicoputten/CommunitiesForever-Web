@@ -847,7 +847,7 @@
   --size-duel-name: 26%; /* the duel grid's name column, so 8 friends fit a 375 px phone */
   --size-duel-cell: 48px; /* the duel grid's narrowest column past 8 friends, then it scrolls */
   --size-emblem-dd: 56px; /* doomsday-today: the sun over the shield next to the title */
-  --size-goals-aside: 340px; /* doomsday-today: Today so far */
+  --size-goals-aside: 340px; /* doomsday-today: the right column (The Hunt today) */
   --surface-goal: #0e1626; /* doomsday-today: a goal */
   --line-goal: rgba(174, 182, 195, 0.14);
   --line-goal-done: rgba(127, 217, 154, 0.35);
@@ -865,8 +865,6 @@
   --size-board-goal: 108px; /* doomsday-today: a goal column of the board */
   --size-board-friend: 190px;
   --size-avatar-board: 28px; /* doomsday-today: friend avatar on the board */
-  --size-avatar-mini: 22px; /* doomsday-today: friend avatar in Today so far */
-  --fs-avatar-mini: 9px;
   --size-heat: 13px; /* doomsday-feats: a heatmap day */
   --r-heat: 3px;
   --size-heat-name: 80px;

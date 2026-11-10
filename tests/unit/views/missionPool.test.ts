@@ -171,6 +171,15 @@ describe("the Mission pool page", () => {
     expect(q.next.map((d) => d.name)).toEqual(["Night Elf Druid"]);
   });
 
+  it("WEB-112: an Alliance-only group sees the Alliance's quarry and the days' Horde targets", () => {
+    const quarry = { Horde: { n: TODAY, target: target("Horde", 5, 4), points: 5 } };
+    const v = missionPoolView(input({}, { data: poolData({ quarry, hunters: ["Alliance"] }) }), "UTC");
+    expect(v.quarry).toMatchObject({ hunter: "Alliance hunts", target: { name: "Undead Rogue" } });
+    expect(v.quarry.other).toBeUndefined();
+    expect(v.days[0]!.hunt).toBe("Undead Rogue");
+    expect(missionPoolView(input(), "UTC").days[0]!.hunt).toBe("Gnome Mage");
+  });
+
   it("the cards: WEB-108's themes, the Duel pool under Skirmish with its history and new missions", () => {
     const stats = new Map([
       ["d.quests10", { cameUp: 2, swapped: 0, had: 4, done: 3, last: TODAY - 6 }],

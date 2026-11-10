@@ -333,51 +333,10 @@
   color: var(--text-dim);
 }
 
-/* ── Today so far ────────────────────────────────────────────────────── */
-
-.soFar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2-5);
-}
-
-.soFarLine {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2-5);
-  font-size: var(--fs-body);
-  color: var(--text);
-}
-
-.soFarLine b {
-  font-weight: var(--fw-medium);
-  color: var(--text-strong);
-}
-
-/* "Grom bagged a Night Elf Hunter · 20:14" (WEB-110, board DS01HuntToday). */
-.soFarHunt {
-  font-size: var(--fs-body-sm);
-  color: var(--text-muted);
-}
-
 .crown {
   width: var(--size-icon);
   height: var(--size-icon);
   flex: none;
-}
-
-.mini {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: var(--size-avatar-mini);
-  height: var(--size-avatar-mini);
-  border-radius: var(--r-pill);
-  background: var(--avatar);
-  color: var(--gold-bright);
-  font-size: var(--fs-avatar-mini);
-  font-weight: var(--fw-semibold);
 }
 
 /* ── The board ───────────────────────────────────────────────────────── */

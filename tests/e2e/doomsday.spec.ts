@@ -19,7 +19,7 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page).toHaveURL(/\/doomsday$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Doomsday");
 
-  // Today: the viewer's points per track, the goals (3 PvE dailies, the Hunt and the Skirmish), the Duel slot, Today so far.
+  // Today: the viewer's points per track, the goals (3 PvE dailies, the Hunt and the Skirmish), the Duel slot.
   await expect(
     page
       .getByText(/^PvE \d+$/)
@@ -40,7 +40,8 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   // The admin (Nico) has Horde and Alliance characters: a Hunt per faction, one slot on the grid.
   await expect(page.getByTestId("goal")).toHaveCount(6);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
-  await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
+  // Today so far is gone (WEB-111).
+  await expect(page.getByRole("heading", { name: "Today so far" })).toHaveCount(0);
   // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click. The Hunt cards' census has its own ⓘ (WEB-110).
   const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
   await expect(tip).toBeHidden();

@@ -4,7 +4,10 @@ import {
   drawTarget,
   entryTarget,
   friendHunt,
+  groupHunted,
+  groupHunters,
   HUNT_FEATS,
+  huntedBy,
   huntFeats,
   huntKills,
   huntTargets,
@@ -419,6 +422,50 @@ describe("the schedule from pool version 6", () => {
       days: { [String(TODAY + 2)]: { skirmish: "p.loneWolf", hunt: { Horde: { race: 8, class: 8 } } } },
       rare: ["95:11"],
     });
+  });
+});
+
+describe("the group's factions (WEB-112)", () => {
+  const chars = (...factions: (string | undefined)[]) => ({
+    characters: Object.fromEntries(
+      factions.map((faction, i) => [
+        `G${i}`,
+        { guid: `G${i}`, hasRecord: true, professions: {}, talents: [], quests: {}, ...(faction ? { faction } : {}) },
+      ]),
+    ),
+  });
+
+  it("one faction: the group hunts with it, the other's targets", () => {
+    expect(groupHunters(chars("Horde", "Horde", undefined))).toEqual(["Horde"]);
+    expect(groupHunted(chars("Horde", "Horde", undefined))).toEqual(["Alliance"]);
+    expect(groupHunters(chars("Alliance"))).toEqual(["Alliance"]);
+    expect(groupHunted(chars("Alliance"))).toEqual(["Horde"]);
+  });
+
+  it("both factions: both, Horde first", () => {
+    expect(groupHunters(chars("Alliance", "Horde"))).toEqual(["Horde", "Alliance"]);
+    expect(groupHunted(chars("Alliance", "Horde"))).toEqual(["Alliance", "Horde"]);
+  });
+
+  it("no character's faction known (or no upload): both, as before", () => {
+    expect(groupHunters(undefined)).toEqual(["Horde", "Alliance"]);
+    expect(groupHunters(chars())).toEqual(["Horde", "Alliance"]);
+    expect(groupHunters(chars(undefined, "Neutral"))).toEqual(["Horde", "Alliance"]);
+  });
+
+  it("a friend without a known faction hunts the group's first hunted faction", () => {
+    expect(huntedBy({ owner: "x", factions: [] })).toEqual(["Alliance"]);
+    expect(huntedBy({ owner: "x", factions: [] }, ["Horde"])).toEqual(["Horde"]);
+    expect(huntedBy({ owner: "x", factions: ["Horde"] }, ["Horde"])).toEqual(["Alliance"]);
+  });
+
+  it("The Hunt today: only the quarries of the factions the group hunts", () => {
+    const quarry = { 100: { Alliance: "4:3", Horde: "8:8" }, 101: { Alliance: "7:8", Horde: "2:1" } };
+    const one = huntToday(100, quarry, [], undefined, undefined, ["Alliance"]);
+    expect(Object.keys(one.quarry)).toEqual(["Alliance"]);
+    expect(Object.keys(one.tomorrow)).toEqual(["Alliance"]);
+    const both = huntToday(100, quarry, [], undefined);
+    expect(Object.keys(both.quarry)).toEqual(["Alliance", "Horde"]);
   });
 });
 

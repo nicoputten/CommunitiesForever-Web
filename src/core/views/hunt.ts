@@ -40,7 +40,10 @@ export function raceShort(race: string): string {
   return RACE_SHORT[race] ?? race.slice(0, 2);
 }
 
-/** The group plays Horde: Horde hunts first (Alliance targets). */
+/**
+ * Both hunting factions, Horde first (the group plays Horde). The pages get the group's own (`groupHunters`, WEB-112):
+ * a faction no friend plays doesn't show.
+ */
 export const HUNTERS: readonly Faction[] = ["Horde", "Alliance"];
 export const hunted = (hunter: Faction): Faction => (hunter === "Horde" ? "Alliance" : "Horde");
 
@@ -97,18 +100,20 @@ const weekday = (n: number) => WEEKDAY_SHORT[(n + 4) % 7]!;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 /**
- * Today's quarry card: the Horde's target (`quarry` and `days` keyed by the hunted faction), the Alliance's, the next 7
- * days.
+ * Today's quarry card: the target of the group's first hunting faction (`quarry` and `days` keyed by the hunted
+ * faction), the second's when the group plays both (WEB-112), the next 7 days.
  */
 export function quarry(
   q: Partial<Record<Faction, QuarryView>>,
   days: readonly DayRecipeView[],
   today: number,
+  hunters: readonly Faction[] = HUNTERS,
   points = 5,
 ): Quarry {
-  const [mine, theirs] = HUNTERS as [Faction, Faction];
+  const mine = hunters[0] ?? "Horde";
+  const theirs = hunters[1];
   const own = q[hunted(mine)];
-  const other = q[hunted(theirs)];
+  const other = theirs === undefined ? undefined : q[hunted(theirs)];
   const out: Quarry = {
     kicker: `Today’s quarry · ${shortDay(today)}`,
     hunter: `${mine} hunts`,
@@ -120,7 +125,8 @@ export function quarry(
     if (own.seen !== undefined) out.seen = String(own.seen);
     if (own.doneToday !== undefined) out.done = pct(own.doneToday);
   }
-  if (other !== undefined) out.other = { hunter: `${theirs} hunts`, target: portrait(other.target) };
+  if (other !== undefined && theirs !== undefined)
+    out.other = { hunter: `${theirs} hunts`, target: portrait(other.target) };
   for (let n = today + 1; n <= today + 7; n++) {
     const t = days.find((d) => d.n === n)?.hunt.targets[hunted(mine)];
     if (t !== undefined) out.next.push({ ...portrait(t), n, weekday: weekday(n) });
@@ -128,9 +134,9 @@ export function quarry(
   return out;
 }
 
-/** The Hunt line on a day tile: the group's target. */
-export function dayTarget(d: DayRecipeView | undefined): string | undefined {
-  return d?.hunt.targets[hunted(HUNTERS[0]!)]?.name;
+/** The Hunt line on a day tile: the target of the group's first hunting faction. */
+export function dayTarget(d: DayRecipeView | undefined, hunter: Faction = HUNTERS[0]!): string | undefined {
+  return d?.hunt.targets[hunted(hunter)]?.name;
 }
 
 export type CellState = "draw" | "skip" | "off" | "invalid";
@@ -200,8 +206,9 @@ export function censusLine(c: CensusInfo): string {
   return parts.join(" · ");
 }
 
-export function tabs(v: HuntTargetsView): TargetTab[] {
-  return HUNTERS.map((f) => ({
+/** The grid's tabs: one per faction the group hunts with (WEB-112; the page shows none for just one). */
+export function tabs(v: HuntTargetsView, hunters: readonly Faction[] = HUNTERS): TargetTab[] {
+  return hunters.map((f) => ({
     hunter: f,
     label: `${f} hunts · ${hunted(f)} targets`,
     inDraw: v.factions[hunted(f)].inDraw,

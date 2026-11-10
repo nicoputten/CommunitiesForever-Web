@@ -73,7 +73,8 @@ function Cell({ cell, action, phone }: { cell: TargetCell; action: Action; phone
 
 /**
  * The Hunt targets (board `mission-pool-v2-hunt`): per hunting faction, races × classes with Everloot's census, the
- * weight and the share of the draw. A click switches a target off or back on. On a phone one list per race.
+ * weight and the share of the draw. A click switches a target off or back on. On a phone one list per race. The tabs
+ * only when the group hunts with both factions (WEB-112).
  */
 export function HuntTargets({
   tabs,
@@ -82,22 +83,24 @@ export function HuntTargets({
   setTarget,
 }: {
   tabs: TargetTab[];
-  grids: Readonly<Record<Faction, TargetRow[]>>;
+  grids: Readonly<Partial<Record<Faction, TargetRow[]>>>;
   first: Faction;
   setTarget: Action;
 }) {
   const [hunter, setHunter] = useState<Faction>(first);
-  const rows = grids[hunter];
+  const rows = grids[hunter] ?? [];
   return (
     <>
-      <div className={styles.tabs} role="group" aria-label="Hunt targets">
-        {tabs.map((t) => (
-          <FilterChip key={t.hunter} pressed={t.hunter === hunter} onClick={() => setHunter(t.hunter)}>
-            {t.label}
-            {t.hunter === hunter && <b className={styles.chipCount}>{t.inDraw}</b>}
-          </FilterChip>
-        ))}
-      </div>
+      {tabs.length > 1 && (
+        <div className={styles.tabs} role="group" aria-label="Hunt targets">
+          {tabs.map((t) => (
+            <FilterChip key={t.hunter} pressed={t.hunter === hunter} onClick={() => setHunter(t.hunter)}>
+              {t.label}
+              {t.hunter === hunter && <b className={styles.chipCount}>{t.inDraw}</b>}
+            </FilterChip>
+          ))}
+        </div>
+      )}
       <ul className={styles.legend} aria-label="Legend">
         <li>
           <span className={styles.swatch} data-kind="draw" /> in the draw, weighted by count

@@ -6,7 +6,7 @@ import { NoDoomsday } from "./NoData";
 
 export const metadata: Metadata = { title: "Doomsday" };
 
-/** Doomsday, Today (WEB-59, board doomsday-today): your goals, the Duel slot, Today so far and the board. */
+/** Doomsday, Today (WEB-59, board doomsday-today): your goals, the Duel slot, The Hunt today and the board. */
 export default async function DoomsdayTodayPage() {
   const page = await doomsdayData();
   if (page === undefined) return <NoDoomsday />;

@@ -104,20 +104,6 @@ describe("doomsdayPage today", () => {
   });
 });
 
-describe("doomsdayPage today so far", () => {
-  it("gives the crown, who finished, who is part way, and who hasn't started or has no addon", () => {
-    const soFar = page().soFar;
-    expect(soFar.crown).toEqual({ name: "Mira", time: "19:30" });
-    expect(soFar.finished.map((f) => [f.name, f.time])).toEqual([["Femke", "20:40"]]);
-    expect(soFar.partial.map((f) => `${f.name}: ${f.text}`)).toEqual([
-      "Bob: 1 PvE daily + Hunt + Skirmish done",
-      "Nico: 2 PvE dailies + Hunt done",
-    ]);
-    expect(soFar.rest).toBe("Jorrit hasn't started · Sanne has no addon");
-    expect(soFar.empty).toBe(false);
-  });
-});
-
 describe("doomsdayPage board", () => {
   it("has the 3 PvE dailies, the Alliance Hunt and the Skirmish as columns", () => {
     expect(page().board.columns.map((c) => [c.track, c.title])).toEqual([
@@ -246,7 +232,6 @@ describe("doomsdayPage first day", () => {
       if (f.points !== undefined) f.points.allTime = { pve: 0, pvp: 0 };
     }
     expect(page(s).firstDay).toBe(true);
-    expect(page(s).soFar.empty).toBe(true);
     expect(page().firstDay).toBe(false);
   });
 
@@ -258,7 +243,6 @@ describe("doomsdayPage first day", () => {
       delete f.today?.finishedAt;
     }
     expect(page(s).firstDay).toBe(false);
-    expect(page(s).soFar.empty).toBe(true);
   });
 });
 
