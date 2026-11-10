@@ -651,3 +651,24 @@ Nico (2026-11-10): the "Today so far" box on the Today tab goes, desktop and pho
 - `docs/DESIGN.md` "Deviations" records it.
 - Done when: the box is gone on desktop and phone; lint, unit, e2e and design checks pass; changed screenshot
   baselines only after Nico's OK.
+
+### WEB-112 The Hunt: hide a faction nobody in the group hunts with
+Nico (2026-11-10): everyone in the group plays Horde (one guild can't hold both factions), so the "Alliance hunts" half
+is always empty. No emptiness: a faction's Hunt shows only when the group has a character who hunts it, data-driven,
+so it comes back by itself once someone makes a character of that faction.
+- **The group's factions, defined once:** `groupHunters` in `src/core/doomsday/hunt.ts`: the factions of every
+  character the site knows for the group (members, roster, uploads), Horde first; both when no character's faction is
+  known. `groupHunted` is the other faction of each: the targets the group hunts.
+- **Where it shows:** the Mission pool's quarry card (the other faction's box), the Hunt targets page (one faction: no
+  tabs, just its grid), the calendar's Hunt line (the group's own faction's target), the Doomsday Hunt card(s) and the
+  board's Hunt column (the snapshot's Hunts are only the group's; a friend without a known faction gets the group's
+  first), The Hunt today's quarries and tomorrow, the trophies and the Hunt feats (per friend, as before), and the
+  bot's board Hunt title (only the Hunts the friends have).
+- **The draw:** unchanged. The addon's schedule keeps a Hunt for both factions. The census asks Everloot only for the
+  targets the group hunts (9 calls a day instead of 18); the other faction's targets then have no counts, so its draw
+  takes every target alike, as without a census.
+- With no character known at all both factions show, as before. No layout gaps: the quarry card and the grid fill the
+  space.
+- `docs/DESIGN.md` "Deviations" records it.
+- Done when: unit and server tests for one faction, both and none; lint, unit, build, e2e and design checks pass;
+  changed screenshot baselines only after Nico's OK.

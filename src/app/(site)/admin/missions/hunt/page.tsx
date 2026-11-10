@@ -19,8 +19,8 @@ export const metadata: Metadata = { title: "Hunt targets" };
 
 /**
  * The Hunt targets (WEB-109, board `mission-pool-v2-hunt`): today's quarry, then every valid race × class of each
- * faction's targets weighted by Everloot's census; a click switches a target off or back on. The owner only, as the
- * Mission pool.
+ * faction's targets weighted by Everloot's census; a click switches a target off or back on. Only the factions the
+ * group hunts with (WEB-112). The owner only, as the Mission pool.
  */
 export default async function HuntTargetsPage() {
   const viewer = await getViewer();
@@ -40,7 +40,9 @@ export default async function HuntTargetsPage() {
   }
   const input = poolInput(missionPoolPage(getDb(), viewer.battleTag, nowSeconds()));
   const { targets } = input.data;
-  const q = quarry(input.data.quarry, input.data.days, input.today);
+  // Only the factions the group hunts with (WEB-112): one faction, no tabs, just its grid.
+  const hunters = input.data.hunters ?? HUNTERS;
+  const q = quarry(input.data.quarry, input.data.days, input.today, hunters);
   const census = targets.census === undefined ? undefined : censusLine(targets.census);
   return (
     <div className={styles.page}>
@@ -60,9 +62,9 @@ export default async function HuntTargetsPage() {
           </span>
         </div>
         <HuntTargets
-          tabs={tabs(targets)}
-          grids={{ Horde: targetRows(targets, "Horde"), Alliance: targetRows(targets, "Alliance") }}
-          first={HUNTERS[0]!}
+          tabs={tabs(targets, hunters)}
+          grids={Object.fromEntries(hunters.map((f) => [f, targetRows(targets, f)]))}
+          first={hunters[0]!}
           setTarget={setTargetAction}
         />
         {census !== undefined && (

@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Doomsday: the Today tab no longer has the "Today so far" box; The Hunt today moves up in its place. Who did what today is on the board below.
+- The Hunt shows only the faction the group hunts with: everyone plays Horde, so the Mission pool's quarry card drops the Alliance's target, the Hunt targets page shows the Alliance targets without tabs, and Doomsday and DoomBot show only the Alliance quarry. A faction comes back by itself once someone in the group has a character of it. The daily Everloot census asks for half as much.
 
 ## v0.15.0 (2026-11-10)
 - Mission pool v2 (owner only): a page you can read at a glance. A recipe bar says what a day and a week are made of, each slot with its pool and how often a mission comes back (orange when that's within about six weeks). Today's quarry gets its own card: the race and class to hunt, the other faction's target, how many Everloot's census saw this week and the next 7 days. Each day shows 6 lines: 3 PvE, the Hunt and the PvP slots. The pool is grouped in nine theme cards (Questing, Loot & gold, Social, Professions, Exploration, Combat & character, Skirmish, Weekly, Bounty) with their history; one opens below with its missions, How often and the switch. Search, Never came up, Hard and Off filter the whole pool. New page Hunt targets: every race and class of each faction weighted by Everloot's census, with the share of the draw; a click switches a target off or back on.

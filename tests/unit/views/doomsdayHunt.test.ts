@@ -174,6 +174,17 @@ describe("The Hunt today", () => {
     expect(view.more).toEqual({ text: "+ 1 more", href: "/doomsday/board#hunt" });
     expect(view.tomorrow?.name).toBe("Gnome Mage");
   });
+
+  it("WEB-112: without the viewer's Hunt, tomorrow is the quarry of the faction the group hunts", () => {
+    const x = sample();
+    const day = x.s.schedule.day;
+    const hunt = {
+      ...x.hunt,
+      hunt: huntTodayData(day, { [day + 1]: { Horde: "2:1" } }, x.hunt.friends, undefined, NOW, ["Horde"]),
+    };
+    expect(huntToday(x.s, hunt, undefined, ZONE).tomorrow?.name).toBe("Orc Warrior");
+    expect(huntToday(x.s, x.hunt, undefined, ZONE).tomorrow?.name).toBe("Gnome Mage");
+  });
 });
 
 describe("the board's Hunt column", () => {

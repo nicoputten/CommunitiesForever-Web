@@ -1,4 +1,5 @@
 import { classInfo } from "../gamedata/classes";
+import type { Dataset } from "../model";
 import {
   CENSUS_LICENCE,
   CENSUS_URL,
@@ -553,19 +554,38 @@ const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 // --- per friend ------------------------------------------------------------------------------------------------
 
+/**
+ * The factions the group hunts with (WEB-112): the factions of every character the site knows for the group (members,
+ * roster, uploads), Horde first. Both when no character's faction is known (no upload yet), as before WEB-112. The
+ * pages show a faction's Hunt only when the group hunts it, so it comes back by itself once someone makes a character.
+ */
+export function groupHunters(data: Pick<Dataset, "characters"> | undefined): Faction[] {
+  const known = new Set(Object.values(data?.characters ?? {}).map((c) => c.faction));
+  const out = (["Horde", "Alliance"] as const).filter((f) => known.has(f));
+  return out.length > 0 ? out : ["Horde", "Alliance"];
+}
+
+/** The factions whose targets the group hunts: the other faction of each of `groupHunters`, in the same order. */
+export function groupHunted(data: Pick<Dataset, "characters"> | undefined): Faction[] {
+  return groupHunters(data).map(enemyOf);
+}
+
 /** A friend as the Hunt sees them: the factions of their characters. */
 export interface HuntFriend {
   owner: string;
   factions: readonly string[];
 }
 
-/** The factions a friend hunts: Horde characters hunt Alliance targets and the other way round. */
-export function huntedBy(f: HuntFriend): Faction[] {
+/**
+ * The factions a friend hunts: Horde characters hunt Alliance targets and the other way round. No known faction: the
+ * group's first hunted faction (`groupHunted`; Alliance when not given: the group plays Horde, Nico 2026-10-28), as
+ * the engine's Hunts.
+ */
+export function huntedBy(f: HuntFriend, group: readonly Faction[] = ["Alliance"]): Faction[] {
   const out: Faction[] = [];
   if (f.factions.includes("Horde")) out.push("Alliance");
   if (f.factions.includes("Alliance")) out.push("Horde");
-  // No known faction: the group plays Horde (Nico 2026-10-28), as the engine's Hunts.
-  return out.length > 0 ? out : ["Alliance"];
+  return out.length > 0 ? out : [group[0] ?? "Alliance"];
 }
 
 export const HUNT_FEATS: readonly { id: HuntFeatId; name: string; text: string }[] = [
@@ -707,13 +727,15 @@ export interface FriendHuntInput {
   censusAt?: number;
   /** Days the friend's goal records have the Hunt done (an addon without `hunts[]` kills still marks it). */
   doneDays?: ReadonlySet<number>;
+  /** The group's hunted factions (`groupHunted`): a friend without a known faction hunts the first. */
+  group?: readonly Faction[];
 }
 
 /** Everything the Doomsday pages show of one friend's Hunt. */
 export function friendHunt(input: FriendHuntInput): FriendHuntView {
   const { friend, today, census } = input;
   const kills = input.kills.filter((k) => k.owner === friend.owner);
-  const hunted = huntedBy(friend);
+  const hunted = huntedBy(friend, input.group);
   const quarries = kills.filter((k) => k.quarry);
   const todayKill = quarries.find((k) => k.day === today);
   const week = weekOf(today);
@@ -743,18 +765,22 @@ export function huntWeek(friends: readonly FriendHuntView[]): HuntWeekRow[] {
     .sort((a, b) => b.days - a.days || cmp(a.owner, b.owner));
 }
 
-/** The Hunt today box (DS01) and the quarry cards. */
+/**
+ * The Hunt today box (DS01) and the quarry cards: today's and tomorrow's quarry of each faction the group hunts
+ * (`groupHunted`, WEB-112; both when not given).
+ */
 export function huntToday(
   today: number,
   plan: Readonly<Record<number, HuntPick>>,
   friends: readonly FriendHuntView[],
   census: Census | undefined,
   censusAt?: number,
+  hunted: readonly Faction[] = FACTIONS,
 ): HuntTodayView {
   const quarry: HuntTodayView["quarry"] = {};
   const tomorrow: HuntTodayView["tomorrow"] = {};
   const info = censusInfo(census, censusAt ?? census?.asOf ?? 0, false);
-  for (const f of FACTIONS) {
+  for (const f of FACTIONS.filter((x) => hunted.includes(x))) {
     const t = targetOf(plan[today]?.[f]);
     if (t !== undefined) {
       const hunters = friends.filter((x) => x.hunts.includes(f));

@@ -299,7 +299,7 @@ describe("pool version 4", () => {
     expect(huntTitle({ race: "NightElf", class: "DRUID" })).toBe("Hunt: Night Elf Druids");
   });
 
-  it("the snapshot's Hunts: Horde characters hunt the Alliance combination", () => {
+  it("the snapshot's Hunts: Horde characters hunt the Alliance combination; only the factions the group hunts", () => {
     const snap = doomsdaySnapshot(input);
     expect(snap.hunts.alliance).toEqual({
       id: `hunt:${hunt.Horde!.race}:${hunt.Horde!.class}`,
@@ -308,7 +308,42 @@ describe("pool version 4", () => {
       title: huntTitle(hunt.Horde!),
       known: true,
     });
+    // WEB-112: a Horde-only group has no Horde Hunt; with an Alliance character it comes back.
+    expect(snap.hunts.horde).toBeUndefined();
+    expect(doomsdaySnapshot(withGoals({}, ["Horde", "Alliance"])).hunts.horde?.title).toBe(huntTitle(hunt.Alliance!));
+  });
+
+  it("an Alliance-only group: only the Horde Hunt, also for a friend without a known faction (WEB-112)", () => {
+    const base = withGoals({}, ["Alliance"]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { faction, ...noFaction } = input.data.characters.G!;
+    const i: DoomsdayInput = {
+      ...base,
+      data: {
+        ...base.data,
+        people: {
+          ...base.data.people,
+          "Bo#1002": { ...input.data.people["Ada#1001"]!, key: "Bo#1002", displayName: "Bo" },
+        },
+        characters: { ...base.data.characters, N: { ...noFaction, guid: "N", owner: "Bo#1002" } },
+      },
+      goals: { ...base.goals, "Bo#1002": { days: {}, weeks: {} } },
+    };
+    const snap = doomsdaySnapshot(i);
+    expect(snap.hunts.alliance).toBeUndefined();
     expect(snap.hunts.horde?.title).toBe(huntTitle(hunt.Alliance!));
+    const hunts = (key: string) =>
+      snap.friends.find((f) => f.friendKey === key)!.today!.goals.filter((g) => g.goal.slot === "hunt");
+    expect(hunts("Ada#1001").map((g) => g.columnId)).toEqual(["hunt:horde"]);
+    expect(hunts("Bo#1002").map((g) => g.columnId)).toEqual(["hunt:horde"]);
+  });
+
+  it("no faction known at all: both Hunts as before WEB-112, a friend gets the Alliance one", () => {
+    const snap = doomsdaySnapshot(withGoals({}, [""]));
+    expect(snap.hunts.alliance?.title).toBe(huntTitle(hunt.Horde!));
+    expect(snap.hunts.horde?.title).toBe(huntTitle(hunt.Alliance!));
+    const ada = snap.friends.find((f) => f.friendKey === "Ada#1001")!;
+    expect(ada.today!.goals.filter((g) => g.goal.slot === "hunt").map((g) => g.columnId)).toEqual(["hunt:alliance"]);
   });
 
   it("a pool-4 day's recorded hunt is the friend's Hunt before the Skirmish, done once and worth 5 PvP", () => {
