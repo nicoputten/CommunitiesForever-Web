@@ -366,7 +366,7 @@
   }
 }
 
-/* Today: The Hunt today above Today so far (DS01); one column on a phone. */
+/* Today: The Hunt today in the right column (DS01; Today so far is gone, WEB-111); under the goals on a phone. */
 .aside {
   display: flex;
   flex-direction: column;

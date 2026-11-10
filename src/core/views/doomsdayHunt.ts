@@ -14,7 +14,7 @@ import type {
 import { CENSUS_URL } from "./pool6";
 
 // The Hunt on the Doomsday pages (WEB-110, boards DS01HuntToday and DS02HuntMore, design/boards/doomsday-hunt): the
-// Hunt card, "The Hunt today" with tomorrow's quarry, the Today so far line, the board's Hunt column, the PvP tab's
+// Hunt card, "The Hunt today" with tomorrow's quarry, the board's Hunt column, the PvP tab's
 // trophies and "Hunt · this week", and the six Hunt feats. The facts are WEB-108's (src/core/views/pool6.ts, from
 // src/server/hunt.ts `doomsdayHunt`); this turns them into text. Census numbers are Everloot's sample ("seen this
 // week"), always with its link and dates; without a census they don't show.
@@ -255,22 +255,6 @@ export function huntToday(
     data.hunt.tomorrow.Horde;
   if (tomorrow !== undefined) view.tomorrow = quarryView(tomorrow);
   return view;
-}
-
-/** Today so far: "Grom bagged a Night Elf Hunter · 20:14", in the order they were bagged. */
-export function huntSoFar(
-  s: DoomsdaySnapshot,
-  data: HuntPageData | undefined,
-  timeZone: string,
-): { key: string; text: string }[] {
-  const names = new Map(s.friends.filter((f) => f.status === "active").map((f) => [f.friendKey, f.name]));
-  return (data?.hunt.friends ?? []).flatMap((h) => {
-    const name = names.get(h.owner);
-    const k = h.kill;
-    if (name === undefined || k?.target === undefined) return [];
-    const time = k.at === undefined ? "" : ` · ${clockAt(k.at, s.schedule.dayStart, timeZone)}`;
-    return [{ key: h.owner, text: `${name} bagged a ${k.target.name}${time}` }];
-  });
 }
 
 /** The board's Hunt column: the quarry of a hunted faction. */

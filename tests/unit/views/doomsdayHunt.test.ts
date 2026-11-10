@@ -185,13 +185,6 @@ describe("The Hunt today", () => {
     expect(huntToday(x.s, hunt, undefined, ZONE).tomorrow?.name).toBe("Orc Warrior");
     expect(huntToday(x.s, x.hunt, undefined, ZONE).tomorrow?.name).toBe("Gnome Mage");
   });
-
-  it("adds a line to Today so far", () => {
-    expect(page(sample()).soFar.hunts.map((h) => h.text)).toEqual([
-      "Nico bagged a Night Elf Druid · 19:38",
-      "Bob bagged a Night Elf Druid · 20:14",
-    ]);
-  });
 });
 
 describe("the board's Hunt column", () => {

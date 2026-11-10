@@ -79,7 +79,6 @@ test("doomsday states: design values", async ({ page }) => {
     "font-size": "var(--fs-title-lg)",
     color: "var(--text-strong)",
   });
-  await expect(page.getByText("Nobody has done anything yet.")).toBeVisible();
   await openScreen(page, "/dev/doomsday?state=error");
   await expectStyles(page.getByRole("button", { name: "Try again" }), {
     color: "var(--stale-text)",
@@ -322,7 +321,7 @@ test("doomsday hunt card: design values", async ({ page }) => {
   await expect(tip.getByRole("link", { name: "Everloot census" })).toHaveAttribute("href", "https://everloot.app/census");
   await page.keyboard.press("Escape");
 
-  // The Hunt today, above Today so far; tomorrow's quarry at the bottom.
+  // The Hunt today, alone in the right column (WEB-111); tomorrow's quarry at the bottom.
   const box = page.getByRole("region", { name: "The Hunt today" });
   await expectStyles(box, { "border-color": "var(--hunt-box-line)" });
   await expect(box.getByText(/^\d+ of \d+ bagged one$/)).toBeVisible();
@@ -331,7 +330,7 @@ test("doomsday hunt card: design values", async ({ page }) => {
   await expectStyles(box.getByRole("link", { name: /^\+ \d+ more$/ }), { "min-height": "var(--size-touch)" });
   await expect(box.getByText("Tomorrow’s quarry")).toBeVisible();
   const order = await page.locator("h2").allTextContents();
-  expect(order.indexOf("The Hunt today")).toBeLessThan(order.indexOf("Today so far"));
+  expect(order).not.toContain("Today so far");
 });
 
 test("doomsday hunt bagged: design values", async ({ page }) => {
@@ -344,7 +343,6 @@ test("doomsday hunt bagged: design values", async ({ page }) => {
     "font-weight": "var(--fw-bold)",
   });
   await expect(card.getByText(/^\+5 PvP · bagged at \d\d:\d\d in Ashenvale$/)).toBeVisible();
-  await expect(page.getByText(/^Nico bagged an? [A-Z][\w ]+ · \d\d:\d\d$/)).toBeVisible();
 });
 
 test("doomsday hunt board column: design values", async ({ page }) => {

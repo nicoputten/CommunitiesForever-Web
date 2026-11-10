@@ -6,7 +6,6 @@ import type {
   GoalCardView,
   HeatmapView,
   PointsView,
-  SoFarView,
   StreakView,
 } from "@/core/views/doomsday";
 import { DoomsdayTabs } from "./DoomsdayTabs";
@@ -129,48 +128,6 @@ export function GoalCard({ goal, week = false, slot }: { goal: GoalCardView; wee
       )}
       <span className={styles.goalMeta}>{goal.done ? goal.doneText : goal.worth}</span>
       {goal.closest !== undefined && <span className={styles.closest}>{goal.closest}</span>}
-    </div>
-  );
-}
-
-export function SoFar({ view }: { view: SoFarView }) {
-  return (
-    <div className={styles.soFar}>
-      {view.crown !== undefined && (
-        <div className={styles.soFarLine}>
-          <CrownIcon className={styles.crown} />
-          <span>
-            <b>{view.crown.name}</b> finished all dailies first, {view.crown.time}
-          </span>
-        </div>
-      )}
-      {view.finished.map((f) => (
-        <div key={f.name} className={styles.soFarLine}>
-          <span className={styles.mini} aria-hidden="true">
-            {f.initials}
-          </span>
-          <span>
-            {f.name} finished all dailies, {f.time}
-          </span>
-        </div>
-      ))}
-      {view.partial.map((f) => (
-        <div key={f.name} className={styles.soFarLine}>
-          <span className={styles.mini} aria-hidden="true">
-            {f.initials}
-          </span>
-          <span>
-            {f.name}: {f.text}
-          </span>
-        </div>
-      ))}
-      {view.hunts.map((h) => (
-        <p key={h.key} className={styles.soFarHunt}>
-          {h.text}
-        </p>
-      ))}
-      {view.empty && <p className={styles.note}>Nobody has done anything yet.</p>}
-      {view.rest !== undefined && <p className={styles.note}>{view.rest}</p>}
     </div>
   );
 }

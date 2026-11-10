@@ -16,7 +16,6 @@ import {
   boardHuntTitle,
   boardQuarry,
   huntCard,
-  huntSoFar,
   huntToday,
   type HuntCardView,
   type HuntPageData,
@@ -119,20 +118,6 @@ export interface TodayView {
   duelGoal?: GoalCardView;
 }
 
-export interface SoFarView {
-  crown?: { name: string; time: string };
-  /** Finished all PvE dailies after the crown. */
-  finished: { name: string; initials: string; time: string }[];
-  /** "Bob: Hunt + Skirmish done". */
-  partial: { name: string; initials: string; text: string }[];
-  /** "Jorrit hasn't started · Sanne has no addon". */
-  rest?: string;
-  /** "Grom bagged a Night Elf Hunter · 20:14" (WEB-110). */
-  hunts: { key: string; text: string }[];
-  /** Nobody has done anything yet today. */
-  empty: boolean;
-}
-
 export interface BoardColumn {
   id: string;
   track: Track;
@@ -206,7 +191,6 @@ export interface DoomsdayPage {
   /** The viewer's own day; undefined without Doomsday data. */
   today?: TodayView;
   week?: WeekView;
-  soFar: SoFarView;
   /** "The Hunt today" (WEB-110); undefined on a day without the Hunt. */
   huntToday?: HuntTodayView;
   board: BoardView;
@@ -488,7 +472,6 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone, hunt: data }: D
 
   const page: DoomsdayPage = {
     header,
-    soFar: soFar(s, timeZone, data),
     board: board(s, viewerKey, timeZone, data),
     heatmap: {
       rows: orderFriends(active, viewerKey).map((f) => heatmapRow(f, s)),
@@ -597,64 +580,4 @@ function board(
         : `Only ${withData[0]!.name} has data so far. The board fills up as friends install the addon and upload.`;
   }
   return view;
-}
-
-function soFar(s: DoomsdaySnapshot, timeZone: string, data: HuntPageData | undefined): SoFarView {
-  const view: SoFarView = { finished: [], partial: [], hunts: huntSoFar(s, data, timeZone), empty: true };
-  const crownKey = s.crown?.friendKey;
-  if (s.crown !== undefined) {
-    const name = s.friends.find((f) => f.friendKey === crownKey)?.name;
-    if (name !== undefined) view.crown = { name, time: clockAt(s.crown.at, s.schedule.dayStart, timeZone) };
-  }
-  const notStarted: string[] = [];
-  const noAddon: string[] = [];
-  const noData: string[] = [];
-  const active = s.friends
-    .filter((f) => f.status === "active")
-    .sort(
-      (a, b) => (a.today?.finishedAt ?? Infinity) - (b.today?.finishedAt ?? Infinity) || compareText(a.name, b.name),
-    );
-  for (const f of active) {
-    const finishedAt = f.today?.finishedAt;
-    if (f.friendKey === crownKey) continue;
-    if (finishedAt !== undefined) {
-      view.finished.push({
-        name: f.name,
-        initials: initials(f.name),
-        time: clockAt(finishedAt, s.schedule.dayStart, timeZone),
-      });
-      continue;
-    }
-    const done = (f.today?.goals ?? []).filter((g) => g.doneAt !== undefined);
-    if (done.length === 0) {
-      notStarted.push(f.name);
-      continue;
-    }
-    // Only the Hunt: its own line says it ("Grom bagged a Night Elf Hunter · 20:14", WEB-110).
-    if (done.every((g) => g.goal.slot === "hunt") && view.hunts.some((h) => h.key === f.friendKey)) continue;
-    view.partial.push({ name: f.name, initials: initials(f.name), text: partialText(done) });
-  }
-  for (const f of s.friends) {
-    if (f.status === "noAddon") noAddon.push(f.name);
-    else if (f.status !== "active") noData.push(f.name);
-  }
-  const rest = [
-    notStarted.length === 0 ? "" : `${joinNames(notStarted)} ${notStarted.length === 1 ? "hasn't" : "haven't"} started`,
-    noData.length === 0 ? "" : `${joinNames(noData)}: no Doomsday data yet`,
-    noAddon.length === 0 ? "" : `${joinNames(noAddon)} ${noAddon.length === 1 ? "has" : "have"} no addon`,
-  ].filter((x) => x !== "");
-  if (rest.length > 0) view.rest = rest.join(" · ");
-  view.empty =
-    view.crown === undefined && view.finished.length === 0 && view.partial.length === 0 && view.hunts.length === 0;
-  return view;
-}
-
-/** "Hunt + Skirmish done", "2 PvE dailies done", "1 PvE daily + Hunt done". */
-function partialText(done: readonly FriendGoal[]): string {
-  const pve = done.filter(isPve).length;
-  const parts: string[] = [];
-  if (pve > 0) parts.push(`${pve} PvE ${pve === 1 ? "daily" : "dailies"}`);
-  if (done.some((g) => g.goal.slot === "hunt")) parts.push("Hunt");
-  if (done.some((g) => g.goal.slot === "skirmish")) parts.push("Skirmish");
-  return `${parts.join(" + ")} done`;
 }
