@@ -180,7 +180,8 @@ test("doomsday: design values", async ({ page }) => {
   // Pool version 6 (WEB-108): today's Skirmish (Roamer) and the Hunt are PvP goals.
   const open = page.getByTestId("goal").filter({ hasText: "Get HKs in 3 different zones" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Gnome Priests" });
+  // Any of today's Hunts: which target the census-weighted draw picks depends on the census (WEB-109's stub).
+  const hunt = page.getByTestId("goal").filter({ hasText: /Hunt: / });
   await expectStyles(hunt.getByText("PvP · the Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
