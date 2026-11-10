@@ -71,6 +71,9 @@ test("the owner opens the pool from the Admin page, steers a day and switches a 
   // Every change is in Admin changes.
   await page.goto("/admin");
   const log = region(page, "Admin changes");
+  // The log shows the newest 10; the other project's changes (and WEB-109's target switches) can push these out.
+  const all = log.getByRole("button", { name: /^Show all/ });
+  if (await all.isVisible()) await all.click();
   await expect(log).toContainText(`switched on ${mine.mission}`);
   await expect(log).toContainText(`switched off ${mine.mission}`);
   await expect(log).toContainText("back to the normal draw");
@@ -129,6 +132,8 @@ test("the recipe bar, today's quarry, the Hunt targets and a theme (WEB-109)", a
 
   await page.goto("/admin");
   const log = region(page, "Admin changes");
+  const all = log.getByRole("button", { name: /^Show all/ });
+  if (await all.isVisible()) await all.click();
   await expect(log).toContainText(`switched off ${target}`);
   await expect(log).toContainText(`switched on ${target}`);
 });

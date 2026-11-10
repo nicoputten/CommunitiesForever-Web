@@ -169,18 +169,19 @@ test("doomsday: design values", async ({ page }) => {
     await expectStyles(tabs.getByRole("link", { name: "Week" }), { color: "var(--text-dim)" });
   }
 
-  const goal = page.getByTestId("goal").filter({ hasText: "Defeat 15 enemies in a group with a friend" });
+  const goal = page.getByTestId("goal").filter({ hasText: "Loot a rare item" });
   await expectStyles(goal, { "background-color": "var(--surface-goal)", "border-color": "var(--line-goal-done)" });
   await expectStyles(goal.getByText("PvE daily"), { ...TYPE.overline, "font-weight": "var(--fw-semibold)", color: "var(--pve-text)" });
-  await expectStyles(goal.getByText("Defeat 15 enemies in a group with a friend"), {
+  await expectStyles(goal.getByText("Loot a rare item"), {
     "font-family": "var(--font-name)",
     "font-size": isPhone(page) ? "var(--fs-name-sm)" : "var(--fs-section)",
     color: "var(--text-muted)",
   });
-  // Pool version 6 (WEB-108): today's Skirmish (Kills in 3 zones) and the Hunt are PvP goals.
-  const open = page.getByTestId("goal").filter({ hasText: "Kills in 3 zones" });
+  // Pool version 6 (WEB-108): today's Skirmish (Roamer) and the Hunt are PvP goals.
+  const open = page.getByTestId("goal").filter({ hasText: "Get HKs in 3 different zones" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Hunt: Gnome Priests" });
+  // Any of today's Hunts: which target the census-weighted draw picks depends on the census (WEB-109's stub).
+  const hunt = page.getByTestId("goal").filter({ hasText: /Hunt: / });
   await expectStyles(hunt.getByText("PvP · the Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
@@ -245,13 +246,13 @@ for (const tab of TABS) {
 
 test("doomsday roster chips: design values", async ({ page }) => {
   await openScreen(page, "/roster");
-  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 40 PvP 62/ });
+  const chip = page.getByRole("link", { name: /^Doomsday this week: PvE 46 PvP 62/ });
   await expectStyles(chip, {
     "background-color": "var(--surface-dd-chip)",
     "border-color": "var(--line-control)",
     "font-size": "var(--fs-meta)",
   });
-  await expectStyles(chip.getByText("PvE 40"), { color: "var(--pve-text)" });
+  await expectStyles(chip.getByText("PvE 46"), { color: "var(--pve-text)" });
   await expectStyles(chip.getByText(/^PvP/), { color: "var(--pvp-text)" });
   await expectStyles(page.getByRole("link", { name: /PvP Virgin/ }).getByText("PvP Virgin"), { color: "var(--swap-text)" });
 });

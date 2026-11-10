@@ -361,8 +361,7 @@ function recipe(tiles: readonly RecipeTileView[]): RecipeTile[] {
       count: String(t.id === "off" ? t.pool : t.perPeriod),
       per,
       line,
-      // Orange only for a weekly slot (board: Bounty); a daily slot's ~4–5 weeks is fine.
-      warn: t.soon && t.period === "week",
+      warn: t.soon,
       hunt: t.id === "hunt",
     };
   });

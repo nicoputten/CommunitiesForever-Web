@@ -193,7 +193,7 @@ export type HuntFeatId = "f.huntFirst" | "f.hunt10" | "f.huntClasses" | "f.huntA
 /** A Hunt feat's progress for one friend (DS02 Feats tab: "a / b" and a bar while unfinished). */
 export interface HuntFeatProgress {
   id: HuntFeatId;
-  /** "First quarry", "Quarry ×10", "Every class", "Big game", "Rare quarry", "Hunter's week". */
+  /** "First quarry", "Quarry ×10", "Every class", "Big game", "Rare quarry", "Hunter’s week". */
   name: string;
   /** "Bag your first Hunt target" ... */
   text: string;
@@ -255,7 +255,7 @@ export interface RecipeTileView {
   pool: number;
   /** Back every ~N days: pool ÷ slots per day (weeks: × 7). */
   backEveryDays?: number;
-  /** Orange: missions come back within ~6 weeks. */
+  /** Orange: a weekly slot whose missions come back within ~6 weeks (Bounty today); never a daily one. */
   soon: boolean;
 }
 

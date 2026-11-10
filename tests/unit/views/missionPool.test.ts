@@ -134,12 +134,6 @@ describe("the Mission pool page", () => {
     ]);
   });
 
-  it("only a weekly slot turns orange, even when WEB-108 marks a daily one soon", () => {
-    const recipe = poolData().recipe.map((t) => (t.id === "pve" ? { ...t, soon: true } : t));
-    const v = missionPoolView(input({}, { data: poolData({ recipe }) }), "UTC");
-    expect(v.tiles.map((t) => t.warn)).toEqual([false, false, false, false, true, false]);
-  });
-
   it("14 days from today with today and tomorrow locked; a day's lines: 3 PvE, the Hunt, Skirmish and Duel", () => {
     const v = missionPoolView(input(), "Europe/Amsterdam");
     expect(v.days).toHaveLength(14);

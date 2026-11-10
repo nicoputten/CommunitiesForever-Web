@@ -7,7 +7,7 @@ import type { DayRecipeView, RecipeTileView, ThemeCardView } from "./pool6";
 // built from the plan, the settings and the stats (src/core/doomsday/missionPool.ts) and the Hunt plan
 // (src/core/doomsday/hunt.ts). Pure; the page (WEB-109) renders them.
 
-/** Missions that come back within this many days get the orange tile (MP05: "back within ~6 weeks"). */
+/** A weekly slot whose missions come back within this many days gets the orange tile (MP05: "within ~6 weeks"). */
 export const SOON_DAYS = 42;
 
 const isOff = (settings: Settings, id: string) => settingOf(settings, id).off;
@@ -25,7 +25,8 @@ export function recipeTiles(settings: Settings, huntInDraw: number): RecipeTileV
     const t: RecipeTileView = { id, label, perPeriod, period, pool: size, soon: false };
     if (perPeriod > 0 && size > 0) {
       t.backEveryDays = Math.round((size / perPeriod) * (period === "week" ? 7 : 1));
-      t.soon = t.backEveryDays <= SOON_DAYS;
+      // Only the weekly slots (Weekly, Bounty): daily missions always come back within weeks (the board).
+      t.soon = period === "week" && t.backEveryDays <= SOON_DAYS;
     }
     return t;
   };
