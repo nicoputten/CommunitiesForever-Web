@@ -477,6 +477,8 @@ export function huntCensusInfo(db: Db | Tx, now: number) {
 
 /** The Hunt feats per friend from every stored Hunt kill (feats.ts, after an upload's feed is stored). */
 export function huntFeatsByOwner(tx: Db | Tx, now: number, data: Dataset): Record<string, HuntFeatProgress[]> {
+  // The quarries of the window are stored first, so a kill is compared with the site's own draw.
+  storeHuntPlan(tx, now);
   const kills = allHuntKills(tx, now, data);
   if (kills.length === 0) return {};
   const rare = new Set(rareTargets(latestCensus(tx)?.census));
