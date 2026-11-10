@@ -639,3 +639,15 @@ pages). One release, pool version 6. Design: Claude Design canvas "Doombringers 
 - **Bot API:** unchanged; the Duel slot's mission isn't on the bot's board.
 - Done when: unit and server tests for the draw (themes distinct, weights, skip, no repeat, locks, pins, fallback
   without a census), the census parsing, the schedule export and the Hunt kills; lint, tests, build and e2e pass.
+
+### WEB-111 Doomsday Today: no "Today so far"
+Nico (2026-11-10): the "Today so far" box on the Today tab goes, desktop and phone. A deviation from DS01 (WEB-110).
+- Today's right column holds only **The Hunt today** (it moves up). On a day without the Hunt the goals take the
+  whole width. Phone: goals, The Hunt today, the board.
+- The crown, who finished, who is part way, the Hunt lines and "… haven't started" leave the page with the box; the
+  board still has the crown, every friend's checks and the Hunt column.
+- The view model loses `soFar` (and `huntSoFar`), the component and its styles go. The bot API and DoomBot's board
+  are unchanged (they never used it: the board's "+N haven't started" is the bot API's own).
+- `docs/DESIGN.md` "Deviations" records it.
+- Done when: the box is gone on desktop and phone; lint, unit, e2e and design checks pass; changed screenshot
+  baselines only after Nico's OK.

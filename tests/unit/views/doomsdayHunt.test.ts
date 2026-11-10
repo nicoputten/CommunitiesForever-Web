@@ -174,13 +174,6 @@ describe("The Hunt today", () => {
     expect(view.more).toEqual({ text: "+ 1 more", href: "/doomsday/board#hunt" });
     expect(view.tomorrow?.name).toBe("Gnome Mage");
   });
-
-  it("adds a line to Today so far", () => {
-    expect(page(sample()).soFar.hunts.map((h) => h.text)).toEqual([
-      "Nico bagged a Night Elf Druid · 19:38",
-      "Bob bagged a Night Elf Druid · 20:14",
-    ]);
-  });
 });
 
 describe("the board's Hunt column", () => {
