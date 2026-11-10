@@ -19,6 +19,12 @@ import { ADMIN } from "./sample";
 
 test.beforeEach(async ({ context, baseURL }) => signInAs(context, baseURL!, ADMIN));
 
+/**
+ * Today's and tomorrow's tiles keep the board's 60 % opacity (`--opacity-locked`), below AA contrast: Nico's decision
+ * 2026-11-10 (WEB-109, docs/DESIGN.md "Deviations"), so the contrast check leaves those two tiles out.
+ */
+const LOCKED_TILES = ['[data-testid="mission-day"][data-locked]'];
+
 /** The fourth day shown: free (today and tomorrow are locked). */
 async function freeDay(page: import("@playwright/test").Page): Promise<string> {
   await openScreen(page, "/admin/missions");
@@ -64,7 +70,7 @@ test("missions: touch targets", async ({ page }) => {
 
 test("missions: accessibility", async ({ page }) => {
   await openScreen(page, await freeDay(page));
-  await expectAccessible(page);
+  await expectAccessible(page, [], LOCKED_TILES);
 });
 
 test("missions: reduced motion", async ({ page }) => {
@@ -122,7 +128,7 @@ test("missions: theme cards and an open theme", async ({ page }) => {
   await cards.nth(6).click();
   await expect(cards.nth(6)).toHaveAttribute("aria-expanded", "true");
   await expect(pool.getByTestId("theme-list").getByRole("heading", { level: 3 })).toHaveText(/^Skirmish · \d+$/);
-  await expectAccessible(page);
+  await expectAccessible(page, [], LOCKED_TILES);
   if (isPhone(page)) await expectTouchTargets(page);
 });
 
@@ -161,7 +167,7 @@ test("missions: Hunt targets", async ({ page }) => {
     await cell.hover();
     await expect(grid.getByRole("tooltip").first()).toBeVisible();
   }
-  await expectAccessible(page);
+  await expectAccessible(page, [], LOCKED_TILES);
 });
 
 test("missions: Hunt targets, screenshot", async ({ page }) => {
