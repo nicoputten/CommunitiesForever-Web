@@ -354,6 +354,12 @@
   color: var(--text-strong);
 }
 
+/* "Grom bagged a Night Elf Hunter · 20:14" (WEB-110, board DS01HuntToday). */
+.soFarHunt {
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
 .crown {
   width: var(--size-icon);
   height: var(--size-icon);

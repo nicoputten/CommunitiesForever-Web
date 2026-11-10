@@ -1,0 +1,387 @@
+/* The Hunt on the Doomsday pages (WEB-110, boards DS01HuntToday, DS02HuntMore). */
+
+/* ── The Hunt card (DS01): the red wanted card with a faint crosshair ─── */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  min-height: var(--size-hunt-card);
+  overflow: hidden;
+  border-color: var(--hunt-line);
+  background: var(--hunt-card);
+}
+
+/* The phone's goal rows centre their items; the Hunt card keeps its own layout (board DS01HuntToday, 375 px). */
+.card.card {
+  align-items: stretch;
+}
+
+.card[data-done="true"] {
+  border-color: var(--gold);
+  background: var(--hunt-card-done);
+}
+
+.watermark {
+  position: absolute;
+  right: var(--s-hunt-mark);
+  top: var(--s-hunt-mark);
+  width: var(--size-hunt-mark);
+  height: var(--size-hunt-mark);
+  color: var(--pvp-text);
+  opacity: var(--opacity-hunt-mark);
+  pointer-events: none;
+}
+
+.kind {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-5);
+}
+
+.kindIcon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  flex: none;
+}
+
+.quarry {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.quarryName {
+  font-family: var(--font-display);
+  font-size: var(--fs-quarry);
+  letter-spacing: var(--ls-quarry);
+  line-height: var(--lh-name);
+  color: var(--gold-pale);
+}
+
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.seen {
+  color: var(--text-strong);
+}
+
+.census {
+  color: var(--gold);
+}
+
+.census:hover {
+  color: var(--gold-bright);
+}
+
+.stamp {
+  position: absolute;
+  right: var(--s-2-5);
+  top: var(--s-2-5);
+  transform: var(--stamp-tilt);
+  padding: var(--s-0-75) var(--s-2);
+  border-radius: var(--r-tag);
+  border: var(--line-stamp) solid var(--gold);
+  background: var(--stamp-bg);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-stamp);
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+/* ── The Hunt today, Hunt · this week ────────────────────────────────── */
+
+.box {
+  border-color: var(--hunt-box-line);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.titleIcon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  flex: none;
+  color: var(--pvp-text);
+}
+
+.sub {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--size-hunt-row);
+  font-size: var(--fs-body-sm);
+}
+
+.hit,
+.days {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-left: auto;
+  color: var(--hunt-hit);
+}
+
+.hitIcon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  flex: none;
+  color: var(--pvp-text);
+}
+
+.none {
+  margin-left: auto;
+  color: var(--text-faint);
+}
+
+.place {
+  width: var(--size-class-icon);
+  color: var(--text-dim);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--size-touch);
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--gold-bright);
+}
+
+.tomorrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding-top: var(--s-2-5);
+  border-top: var(--border) solid var(--line-row);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.tomorrow b {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+/* ── Hunt trophies (DS02) ────────────────────────────────────────────── */
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.summary {
+  font-size: var(--fs-body-sm);
+  color: var(--gold-bright);
+}
+
+.bar {
+  display: block;
+  height: var(--size-trophy-bar);
+  border-radius: var(--r-progress);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.trophies {
+  border-collapse: separate;
+  border-spacing: var(--s-trophy);
+}
+
+.trophies thead th {
+  text-align: center;
+}
+
+.trophies tbody th {
+  padding-right: var(--s-1-5);
+  text-align: left;
+  font-family: var(--font-name);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.trophy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-trophy-w);
+  height: var(--size-trophy-h);
+  box-sizing: border-box;
+  border-radius: var(--r-trophy);
+  border: var(--border) solid var(--line-trophy);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  color: var(--trophy-empty);
+}
+
+.trophy[data-got="true"] {
+  border-color: var(--gold);
+  background: var(--trophy-got);
+  color: var(--gold-pale);
+}
+
+.trophy[data-kind="na"] {
+  border: 0;
+  color: var(--trophy-na);
+}
+
+.trophy[data-rare] {
+  box-shadow: var(--ring-trophy-rare);
+}
+
+.rarest {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.rare {
+  color: var(--swap-text);
+}
+
+/* ── Hunt feats (DS02) ───────────────────────────────────────────────── */
+
+.feats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 1023px) {
+  .feats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .feats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.feat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: var(--s-3);
+  border-radius: var(--r-btn);
+  border: var(--border) solid var(--line-hunt-feat);
+  background: var(--surface-goal);
+}
+
+.feat[data-done="true"] {
+  border-color: var(--line-hunt-feat-got);
+}
+
+.featIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--size-hunt-feat-icon);
+  height: var(--size-hunt-feat-icon);
+  border-radius: var(--r-hunt-feat-icon);
+  background: var(--hunt-icon-tint);
+  color: var(--pvp-text);
+}
+
+.featIcon > svg {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.featText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.featText b {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.featText .bar {
+  margin-top: var(--s-1);
+}
+
+/* ── The PvP tab: trophies next to this week's hunters ───────────────── */
+
+.pvp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-hunt-week);
+  gap: var(--s-4);
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .pvp {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Today: The Hunt today above Today so far (DS01); one column on a phone. */
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+/* ── The board's Hunt column (DS02) ──────────────────────────────────── */
+
+.column {
+  background: var(--hunt-column);
+}
+
+.columnHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1-5);
+}

@@ -12,6 +12,17 @@ import { clockAt, doomsdayDay, gridCount, resetsText } from "../doomsday/rules";
 import { compareText } from "./characters";
 import { initials, joinNames } from "./text";
 import { MONTH_SHORT, WEEKDAY_SHORT } from "../names";
+import {
+  boardHuntTitle,
+  boardQuarry,
+  huntCard,
+  huntSoFar,
+  huntToday,
+  type HuntCardView,
+  type HuntPageData,
+  type HuntTodayView,
+  type QuarryView,
+} from "./doomsdayHunt";
 
 // The Doomsday page (E8; the addon repo's docs/DOOMSDAY.md): the header, Today, Week, the Board and the 12-week
 // heatmap (WEB-59, boards `doomsday-today`, `doomsday-phone` and `doomsday-rules`). Times in the viewer's own zone
@@ -36,6 +47,8 @@ export interface DoomsdayInput {
   viewerKey?: string;
   /** The viewer's own time zone. */
   timeZone: string;
+  /** The Hunt (WEB-108's `doomsdayHunt`, WEB-110); undefined: the Hunt shows as a plain goal. */
+  hunt?: HuntPageData;
 }
 
 /** Points of both tracks, never added together; `approx` when a PvP number rests on guessed victims ("≈"). */
@@ -78,6 +91,8 @@ export interface GoalCardView {
   worth: string;
   /** Tooltip of the swap mark: "Instead of: Raise Cooking, First Aid or Fishing". */
   swap?: string;
+  /** The Hunt's own card (WEB-110, board DS01HuntToday). */
+  hunt?: HuntCardView;
 }
 
 export interface DuelSlotView {
@@ -97,6 +112,11 @@ export interface TodayView {
   pve: GoalCardView[];
   pvp: GoalCardView[];
   duels: DuelSlotView;
+  /**
+   * Pool version 6 (WEB-108): the Duel slot's mission when it isn't "First duel with each friend" (`p.duelFirst`,
+   * which keeps the `duels` card); it takes the Duel slot's place.
+   */
+  duelGoal?: GoalCardView;
 }
 
 export interface SoFarView {
@@ -107,6 +127,8 @@ export interface SoFarView {
   partial: { name: string; initials: string; text: string }[];
   /** "Jorrit hasn't started · Sanne has no addon". */
   rest?: string;
+  /** "Grom bagged a Night Elf Hunter · 20:14" (WEB-110). */
+  hunts: { key: string; text: string }[];
   /** Nobody has done anything yet today. */
   empty: boolean;
 }
@@ -115,10 +137,13 @@ export interface BoardColumn {
   id: string;
   track: Track;
   title: string;
+  /** The Hunt column (WEB-110): the quarry's portrait and name under "The Hunt". */
+  quarry?: QuarryView;
 }
 
 export type BoardCell =
-  | { kind: "done"; time: string; swap?: string }
+  /** `hunt`: a bagged quarry's hover, "Bagged 20:14 in Ashenvale" (WEB-110). */
+  | { kind: "done"; time: string; swap?: string; hunt?: string }
   /** `value` 0: nothing yet (a PvP Virgin's kill goal shows the pill instead). */
   | { kind: "progress"; text: string; value: number; swap?: string }
   | { kind: "open"; swap?: string };
@@ -182,6 +207,8 @@ export interface DoomsdayPage {
   today?: TodayView;
   week?: WeekView;
   soFar: SoFarView;
+  /** "The Hunt today" (WEB-110); undefined on a day without the Hunt. */
+  huntToday?: HuntTodayView;
   board: BoardView;
   heatmap: HeatmapView;
   /** Day one of Doomsday: nobody has a point yet, in either track, ever (board doomsday-phone, WEB-61). */
@@ -341,7 +368,7 @@ function isPve(g: FriendGoal): boolean {
 }
 
 /** The board's columns: the 3 PvE dailies, the Hunt (Alliance: the group plays Horde, Nico 2026-10-28), the Skirmish. */
-function boardColumns(s: DoomsdaySnapshot): BoardColumn[] {
+function boardColumns(s: DoomsdaySnapshot, data: HuntPageData | undefined): BoardColumn[] {
   const column = (g: GoalRef, id = g.id): BoardColumn => ({ id, track: g.track, title: g.title });
   const pve = s.todayGoals.filter((g) => g.slot === "pveDaily").map((g) => column(g));
   const rest = s.todayGoals.filter((g) => g.slot !== "pveDaily").map((g) => column(g));
@@ -351,6 +378,11 @@ function boardColumns(s: DoomsdaySnapshot): BoardColumn[] {
       : s.hunts.horde !== undefined
         ? column(s.hunts.horde, "hunt:horde")
         : undefined;
+  const quarry = hunt === undefined ? undefined : boardQuarry(data, hunt.id === "hunt:horde" ? "Horde" : "Alliance");
+  if (hunt !== undefined && quarry !== undefined) {
+    hunt.quarry = quarry;
+    hunt.title = quarry.name;
+  }
   return [...pve, ...(hunt === undefined ? [] : [hunt]), ...rest];
 }
 
@@ -439,7 +471,7 @@ function heatmapRow(f: FriendDoomsday, s: DoomsdaySnapshot): HeatmapRow {
   };
 }
 
-export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput): DoomsdayPage {
+export function doomsdayPage({ snapshot: s, viewerKey, timeZone, hunt: data }: DoomsdayInput): DoomsdayPage {
   const me = s.friends.find((f) => f.friendKey === viewerKey);
   const active = s.friends.filter((f) => f.status === "active");
   const approx = (f: FriendDoomsday) => f.points?.approx?.pvp === true;
@@ -456,13 +488,15 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
 
   const page: DoomsdayPage = {
     header,
-    soFar: soFar(s, timeZone),
-    board: board(s, viewerKey, timeZone),
+    soFar: soFar(s, timeZone, data),
+    board: board(s, viewerKey, timeZone, data),
     heatmap: {
       rows: orderFriends(active, viewerKey).map((f) => heatmapRow(f, s)),
     },
     firstDay: active.every((f) => (f.points?.allTime.pve ?? 0) + (f.points?.allTime.pvp ?? 0) === 0),
   };
+  if (data !== undefined && Object.keys(data.hunt.quarry).length > 0)
+    page.huntToday = huntToday(s, data, viewerKey, timeZone);
   const noAddon = s.friends.filter((f) => f.status !== "active").map((f) => f.name);
   if (noAddon.length > 0) {
     page.heatmap.without = `${joinNames(noAddon)}: no Doomsday data yet.`;
@@ -477,9 +511,18 @@ export function doomsdayPage({ snapshot: s, viewerKey, timeZone }: DoomsdayInput
       doneText: `${count.done} of ${count.total} done`,
       resets: resetsText(s.schedule.nextReset, s.now, timeZone),
       pve: goals.filter(isPve).map((g) => goalCard(g, timeZone, s.schedule.dayStart)),
-      pvp: goals.filter((g) => !isPve(g)).map((g) => goalCard(g, timeZone, s.schedule.dayStart)),
+      pvp: goals
+        .filter((g) => !isPve(g) && g.goal.slot !== "duel")
+        .map((g) => {
+          const card = goalCard(g, timeZone, s.schedule.dayStart);
+          const hunt = g.goal.slot === "hunt" ? huntCard(s, data, me.friendKey, g, timeZone) : undefined;
+          return hunt === undefined ? card : { ...card, hunt };
+        }),
       duels: duelSlot(me),
     };
+    const duel = goals.find((g) => g.goal.slot === "duel" && g.goal.id !== "p.duelFirst");
+    if (duel !== undefined)
+      page.today.duelGoal = { ...goalCard(duel, timeZone, s.schedule.dayStart), kind: "PvP · Duel slot" };
   }
   if (me?.status === "active" && me.week !== undefined) {
     const week: WeekView = {
@@ -509,8 +552,13 @@ function orderFriends(friends: readonly FriendDoomsday[], viewerKey: string | un
   );
 }
 
-function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: string): BoardView {
-  const columns = boardColumns(s);
+function board(
+  s: DoomsdaySnapshot,
+  viewerKey: string | undefined,
+  timeZone: string,
+  data: HuntPageData | undefined,
+): BoardView {
+  const columns = boardColumns(s, data);
   const rows = orderFriends(s.friends, viewerKey).map((f): BoardRow => {
     const row: BoardRow = {
       key: f.friendKey,
@@ -526,7 +574,11 @@ function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: str
       return row;
     }
     if (s.crown?.friendKey === f.friendKey) row.crown = clockAt(s.crown.at, s.schedule.dayStart, timeZone);
-    row.cells = columns.map((c) => boardCell(goalFor(f, c), timeZone, s.schedule.dayStart));
+    row.cells = columns.map((c) => {
+      const cell = boardCell(goalFor(f, c), timeZone, s.schedule.dayStart);
+      const title = c.quarry === undefined || cell.kind !== "done" ? undefined : boardHuntTitle(s, data, f, timeZone);
+      return title === undefined ? cell : { ...cell, hunt: title };
+    });
     row.duels = duelsCell(f);
     const approx = f.points?.approx?.pvp === true;
     const today = pointsView(f.points?.today, approx);
@@ -547,8 +599,8 @@ function board(s: DoomsdaySnapshot, viewerKey: string | undefined, timeZone: str
   return view;
 }
 
-function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
-  const view: SoFarView = { finished: [], partial: [], empty: true };
+function soFar(s: DoomsdaySnapshot, timeZone: string, data: HuntPageData | undefined): SoFarView {
+  const view: SoFarView = { finished: [], partial: [], hunts: huntSoFar(s, data, timeZone), empty: true };
   const crownKey = s.crown?.friendKey;
   if (s.crown !== undefined) {
     const name = s.friends.find((f) => f.friendKey === crownKey)?.name;
@@ -578,6 +630,8 @@ function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
       notStarted.push(f.name);
       continue;
     }
+    // Only the Hunt: its own line says it ("Grom bagged a Night Elf Hunter · 20:14", WEB-110).
+    if (done.every((g) => g.goal.slot === "hunt") && view.hunts.some((h) => h.key === f.friendKey)) continue;
     view.partial.push({ name: f.name, initials: initials(f.name), text: partialText(done) });
   }
   for (const f of s.friends) {
@@ -590,7 +644,8 @@ function soFar(s: DoomsdaySnapshot, timeZone: string): SoFarView {
     noAddon.length === 0 ? "" : `${joinNames(noAddon)} ${noAddon.length === 1 ? "has" : "have"} no addon`,
   ].filter((x) => x !== "");
   if (rest.length > 0) view.rest = rest.join(" · ");
-  view.empty = view.crown === undefined && view.finished.length === 0 && view.partial.length === 0;
+  view.empty =
+    view.crown === undefined && view.finished.length === 0 && view.partial.length === 0 && view.hunts.length === 0;
   return view;
 }
 

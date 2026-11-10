@@ -1153,6 +1153,7 @@
   --ring-class-icon: 0 0 0 1px #0b0f14;
   --ring-quarry-class: 0 0 0 2px #0b0f18; /* DS01: the class icon on the race ring */
   --class-glyph-shine: radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 55%);
+  --size-hunt-week: 320px; /* DS02: Hunt · this week next to the trophies */
   --size-hunt-row: 32px; /* DS01: a friend's line in "The Hunt today" */
   --size-trophy-w: 46px; /* DS02: a trophy cell */
   --size-trophy-h: 40px;

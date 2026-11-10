@@ -705,6 +705,9 @@ export function doomsdaySnapshot(input: DoomsdayInput): DoomsdaySnapshot {
       pvp: pvpDetails(f, weekDays, firstOfWeek, allDuels, byKey, input, s),
       featProgress: featProgress(f, input.feats),
     };
+    // The friend's class for an icon next to the name (WEB-110): the highest-level character's.
+    const main = [...f.chars].sort((a, b) => (b.level ?? 0) - (a.level ?? 0))[0];
+    if (main?.classFile !== undefined) friend.classFile = main.classFile;
     return friend;
   });
 

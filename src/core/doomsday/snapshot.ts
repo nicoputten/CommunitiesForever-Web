@@ -81,6 +81,8 @@ export interface FriendDoomsday {
   /** 84 Doomsday days, oldest first, ending today: goals done that day (either track); null = no data that day. */
   heatmap?: (number | null)[];
   pvp?: PvpDetails;
+  /** The friend's class for an icon next to the name: the highest-level character's (WEB-110). */
+  classFile?: string;
   /** The next step of the counted feats (honorKills, duelWins, deaths100, the next pvpRank; WEB-56). */
   featProgress?: FeatProgress[];
 }

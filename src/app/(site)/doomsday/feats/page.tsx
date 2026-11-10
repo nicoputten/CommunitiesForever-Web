@@ -2,18 +2,24 @@ import type { Metadata } from "next";
 import styles from "@/components/doomsday/Doomsday.module.css";
 import ladder from "@/components/doomsday/Ladder.module.css";
 import { FriendChips, GroupFeats, OwnFeats, RankTitles } from "@/components/doomsday/ladder";
+import { HuntFeats } from "@/components/doomsday/hunt";
 import { DoomsdayFrame } from "@/components/doomsday/parts";
 import { featsView } from "@/core/views/doomsdayFeats";
+import { friendHunt, huntFeats } from "@/core/views/doomsdayHunt";
 import { doomsdayContext } from "../data";
 import { NoDoomsday } from "../NoData";
 
 export const metadata: Metadata = { title: "Doomsday · Feats" };
 
-/** Doomsday, Feats (WEB-60, board doomsday-feats): the group's feats, a friend's own feats, the PvP rank titles. */
+/**
+ * Doomsday, Feats (WEB-60, board doomsday-feats): the group's feats, a friend's own feats, the friend's six Hunt feats
+ * (WEB-110, board DS02HuntMore), the PvP rank titles.
+ */
 export default async function DoomsdayFeatsPage({ searchParams }: { searchParams: Promise<{ friend?: string }> }) {
   const ctx = await doomsdayContext();
   if (ctx === undefined) return <NoDoomsday />;
   const view = featsView(ctx.snapshot, (await searchParams).friend, ctx.viewerKey, ctx.timeZone);
+  const hunt = friendHunt(ctx.hunt, view.friends.find((x) => x.current)?.key);
   return (
     <DoomsdayFrame header={ctx.page.header} tab="feats">
       <div className={ladder.feats}>
@@ -36,6 +42,7 @@ export default async function DoomsdayFeatsPage({ searchParams }: { searchParams
           <OwnFeats view={view} />
         </section>
       </div>
+      {hunt !== undefined && <HuntFeats feats={huntFeats(hunt)} />}
       <section className={styles.card} aria-labelledby="dd-ranks">
         <div className={styles.cardHead}>
           <h2 id="dd-ranks" className={styles.cardTitle}>

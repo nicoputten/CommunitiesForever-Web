@@ -11,8 +11,10 @@ import type {
 } from "@/core/views/doomsday";
 import { DoomsdayTabs } from "./DoomsdayTabs";
 import { PageTitle } from "@/components/ui/PageTitle";
-import { CrownIcon, DoomsdayEmblem, FlameIcon, SwapIcon } from "@/components/ui/icons";
+import { CrownIcon, CrosshairIcon, DoomsdayEmblem, FlameIcon, SwapIcon } from "@/components/ui/icons";
+import { QuarryPortrait } from "@/components/ui/QuarryPortrait";
 import styles from "./Doomsday.module.css";
+import hunt from "./Hunt.module.css";
 
 // The Doomsday page's pieces (WEB-59, board doomsday-today). Server components: nothing to click but the tabs.
 
@@ -94,9 +96,15 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function GoalCard({ goal, week = false }: { goal: GoalCardView; week?: boolean }) {
+export function GoalCard({ goal, week = false, slot }: { goal: GoalCardView; week?: boolean; slot?: "duel" }) {
   return (
-    <div className={styles.goal} data-done={goal.done} data-week={week || undefined} data-testid="goal">
+    <div
+      className={styles.goal}
+      data-done={goal.done}
+      data-week={week || undefined}
+      data-slot={slot}
+      data-testid={slot === "duel" ? "duel" : "goal"}
+    >
       <span className={`${styles.kind} ${goal.track === "pve" ? styles.pve : styles.pvp}`}>{goal.kind}</span>
       <span className={styles.goalTitle}>
         {goal.title}
@@ -156,6 +164,11 @@ export function SoFar({ view }: { view: SoFarView }) {
           </span>
         </div>
       ))}
+      {view.hunts.map((h) => (
+        <p key={h.key} className={styles.soFarHunt}>
+          {h.text}
+        </p>
+      ))}
       {view.empty && <p className={styles.note}>Nobody has done anything yet.</p>}
       {view.rest !== undefined && <p className={styles.note}>{view.rest}</p>}
     </div>
@@ -175,14 +188,26 @@ export function Board({ view }: { view: BoardView }) {
               <th scope="col" className={styles.friendCol}>
                 Friend
               </th>
-              {view.columns.map((c) => (
-                <th key={c.id} scope="col" className={styles.goalCol}>
-                  <span className={c.track === "pve" ? styles.pve : styles.pvp}>
-                    {c.track === "pve" ? "PvE" : "PvP"}
-                  </span>
-                  <span className={styles.colTitle}>{c.title}</span>
-                </th>
-              ))}
+              {view.columns.map((c) =>
+                c.quarry !== undefined ? (
+                  <th key={c.id} id="hunt" scope="col" className={`${styles.goalCol} ${hunt.column}`}>
+                    <span className={hunt.columnHead}>
+                      <QuarryPortrait quarry={c.quarry} size="sm" />
+                      <span>
+                        <span className={styles.pvp}>The Hunt</span>
+                        <span className={styles.colTitle}>{c.title}</span>
+                      </span>
+                    </span>
+                  </th>
+                ) : (
+                  <th key={c.id} scope="col" className={styles.goalCol}>
+                    <span className={c.track === "pve" ? styles.pve : styles.pvp}>
+                      {c.track === "pve" ? "PvE" : "PvP"}
+                    </span>
+                    <span className={styles.colTitle}>{c.title}</span>
+                  </th>
+                ),
+              )}
               <th scope="col">
                 Duels<span className={styles.colTitle}>first with each friend</span>
               </th>
@@ -215,7 +240,11 @@ export function Board({ view }: { view: BoardView }) {
                   </td>
                 ) : (
                   <>
-                    <Cells row={r} pvpColumns={view.columns.map((c) => c.track === "pvp")} />
+                    <Cells
+                      row={r}
+                      pvpColumns={view.columns.map((c) => c.track === "pvp")}
+                      huntColumns={view.columns.map((c) => c.quarry !== undefined)}
+                    />
                     <td className={styles.meta}>{r.duels}</td>
                     <td>{r.today !== undefined && <Points points={r.today} />}</td>
                     <td>{r.week !== undefined && <Points points={r.week} />}</td>
@@ -297,7 +326,15 @@ function BoardCards({ view }: { view: BoardView }) {
 }
 
 /** A row's goal cells; a PvP Virgin with nothing done in PvP gets one "PvP Virgin" pill over the PvP columns. */
-function Cells({ row, pvpColumns }: { row: BoardView["rows"][number]; pvpColumns: boolean[] }) {
+function Cells({
+  row,
+  pvpColumns,
+  huntColumns,
+}: {
+  row: BoardView["rows"][number];
+  pvpColumns: boolean[];
+  huntColumns: boolean[];
+}) {
   const cells = row.cells ?? [];
   const pvpIdle = cells.every(
     (c, i) => !pvpColumns[i] || c.kind === "open" || (c.kind === "progress" && c.value === 0),
@@ -317,8 +354,20 @@ function Cells({ row, pvpColumns }: { row: BoardView["rows"][number]; pvpColumns
       }
       return;
     }
+    if (c.kind === "done" && c.hunt !== undefined) {
+      out.push(
+        <td key={i} className={hunt.column} title={c.hunt}>
+          <span className={hunt.hit}>
+            <CrosshairIcon className={hunt.hitIcon} />
+            {c.time}
+          </span>
+          <span className="visually-hidden">{c.hunt}</span>
+        </td>,
+      );
+      return;
+    }
     out.push(
-      <td key={i} title={c.swap}>
+      <td key={i} title={c.swap} className={huntColumns[i] ? hunt.column : undefined}>
         {c.kind === "done" ? (
           <span className={styles.cell}>
             <span className={styles.cellDone}>
