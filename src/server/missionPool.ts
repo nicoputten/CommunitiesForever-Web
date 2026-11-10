@@ -181,6 +181,37 @@ export function setMission(
   });
 }
 
+/** The settings id of a Hunt target (WEB-109): the owner switches a target off or on like a mission. */
+export const huntTargetId = (race: number, cls: number) => `hunt:${race}:${cls}`;
+
+/**
+ * Switches a Hunt target off or on (WEB-109, board `mission-pool-v2-hunt`). Stored as a mission setting with the
+ * target's id; the draw (WEB-108) skips a target that is off.
+ */
+export function setHuntTarget(
+  db: Db,
+  by: string,
+  race: number,
+  cls: number,
+  off: boolean,
+  now: number,
+  valid: (race: number, cls: number) => boolean,
+  owner?: string,
+): void {
+  if (!Number.isInteger(race) || !Number.isInteger(cls) || !valid(race, cls)) throw new AccessError("No such target.");
+  const id = huntTargetId(race, cls);
+  change(db, by, now, owner, (tx) => {
+    const old = tx.select().from(missionSettings).where(eq(missionSettings.id, id)).get();
+    if ((old?.off ?? false) === off) return;
+    const next = { off, often: "normal" as const };
+    tx.insert(missionSettings)
+      .values({ id, ...next, changedAt: now, changedBy: by })
+      .onConflictDoUpdate({ target: missionSettings.id, set: { ...next, changedAt: now, changedBy: by } })
+      .run();
+    return { action: off ? "missionOff" : "missionOn", target: id };
+  });
+}
+
 /** Pins a mission in a slot of a free day or week. */
 export function pinMission(
   db: Db,
@@ -329,6 +360,7 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
       if (owners.length > 0) sawNormal.push({ period, n: p.n, owners });
     }
   }
+  const stats = missionStats(records, { day: fromDay, week: weekOf(fromDay) });
   return {
     now,
     s: c.s,
@@ -338,7 +370,7 @@ export function missionPool(db: Db, by: string, now: number, owner?: string): Mi
     plan,
     settings: state.settings,
     overrides: state.overrides,
-    stats: missionStats(records, { day: fromDay, week: weekOf(fromDay) }),
+    stats,
     sawNormal,
   };
 }

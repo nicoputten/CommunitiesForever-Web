@@ -186,7 +186,8 @@ test("doomsday: design values", async ({ page }) => {
   // Pool version 6 (WEB-108): today's Skirmish (Roamer) and the Hunt are PvP goals.
   const open = page.getByTestId("goal").filter({ hasText: "Get HKs in 3 different zones" });
   await expectStyles(open.getByText("PvP · Skirmish"), { color: "var(--pvp-text)" });
-  const hunt = page.getByTestId("goal").filter({ hasText: "Gnome Priest" });
+  // Today's Hunt: which target the census-weighted draw picks depends on the census (WEB-109's stub).
+  const hunt = page.locator('[data-slot="hunt"]').first();
   await expectStyles(hunt.getByText("PvP · The Hunt"), { color: "var(--pvp-text)" });
   await expectStyles(page.getByText(/^resets \w{3} \d\d:\d\d · in /), { "font-size": "var(--fs-body-sm)", color: "var(--streak-text)" });
 
@@ -266,7 +267,8 @@ test("doomsday roster chips: design values", async ({ page }) => {
 test("info tip: design values", async ({ page }) => {
   await openScreen(page, "/doomsday");
   const goals = page.getByRole("region", { name: /^Your goals/ });
-  const button = goals.getByRole("button", { name: "More info" });
+  // The heading's ⓘ (WEB-110: the Hunt cards' census has its own).
+  const button = goals.getByRole("button", { name: "More info" }).first();
   await expectStyles(button, { width: "var(--size-touch)", height: "var(--size-touch)" });
   await expectStyles(button.locator("span"), {
     width: "var(--size-info)",
@@ -298,14 +300,16 @@ test("doomsday hunt card: design values", async ({ page }) => {
     "font-weight": "var(--fw-semibold)",
     color: "var(--pvp-text)",
   });
-  await expectStyles(card.getByText("Gnome Priest", { exact: true }), {
+  // The drawn target depends on the census, so read its name from the portrait.
+  const portrait = card.locator('[role="img"][data-size="md"]');
+  const quarry = (await portrait.getAttribute("aria-label"))!;
+  await expectStyles(card.getByText(quarry, { exact: true }), {
     "font-family": "var(--font-display)",
     "font-size": "var(--fs-quarry)",
     color: "var(--gold-pale)",
   });
-  const portrait = card.getByRole("img", { name: "Gnome Priest" });
   await expectStyles(portrait, { width: "var(--size-quarry)", height: "var(--size-quarry)" });
-  await expectStyles(portrait.getByText("Gn"), {
+  await expectStyles(portrait.locator('[aria-hidden="true"]').first(), {
     width: "var(--size-race-ring)",
     "border-top-color": "var(--gold-bright)",
     "font-family": "var(--font-display)",
@@ -314,7 +318,7 @@ test("doomsday hunt card: design values", async ({ page }) => {
   await expect(card.getByText(/seen this week/)).toBeVisible();
   await card.getByRole("button", { name: "More info" }).click();
   const tip = page.getByRole("tooltip").filter({ hasText: "seen in the last 7 days" });
-  await expect(tip).toContainText(/^Everloot census: Gnome Priests seen in the last 7 days \(\d+–\d+ \w{3}\)\. More/);
+  await expect(tip).toContainText(new RegExp(`^Everloot census: ${quarry}s seen in the last 7 days \\(\\d+–\\d+ \\w{3}\\)\\. More`));
   await expect(tip.getByRole("link", { name: "Everloot census" })).toHaveAttribute("href", "https://everloot.app/census");
   await page.keyboard.press("Escape");
 
@@ -340,7 +344,7 @@ test("doomsday hunt bagged: design values", async ({ page }) => {
     "font-weight": "var(--fw-bold)",
   });
   await expect(card.getByText(/^\+5 PvP · bagged at \d\d:\d\d in Ashenvale$/)).toBeVisible();
-  await expect(page.getByText(/^Nico bagged a Gnome Priest · \d\d:\d\d$/)).toBeVisible();
+  await expect(page.getByText(/^Nico bagged an? [A-Z][\w ]+ · \d\d:\d\d$/)).toBeVisible();
 });
 
 test("doomsday hunt board column: design values", async ({ page }) => {
@@ -348,7 +352,7 @@ test("doomsday hunt board column: design values", async ({ page }) => {
   await openScreen(page, "/dev/doomsday?state=hunt-bagged&tab=board");
   const head = page.getByRole("columnheader", { name: /The Hunt/ });
   await expectStyles(head, { "background-color": "var(--hunt-column)" });
-  await expect(head.getByRole("img", { name: "Gnome Priest" })).toBeVisible();
+  await expect(head.locator('[role="img"][data-size="sm"]')).toBeVisible();
   const hit = page.getByRole("cell", { name: /Bagged \d\d:\d\d in / }).first();
   await expect(hit).toHaveAttribute("title", /^Bagged \d\d:\d\d in \w/);
   await expectStyles(hit.getByText(/^\d\d:\d\d$/), { color: "var(--hunt-hit)" });

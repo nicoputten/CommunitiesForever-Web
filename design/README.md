@@ -34,6 +34,9 @@ View them: `npm run design`, then open http://localhost:4400.
 | `mission-pool-steering` | `MP02Edit.dc.html` | Mission pool: editing a free day (pin, Reroll, Pick…, Reroll day, Back to normal draw), the Pick… list (WEB-79) |
 | `mission-pool-states` | `MP03States.dc.html` | Mission pool states: a locked day, a friend who saw the normal draw, switching a mission off, a changed week, the Admin changes log (WEB-79) |
 | `mission-pool-admin-entry` | `MP04Entry.dc.html` | Admin page: the owner-only Doomsday missions box (WEB-79) |
+| `mission-pool-v2-overview` | `MP05Overview.dc.html` | Mission pool v2: recipe bar, Today's quarry, 6-line days, the pool as nine theme cards with one open, desktop and 375 px (WEB-109) |
+| `mission-pool-v2-hunt` | `MP06Hunt.dc.html` | Mission pool v2: Hunt targets, races × classes weighted by Everloot's census, desktop and 375 px (WEB-109) |
+| `mission-pool-v2-pvp` | `MP07PvP.dc.html` | Mission pool v2: the 50 new PvP dailies by group, easy or check (WEB-109) |
 | `discord-settings` | `BotAdmin.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page: link your Discord, admin settings for the bot (WEB-39; from the Discord bot workshop) |
 | `discord-settings-runs` | `BotAdmin-runs.dc.html` | **Superseded** by `discord-page*` and `discord-page-coadmins`. Discord page with the runs section: runs channel, reminder time, ask now from the game, mark runs done (WEB-39, WEB-40) |
 | `runs` | `SiteRuns.dc.html` | **Superseded** by `asks-now` and the `runs-v2-*` boards. Runs page: this week, later, past, "runs I can join", your answers (WEB-40) |

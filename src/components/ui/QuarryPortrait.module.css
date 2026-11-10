@@ -55,3 +55,21 @@
   width: var(--size-quarry-class-sm);
   height: var(--size-quarry-class-sm);
 }
+
+/* MP05: the Mission pool's quarry card (WEB-109). */
+.portrait[data-size="lg"] {
+  width: var(--size-quarry-lg);
+  height: var(--size-quarry-lg);
+}
+
+.portrait[data-size="lg"] .ring {
+  width: var(--size-race-ring-lg);
+  height: var(--size-race-ring-lg);
+  font-size: var(--fs-race-ring-lg);
+}
+
+.portrait[data-size="lg"] .class {
+  width: var(--size-quarry-class-lg);
+  height: var(--size-quarry-class-lg);
+  box-shadow: var(--ring-quarry-class-lg);
+}

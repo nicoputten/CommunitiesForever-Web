@@ -1,13 +1,14 @@
 "use client";
 
 import { useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { FilterChip } from "@/components/ui/FilterChip";
 import type { Often } from "@/core/doomsday/missionPool";
-import type { PoolGroup, PoolRow } from "@/core/views/missionPool";
+import { matches, type FilterChipView, type PoolFilter, type PoolRow, type ThemeCard } from "@/core/views/missionPool";
 import styles from "./MissionPool.module.css";
 
 type Action = (form: FormData) => Promise<void>;
 
-/** Lines shown on a phone before "Show all" (board `mission-pool`). */
+/** Rows in view before the open list scrolls (board `mission-pool-v2-overview`). */
 const SHOWN = 7;
 
 const OFTEN: readonly { value: Often; label: string }[] = [
@@ -100,43 +101,32 @@ function OftenChoice({ row, action }: { row: PoolRow; action: Action }) {
   );
 }
 
-function Often({
-  row,
-  offFrom,
-  setOff,
-  setOften,
-}: {
-  row: PoolRow;
-  offFrom: string;
-  setOff: Action;
-  setOften: Action;
-}) {
-  return (
-    <span className={styles.often}>
-      {row.off ? <span className={styles.offText}>Off</span> : <OftenChoice row={row} action={setOften} />}
-      <OffSwitch row={row} offFrom={offFrom} action={setOff} />
+function Tag({ row }: { row: PoolRow }) {
+  return row.tag === undefined ? null : (
+    <span className={styles.tag6} data-tag={row.tag}>
+      {row.tag}
     </span>
   );
 }
 
-/**
- * The pool (board `mission-pool`): per kind, each mission with its stats and how often it comes up, or Off. A table on
- * a desktop; on a phone one block per mission, the first 7 until "Show all".
- */
-export function PoolControls({
-  groups,
+interface Section {
+  key: string;
+  title: string;
+  rows: PoolRow[];
+}
+
+/** One list: a desktop row per mission (Mission, Short, Pts, History, How often, the switch), or two phone lines. */
+function Rows({
+  sections,
   offFrom,
   setOff,
   setOften,
 }: {
-  groups: PoolGroup[];
+  sections: Section[];
   offFrom: string;
   setOff: Action;
   setOften: Action;
 }) {
-  const [all, setAll] = useState(false);
-  const total = groups.reduce((a, g) => a + g.rows.length, 0);
-  let index = 0;
   return (
     <>
       <table className={styles.table}>
@@ -145,46 +135,38 @@ export function PoolControls({
             <th scope="col">Mission</th>
             <th scope="col">Short</th>
             <th scope="col" className={styles.num}>
-              Points
+              Pts
             </th>
-            <th scope="col" className={styles.num}>
-              Came up
-            </th>
-            <th scope="col" className={styles.num}>
-              Swapped
-            </th>
-            <th scope="col">Done</th>
-            <th scope="col">Last</th>
-            <th scope="col" className={styles.end}>
-              How often
+            <th scope="col">History</th>
+            <th scope="col">How often</th>
+            <th scope="col">
+              <span className="visually-hidden">On</span>
             </th>
           </tr>
         </thead>
-        {groups.map((g) => (
-          <tbody key={g.kind}>
-            <tr className={styles.group}>
-              <th scope="colgroup" colSpan={8}>
-                {g.title}
-              </th>
-            </tr>
-            {g.rows.map((r) => (
+        {sections.map((s) => (
+          <tbody key={s.key}>
+            {sections.length > 1 && (
+              <tr className={styles.group}>
+                <th scope="colgroup" colSpan={6}>
+                  {s.title}
+                </th>
+              </tr>
+            )}
+            {s.rows.map((r) => (
               <tr key={r.id} data-off={r.off || undefined}>
-                <td className={styles.name}>{r.text}</td>
+                <td className={styles.name}>
+                  {r.text}
+                  <Tag row={r} />
+                </td>
                 <td className={styles.short}>{r.short}</td>
                 <td className={styles.num}>{r.points}</td>
-                <td className={styles.num}>{r.cameUp}</td>
-                <td className={styles.num}>{r.swapped}</td>
-                <td className={styles.dim}>
-                  {r.donePct !== undefined && (
-                    <span className={styles.bar} aria-hidden="true">
-                      <i style={{ width: `${r.donePct}%` }} />
-                    </span>
-                  )}
-                  {r.done}
+                <td className={styles.dim}>{r.history}</td>
+                <td>
+                  <OftenChoice row={r} action={setOften} />
                 </td>
-                <td className={styles.dim}>{r.last}</td>
                 <td className={styles.end}>
-                  <Often row={r} offFrom={offFrom} setOff={setOff} setOften={setOften} />
+                  <OffSwitch row={r} offFrom={offFrom} action={setOff} />
                 </td>
               </tr>
             ))}
@@ -192,29 +174,133 @@ export function PoolControls({
         ))}
       </table>
       <div className={styles.lines}>
-        {groups.map((g) => (
-          <div key={g.kind} data-hidden={(!all && index >= SHOWN) || undefined} className={styles.lineBlock}>
-            <h3 className={styles.lineGroup}>{g.title}</h3>
-            {g.rows.map((r) => {
-              const hidden = !all && index++ >= SHOWN;
-              return (
-                <div key={r.id} className={styles.line} data-off={r.off || undefined} data-hidden={hidden || undefined}>
-                  <div className={styles.lineHead}>
-                    <span>{r.text}</span>
-                    <OffSwitch row={r} offFrom={offFrom} action={setOff} />
-                  </div>
-                  <div className={styles.lineStats}>{r.line}</div>
-                  {!r.off && <OftenChoice row={r} action={setOften} />}
+        {sections.map((s) => (
+          <div key={s.key} className={styles.lineBlock}>
+            {sections.length > 1 && <h4 className={styles.lineGroup}>{s.title}</h4>}
+            {s.rows.map((r) => (
+              <div key={r.id} className={styles.line} data-off={r.off || undefined}>
+                <div className={styles.lineHead}>
+                  <span>
+                    {r.text}
+                    <Tag row={r} />
+                  </span>
+                  <OffSwitch row={r} offFrom={offFrom} action={setOff} />
                 </div>
-              );
-            })}
+                <div className={styles.lineStats}>{r.line}</div>
+                <OftenChoice row={r} action={setOften} />
+              </div>
+            ))}
           </div>
         ))}
-        {!all && total > SHOWN && (
-          <button type="button" className={styles.button} onClick={() => setAll(true)}>
-            Show all {total}
-          </button>
-        )}
+      </div>
+    </>
+  );
+}
+
+/**
+ * The pool as themes (board `mission-pool-v2-overview`): search and filters, nine cards with their history, the open
+ * card's missions below (one at a time). A search or a filter lists the matches of every card instead.
+ */
+export function PoolControls({
+  cards,
+  filters,
+  offFrom,
+  setOff,
+  setOften,
+}: {
+  cards: ThemeCard[];
+  filters: FilterChipView[];
+  offFrom: string;
+  setOff: Action;
+  setOften: Action;
+}) {
+  const [open, setOpen] = useState(cards[0]?.key);
+  const [filter, setFilter] = useState<PoolFilter>("all");
+  const [query, setQuery] = useState("");
+  const listId = useId();
+  const q = query.trim().toLowerCase();
+  const searching = filter !== "all" || q !== "";
+  const hit = (r: PoolRow) =>
+    matches(r, filter) && (q === "" || r.text.toLowerCase().includes(q) || r.short.toLowerCase().includes(q));
+  const sections: Section[] = searching
+    ? cards
+        .map((c) => ({ key: c.key, rows: c.rows.filter(hit), name: c.name }))
+        .filter((s) => s.rows.length > 0)
+        .map((s) => ({ key: s.key, title: `${s.name} · ${s.rows.length}`, rows: s.rows }))
+    : cards.filter((c) => c.key === open).map((c) => ({ key: c.key, title: `${c.name} · ${c.count}`, rows: c.rows }));
+  const total = sections.reduce((a, s) => a + s.rows.length, 0);
+  // A search or filter: "Never came up · 131" (the chip's label), "All · 4" for a search alone.
+  const chip = filters.find((f) => f.filter === filter)?.label ?? "All";
+  const title = searching ? `${chip} · ${total}` : (sections[0]?.title ?? "");
+  return (
+    <>
+      <div className={styles.filters}>
+        <input
+          type="search"
+          className={styles.search}
+          placeholder="Search missions"
+          aria-label="Search missions"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {filters.map((f) => (
+          <FilterChip key={f.filter} pressed={filter === f.filter} onClick={() => setFilter(f.filter)}>
+            {f.label} <b className={styles.chipCount}>{f.count}</b>
+          </FilterChip>
+        ))}
+      </div>
+      <ul className={styles.cards}>
+        {cards.map((c) => (
+          <li key={c.key}>
+            <button
+              type="button"
+              className={styles.card}
+              aria-expanded={!searching && open === c.key}
+              aria-controls={listId}
+              data-testid="theme-card"
+              onClick={() => {
+                setOpen(c.key);
+                setFilter("all");
+                setQuery("");
+              }}
+            >
+              <span className={styles.cardHead}>
+                <span className={styles.cardName}>{c.name}</span>
+                <em className={styles.cardTag} data-kind={c.kind}>
+                  {c.tag}
+                </em>
+                <span className={styles.cardCount}>{c.count}</span>
+              </span>
+              <span className={styles.cardLine}>
+                {c.history}
+                {c.fresh !== undefined && (
+                  <>
+                    {" · "}
+                    <span className={styles.cardNew}>{c.fresh}</span>
+                  </>
+                )}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div id={listId} className={styles.open} data-testid="theme-list">
+        <div className={styles.head}>
+          <h3 className={styles.subTitle}>{title}</h3>
+          {total > SHOWN && (
+            <span className={styles.aside}>
+              {SHOWN} of {total} shown · scroll
+            </span>
+          )}
+        </div>
+        <div
+          className={styles.scroll}
+          tabIndex={total > SHOWN ? 0 : undefined}
+          aria-label={title || undefined}
+          role={total > SHOWN ? "region" : undefined}
+        >
+          <Rows sections={sections} offFrom={offFrom} setOff={setOff} setOften={setOften} />
+        </div>
       </div>
     </>
   );

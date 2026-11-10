@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mission pool v2 · PvP dailies</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&amp;family=Marcellus&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#070C15}
+a{color:#D4AF6A}a:hover{color:#F0D08E}
+.box{padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:12px}
+.bt{margin:0;font:17px 'Marcellus SC',serif;letter-spacing:.08em;color:#F0D08E}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font:600 14px Inter,sans-serif;text-decoration:none;cursor:pointer;border:0;box-sizing:border-box}
+.pri{background:#D4AF6A;color:#0B0F14}
+.sec{background:transparent;border:1px solid rgba(212,175,106,.4);color:#F0D08E}
+.ghost{background:transparent;color:#AEB6C3;border:1px solid rgba(174,182,195,.25)}
+.danger{background:transparent;color:#F59A9C;border:1px solid rgba(218,55,60,.45)}
+.on{background:rgba(127,217,154,.16);color:#9BE3B0;border:1px solid rgba(127,217,154,.5)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(174,182,195,.25);background:rgba(12,18,30,.8);color:#AEB6C3;font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.act{border-color:#D4AF6A;background:rgba(212,175,106,.16);color:#F3EBDA}
+.pill{display:inline-block;font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.p-open{background:rgba(212,175,106,.18);color:#F3DFAE}
+.p-soon{background:rgba(240,167,116,.18);color:#F6C29C}
+.p-full{background:rgba(127,217,154,.16);color:#9BE3B0}
+.p-done{background:rgba(174,182,195,.12);color:#C4C9D0}
+.p-cx{background:rgba(218,55,60,.18);color:#F59A9C}
+.lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#7E8898}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 14px;border-radius:10px;background:#0B1220;border:1px solid rgba(174,182,195,.25);font-size:14px;color:#E6E1D6;box-sizing:border-box}
+.muted{color:#8E98A8}
+.slots{display:flex;gap:4px}
+.slots i{width:22px;height:8px;border-radius:2px;display:block}
+.run{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 18px;border-radius:12px;background:rgba(12,18,30,.8);border:1px solid rgba(174,182,195,.14);text-decoration:none;color:#E6E1D6}
+.run:hover{border-color:rgba(212,175,106,.45)}
+.when{display:flex;flex-direction:column;gap:2px}
+.when b{font:22px/1 'Marcellus',serif;color:#F3EBDA;font-weight:400}
+.when span{font-size:12px;color:#8E98A8}
+.rn{font:18px 'Marcellus',serif;color:#F3EBDA}
+.rm{font-size:13px;color:#AEB6C3;margin-top:3px}
+.yours{font-size:12px;margin-top:6px}
+.sk{background:linear-gradient(90deg,#121B2A,#1A2537,#121B2A);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:8px}
+@keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.wa{color:#C69B6D}.pa{color:#F48CBA}.hu{color:#AAD372}.ro{color:#FFF468}.pr{color:#FFFFFF}.sh{color:#4DA3FF}.ma{color:#3FC7EB}.wl{color:#A9AAF5}.dr{color:#FF9A45}
+a:focus-visible,button:focus-visible{outline:2px solid #F0D08E;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.sk{animation:none}}
+.strings{font:12.5px/1.5 Inter,sans-serif;color:#C9CFD9;padding:16px 18px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);align-self:start}
+.strings h3{margin:0 0 8px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+.strings ol{margin:0;padding-left:22px;columns:2;column-gap:26px}
+.strings li{padding:1px 0}
+.strings .tl{margin-top:10px;color:#D4AF6A;font-size:11px;letter-spacing:.1em;text-transform:uppercase}.ttp{position:absolute;z-index:5;background:rgba(6,10,18,.97);border:1px solid #5C6A85;padding:8px 10px;font:12.5px/1.45 Inter,sans-serif;color:#C9CFD9;box-shadow:0 6px 18px rgba(0,0,0,.6);white-space:nowrap}
+.ttp b{display:block;font-size:13.5px;color:#FFFFFF;font-weight:600}
+.ver{scroll-margin-top:90px;padding:18px 20px;border-radius:14px;background:rgba(12,18,30,.8);border:1px solid rgba(212,175,106,.22);display:flex;flex-direction:column;gap:10px}
+.ver.hit{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.16),rgba(12,18,30,.85) 55%);box-shadow:0 0 0 3px rgba(212,175,106,.18)}
+.vh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.vh h2{margin:0;font:22px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.vh span{font-size:13px;color:#8E98A8}
+.vh a{margin-left:auto;font-size:12px;color:#6E7888;text-decoration:none}
+.ver ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55;color:#C9CFD9}
+.vh .ltag{font:700 11px/1 Inter,sans-serif;padding:4px 8px;border-radius:999px;background:#D4AF6A;color:#0B0F14;text-transform:uppercase;letter-spacing:.05em}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid rgba(212,175,106,.18)}
+.tabs2 a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;color:#AEB6C3;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 a.act{color:#F3EBDA;border-bottom-color:#D4AF6A;font-weight:600}
+.qr{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.qr:last-child{border-bottom:0}
+.qt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.qt b{font:500 15px Inter,sans-serif;color:#F3EBDA}
+.qt span{font-size:12px;color:#7E8898}
+.who{display:flex;flex-wrap:wrap;gap:6px 14px}
+.ch{display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;min-height:28px}
+.more{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:28px;padding:0 8px;border-radius:999px;border:1px solid rgba(174,182,195,.3);font:600 12px Inter,sans-serif;color:#C9CFD9;background:#0E1626}
+.phone{width:375px;border-radius:28px;overflow:hidden;border:1px solid rgba(212,175,106,.3);box-shadow:0 30px 80px rgba(0,0,0,.5);background:#070C15}
+.cap2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#D4AF6A;margin-bottom:8px}
+.H1b{margin:0;font:38px 'Marcellus SC',serif;letter-spacing:.05em;color:#F3DFAE}
+.subb{margin:6px 0 0;font-size:15px;color:#8E98A8;line-height:1.5;max-width:1200px}
+.reuse{padding:14px 16px;border-radius:12px;border:1px solid rgba(212,175,106,.3);background:rgba(12,18,30,.9);font-size:13px;line-height:1.55;color:#C9CFD9}
+.reuse b{color:#F3EBDA}
+.reuse h3{margin:0 0 6px;font:16px 'Marcellus SC',serif;color:#F3DFAE}
+
+.own{display:inline-flex;align-items:center;gap:5px;font:700 10px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid rgba(212,175,106,.5);color:#F3DFAE}
+.sum{display:flex;flex-wrap:wrap;gap:8px}
+.sum span{display:inline-flex;align-items:baseline;gap:6px;padding:8px 12px;border-radius:10px;background:#0E1626;border:1px solid rgba(174,182,195,.14);font-size:13px;color:#AEB6C3}
+.sum b{font:20px Marcellus,serif;color:#F3EBDA;font-weight:400}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{position:relative;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:5px;padding:10px;border-radius:10px;background:#0E1626;border:1px solid rgba(174,182,195,.14);min-height:132px;box-sizing:border-box;text-decoration:none;color:#E6E1D6}
+.day .dt{display:flex;flex-wrap:wrap;gap:4px;justify-content:space-between;align-items:center;font:600 13px Inter,sans-serif;color:#F3EBDA}
+.day .m{font-size:12px;line-height:1.35;color:#C9CFD9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day .m.pvp{color:#F6B3AD}
+.day.lock{opacity:.6;background:#0A111D}
+.day.chg{border-color:#D4AF6A;background:radial-gradient(circle at 0% 0%,rgba(212,175,106,.14),#0E1626 60%)}
+.day.sel{box-shadow:0 0 0 2px #F0D08E}
+.cbadge{font:700 9px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:3px 5px;border-radius:999px;background:#D4AF6A;color:#0B0F14}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
+.pve{background:#7FD99A}.pvpd{background:#F08A80}
+.ptbl{width:100%;border-collapse:collapse;font-size:14px;color:#C9CFD9}
+.ptbl th{text-align:left;font:600 11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7E8898;padding:8px 10px;border-bottom:1px solid rgba(212,175,106,.3);white-space:nowrap}
+.ptbl td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+.ptbl td.n{text-align:right;font-variant-numeric:tabular-nums}
+.ptbl tr.off td{opacity:.45}
+.ptbl tr.grp td{padding:14px 10px 6px;font:16px 'Marcellus SC',serif;color:#F0D08E;border-bottom:1px solid rgba(212,175,106,.2)}
+.seg3{display:inline-flex;border:1px solid rgba(174,182,195,.25);border-radius:999px;overflow:hidden}
+.seg3 span{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;font-size:12px;color:#AEB6C3}
+.seg3 span.on{background:rgba(212,175,106,.18);color:#F3EBDA;font-weight:600}
+.swt{position:relative;display:inline-block;width:40px;height:22px;border-radius:11px;background:#D4AF6A;vertical-align:middle}
+.swt:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#0B0F14}
+.swt.off{background:#2A3446}.swt.off:after{right:auto;left:3px;background:#8E98A8}
+.bar2{display:inline-block;width:70px;height:6px;border-radius:3px;background:#1B2232;vertical-align:middle;margin-right:8px;position:relative;overflow:hidden}
+.bar2 i{position:absolute;left:0;top:0;bottom:0;background:#7FD99A}
+.slot{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.slot .k{font-size:12px;color:#8E98A8}
+.slot .t{font-size:15px;color:#F3EBDA}
+.slot .src{font-size:12px;color:#8E98A8;margin-left:8px}
+.warn2{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(240,167,116,.08);border:1px solid rgba(240,167,116,.35);font-size:13px;color:#F6C29C}
+.lockic{display:inline-flex}
+.mono2{font:12px ui-monospace,Menlo,monospace;color:#8E98A8}
+
+.rcp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.rs{padding:10px 12px;border-radius:10px;background:#0E1626;border:1px solid rgba(174,182,195,.14);display:flex;flex-direction:column;gap:2px}
+.rs .k{font:11px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7E8898}
+.rs b{font:22px Marcellus,serif;color:#F3EBDA;font-weight:400}
+.rs .s{font-size:12px;color:#8E98A8}
+.rs.warn{border-color:rgba(240,167,116,.5);background:rgba(240,167,116,.06)}.rs.warn .s{color:#F6C29C}
+.rs.hunt{border-color:rgba(224,98,90,.55);background:linear-gradient(135deg,rgba(224,98,90,.14),#0E1626 60%)}
+.grpk{font:12px Inter,sans-serif;color:#AEB6C3;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.grpk b{color:#F0D08E;font-weight:600}
+.qz{position:relative;overflow:hidden;border-radius:16px;border:1px solid rgba(224,98,90,.55);
+  background:radial-gradient(500px 220px at 18% 30%,rgba(224,98,90,.22),rgba(0,0,0,0) 70%),repeating-linear-gradient(135deg,rgba(255,255,255,.015) 0 10px,rgba(0,0,0,0) 10px 20px),#0B0F18}
+.qz .kick{font:700 11px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#F08A80}
+.qz .nm{font:34px 'Marcellus SC',serif;letter-spacing:.04em;color:#F3DFAE}
+.ret{position:absolute;opacity:.12}
+.duo{position:relative;width:96px;height:96px;flex:none}
+.duo .rc{position:absolute;left:0;top:0;width:76px;height:76px;border-radius:50%;border:2px solid #F0D08E;display:flex;align-items:center;justify-content:center;font:28px 'Marcellus SC',serif;color:#F3DFAE;background:radial-gradient(circle at 35% 30%,#3A4A6A,#121A2A)}
+.duo .cc{position:absolute;right:0;bottom:0;border-radius:50%;box-shadow:0 0 0 3px #0B0F18}
+.mini{display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;flex:none}
+.mini .p{position:relative;width:40px;height:40px}
+.mini .p .r{position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;border:1px solid rgba(240,208,142,.6);display:flex;align-items:center;justify-content:center;font:13px 'Marcellus SC',serif;color:#F3DFAE;background:#162034}
+.mini .p .c{position:absolute;right:0;bottom:0;border-radius:50%;box-shadow:0 0 0 2px #0B0F18}
+.mini span{font-size:10.5px;color:#AEB6C3;text-align:center;line-height:1.25;white-space:normal}
+.day .m.hunt{color:#FFB4A8;font-weight:600}
+.hx{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
+.th{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tc{padding:14px 16px;border-radius:12px;background:#0E1626;border:1px solid rgba(174,182,195,.14);display:flex;flex-direction:column;gap:6px}
+.tc.open{border-color:#D4AF6A;background:rgba(212,175,106,.06)}
+.tc .t{display:flex;align-items:center;gap:8px;font:17px 'Marcellus SC',serif;color:#F0D08E}
+.tc .t em{font:600 10px Inter,sans-serif;font-style:normal;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:999px}
+.em-pve{background:rgba(127,217,154,.14);color:#9BE3B0}.em-pvp{background:rgba(240,138,128,.16);color:#F6B3AD}.em-wk{background:rgba(157,180,255,.14);color:#C3D0FF}
+.tc .c{margin-left:auto;font:22px Marcellus,serif;color:#F3EBDA}
+.tc .s{font-size:12.5px;color:#8E98A8}
+.tc .new{color:#F0D08E}
+.cr{display:grid;grid-template-columns:minmax(0,1fr) 110px 46px 200px 150px 44px;gap:12px;align-items:center;min-height:44px;padding:0 6px;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px;color:#E6E1D6}
+.cr .sh{font:12px ui-monospace,Menlo,monospace;color:#8E98A8}
+.cr .pt{color:#C9CFD9;text-align:right}
+.cr .st{font-size:12.5px;color:#8E98A8}
+.cr.off{opacity:.45}
+.fq{display:inline-flex;font-size:11.5px;border:1px solid rgba(174,182,195,.25);border-radius:999px;overflow:hidden}
+.fq span{padding:3px 8px;color:#8E98A8}.fq span.on{background:rgba(212,175,106,.18);color:#F3EBDA;font-weight:600}
+.sw2{position:relative;display:inline-block;width:34px;height:19px;border-radius:10px;background:#D4AF6A}
+.sw2:after{content:"";position:absolute;right:3px;top:3px;width:13px;height:13px;border-radius:50%;background:#0B0F14}
+.sw2.off{background:#2A3446}.sw2.off:after{right:auto;left:3px;background:#8E98A8}
+.fl{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(174,182,195,.25);font-size:13px;color:#C9CFD9;background:#0E1626}
+.fl.on{border-color:#D4AF6A;background:rgba(212,175,106,.14);color:#F3EBDA}
+.fl b{font-weight:600;color:#8E98A8}
+.hg{border-collapse:separate;border-spacing:6px}
+.hg th{font:600 11px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7E8898;padding:0 4px;text-align:center}
+.hg th.r{text-align:left;font:15px Marcellus,serif;letter-spacing:0;text-transform:none;color:#F3EBDA;padding-right:10px;white-space:nowrap}
+.cell{width:96px;height:58px;box-sizing:border-box;border-radius:10px;border:1px solid rgba(212,175,106,.55);background:rgba(212,175,106,.07);padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between}
+.cell b{font:600 15px Inter,sans-serif;color:#F3EBDA}
+.cell .w{height:4px;border-radius:2px;background:#1B2232;overflow:hidden}.cell .w i{display:block;height:100%;background:#F08A80}
+.cell .l{font-size:10.5px;color:#AEB6C3}
+.cell.skip{border-style:dashed;border-color:rgba(174,182,195,.3);background:transparent}.cell.skip b{color:#8E98A8}.cell.skip .l{color:#F6C29C}
+.cell.na{border:0;background:transparent;align-items:center;justify-content:center;color:#3A4456;font-size:18px}
+.cell.today{box-shadow:0 0 0 2px #F08A80}
+.cell.new{border-color:#9DB4FF}
+.pv{display:grid;grid-template-columns:minmax(0,1fr) 92px 40px 64px;gap:10px;align-items:center;min-height:36px;padding:0 4px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px;color:#E6E1D6}
+.pv .sh{font:11.5px ui-monospace,Menlo,monospace;color:#8E98A8}
+.pv .pt{text-align:right;color:#C9CFD9}
+.chk{font:600 10px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:999px;text-align:center}
+.chk.e{background:rgba(127,217,154,.12);color:#9BE3B0}.chk.c{background:rgba(240,167,116,.14);color:#F6C29C}
+
+</style>
+</helmet>
+<div style="width: 2480px; box-sizing: border-box; padding: 48px 56px 64px; background: radial-gradient(1200px 500px at 30% -10%, #12233A, rgba(7,12,21,0) 70%), #070C15; font-family: Inter, system-ui, sans-serif; color: #E6E1D6; display: flex; flex-direction: column; gap: 28px">
+  <div><h1 class="H1b">Mission pool v2 · 50 new PvP dailies</h1><p class="subb">Ideas the addon can detect, grouped like the pool themes. Easy = works with what the addon already reads.</p></div><div class="reuse" style="max-width: 1500px"><h3>50 new PvP dailies · Skirmish theme</h3>
+      Together with today’s 6 Skirmish missions that’s 56 PvP dailies for 2 slots a day: each one comes back about every 28 days instead of every 3.<br>
+      <b>easy</b> = the addon already sees this (honorable kills, the killed player when targeted or moused over like the Hunt, duel results from the system message, flagged state, zone, group, level, time). <b>check</b> = needs a test on Forever first (health or target of target during combat, guards and NPC kills, assists), because combat details may be hidden from addons.<br>
+      <b>Points</b> follow today’s scale: +1 trivial, +3 normal, +5 hard. Everloot is used by “Rare quarry” (a race/class under 1% of the census) and by the Hunt weighting.<br>
+      Names are short like the existing ones so they fit the day tiles (max ~12 characters).</div><div style="columns: 3; column-gap: 16px; width: 2368px"><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Kills</h2><span style="font-size: 12px; color: #8E98A8">12</span></div><div class="pv"><span>Win 3 honorable kills</span><span class="sh">3 HKs</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Win 10 honorable kills</span><span class="sh">10 HKs</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy above your level</span><span class="sh">Up a level</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy 5 or more levels above you</span><span class="sh">Giant</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy of your own level</span><span class="sh">Fair fight</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy of your own class</span><span class="sh">Mirror</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill 3 different enemy classes</span><span class="sh">3 classes</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill 3 different enemy races</span><span class="sh">3 races</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy healer class</span><span class="sh">Healer down</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill 2 enemies within 30 sec</span><span class="sh">Double</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Win 5 honorable kills without dying</span><span class="sh">Clean 5</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy while under 20% health</span><span class="sh">Close call</span><span class="pt">+5</span><span class="chk c">check</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Hunt-like</h2><span style="font-size: 12px; color: #8E98A8">4</span></div><div class="pv"><span>Kill an enemy of today’s quarry race</span><span class="sh">Close enough</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy of today’s quarry class</span><span class="sh">Half hunt</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy of a rare race and class (Everloot census)</span><span class="sh">Rare quarry</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Kill the enemy who last killed you</span><span class="sh">Payback</span><span class="pt">+3</span><span class="chk e">easy</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Duels</h2><span style="font-size: 12px; color: #8E98A8">7</span></div><div class="pv"><span>Win a duel</span><span class="sh">Duel win</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Win 3 duels</span><span class="sh">3 duels</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Duel a friend</span><span class="sh">Spar</span><span class="pt">+1</span><span class="chk e">easy</span></div><div class="pv"><span>Win a duel against a higher level</span><span class="sh">Underdog</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Duel 3 different classes</span><span class="sh">3 styles</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Win a duel in a capital city</span><span class="sh">City duel</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Win a duel and get an HK on the same day</span><span class="sh">Both ways</span><span class="pt">+5</span><span class="chk e">easy</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Territory</h2><span style="font-size: 12px; color: #8E98A8">8</span></div><div class="pv"><span>Get an HK in a contested zone</span><span class="sh">Contested</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK in an enemy zone</span><span class="sh">Deep strike</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Get HKs in 3 different zones</span><span class="sh">Roamer</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK in the zone of the day</span><span class="sh">Zone of day</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Enter an enemy capital</span><span class="sh">Tourist</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Visit an enemy town</span><span class="sh">Raid party</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Kill an enemy guard</span><span class="sh">Guard down</span><span class="pt">+3</span><span class="chk c">check</span></div><div class="pv"><span>Kill 5 enemy faction NPCs</span><span class="sh">Town raid</span><span class="pt">+5</span><span class="chk c">check</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Flagged</h2><span style="font-size: 12px; color: #8E98A8">4</span></div><div class="pv"><span>Stay flagged for 1 hour</span><span class="sh">Flagged 60</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Quest flagged in a contested zone for 20 min</span><span class="sh">Bold quest</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Stay flagged 30 min without dying</span><span class="sh">Untouchable</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Stay flagged 10 min in the zone of the day</span><span class="sh">Holdout</span><span class="pt">+3</span><span class="chk e">easy</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Together</h2><span style="font-size: 12px; color: #8E98A8">7</span></div><div class="pv"><span>Get an HK while grouped with a friend</span><span class="sh">Duo kill</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK in a group of 3 friends</span><span class="sh">War party</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Stay grouped and flagged with 2 friends for 20 min</span><span class="sh">Patrol</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Everyone in your group gets an HK</span><span class="sh">Shared glory</span><span class="pt">+5</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK where a friend lands the killing blow</span><span class="sh">Assist</span><span class="pt">+3</span><span class="chk c">check</span></div><div class="pv"><span>Kill an enemy who is attacking a friend</span><span class="sh">Guardian</span><span class="pt">+5</span><span class="chk c">check</span></div><div class="pv"><span>Kill the enemy who killed a friend</span><span class="sh">Avenger</span><span class="pt">+5</span><span class="chk e">easy</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Survive</h2><span style="font-size: 12px; color: #8E98A8">3</span></div><div class="pv"><span>Kill an enemy who attacked you first</span><span class="sh">Self-defense</span><span class="pt">+3</span><span class="chk c">check</span></div><div class="pv"><span>Survive a fight below 10% health</span><span class="sh">Narrow escape</span><span class="pt">+3</span><span class="chk c">check</span></div><div class="pv"><span>Win a fight against 2 enemies</span><span class="sh">Outnumbered</span><span class="pt">+5</span><span class="chk c">check</span></div></section><section class="box" style="gap: 4px; break-inside: avoid; margin-bottom: 16px"><div style="display: flex; justify-content: space-between"><h2 class="bt">Timing</h2><span style="font-size: 12px; color: #8E98A8">5</span></div><div class="pv"><span>Get an HK before 12:00</span><span class="sh">Early blood</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK after midnight</span><span class="sh">Midnight raid</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK on an alt below level 30</span><span class="sh">Young blood</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get an HK within 10 min of logging in</span><span class="sh">Hot start</span><span class="pt">+3</span><span class="chk e">easy</span></div><div class="pv"><span>Get HKs on 2 characters</span><span class="sh">Two blades</span><span class="pt">+5</span><span class="chk e">easy</span></div></section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2480,"height":1372}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

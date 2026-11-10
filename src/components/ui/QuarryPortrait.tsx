@@ -1,4 +1,3 @@
-import type { QuarryView } from "@/core/views/doomsdayHunt";
 import { ClassIcon } from "./ClassIcon";
 import styles from "./QuarryPortrait.module.css";
 
@@ -8,7 +7,13 @@ import styles from "./QuarryPortrait.module.css";
  * (tomorrow's quarry, the board's header), `lg` 76 px and 40 px (the Mission pool's quarry card, MP05). Its name is the
  * quarry's ("Night Elf Hunter").
  */
-export function QuarryPortrait({ quarry, size = "md" }: { quarry: QuarryView; size?: "lg" | "md" | "sm" }) {
+export function QuarryPortrait({
+  quarry,
+  size = "md",
+}: {
+  quarry: { name: string; raceShort: string; classFile?: string | undefined };
+  size?: "lg" | "md" | "sm";
+}) {
   return (
     <span className={styles.portrait} data-size={size} role="img" aria-label={quarry.name}>
       <span className={styles.ring} aria-hidden="true">

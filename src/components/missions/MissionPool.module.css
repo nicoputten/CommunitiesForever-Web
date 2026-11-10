@@ -764,3 +764,526 @@
   letter-spacing: inherit;
   color: inherit;
 }
+
+/* === Mission pool v2 (WEB-109, boards mission-pool-v2-overview, mission-pool-v2-hunt) ============================ */
+
+/* --- the recipe bar ----------------------------------------------------------------------------------------------- */
+
+.recipe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+}
+
+.recipeLine {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.recipeLine b {
+  font-weight: var(--fw-semibold);
+  color: var(--gold-bright);
+}
+
+.sep {
+  color: var(--skill-sep);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-0-5);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-goal);
+}
+
+.tile[data-warn] {
+  border-color: var(--warn-tile-line);
+  background: var(--warn-tile-bg);
+}
+
+.tile[data-hunt] {
+  border-color: var(--line-hunt);
+  background: var(--surface-hunt-tile);
+}
+
+.tileKey {
+  font-size: var(--fs-meta-sm);
+  letter-spacing: var(--ls-badge);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.tileCount {
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-regular);
+  color: var(--text-strong);
+}
+
+.tilePer {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+.tileLine {
+  font-size: var(--fs-meta);
+  color: var(--text-dim);
+}
+
+.tile[data-warn] .tileLine {
+  color: var(--pill-soon-text);
+}
+
+/* --- the quarry --------------------------------------------------------------------------------------------------- */
+
+.quarry {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-6);
+  align-items: center;
+  overflow: hidden;
+  padding: var(--s-5) var(--s-6);
+  border-radius: var(--r-quarry);
+  background: var(--surface-quarry);
+  border: var(--border) solid var(--line-hunt);
+}
+
+.reticle {
+  position: absolute;
+  top: calc(-1 * var(--s-10));
+  right: calc(-1 * var(--s-7-5));
+  width: var(--size-watermark);
+  height: var(--size-watermark);
+  color: var(--pvp-text);
+  opacity: var(--opacity-watermark);
+  pointer-events: none;
+}
+
+.quarryMain {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2-5);
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0;
+  font-size: var(--fs-kicker);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-kicker);
+  text-transform: uppercase;
+  color: var(--pvp-text);
+}
+
+.quarryHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4-5);
+}
+
+.quarryName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  letter-spacing: var(--ls-tag);
+  color: var(--gold-pale);
+}
+
+.quarryHunter {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.quarryOther {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2-5);
+  padding: var(--s-2-5) var(--s-3);
+  border-radius: var(--r-btn);
+  background: var(--surface-quiet);
+  border: var(--border) solid var(--line-goal);
+}
+
+.quarryOther p {
+  margin: 0;
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.quarryOther b {
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+}
+
+.quarryStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4-5);
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}
+
+.quarryStats b {
+  color: var(--text-strong);
+}
+
+.quarryStats .quarryPoints {
+  font-size: var(--fs-section);
+  color: var(--gold-bright);
+}
+
+.quarrySeen {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1-5);
+}
+
+.quarryNext {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-2);
+}
+
+.nextTitle {
+  margin: 0;
+  font-size: var(--fs-meta);
+  letter-spacing: var(--ls-badge);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.minis {
+  display: flex;
+  gap: var(--s-0-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mini {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  width: var(--size-mini);
+  font-size: var(--fs-mini);
+  line-height: var(--lh-tight);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.mini b {
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.quarryLink {
+  font-size: var(--fs-body-sm);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.quarryLink:hover {
+  color: var(--gold-bright);
+}
+
+/* --- the Hunt line on a day --------------------------------------------------------------------------------------- */
+
+.huntLine {
+  overflow: hidden;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-name);
+  color: var(--hunt-text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.crosshair {
+  width: var(--s-2-5);
+  height: var(--s-2-5);
+  margin-right: var(--s-1);
+  color: var(--pvp-text);
+  vertical-align: -1px;
+}
+
+/* --- the pool as themes ------------------------------------------------------------------------------------------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.search {
+  min-width: var(--size-pool-search);
+  min-height: var(--size-btn-compact);
+  padding: 0 var(--s-3);
+  box-sizing: border-box;
+  border-radius: var(--r-pill);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-neutral);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--text-strong);
+}
+
+.search::placeholder {
+  color: var(--text-faint);
+}
+
+.chipCount {
+  font-weight: var(--fw-semibold);
+  color: var(--text-dim);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1-5);
+  width: 100%;
+  min-height: var(--size-touch);
+  padding: var(--s-3-5) var(--s-4);
+  box-sizing: border-box;
+  border-radius: var(--r-card);
+  background: var(--surface-goal);
+  border: var(--border) solid var(--line-goal);
+  font-family: var(--font-ui);
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: var(--line-menu);
+}
+
+.card[aria-expanded="true"] {
+  border-color: var(--gold);
+  background: var(--tint-row);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: var(--fs-name);
+  color: var(--gold-bright);
+}
+
+.cardTag {
+  flex: none;
+  white-space: nowrap;
+  padding: var(--s-0-5) var(--s-1-5);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-tiny);
+  font-style: normal;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-brand);
+  text-transform: uppercase;
+  background: var(--tint-pve-tag);
+  color: var(--pve-text);
+}
+
+.cardTag[data-kind="pvp"] {
+  background: var(--tint-pvp-tag);
+  color: var(--pvp-soft);
+}
+
+.cardTag[data-kind="weekly"] {
+  background: var(--tint-weekly-tag);
+  color: var(--weekly-tag-text);
+}
+
+.cardCount {
+  margin-left: auto;
+  font-family: var(--font-name);
+  font-size: var(--fs-title-lg);
+  color: var(--text-strong);
+}
+
+.cardLine {
+  font-size: var(--fs-tip);
+  color: var(--text-dim);
+}
+
+.cardNew {
+  color: var(--gold-bright);
+}
+
+.open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-top: var(--s-3);
+  border-top: var(--border) solid var(--line);
+}
+
+.scroll {
+  max-height: var(--size-pool-list);
+  overflow-y: auto;
+}
+
+.scroll .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-night);
+}
+
+.scroll .table th:nth-child(2) {
+  width: var(--size-col-short);
+}
+
+.scroll .table th:nth-child(3) {
+  width: var(--size-col-pts);
+}
+
+.scroll .table th:nth-child(4) {
+  width: var(--size-col-history);
+}
+
+.scroll .table th:nth-child(5) {
+  width: var(--size-col-often);
+}
+
+.scroll .table th:nth-child(6) {
+  width: var(--size-touch);
+}
+
+.scroll .table td {
+  height: var(--size-touch);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.scroll .table .dim {
+  font-size: var(--fs-tip);
+}
+
+.tag6 {
+  margin-left: var(--s-2);
+  padding: var(--s-0-5) var(--s-1-5);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-th);
+  text-transform: uppercase;
+  vertical-align: 1px;
+  background: var(--tint-easy-tag);
+  color: var(--pve-text);
+}
+
+.tag6[data-tag="check"] {
+  background: var(--tint-check-tag);
+  color: var(--pill-soon-text);
+}
+
+@media (max-width: 1023px) {
+  .tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quarry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-3);
+    padding: var(--s-4);
+  }
+
+  .quarryName {
+    font-size: var(--fs-summary);
+  }
+
+  .quarryHow {
+    display: none;
+  }
+
+  .quarryHead {
+    gap: var(--s-3-5);
+  }
+
+  .quarryOther {
+    flex-basis: 100%;
+  }
+
+  .quarryNext {
+    align-items: flex-start;
+  }
+
+  .minis {
+    gap: var(--s-1);
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .quarryLink {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-touch);
+    font-size: var(--fs-body);
+  }
+
+  .nextTitle {
+    display: none;
+  }
+
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .search {
+    flex: 1 1 100%;
+    min-height: var(--size-touch);
+  }
+}
+
+.drawRule {
+  font-size: var(--fs-body-sm);
+  color: var(--text-muted);
+}

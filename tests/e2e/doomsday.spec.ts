@@ -41,12 +41,13 @@ test("Doomsday from the navigation: today, week and board", async ({ page }) => 
   await expect(page.getByTestId("goal")).toHaveCount(6);
   await expect(page.getByText("First duel with each friend")).toBeVisible();
   await expect(page.getByText(/Sanne has no addon/)).toBeVisible();
-  // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click.
+  // The explanation is in the ⓘ next to "Your goals" (WEB-65): it opens on a tap or a click. The Hunt cards' census has its own ⓘ (WEB-110).
   const tip = page.getByRole("tooltip").filter({ hasText: "Goals are suggestions with points." });
   await expect(tip).toBeHidden();
   await page
     .getByRole("region", { name: /^Your goals/ })
     .getByRole("button", { name: "More info" })
+    .first()
     .click();
   await expect(tip).toBeVisible();
   await page.keyboard.press("Escape");

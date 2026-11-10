@@ -255,7 +255,7 @@ export interface RecipeTileView {
   pool: number;
   /** Back every ~N days: pool ÷ slots per day (weeks: × 7). */
   backEveryDays?: number;
-  /** Orange: missions come back within ~6 weeks. */
+  /** Orange: a weekly slot whose missions come back within ~6 weeks (Bounty today); never a daily one. */
   soon: boolean;
 }
 
