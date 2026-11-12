@@ -41,7 +41,10 @@ export const REUSED: Readonly<Record<string, Partial<Goal>>> = {
   "p.mirror": { since: 6, text: "Kill an enemy of your own class", can: "level20", fallback: ["p.loneWolf"] },
   "p.races3": { since: 6, points: 5, text: "Kill 3 different enemy races", can: "level20", fallback: ["p.loneWolf"] },
   "p.trioKills": { since: 6, text: "Get an HK in a group of 3 friends", short: "War party", can: "friends2" },
-  "p.avenge": { since: 6, check: true, text: "Kill the enemy who killed a friend", short: "Avenger" },
+  "p.avenge": { since: 6, siteOnly: true, text: "Kill the enemy who killed a friend", short: "Avenger" },
+  // CF-121: site-only missions (the addon tracks them; only the site's schedule switches one on).
+  "d.auctionBuy": { since: 6, siteOnly: true },
+  "b.avenge3": { since: 6, siteOnly: true },
   "p.duelWin": { slot: "duel", since: 6, points: 3 },
   "p.duelUp": { slot: "duel", since: 6, short: "Underdog", can: undefined, fallback: undefined },
 };

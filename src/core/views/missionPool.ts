@@ -121,6 +121,8 @@ export interface PoolRow {
   cameUp: number;
   /** "easy" or "check" (the new PvP missions). */
   tag?: "easy" | "check";
+  /** CF-121: a site-only mission (Off until switched on); it counts only for friends on the addon release with it. */
+  siteOnly?: true;
   off: boolean;
   often: Often;
 }
@@ -316,6 +318,7 @@ function row(
   if (h.pct !== undefined) r.donePct = h.pct;
   const check = data.check !== undefined ? data.check(id) : catalogueCheck(id);
   if (check !== undefined) r.tag = check ? "check" : "easy";
+  if (goal(id)?.siteOnly === true) r.siteOnly = true;
   return r;
 }
 

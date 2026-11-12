@@ -218,6 +218,22 @@ describe("the Mission pool page", () => {
     expect(v.cards[0]!.rows[0]!.tag).toBeUndefined();
   });
 
+  it("WEB-113: the site-only missions are available, Off until switched on, no check tag, with the addon hint", () => {
+    const v = missionPoolView(input(), "UTC");
+    const rows = v.cards.flatMap((c) => c.rows);
+    for (const id of ["d.auctionBuy", "p.avenge", "b.avenge3"]) {
+      const r = rows.find((x) => x.id === id)!;
+      expect(r, id).toMatchObject({ siteOnly: true, off: true });
+      expect(r.tag, id).not.toBe("check");
+    }
+    expect(rows.find((x) => x.id === "p.avenge")).toMatchObject({ short: "Avenger", tag: "easy" });
+    expect(rows.find((x) => x.id === "d.auctionBuy")!.short).toBe("Bargain");
+    expect(rows.find((x) => x.id === "b.avenge3")!.short).toBe("Avenge x3");
+    expect(rows.find((x) => x.id === "p.loneWolf")!.siteOnly).toBeUndefined();
+    const on = missionPoolView(input({ settings: { "p.avenge": { off: false, often: "normal" } } }), "UTC");
+    expect(on.cards.flatMap((c) => c.rows).find((x) => x.id === "p.avenge")!.off).toBe(false);
+  });
+
   it("filters: never came up, hard (under 30 % done), off; their counts over every card", () => {
     const stats = new Map([
       ["d.quests10", { cameUp: 2, swapped: 0, had: 4, done: 3, last: TODAY - 1 }],
@@ -229,8 +245,8 @@ describe("the Mission pool page", () => {
       { filter: "all", label: "All", count: all },
       { filter: "never", label: "Never came up", count: all - 2 },
       { filter: "hard", label: "Hard", count: 1 },
-      // d.zone5 and the 9 "check" missions, Off until tested (WEB-108).
-      { filter: "off", label: "Off", count: 10 },
+      // d.zone5, the 8 "check" missions, Off until tested (WEB-108), and the 3 site-only ones (WEB-113).
+      { filter: "off", label: "Off", count: 12 },
     ]);
     const rows = v.cards.flatMap((c) => c.rows);
     expect(rows.filter((r) => matches(r, "hard")).map((r) => r.id)).toEqual(["d.quests20"]);
@@ -285,8 +301,8 @@ describe("the Mission pool page", () => {
     expect(v.editor!.sawNormal).toEqual(["Bob"]);
   });
 
-  it("the Admin page's box: the 217 missions of pool version 6", () => {
-    expect(missionPoolBox(input())).toEqual({ missions: 217, changed: 0, today: "Mon 9" });
+  it("the Admin page's box: the 219 missions of pool version 6 (Bargain and Avenge x3 joined, WEB-113)", () => {
+    expect(missionPoolBox(input())).toEqual({ missions: 219, changed: 0, today: "Mon 9" });
     // The page counts its cards' missions (the fixture's cards).
     expect(missionPoolView(input(), "UTC").missionCount).toBe(
       new Set(poolData().cards.flatMap((c) => c.missions)).size,

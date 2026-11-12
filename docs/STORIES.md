@@ -672,3 +672,18 @@ so it comes back by itself once someone makes a character of that faction.
 - `docs/DESIGN.md` "Deviations" records it.
 - Done when: unit and server tests for one faction, both and none; lint, unit, build, e2e and design checks pass;
   changed screenshot baselines only after Nico's OK.
+
+### WEB-113 Site-only missions (pairs with the addon's CF-121, nicoputten/CommunitiesForever#274)
+Nico (2026-11-12): the addon tracks three missions it never draws itself; only the site's schedule switches one on.
+- **Catalogue:** the addon's `doomsday-cases.json` copied byte for byte; `siteOnly` on `d.auctionBuy` (Bargain, daily,
+  Loot & gold, 3), `p.avenge` (Avenger, Skirmish, 5; no longer a check mission) and `b.avenge3` (Avenge x3, Bounty, 15),
+  all from pool version 6.
+- **The draw:** never in the normal draw (`drawPool`, the dailies, the Skirmish and, now also, the week's draw) nor a
+  swap's replacement (the swap now takes the draw's pool, as the addon). Off until the owner switches one on in the
+  Mission pool; switched on (any weight) the slot is redrawn and it comes up like any other mission of its slot and
+  theme. A schedule may name `d.auctionBuy` in the dailies, `p.avenge` as the Skirmish and `b.avenge3` as the Bounty.
+- **Mission pool page:** the three are listed as available with the on/off switch, no "check" tag; an ⓘ by the switch:
+  "Counts once friends have the next addon release." (no version number: the site doesn't know addon versions).
+- **Labels:** Bargain, Avenger, Avenge x3 on the Doomsday pages and DoomBot's board, from the catalogue.
+- Done when: unit tests (pool and draw, swaps, the plan Off and switched on, the schedule, the page's rows); lint, unit,
+  build, e2e and design checks pass; changed screenshots go to Nico before any baseline.

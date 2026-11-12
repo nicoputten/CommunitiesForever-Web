@@ -6,6 +6,7 @@ import {
   dayStart,
   distinctCategories,
   draw,
+  drawPool,
   drawWeek,
   type Faction,
   goal,
@@ -32,7 +33,10 @@ export type Often = "rare" | "normal" | "often";
 /** The weights of the redraw (WEB-78): Rare 1, Normal 2, Often 4. */
 export const WEIGHT: Readonly<Record<Often, number>> = { rare: 1, normal: 2, often: 4 };
 
-/** A mission's setting; a mission without one is on and Normal (a `check` mission of pool version 6: Off). */
+/**
+ * A mission's setting; a mission without one is on and Normal (a `check` mission of pool version 6, and a site-only one
+ * of CF-121: Off until the owner switches it on).
+ */
 export interface MissionSetting {
   off: boolean;
   often: Often;
@@ -86,16 +90,25 @@ export function normalPlan(period: Period, n: number): Plan {
 }
 
 export function settingOf(settings: Settings, id: string): MissionSetting {
-  return settings[id] ?? { off: goal(id)?.check === true, often: "normal" };
+  const g = goal(id);
+  return settings[id] ?? { off: g?.check === true || g?.siteOnly === true, often: "normal" };
 }
 
 const isOn = (settings: Settings, id: string) => !settingOf(settings, id).off;
 /** What may not repeat within a day's dailies (the category; from pool version 6 the theme) or a week's weeklies. */
 const kindOf = (period: Period, id: string) => (period === "day" ? dailyKind(id) : goal(id)?.category);
 
-/** Whether a slot kind is weighted: some mission of it that is on is set to Rare or Often. */
+/**
+ * Whether a slot kind is redrawn: some mission of it that is on is set to Rare or Often, or is one the normal draw
+ * never takes (a check mission, CF-118, or a site-only one, CF-121) and the owner switched on: from then on it comes
+ * up like any other mission of its slot and theme.
+ */
+const DRAWN = new Map<GoalSlot, ReadonlySet<string>>();
+
 function weighted(kind: GoalSlot, settings: Settings): boolean {
-  return pool(kind).some((id) => isOn(settings, id) && settingOf(settings, id).often !== "normal");
+  let drawn = DRAWN.get(kind);
+  if (drawn === undefined) DRAWN.set(kind, (drawn = new Set(drawPool(kind))));
+  return pool(kind).some((id) => isOn(settings, id) && (settingOf(settings, id).often !== "normal" || !drawn.has(id)));
 }
 
 /**
