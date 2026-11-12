@@ -575,6 +575,14 @@
   gap: var(--s-2-5);
 }
 
+/* CF-121: the site-only hint (ⓘ) left of the switch, on one line with it. */
+.lineEnd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-1-5);
+}
+
 .lineHead > :first-child {
   flex: 1;
   font-size: var(--fs-body);

@@ -2,6 +2,7 @@
 
 import { useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { InfoTip } from "@/components/ui/InfoTip";
 import type { Often } from "@/core/doomsday/missionPool";
 import { matches, type FilterChipView, type PoolFilter, type PoolRow, type ThemeCard } from "@/core/views/missionPool";
 import styles from "./MissionPool.module.css";
@@ -101,6 +102,11 @@ function OftenChoice({ row, action }: { row: PoolRow; action: Action }) {
   );
 }
 
+/** CF-121: a site-only mission counts only for friends on the addon release that tracks it. */
+function SiteOnlyTip({ row }: { row: PoolRow }) {
+  return row.siteOnly === true ? <InfoTip>Counts once friends have the next addon release.</InfoTip> : null;
+}
+
 function Tag({ row }: { row: PoolRow }) {
   return row.tag === undefined ? null : (
     <span className={styles.tag6} data-tag={row.tag}>
@@ -166,7 +172,10 @@ function Rows({
                   <OftenChoice row={r} action={setOften} />
                 </td>
                 <td className={styles.end}>
-                  <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+                  <div className={styles.lineEnd}>
+                    <SiteOnlyTip row={r} />
+                    <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -184,7 +193,10 @@ function Rows({
                     {r.text}
                     <Tag row={r} />
                   </span>
-                  <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+                  <div className={styles.lineEnd}>
+                    <SiteOnlyTip row={r} />
+                    <OffSwitch row={r} offFrom={offFrom} action={setOff} />
+                  </div>
                 </div>
                 <div className={styles.lineStats}>{r.line}</div>
                 <OftenChoice row={r} action={setOften} />

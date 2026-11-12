@@ -228,6 +228,11 @@ export interface Goal {
   theme?: Theme;
   /** Pool version 6: needs a test on Forever first, so it is Off until the owner switches it on (CF-118 `check`). */
   check?: boolean;
+  /**
+   * CF-121: tracked by the addon but never in its own draw nor a swap's replacement; only the site's schedule switches
+   * one on. Off until the owner switches it on, and counted only by an addon with CF-121.
+   */
+  siteOnly?: boolean;
 }
 
 /** The daily PvE themes of pool version 6 (CF-118): the draw takes 3 PvE dailies from 3 different themes. */
@@ -2912,9 +2917,12 @@ export function pool(slot: GoalSlot, version = POOL_VERSION): string[] {
   ).map((g) => g.id);
 }
 
-/** The goals the draw takes for a slot: the pool without the `check` ones (Off until tested, CF-118). */
+/**
+ * The goals the draw takes for a slot: the pool without the `check` ones (Off until tested, CF-118) and the site-only
+ * ones (CF-121: only the site's schedule draws them).
+ */
 export function drawPool(slot: GoalSlot, version = POOL_VERSION): string[] {
-  return pool(slot, version).filter((id) => BY_ID.get(id)!.check !== true);
+  return pool(slot, version).filter((id) => BY_ID.get(id)!.check !== true && BY_ID.get(id)!.siteOnly !== true);
 }
 
 // ===== Lists =====
@@ -3233,8 +3241,8 @@ export function drawWeek(week: number, version = POOL_VERSION): WeekDraw {
   const key = `${version}:`;
   const cached = weekCache.get(key + week);
   if (cached !== undefined) return cached;
-  const weeklyPool = pool("weekly", version);
-  const bountyPool = pool("bounty", version);
+  const weeklyPool = drawPool("weekly", version);
+  const bountyPool = drawPool("bounty", version);
   const epochWeek = weekOf(EPOCH);
   const first = week < epochWeek ? week : epochWeek;
   let previous: WeekDraw | undefined;
@@ -3340,7 +3348,8 @@ export function canDo(id: string, s: Situation = {}, version = POOL_VERSION): bo
 function replacement(id: string, s: Situation, taken: Set<string>, version: number): string | undefined {
   const g = BY_ID.get(id)!;
   for (const f of g.fallback ?? []) if (!taken.has(f) && canDo(f, s, version)) return f;
-  const list = pool(g.slot, version);
+  // As the addon's Doomsday.pool: never a check (CF-118) or site-only (CF-121) mission as a replacement.
+  const list = drawPool(g.slot, version);
   const start = list.lastIndexOf(id) + 1;
   for (let step = 1; step <= list.length; step++) {
     const candidate = list[(start + step - 1) % list.length]!;

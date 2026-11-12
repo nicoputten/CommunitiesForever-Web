@@ -95,6 +95,7 @@ describe("Doomsday golden cases", () => {
         // Pool version 6 (CF-118): the PvE dailies' theme, and the missions that wait for a test.
         ["theme", themeOf(g.id)],
         ["check", g.check],
+        ["siteOnly", g.siteOnly],
       ] as const)
         if (value !== undefined) out[key] = value;
       return out;
