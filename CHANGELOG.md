@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.16.0 (2026-11-12)
+- Mission pool: three site-only missions, Bargain (buy at the auction house), Avenger and Avenge x3, are now available. They start switched off and only come up once the owner switches them on, and they count once friends have the next addon release (an ⓘ by the switch says so). Avenger no longer waits for a test.
+
 ## v0.15.1 (2026-11-10)
 - Doomsday: the Today tab no longer has the "Today so far" box; The Hunt today moves up in its place. Who did what today is on the board below.
 - The Hunt shows only the faction the group hunts with: everyone plays Horde, so the Mission pool's quarry card drops the Alliance's target, the Hunt targets page shows the Alliance targets without tabs, and Doomsday and DoomBot show only the Alliance quarry. A faction comes back by itself once someone in the group has a character of it. The daily Everloot census asks for half as much.

@@ -98,7 +98,6 @@ describe("pool version 6: the catalogue", () => {
         "p.selfDefense",
         "p.narrowEscape",
         "p.outnumbered",
-        "p.avenge",
       ].sort(),
     );
     for (let n = EPOCH; n < EPOCH + 300; n++) expect(check).not.toContain(draw(n).skirmish);
@@ -593,16 +592,17 @@ describe("the Mission pool page's tiles, cards and days (MP05)", () => {
     const tiles = recipeTiles({ "d.quests10": { off: true, often: "normal" } }, 27);
     const by = Object.fromEntries(tiles.map((t) => [t.id, t]));
     expect(tiles.map((t) => t.label)).toEqual(["Daily PvE", "The Hunt", "Daily PvP", "Weekly", "Bounty", "Off"]);
-    expect(by.pve).toMatchObject({ perPeriod: 3, period: "day", pool: pool("daily").length - 1, soon: false });
+    expect(by.pve).toMatchObject({ perPeriod: 3, period: "day", pool: pool("daily").length - 2, soon: false });
     expect(by.hunt).toMatchObject({ perPeriod: 1, pool: 27, backEveryDays: 27, soon: false });
     // The 9 check missions start Off.
     expect(by.pvp!.pool).toBe(drawPool("skirmish").length + drawPool("duel").length);
-    expect(by.off!.pool).toBe(1 + 9);
+    // d.quests10, the 8 check missions and the 3 site-only ones (WEB-113) start Off; d.auctionBuy is a daily.
+    expect(by.off!.pool).toBe(1 + 8 + 3);
     // Orange only for a weekly slot back within ~6 weeks: the Bounty (6 in the pool, every 6 weeks).
     expect(by.bounty).toMatchObject({
       perPeriod: 1,
       period: "week",
-      backEveryDays: pool("bounty").length * 7,
+      backEveryDays: drawPool("bounty").length * 7,
       soon: true,
     });
     expect(by.weekly!.soon).toBe(false);
