@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.16.0 (2026-11-12)
 - Mission pool: three site-only missions, Bargain (buy at the auction house), Avenger and Avenge x3, are now available. They start switched off and only come up once the owner switches them on, and they count once friends have the next addon release (an ⓘ by the switch says so). Avenger no longer waits for a test.
 
 ## v0.15.1 (2026-11-10)
