@@ -45,7 +45,8 @@ export interface FeedSession {
   to?: number;
 }
 
-/** One honorable kill (CF-55). Each victim field only when the addon could read it; `lvl` -1 is a skull. */
+/** One honorable kill (CF-55). Each victim field only when the addon could read it; `lvl` -1 is a skull; so is
+ * a victim 10+ levels above (CF-124: Forever reports a skull's real level, see `isSkull`). */
 export interface FeedPvpKill {
   t?: number;
   zone?: string;

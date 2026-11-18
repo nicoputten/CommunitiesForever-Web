@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Doomsday: a PvP kill on an enemy player 10 or more levels above you now counts as a skull (3 points, +1 solo), as in the addon of the same release. Forever never shows such players as "??" to the addon, so skulls never counted before. The PvP tab's skull count follows.
+
 ## v0.16.0 (2026-11-12)
 - Mission pool: three site-only missions, Bargain (buy at the auction house), Avenger and Avenge x3, are now available. They start switched off and only come up once the owner switches them on, and they count once friends have the next addon release (an ⓘ by the switch says so). Avenger no longer waits for a test.
 

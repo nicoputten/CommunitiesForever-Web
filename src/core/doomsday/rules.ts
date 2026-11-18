@@ -3606,7 +3606,7 @@ export interface Kill {
   t?: number;
   zone?: string;
   name?: string;
-  /** -1 a skull. */
+  /** -1 a skull as Classic reports it; Forever reports a skull's real level (see isSkull). */
   lvl?: number;
   myLvl?: number;
   class?: string;
@@ -3618,10 +3618,25 @@ export interface Kill {
   char?: string;
 }
 
-/** Points of one counted kill. */
+/**
+ * Levels above the killer from which a victim is a skull (CF-124). Forever's client reports a skull-level enemy
+ * player's real level, never -1 (addon API-FINDINGS V74).
+ */
+export const SKULL_GAP = 10;
+
+/**
+ * Whether a victim of level `lvl` was a skull for a killer of level `myLvl` (the addon's `Doomsday.isSkull`): -1
+ * (a skull as Classic gives it), or SKULL_GAP or more levels above. Without either level only -1 is one.
+ */
+export function isSkull(lvl: number | undefined, myLvl: number | undefined): boolean {
+  if (lvl === -1) return true;
+  return typeof lvl === "number" && typeof myLvl === "number" && myLvl > 0 && lvl >= myLvl + SKULL_GAP;
+}
+
+/** Points of one counted kill: 0 for 4+ levels below, 1 near, 2 for 3+ above, 3 for a skull (isSkull); solo +1. */
 export function killValue(k: Kill): number {
   let points: number;
-  if (k.lvl === -1) points = 3;
+  if (isSkull(k.lvl, k.myLvl)) points = 3;
   else if (k.lvl === undefined || k.myLvl === undefined) points = 1;
   else {
     const diff = k.lvl - k.myLvl;

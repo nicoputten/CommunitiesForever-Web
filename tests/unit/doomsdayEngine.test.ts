@@ -14,9 +14,12 @@ import {
   HUNT_SINCE,
   huntName,
   huntTitle,
+  isSkull,
+  killValue,
   pointsFor,
   pool,
   POOL_VERSION,
+  SKULL_GAP,
   weekOf,
 } from "@/core/doomsday/rules";
 
@@ -501,5 +504,59 @@ describe("pool version 5", () => {
     expect(h.goal).toEqual(snap.hunts.alliance);
     expect(h.goal.title).toBe(huntTitle(draw(today, 6).hunt!.Horde!));
     expect([h.points, h.doneAt]).toEqual([5, 1]);
+  });
+});
+
+// WEB-114 (addon CF-124): a skull is -1 or a victim SKULL_GAP (10) or more levels above; Forever reports the real level.
+describe("skulls", () => {
+  it("isSkull: -1, or 10 or more above with both levels known", () => {
+    expect(SKULL_GAP).toBe(10);
+    expect(isSkull(-1, undefined)).toBe(true);
+    expect(isSkull(-1, 20)).toBe(true);
+    expect(isSkull(30, 20)).toBe(true);
+    expect(isSkull(29, 20)).toBe(false);
+    expect(isSkull(15, 5)).toBe(true);
+    expect(isSkull(30, undefined)).toBe(false);
+    expect(isSkull(undefined, 20)).toBe(false);
+    expect(isSkull(10, 0)).toBe(false);
+  });
+
+  it("killValue: a skull is 3, solo 4; 9 above stays 2", () => {
+    expect(killValue({ lvl: 27, myLvl: 17 })).toBe(3);
+    expect(killValue({ lvl: 26, myLvl: 17 })).toBe(2);
+    expect(killValue({ lvl: 30, myLvl: 20, solo: true })).toBe(4);
+    expect(killValue({ lvl: -1 })).toBe(3);
+    expect(killValue({ lvl: 40 })).toBe(1);
+  });
+
+  it("the PvP details count skulls by isSkull", () => {
+    const today = doomsdaySnapshot(input).schedule.day;
+    const t = 1794333600;
+    const kill = (name: string, lvl: number, myLvl?: number) => ({ t, zone: "Ashenvale", name, lvl, myLvl });
+    const snap = doomsdaySnapshot({
+      ...input,
+      feed: [
+        {
+          guid: "G",
+          owner: "Ada#1001",
+          day: today,
+          entry: {
+            quests: {},
+            ranks: {},
+            learned: [],
+            runs: [],
+            pvpKills: [
+              kill("Victim 1", 30, 20),
+              kill("Victim 2", 29, 20),
+              kill("Victim 3", -1, 20),
+              kill("Victim 4", 40),
+            ],
+          },
+        },
+      ],
+    });
+    const week = snap.friends.find((f) => f.friendKey === "Ada#1001")!.pvp!.week;
+    expect(week.kills).toBe(4);
+    expect(week.skulls).toBe(2);
   });
 });
