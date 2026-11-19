@@ -41,6 +41,7 @@ import {
   type ScoredKill,
   scheduledDraw,
   scheduledWeek,
+  isSkull,
   scoreKills,
   type Situation,
   streak,
@@ -890,7 +891,7 @@ function pvpDetails(
     week: {
       kills: week.length,
       solo: week.filter((k) => k.kill.solo === true).length,
-      skulls: week.filter((k) => k.kill.lvl === -1).length,
+      skulls: week.filter((k) => isSkull(k.kill.lvl, k.kill.myLvl)).length,
       ...(week.some((k) => k.kill.lvl === undefined || k.kill.myLvl === undefined) ? { approx: true } : {}),
     },
     byZone: [...zones.entries()]
