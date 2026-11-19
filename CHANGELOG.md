@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.16.1 (2026-11-19)
 - Doomsday: a PvP kill on an enemy player 10 or more levels above you now counts as a skull (3 points, +1 solo), as in the addon of the same release. Forever never shows such players as "??" to the addon, so skulls never counted before. The PvP tab's skull count follows.
 
 ## v0.16.0 (2026-11-12)
